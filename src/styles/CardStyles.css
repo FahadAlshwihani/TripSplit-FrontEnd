@@ -9,6 +9,13 @@
     margin: 0 auto;
 }
 
+.avatar-picker { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1rem 0; }
+.avatar-choice { width: 3rem; height: 3rem; border: 2px solid transparent; border-radius: 50%; background: rgba(255,255,255,.12); font-size: 1.5rem; cursor: pointer; }
+.avatar-choice.selected { border-color: #6ee7b7; background: rgba(110,231,183,.18); }
+.avatar-choice:focus-visible, .pc-input:focus-visible, button:focus-visible { outline: 3px solid #f9cb28; outline-offset: 2px; }
+.otp-input { font-size: 1.5rem; letter-spacing: .35em; text-align: center; }
+.success-message { color: #6ee7b7; }
+
 /* Card Styles */
 .card-pc {
     width: 100%;

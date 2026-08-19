@@ -12,6 +12,9 @@ import './styles/Footer.css';
 import './i18n'; // Import i18n configuration
 import LanguageProvider from './components/LanguageProvider';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import AuthPage from './pages/AuthPage';
+import ProfilePage from './pages/ProfilePage';
+import { AuthProvider } from './auth/AuthContext';
 
 const App = () => {
   const [trip, setTrip] = useState(null);
@@ -19,7 +22,7 @@ const App = () => {
   const [budget, setBudget] = useState(0);
 
   return (
-    <LanguageProvider>
+    <LanguageProvider><AuthProvider>
       <div className="app-container">
         <div className="area">
           <ul className="circles">
@@ -44,12 +47,14 @@ const App = () => {
               }
             />
             <Route path="/about" element={<About />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/not-found" element={<NotFoundPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Router>
       </div>
-    </LanguageProvider>
+    </AuthProvider></LanguageProvider>
   );
 };
 
