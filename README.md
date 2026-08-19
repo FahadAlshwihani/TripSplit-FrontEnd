@@ -28,8 +28,10 @@ npm run build
 
 - Guests create or join a trip with a display name and predefined avatar. The browser retains the opaque, trip-scoped guest credential; clearing storage makes an anonymous membership unrecoverable.
 - Registered users authenticate with an emailed six-digit OTP. The access session is an HttpOnly cookie, never localStorage. New users complete name/avatar onboarding and can reopen server-side trip history.
-- Expense creation selects a payer and equal-split participants. A request UUID prevents duplicate financial posts.
-- The trip page displays server-calculated member balances and deterministic settlement suggestions.
+- Expense creation and editing share one form supporting multiple payers plus equal, exact, percentage, and weighted splits. Client totals are form assistance only; Django remains authoritative.
+- The trip page displays settlement-adjusted server balances, suggestions, and recorded settlement history.
+- Owners manage roles, transfer ownership, update settings, and archive or restore trips. Members can leave without erasing their financial history.
+- Activity, member management, settlements, and archived read-only state are localized in Arabic and English and retain the responsive card layout.
 
 ## Security notes
 
@@ -40,7 +42,7 @@ Axios sends cookies with `withCredentials: true` and attaches Django's CSRF toke
 ```text
 src/auth/             current-user session state
 src/pages/            home, OTP/onboarding, profile, trip, informational pages
-src/components/       existing layout, summary/chart, balances, loading
+src/components/       layout, expense form, balances, settlements, members, activity, settings
 src/utils/api.js      versioned API client and guest credential transport
 src/utils/avatars.js  stable local predefined avatar catalog
 ```
