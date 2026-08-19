@@ -1,5 +1,5 @@
 // src/components/LanguageProvider.jsx
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const LanguageProvider = ({ children }) => {

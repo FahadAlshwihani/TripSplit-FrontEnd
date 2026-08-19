@@ -31,6 +31,7 @@ const Header = () => {
   };
 
   useEffect(() => {
+    const timeout = timeoutRef.current;
     const handleClickOutside = (event) => {
       // For desktop language dropdown
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -48,7 +49,7 @@ const Header = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timeout) clearTimeout(timeout);
     };
   }, []);
 

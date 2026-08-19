@@ -21,7 +21,7 @@ const Loading = () => {
           </svg>
         </div>
         <div className="text-container mt-5">
-          <h2></h2>
+          <span className="visually-hidden">Loading Trip Split</span>
         </div>
         <div className="smoke">
           {[...Array(10)].map((_, index) => (

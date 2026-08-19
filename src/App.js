@@ -11,7 +11,6 @@ import './styles/Header.css';
 import './styles/Footer.css';
 import './i18n'; // Import i18n configuration
 import LanguageProvider from './components/LanguageProvider';
-import LanguageSwitcher from './components/LanguageSwitcher';
 import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import { AuthProvider } from './auth/AuthContext';
