@@ -12,7 +12,7 @@ Copy-Item .env.example .env
 npm start
 ```
 
-The lockfile intentionally pins `react-router-dom` and `react-router` to 6.28.2. The application uses the stable v6 routing API and does not require React Router 7. If an interrupted install leaves `node_modules` inconsistent, remove only `node_modules`, run `npm cache verify`, and repeat the `npm ci` command above; do not regenerate the lockfile.
+The lockfile intentionally pins `react-router-dom` and `react-router` to 6.30.6. The application uses the stable v6 routing API and does not require React Router 7. If an interrupted install leaves `node_modules` inconsistent, remove only `node_modules`, run `npm cache verify`, and repeat the `npm ci` command above; do not regenerate the lockfile.
 
 The default API URL is `http://localhost:8000/api/v1`. Start the Django backend first. Keep the browser and API on the same hostname in development (`localhost` by default) so the SPA can read Django's host-scoped CSRF cookie for authenticated writes.
 
@@ -54,3 +54,15 @@ The visual direction remains the existing Trip Split card-based experience with 
 Trip managers can review requests, issue one-time email/guest invitations, kick members, manage room bans, and select the join policy in the existing responsive management surface. `/invite/:token` validates and accepts invitation capabilities without treating the token as durable identity.
 
 The expense form now supports shared/personal scope, server-defined categories, and duplicate-to-draft. The overview consumes server aggregates. Recipients can confirm/reject pending settlements, owners can close/reopen settled trips, and expenses, settlements, and activity keep independent Load More pagination state.
+
+## Phase 3.1 completion
+
+Approval-required joins now persist a waiting screen, poll every 12 seconds, and support requester cancellation. Email invitation routes survive OTP and first-time onboarding through the short-lived `next` URL; invitation tokens are never copied into localStorage. The same page automatically resumes acceptance after authentication.
+
+Trip managers can create, rename, archive, and budget categories. Budget cards show authoritative spent, remaining, percentage, allocated, and unallocated values. Quick Expense is a compact request builder for shared equal splits or personal expenses and expands into the existing full form through **More options**.
+
+Member rows open a privacy-safe detail view with aggregate financial statistics and last activity. Pending settlement confirmations use the lightweight trip-detail count, and registered trip history is grouped into Active, Closed, and Archived sections.
+
+### Dependency security decision
+
+Phase 3.1 pins patched compatible releases of Axios, React Router 6, the i18next HTTP backend, SweetAlert2, and AJV. Remaining audit findings originate in the Create React App 5 build/development dependency graph. They are not application runtime libraries emitted as independently reachable server components; resolving them cleanly requires a separately planned CRA-to-modern-tooling migration. `npm audit fix --force` is intentionally not used.
