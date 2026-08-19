@@ -20,6 +20,16 @@
 .member-avatar { display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgba(255,255,255,.12); font-size: 1.25rem; flex: 0 0 auto; }
 .participant-picker { border: 1px solid rgba(255,255,255,.2); border-radius: 12px; padding: 1rem; margin: 1rem 0; }
 .participant-option { padding: .45rem 0; cursor: pointer; }
+.allocation-row, .management-row, .activity-row { display: flex; align-items: center; gap: .75rem; padding: .75rem 0; border-bottom: 1px solid rgba(255,255,255,.12); }
+.allocation-row { justify-content: space-between; }
+.allocation-row input[type="number"] { width: 8rem; padding: .55rem; border-radius: 8px; }
+.management-row > div:nth-child(2) { display: flex; flex-direction: column; flex: 1; }
+.management-row small, .activity-row small, .settlement-row small { display: block; color: rgba(255,255,255,.65); }
+.row-actions, .form-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.row-actions button, .form-actions button { min-height: 2.5rem; }
+.archive-banner { width: 100%; max-width: 600px; padding: 1rem; border: 1px solid #f9cb28; border-radius: 12px; color: #f9cb28; text-align: center; }
+.expense-form fieldset { border: 1px solid rgba(255,255,255,.2); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+.expense-item { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,.12); }
 .account-actions { display: flex; gap: .75rem; flex-wrap: wrap; }
 .trip-history-item { color: inherit; text-decoration: none; justify-content: flex-start; }
 
@@ -150,6 +160,8 @@
         padding: 1rem; /* Smaller button padding for mobile */
         font-size: 1rem; /* Smaller button font for mobile */
     }
+    .allocation-row, .management-row, .expense-item, .settlement-row { align-items: stretch; flex-direction: column; }
+    .allocation-row input[type="number"] { width: 100%; }
 }
 
 /* Error Message Styles */
