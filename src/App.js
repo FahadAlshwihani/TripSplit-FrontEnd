@@ -13,6 +13,7 @@ import './i18n'; // Import i18n configuration
 import LanguageProvider from './components/LanguageProvider';
 import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
+import InvitationPage from './pages/InvitationPage';
 import { AuthProvider } from './auth/AuthContext';
 
 const App = () => {
@@ -48,6 +49,7 @@ const App = () => {
             <Route path="/about" element={<About />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/invite/:token" element={<InvitationPage />} />
             <Route path="/not-found" element={<NotFoundPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
