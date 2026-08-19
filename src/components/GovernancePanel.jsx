@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { avatarGlyph } from '../utils/avatars';
 
-const GovernancePanel = ({ requests, invitations, bans, members, onReview, onInvite, onRevokeInvite, onKick, onBan, onUnban }) => {
+const GovernancePanel = ({ requests, invitations, bans, members, onReview, onInvite, onRevokeInvite, onResendInvite, onKick, onBan, onUnban }) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [lastLink, setLastLink] = useState('');
@@ -20,7 +20,7 @@ const GovernancePanel = ({ requests, invitations, bans, members, onReview, onInv
     <h3>{t('governance.invitations')}</h3>
     <form onSubmit={invite}><label>{t('governance.inviteEmail')}<input className="pc-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label><div className="form-actions"><button className="pc-btn-create">{t('governance.sendInvite')}</button><button type="button" onClick={(event) => invite(event, true)}>{t('governance.guestLink')}</button></div></form>
     {lastLink && <label>{t('governance.copyOnce')}<input className="pc-input" readOnly value={lastLink} onFocus={(event) => event.target.select()} /></label>}
-    {invitations.map((row) => <div className="management-row" key={row.id}><span>{row.email || t('governance.guestInvite')}<small>{new Date(row.expires_at).toLocaleDateString()}</small></span>{!row.accepted_at && !row.revoked_at && <button onClick={() => onRevokeInvite(row)}>{t('governance.revoke')}</button>}</div>)}
+    {invitations.map((row) => <div className="management-row" key={row.id}><span>{row.email || t('governance.guestInvite')}<small>{new Date(row.expires_at).toLocaleDateString()}</small></span>{!row.accepted_at && !row.revoked_at && <div className="row-actions">{row.email && <button onClick={() => onResendInvite(row)}>{t('governance.resend')}</button>}<button onClick={() => onRevokeInvite(row)}>{t('governance.revoke')}</button></div>}</div>)}
     <h3>{t('governance.moderation')}</h3>
     {members.filter((member) => member.role !== 'owner' && member.active !== false).map((member) => <div className="management-row" key={member.id}><span>{avatarGlyph(member.avatar_key)} {member.display_name}</span><div className="row-actions"><button onClick={() => onKick(member)}>{t('governance.kick')}</button><button onClick={() => onBan(member, '24h')}>{t('governance.ban24h')}</button><button onClick={() => onBan(member, 'permanent')}>{t('governance.banPermanent')}</button></div></div>)}
     <h3>{t('governance.bans')}</h3>
