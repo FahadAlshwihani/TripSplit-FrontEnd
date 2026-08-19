@@ -12,7 +12,7 @@ Copy-Item .env.example .env
 npm start
 ```
 
-The default API URL is `http://127.0.0.1:8000/api/v1`. Start the Django backend first.
+The default API URL is `http://localhost:8000/api/v1`. Start the Django backend first. Keep the browser and API on the same hostname in development (`localhost` by default) so the SPA can read Django's host-scoped CSRF cookie for authenticated writes.
 
 ## Commands
 
