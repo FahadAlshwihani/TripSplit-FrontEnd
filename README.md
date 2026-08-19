@@ -48,3 +48,9 @@ src/utils/avatars.js  stable local predefined avatar catalog
 ```
 
 The visual direction remains the existing Trip Split card-based experience with its responsive layout and English/Arabic foundation. Phase 1 extends it rather than replacing it.
+
+## Phase 3 UI
+
+Trip managers can review requests, issue one-time email/guest invitations, kick members, manage room bans, and select the join policy in the existing responsive management surface. `/invite/:token` validates and accepts invitation capabilities without treating the token as durable identity.
+
+The expense form now supports shared/personal scope, server-defined categories, and duplicate-to-draft. The overview consumes server aggregates. Recipients can confirm/reject pending settlements, owners can close/reopen settled trips, and expenses, settlements, and activity keep independent Load More pagination state.
