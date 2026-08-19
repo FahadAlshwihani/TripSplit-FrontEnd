@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import '../styles/CardStyles.css';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
-const Summary = ({ expenses = [], budget }) => {
+const Summary = ({ expenses = [], budget, currency = 'SAR' }) => {
   const { t } = useTranslation(); // Initialize useTranslation
   const budgetRef = useRef(null);
   const spentRef = useRef(null);
@@ -77,14 +77,14 @@ const Summary = ({ expenses = [], budget }) => {
         <div className="summary-item">
           <div className="summary-label">{t('summary.card.total.budget')}</div> {/* Translated */}
           <div className="summary-value">
-            <span ref={budgetRef}>0</span> {t('summary.card.sar1')} {/* Translated */}
+            <span ref={budgetRef}>0</span> {currency}
           </div>
         </div>
         
         <div className="summary-item">
           <div className="summary-label">{t('summary.card.amount.spent')}</div> {/* Translated */}
           <div className={`summary-value ${total > 0 ? 'text-danger' : ''}`}>
-            <span ref={spentRef}>0</span> {t('summary.card.sar2')} {/* Translated */}
+            <span ref={spentRef}>0</span> {currency}
           </div>
         </div>
         
@@ -93,7 +93,7 @@ const Summary = ({ expenses = [], budget }) => {
           <div className={`summary-value ${
             remaining >= 0 ? 'text-success' : 'text-danger'
           }`}>
-            <span ref={remainingRef}>0</span> {t('summary.card.sar3')} {/* Translated */}
+            <span ref={remainingRef}>0</span> {currency}
           </div>
         </div>
       </div>

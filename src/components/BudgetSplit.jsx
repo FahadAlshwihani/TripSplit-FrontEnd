@@ -18,7 +18,7 @@ const BudgetSplit = ({ categories, currency = 'SAR' }) => {
       <div className="categories-list">
         {categories.map(cat => (
           <div key={cat.id} className="category-item">
-            <h4>{cat.name}</h4>
+            <h4>{cat.category}</h4>
             <p>Budget: {cat.budget} {currency}</p>
             <p>Spent: {cat.spent} {currency}</p>
             <p>Remaining: {cat.remaining} {currency}</p>
