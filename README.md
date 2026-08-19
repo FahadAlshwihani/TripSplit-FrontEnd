@@ -1,44 +1,46 @@
-# 🧾 TripSplit – Travel Expense Tracker
+# Trip Split Frontend
 
-**TripSplit** (قطتنا) is a simple and friendly web app that helps you and your friends keep track of shared travel expenses — so no more guessing who paid what!
-It’s designed with love by Eng. Fahad ❤️ for small travel groups who want a clear view of “al-gatta” 🧠💸
+React 18 single-page application for registered and guest trip participants.
 
----
+## Local setup
 
-## ✨ Features
+Node 18 or newer is required. This Create React App 5 project has legacy peer metadata, so install the existing lockfile with:
 
-- Create a trip and get a unique code
-- Add expenses with category, amount, and who paid
-- Auto-calculate the remaining amount
-- Invite friends to view & add expenses using the code
-- Clean UI with TailwindCSS
-- Expense chart and delete/edit features
+```powershell
+npm ci --legacy-peer-deps
+Copy-Item .env.example .env
+npm start
+```
 
----
+The default API URL is `http://127.0.0.1:8000/api/v1`. Start the Django backend first.
 
-## 🧱 Tech Stack
+## Commands
 
-- Create a new trip and get a unique access code
-- Add expenses with category, amount, and who paid
-- Auto-calculate remaining budget and total spent
-- Invite friends to access the same trip using the code
-- Clean and responsive UI built with TailwindCSS
-- Interactive chart to visualize spending by category
-- Update or delete any expense anytime
-- Trip data is stored securely in a Django backend (no lost data)
-- Fully mobile-friendly for travel use on the go
-- No login required — just share the trip code
+```powershell
+npm start
+$env:CI='true'; npm test -- --runInBand
+npm run build
+```
 
----
+## Main flows
 
-## 🚀 How to Run Locally
+- Guests create or join a trip with a display name and predefined avatar. The browser retains the opaque, trip-scoped guest credential; clearing storage makes an anonymous membership unrecoverable.
+- Registered users authenticate with an emailed six-digit OTP. The access session is an HttpOnly cookie, never localStorage. New users complete name/avatar onboarding and can reopen server-side trip history.
+- Expense creation selects a payer and equal-split participants. A request UUID prevents duplicate financial posts.
+- The trip page displays server-calculated member balances and deterministic settlement suggestions.
 
-### Backend (Django)
+## Security notes
 
-```bash
-cd travel_budget_tracker
-python -m venv env
-source env/bin/activate # or env\Scripts\activate on Windows
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
+Axios sends cookies with `withCredentials: true` and attaches Django's CSRF token to modifying requests. Only guest trip credentials are stored in localStorage, under a trip-specific key. No passwords, OTPs, session cookies, or registered-user tokens are stored by JavaScript.
+
+## Structure
+
+```text
+src/auth/             current-user session state
+src/pages/            home, OTP/onboarding, profile, trip, informational pages
+src/components/       existing layout, summary/chart, balances, loading
+src/utils/api.js      versioned API client and guest credential transport
+src/utils/avatars.js  stable local predefined avatar catalog
+```
+
+The visual direction remains the existing Trip Split card-based experience with its responsive layout and English/Arabic foundation. Phase 1 extends it rather than replacing it.
