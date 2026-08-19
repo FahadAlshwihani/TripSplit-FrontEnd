@@ -37,3 +37,14 @@ test('percentage submit remains disabled until assigned total is 100', () => {
 test('converts decimal assistance values to minor units', () => {
   expect(toCents('10.25')).toBe(1025);
 });
+
+test('personal expense hides split controls and submits explicit scope', () => {
+  const onSubmit = jest.fn();
+  render(<ExpenseForm members={members} currentMember={members[0]} categories={[{ id: 'food', code: 'food', name: 'Food' }]} onSubmit={onSubmit} />);
+  fireEvent.click(screen.getByLabelText('expense.scope.personal'));
+  fireEvent.change(screen.getByLabelText('expense.description'), { target: { value: 'Coffee' } });
+  fireEvent.change(screen.getByLabelText('expense.amount'), { target: { value: '12.00' } });
+  expect(screen.queryByText('expense.payers')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByText('expense.add'));
+  expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ scope: 'personal', amount: '12.00', category: 'food' }));
+});

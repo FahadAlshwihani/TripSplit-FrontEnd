@@ -16,3 +16,10 @@ test('member may edit only their own expense', () => {
   expect(permissions.canEditExpense({ created_by: 'other' })).toBe(false);
   expect(permissions.canManageMembers).toBe(false);
 });
+
+test('closed trips are read only for financial mutations', () => {
+  const permissions = permissionsFor({ id: 'owner', role: 'owner' }, false, true);
+  expect(permissions.canCreateExpense).toBe(false);
+  expect(permissions.canRecordSettlement).toBe(false);
+  expect(permissions.canManageMembers).toBe(false);
+});

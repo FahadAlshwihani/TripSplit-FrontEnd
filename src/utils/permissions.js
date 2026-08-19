@@ -1,13 +1,14 @@
-export const permissionsFor = (member, archived = false) => {
+export const permissionsFor = (member, archived = false, closed = false) => {
   const role = member?.role;
+  const readOnly = archived || closed;
   return {
-    canEditTrip: !archived && role === 'owner',
-    canManageMembers: !archived && ['owner', 'admin'].includes(role),
-    canTransferOwnership: !archived && role === 'owner',
-    canCreateExpense: !archived && Boolean(member),
-    canRecordSettlement: !archived && Boolean(member),
+    canEditTrip: !readOnly && ['owner', 'admin'].includes(role),
+    canManageMembers: !readOnly && ['owner', 'admin'].includes(role),
+    canTransferOwnership: !readOnly && role === 'owner',
+    canCreateExpense: !readOnly && Boolean(member),
+    canRecordSettlement: !readOnly && Boolean(member),
     canArchiveTrip: !archived && role === 'owner',
     canRestoreTrip: archived && role === 'owner',
-    canEditExpense: (expense) => !archived && (['owner', 'admin'].includes(role) || expense.created_by === member?.id),
+    canEditExpense: (expense) => !readOnly && (['owner', 'admin'].includes(role) || expense.created_by === member?.id),
   };
 };
