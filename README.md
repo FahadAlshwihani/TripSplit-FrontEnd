@@ -12,6 +12,8 @@ Copy-Item .env.example .env
 npm start
 ```
 
+The lockfile intentionally pins `react-router-dom` and `react-router` to 6.28.2. The application uses the stable v6 routing API and does not require React Router 7. If an interrupted install leaves `node_modules` inconsistent, remove only `node_modules`, run `npm cache verify`, and repeat the `npm ci` command above; do not regenerate the lockfile.
+
 The default API URL is `http://localhost:8000/api/v1`. Start the Django backend first. Keep the browser and API on the same hostname in development (`localhost` by default) so the SPA can read Django's host-scoped CSRF cookie for authenticated writes.
 
 ## Commands
