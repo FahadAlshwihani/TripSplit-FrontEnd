@@ -1,80 +1,31 @@
 import axios from 'axios';
 
-//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://travel-budget-backend.onrender.com/api';
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+const api = axios.create({ baseURL: API_BASE_URL, withCredentials: true, timeout: 15000 });
+api.interceptors.request.use((config) => {
+  const csrf = document.cookie.split('; ').find((row) => row.startsWith('csrftoken='))?.split('=')[1];
+  if (csrf) config.headers['X-CSRFToken'] = decodeURIComponent(csrf);
+  return config;
+});
+const data = (request) => request.then((response) => response.data);
+const guestKey = (tripId) => `tripsplit:guest:${tripId}`;
+export const saveGuestToken = (tripId, token) => localStorage.setItem(guestKey(tripId), token);
+export const getGuestToken = (tripId) => localStorage.getItem(guestKey(tripId));
+const guestConfig = (tripId) => ({ headers: getGuestToken(tripId) ? { 'X-Guest-Token': getGuestToken(tripId) } : {} });
 
-// Function to create a trip
-export const createTrip = async (tripData) => {
-    try {
-        const response = await axios.post(`${API_BASE_URL}/trips/`, tripData);
-        return response.data;
-    } catch (error) {
-        console.error("Error creating trip:", error);
-        throw error;
-    }
-};
-
-// Function to get expenses for a specific trip by CODE
-export const getExpenses = async (tripId) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/trips/${tripId}/expenses/`);
-        return response.data;
-    } catch (error) {
-        console.error("Error getting expenses:", error);
-        throw error;
-    }
-};
-
-// Function to get trip by code
-export const getTripByCode = async (code) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/trips/${code}/`);
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching trip by code:", error);
-        throw error;
-    }
-};
-
-// Function to add an expense to a trip
-export const addExpense = async (tripId, expenseData) => {
-    try {
-        const response = await axios.post(`${API_BASE_URL}/trips/${tripId}/expenses/`, expenseData);
-        return response.data;
-    } catch (error) {
-        console.error("Error adding expense:", error);
-        throw error;
-    }
-};
-
-// Optional: Only if you have a delete route in your backend
-export const deleteExpense = async (tripCode, expenseId) => {
-    try {
-        await axios.delete(`${API_BASE_URL}/trips/${tripCode}/expenses/${expenseId}/`);
-        return { success: true };
-    } catch (error) {
-        console.error("Error deleting expense:", error);
-        throw error;
-    }
-};
-
-// Categories
-export const getCategories = async (tripId) => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/trips/${tripId}/categories/`);
-    return response.data;
-  } catch (error) {
-    console.error("Error getting categories:", error.response?.data || error);
-    throw error;
-  }
-};
-
-export const addCategory = async (tripId, categoryData) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/trips/${tripId}/categories/`, categoryData);
-    return response.data;
-  } catch (error) {
-    console.error("Error adding category:", error.response?.data || error);
-    throw error;
-  }
-};
+export const requestOtp = (email) => data(api.post('/auth/otp/request/', { email }));
+export const verifyOtp = (payload) => data(api.post('/auth/otp/verify/', payload));
+export const getCurrentUser = () => data(api.get('/auth/me/'));
+export const logout = () => data(api.post('/auth/logout/'));
+export const updateProfile = (payload) => data(api.patch('/profile/', payload));
+export const createTrip = async (payload) => { const response = await data(api.post('/trips/', payload)); if (response.guest_token) saveGuestToken(response.trip.id, response.guest_token); return response; };
+export const joinTrip = async (payload) => { const response = await data(api.post('/trips/join/', payload)); if (response.guest_token) saveGuestToken(response.trip.id, response.guest_token); return response; };
+export const getTrips = () => data(api.get('/trips/'));
+export const getTrip = (tripId) => data(api.get(`/trips/${tripId}/`, guestConfig(tripId)));
+export const getMembers = (tripId) => data(api.get(`/trips/${tripId}/members/`, guestConfig(tripId)));
+export const getExpenses = (tripId) => data(api.get(`/trips/${tripId}/expenses/`, guestConfig(tripId)));
+export const addExpense = (tripId, payload) => data(api.post(`/trips/${tripId}/expenses/`, payload, guestConfig(tripId)));
+export const deleteExpense = (tripId, expenseId) => data(api.delete(`/trips/${tripId}/expenses/${expenseId}/`, guestConfig(tripId)));
+export const getCategoryBudgets = (tripId) => data(api.get(`/trips/${tripId}/category-budgets/`, guestConfig(tripId)));
+export const getBalances = (tripId) => data(api.get(`/trips/${tripId}/balances/`, guestConfig(tripId)));
+export default api;
