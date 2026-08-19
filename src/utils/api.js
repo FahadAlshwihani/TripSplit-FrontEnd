@@ -18,6 +18,8 @@ export const verifyOtp = (payload) => data(api.post('/auth/otp/verify/', payload
 export const getCurrentUser = () => data(api.get('/auth/me/'));
 export const logout = () => data(api.post('/auth/logout/'));
 export const updateProfile = (payload) => data(api.patch('/profile/', payload));
+export const requestEmailChange = (email) => data(api.post('/profile/email/change/request/', { email }));
+export const verifyEmailChange = (payload) => data(api.post('/profile/email/change/verify/', payload));
 export const createTrip = async (payload) => { const response = await data(api.post('/trips/', payload)); if (response.guest_token) saveGuestToken(response.trip.id, response.guest_token); return response; };
 export const joinTrip = async (payload) => { const response = await data(api.post('/trips/join/', payload)); if (response.guest_token) saveGuestToken(response.trip.id, response.guest_token); return response; };
 export const getTrips = () => data(api.get('/trips/'));
