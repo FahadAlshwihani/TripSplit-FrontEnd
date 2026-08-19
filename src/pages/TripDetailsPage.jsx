@@ -1,71 +1,54 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '../components/Layout/MainLayout';
 import Loading from '../components/Loading';
 import Summary from '../components/Summary';
 import CustomChart from '../components/CustomChart';
 import BudgetSplit from '../components/BudgetSplit';
 import Balances from '../components/Balances';
-import { addExpense, deleteExpense, getBalances, getCategoryBudgets, getExpenses, getMembers, getTrip } from '../utils/api';
-import { avatarGlyph } from '../utils/avatars';
+import ExpenseForm from '../components/ExpenseForm';
+import SettlementsPanel from '../components/SettlementsPanel';
+import MembersPanel from '../components/MembersPanel';
+import ActivityPanel from '../components/ActivityPanel';
+import TripSettings from '../components/TripSettings';
+import { addExpense, addSettlement, archiveTrip, deleteExpense, deleteSettlement, getActivity, getBalances, getCategoryBudgets, getExpenses, getMembers, getSettlements, getTrip, leaveTrip, removeMember, restoreTrip, transferOwnership, updateExpense, updateMember, updateTrip } from '../utils/api';
+import { permissionsFor } from '../utils/permissions';
 
-const categories = ['accommodation', 'food', 'transport', 'activities', 'shopping', 'other'];
 const TripDetailsPage = () => {
   const { code: tripId } = useParams();
   const navigate = useNavigate();
-  const [trip, setTrip] = useState(null);
-  const [members, setMembers] = useState([]);
-  const [expenses, setExpenses] = useState([]);
-  const [budgets, setBudgets] = useState([]);
-  const [balances, setBalances] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [form, setForm] = useState({ title: '', amount: '', category: 'other', expense_date: new Date().toISOString().slice(0, 10), payer_id: '', participant_ids: [], notes: '' });
-
+  const { t } = useTranslation();
+  const [trip, setTrip] = useState(null), [members, setMembers] = useState([]), [expenses, setExpenses] = useState([]);
+  const [budgets, setBudgets] = useState([]), [balances, setBalances] = useState(null), [settlements, setSettlements] = useState([]), [activity, setActivity] = useState([]);
+  const [editing, setEditing] = useState(null), [loading, setLoading] = useState(true), [error, setError] = useState('');
   const load = useCallback(async () => {
-    const [tripData, memberData, expenseData, budgetData, balanceData] = await Promise.all([getTrip(tripId), getMembers(tripId), getExpenses(tripId), getCategoryBudgets(tripId), getBalances(tripId)]);
-    setTrip(tripData); setMembers(memberData.results); setExpenses(expenseData.results); setBudgets(budgetData.results); setBalances(balanceData);
-    setForm((current) => ({ ...current, payer_id: current.payer_id || memberData.results[0]?.id || '', participant_ids: current.participant_ids.length ? current.participant_ids : memberData.results.map((member) => member.id) }));
+    const [tripData, memberData, expenseData, budgetData, balanceData, settlementData, activityData] = await Promise.all([getTrip(tripId), getMembers(tripId), getExpenses(tripId), getCategoryBudgets(tripId), getBalances(tripId), getSettlements(tripId), getActivity(tripId)]);
+    setTrip(tripData); setMembers(memberData.results); setExpenses(expenseData.results); setBudgets(budgetData.results); setBalances(balanceData); setSettlements(settlementData.results); setActivity(activityData.results);
   }, [tripId]);
-  useEffect(() => { setLoading(true); load().catch((err) => setError(err.response?.data?.message || 'Could not load this trip.')).finally(() => setLoading(false)); }, [load]);
-
-  const submitExpense = async (event) => {
-    event.preventDefault(); setError('');
-    try {
-      const created = await addExpense(tripId, { ...form, idempotency_key: crypto.randomUUID() });
-      setExpenses((current) => [created, ...current]);
-      setForm((current) => ({ ...current, title: '', amount: '', notes: '' }));
-      const balanceData = await getBalances(tripId); setBalances(balanceData);
-    } catch (err) { setError(err.response?.data?.message || 'Could not add the expense.'); }
-  };
-  const removeExpense = async (expenseId) => {
-    if (!window.confirm('Delete this expense?')) return;
-    try { await deleteExpense(tripId, expenseId); setExpenses((current) => current.filter((expense) => expense.id !== expenseId)); setBalances(await getBalances(tripId)); }
-    catch (err) { setError(err.response?.data?.message || 'Could not delete the expense.'); }
-  };
-  const refresh = async () => { setLoading(true); setError(''); try { await load(); } catch (err) { setError(err.response?.data?.message || 'Refresh failed.'); } finally { setLoading(false); } };
-  const toggleParticipant = (id) => setForm((current) => ({ ...current, participant_ids: current.participant_ids.includes(id) ? current.participant_ids.filter((item) => item !== id) : [...current.participant_ids, id] }));
-
+  useEffect(() => { setLoading(true); load().catch((err) => setError(err.response?.data?.message || t('error.loadTrip'))).finally(() => setLoading(false)); }, [load, t]);
+  const currentMember = trip?.current_member;
+  const permissions = useMemo(() => permissionsFor(currentMember, Boolean(trip?.archived_at)), [currentMember, trip?.archived_at]);
+  const refreshFinancials = async () => { const [expenseData, balanceData, settlementData, activityData] = await Promise.all([getExpenses(tripId), getBalances(tripId), getSettlements(tripId), getActivity(tripId)]); setExpenses(expenseData.results); setBalances(balanceData); setSettlements(settlementData.results); setActivity(activityData.results); };
+  const guard = async (action) => { setError(''); try { await action(); } catch (err) { setError(err.response?.data?.message || t('error.action')); } };
+  const saveExpense = (payload) => guard(async () => { if (editing) await updateExpense(tripId, editing.id, payload); else await addExpense(tripId, { ...payload, idempotency_key: crypto.randomUUID() }); setEditing(null); await refreshFinancials(); });
+  const memberName = (id) => members.find((m) => m.id === id)?.display_name || t('activity.unknown');
   if (loading) return <Loading />;
-  if (!trip) return <MainLayout><div className="error-message">{error}<button onClick={() => navigate('/')}>Home</button></div></MainLayout>;
-  return <MainLayout><div className="home-container-pc mt-5">
-    <div className="card-pc trip-details-card"><h2>{trip.title}</h2><p>Budget: {trip.budget} {trip.currency}</p><p>Join code: <strong>{trip.join_code}</strong></p><button className="pc-btn-refresh" onClick={refresh}>Refresh</button></div>
+  if (!trip) return <MainLayout><div className="error-message">{error}<button onClick={() => navigate('/')}>{t('Home')}</button></div></MainLayout>;
+  return <MainLayout><main className="home-container-pc mt-5">
+    <section className="card-pc trip-details-card"><h2>{trip.title}</h2><p>{t('trip.budget')}: {trip.budget} {trip.currency}</p><p>{t('trip.code')}: <strong>{trip.join_code}</strong></p><p>{t(`role.${currentMember?.role}`)}</p><button className="pc-btn-refresh" onClick={() => guard(load)}>{t('refresh.button.text')}</button></section>
+    {trip.archived_at && <div className="archive-banner" role="status">{t('trip.archivedReadOnly')}</div>}
     {error && <div className="error-message" role="alert">{error}</div>}
-    <div className="card-pc"><Summary budget={trip.budget} expenses={expenses} currency={trip.currency} /></div>
+    <section className="card-pc"><Summary budget={trip.budget} expenses={expenses} currency={trip.currency} /></section>
     <Balances data={balances} />
+    <SettlementsPanel members={members} currency={trip.currency} settlements={settlements} suggestion={balances?.suggested_settlements?.[0]} currentMember={currentMember} disabled={!permissions.canRecordSettlement} onSave={(payload) => guard(async () => { await addSettlement(tripId, payload); await refreshFinancials(); })} onDelete={(row) => guard(async () => { if (window.confirm(t('settlements.confirmDelete'))) { await deleteSettlement(tripId, row.id); await refreshFinancials(); } })} />
     <BudgetSplit categories={budgets} currency={trip.currency} />
-    <div className="card-pc"><h2>Add New Expense</h2><form onSubmit={submitExpense}>
-      <input className="pc-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Description" required />
-      <input className="pc-input" type="number" min="0.01" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="Amount" required />
-      <select className="pc-input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select>
-      <input className="pc-input" type="date" value={form.expense_date} onChange={(e) => setForm({ ...form, expense_date: e.target.value })} required />
-      <label>Who paid?</label><select className="pc-input" value={form.payer_id} onChange={(e) => setForm({ ...form, payer_id: e.target.value })} required>{members.map((member) => <option key={member.id} value={member.id}>{member.display_name}</option>)}</select>
-      <fieldset className="participant-picker"><legend>Who participates? · Split equally</legend>{members.map((member) => <label key={member.id} className="participant-option"><input type="checkbox" checked={form.participant_ids.includes(member.id)} onChange={() => toggleParticipant(member.id)} /><span className="member-avatar">{avatarGlyph(member.avatar_key)}</span>{member.display_name}</label>)}</fieldset>
-      <textarea className="pc-input" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Notes (optional)" />
-      <button className="pc-btn-create" disabled={!form.participant_ids.length}>Add Expense</button>
-    </form></div>
-    <div className="card-pc"><h2>Expenses</h2>{expenses.length ? <div className="expenses-list">{expenses.map((expense) => <div className="expense-item" key={expense.id}><div><h4>{expense.title}</h4><p>{expense.category} · {expense.expense_date}</p><p>{expense.amount} {trip.currency}{expense.legacy_payer_name ? ` · Paid by ${expense.legacy_payer_name}` : ''}</p></div><button className="delete-btn" onClick={() => removeExpense(expense.id)}>✕</button></div>)}</div> : <p>No expenses yet.</p>}</div>
-    <div className="card-pc"><CustomChart expenses={expenses} /></div>
-  </div></MainLayout>;
+    {permissions.canCreateExpense && <section className="card-pc"><h2>{editing ? t('expense.edit') : t('expense.addTitle')}</h2><ExpenseForm key={editing?.id || 'create'} members={members} expense={editing} onSubmit={saveExpense} onCancel={editing ? () => setEditing(null) : null} /></section>}
+    <section className="card-pc"><h2>{t('expense.history')}</h2>{expenses.length ? <div className="expenses-list">{expenses.map((expense) => <article className="expense-item" key={expense.id}><div><h4>{expense.title}</h4><p>{t(`category.${expense.category}`)} · {expense.expense_date} · {t(`split.${expense.split_type}`)}</p><p>{expense.amount} {trip.currency}</p><p>{t('expense.paidBy')}: {expense.payments.map((row) => `${memberName(row.member_id)} ${row.amount}`).join(' + ')}</p><p>{t('expense.participantCount', { count: expense.shares.length })}</p>{expense.notes && <p>{expense.notes}</p>}</div>{permissions.canEditExpense(expense) && <div className="row-actions"><button onClick={() => setEditing(expense)}>{t('common.edit')}</button><button onClick={() => guard(async () => { if (window.confirm(t('expense.confirmDelete'))) { await deleteExpense(tripId, expense.id); await refreshFinancials(); } })}>{t('common.delete')}</button></div>}</article>)}</div> : <p>{t('expense.empty')}</p>}</section>
+    <MembersPanel members={members} currentMember={currentMember} permissions={permissions} onRole={(member, role) => guard(async () => { await updateMember(tripId, member.id, { role }); await load(); })} onRemove={(member) => guard(async () => { if (window.confirm(t('members.confirmRemove'))) { await removeMember(tripId, member.id); await load(); } })} onTransfer={(member) => guard(async () => { if (window.confirm(t('members.confirmTransfer'))) { await transferOwnership(tripId, member.id); await load(); } })} onLeave={() => guard(async () => { if (window.confirm(t('members.confirmLeave'))) { await leaveTrip(tripId); navigate('/'); } })} />
+    <TripSettings trip={trip} permissions={permissions} onUpdate={(payload) => guard(async () => { const updated = await updateTrip(tripId, payload); setTrip({ ...trip, ...updated, current_member: currentMember }); })} onArchive={() => guard(async () => { if (window.confirm(t('trip.confirmArchive'))) { await archiveTrip(tripId); setTrip({ ...trip, archived_at: new Date().toISOString() }); } })} onRestore={() => guard(async () => { const restored = await restoreTrip(tripId); setTrip({ ...trip, ...restored, current_member: currentMember }); })} />
+    <ActivityPanel events={activity} />
+    <section className="card-pc"><CustomChart expenses={expenses} /></section>
+  </main></MainLayout>;
 };
 export default TripDetailsPage;
