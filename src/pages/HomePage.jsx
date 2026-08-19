@@ -6,6 +6,7 @@ import Loading from '../components/Loading';
 import { createTrip, getTrips, joinTrip } from '../utils/api';
 import { AVATARS, avatarGlyph } from '../utils/avatars';
 import { useAuth } from '../auth/AuthContext';
+import { requestTokenKey } from './JoinRequestPage';
 
 const GuestFields = ({ values, onChange }) => <>
   <input className="pc-input" value={values.guest_name} onChange={(e) => onChange({ ...values, guest_name: e.target.value })} placeholder="Your display name" required />
@@ -31,7 +32,7 @@ const HomePage = () => {
   };
   const submitJoin = async (event) => {
     event.preventDefault(); setLoading(true); setError('');
-    try { const payload = { ...join }; if (user) { delete payload.guest_name; delete payload.avatar_key; } const result = await joinTrip(payload); navigate(`/trip/${result.trip.id}`); }
+    try { const payload = { ...join }; if (user) { delete payload.guest_name; delete payload.avatar_key; } const result = await joinTrip(payload); if (result.join_request) { if (result.request_token) sessionStorage.setItem(requestTokenKey(result.join_request.id), result.request_token); navigate(`/join-request/${result.join_request.id}`); } else navigate(`/trip/${result.trip.id}`); }
     catch (err) { setError(err.response?.data?.message || t('show.Error.alert2')); }
     finally { setLoading(false); }
   };

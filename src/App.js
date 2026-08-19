@@ -14,6 +14,7 @@ import LanguageProvider from './components/LanguageProvider';
 import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import InvitationPage from './pages/InvitationPage';
+import JoinRequestPage from './pages/JoinRequestPage';
 import { AuthProvider } from './auth/AuthContext';
 
 const App = () => {
@@ -50,6 +51,7 @@ const App = () => {
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/invite/:token" element={<InvitationPage />} />
+            <Route path="/join-request/:requestId" element={<JoinRequestPage />} />
             <Route path="/not-found" element={<NotFoundPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

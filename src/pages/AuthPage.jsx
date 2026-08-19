@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import MainLayout from '../components/Layout/MainLayout';
 import { requestOtp, verifyOtp } from '../utils/api';
 import { useAuth } from '../auth/AuthContext';
@@ -7,6 +7,9 @@ import { AVATARS } from '../utils/avatars';
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const next = new URLSearchParams(location.search).get('next');
+  const safeNext = next?.startsWith('/') && !next.startsWith('//') ? next : '/';
   const { setUser, saveProfile } = useAuth();
   const [step, setStep] = useState('email');
   const [email, setEmail] = useState('');
@@ -26,13 +29,13 @@ const AuthPage = () => {
   };
   const submitOtp = async (event) => {
     event.preventDefault(); setBusy(true); setError('');
-    try { const result = await verifyOtp({ otp_id: otpId, email, code }); setUser(result.user); if (result.onboarding_required) setStep('profile'); else navigate('/'); }
+    try { const result = await verifyOtp({ otp_id: otpId, email, code }); setUser(result.user); if (result.onboarding_required) setStep('profile'); else navigate(safeNext); }
     catch (err) { setError(err.response?.data?.message || 'The verification code is invalid.'); }
     finally { setBusy(false); }
   };
   const submitProfile = async (event) => {
     event.preventDefault(); setBusy(true); setError('');
-    try { await saveProfile(profile); navigate('/'); }
+    try { await saveProfile(profile); navigate(safeNext); }
     catch (err) { setError(err.response?.data?.message || 'Could not save your profile.'); }
     finally { setBusy(false); }
   };
