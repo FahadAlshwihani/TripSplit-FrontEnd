@@ -66,3 +66,11 @@ Member rows open a privacy-safe detail view with aggregate financial statistics 
 ### Dependency security decision
 
 Phase 3.1 pins patched compatible releases of Axios, React Router 6, the i18next HTTP backend, SweetAlert2, and AJV. Remaining audit findings originate in the Create React App 5 build/development dependency graph. They are not application runtime libraries emitted as independently reachable server components; resolving them cleanly requires a separately planned CRA-to-modern-tooling migration. `npm audit fix --force` is intentionally not used.
+
+## Phase 4 Fund and foreign-currency workflow
+
+The trip page includes a mobile-friendly Fund section. Owners/admins can create the Fund, select its holder, create equal or custom collection rounds, record partial contributions, start deficit top-ups, preview proportional/equal refunds, distribute a surplus, and close a resolved Fund. Members see authoritative collected, spent, available/deficit, and per-round contribution cards; the browser never derives the Fund balance.
+
+The full expense form defaults to the trip currency. Selecting a foreign currency reveals an editable manual rate expressed as `1 original currency = X trip currency` and a converted preview. Saved cards show the original value and locked base-currency approximation. Fund payment is available only for shared expenses and deliberately has no personal payer allocation. Quick Expense remains base-currency-first; foreign currency stays under the full options flow.
+
+Small-screen trip navigation is horizontally scrollable and sticky rather than compressing every panel label. Fund statistics, rounds, contributions, and refund controls stack into cards below 768px; primary controls maintain touch-sized targets, numeric inputs request mobile decimal keyboards, dialogs remain viewport-bounded, long names wrap, and reduced-motion preferences disable decorative transitions. The layout uses logical properties so the same rules remain usable in Arabic RTL.
