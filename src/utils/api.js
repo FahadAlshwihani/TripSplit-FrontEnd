@@ -74,6 +74,10 @@ export const createFund = (tripId, payload) => data(api.post(`/trips/${tripId}/f
 export const updateFund = (tripId, payload) => data(api.patch(`/trips/${tripId}/fund/`, payload, guestConfig(tripId)));
 export const createFundingRound = (tripId, payload) => data(api.post(`/trips/${tripId}/fund/rounds/`, payload, guestConfig(tripId)));
 export const recordFundContribution = (tripId, roundId, payload) => data(api.post(`/trips/${tripId}/fund/rounds/${roundId}/contributions/`, payload, guestConfig(tripId)));
+export const correctFundContribution = (tripId, roundId, contributionId, payload) => data(api.post(`/trips/${tripId}/fund/rounds/${roundId}/contributions/${contributionId}/correct/`, payload, guestConfig(tripId)));
+export const voidFundContribution = (tripId, roundId, contributionId, payload) => data(api.post(`/trips/${tripId}/fund/rounds/${roundId}/contributions/${contributionId}/void/`, payload, guestConfig(tripId)));
+export const completeFundingRound = (tripId, roundId) => data(api.post(`/trips/${tripId}/fund/rounds/${roundId}/complete/`, {}, guestConfig(tripId)));
+export const cancelFundingRound = (tripId, roundId) => data(api.post(`/trips/${tripId}/fund/rounds/${roundId}/cancel/`, {}, guestConfig(tripId)));
 export const previewFundRefund = (tripId, payload) => data(api.post(`/trips/${tripId}/fund/refund-preview/`, payload, guestConfig(tripId)));
 export const recordFundRefunds = (tripId, payload) => data(api.post(`/trips/${tripId}/fund/refunds/`, payload, guestConfig(tripId)));
 export const closeFund = (tripId) => data(api.post(`/trips/${tripId}/fund/close/`, {}, guestConfig(tripId)));
