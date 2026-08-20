@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ExpenseForm from '../components/ExpenseForm';
 import QuickExpense from '../components/QuickExpense';
+import ExpenseAmount from '../components/ExpenseAmount';
 import CustomChart from '../../../components/CustomChart';
 import Loading from '../../../components/Loading';
 import ErrorState from '../../../shared/components/ErrorState';
@@ -98,7 +99,7 @@ export default function ExpensesPage() {
         <h2>{t('expense.history')}</h2>
         {rows.length ? rows.map((expense) => (
           <article className="expense-item" key={expense.id}>
-            <div><h4>{expense.title}</h4><p>{expense.amount} {trip.currency}</p></div>
+            <div><h4>{expense.title}</h4><ExpenseAmount expense={expense} baseCurrency={trip.currency} /></div>
             <div className="row-actions">
               <button onClick={() => setEditing({ ...expense, duplicate: true })}>{t('expense.duplicate')}</button>
               {permissions.canEditExpense(expense) && (
