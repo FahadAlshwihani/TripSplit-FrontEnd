@@ -204,6 +204,13 @@ button {
 .fund-form { margin-block-start: 1.25rem; }
 .fund-participant { display: flex; align-items: center; gap: .65rem; min-height: 44px; }
 .fund-participant input[type="number"] { margin-inline-start: auto; width: 8rem; }
+.fund-round header, .fund-history-row, .fund-actions { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+.fund-history-row { padding: .85rem 0; border-bottom: 1px solid rgba(255,255,255,.12); overflow-wrap: anywhere; }
+.fund-history-row.voided { opacity: .65; text-decoration: line-through; }
+.fund-correction { position: fixed; z-index: 30; inset: 10vh max(1rem, calc((100vw - 34rem)/2)); max-height: 80vh; overflow: auto; padding: 1.25rem; border-radius: 16px; background: #161b2b; box-shadow: 0 20px 70px rgba(0,0,0,.55); }
+.fund-correction label, .fund-custom-refund { display: grid; gap: .4rem; margin-block: .75rem; }
+.fund-correction input, .fund-correction textarea, .fund-custom-refund input { width: 100%; min-height: 44px; }
+.refund-preview { padding: 1rem; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; }
 .compact-input { max-width: 15rem; margin: 0; }
 .member-detail, [role="dialog"] { max-height: calc(100dvh - 2rem); overflow-y: auto; overscroll-behavior: contain; }
 button, a, input, select, textarea { overflow-wrap: anywhere; }
@@ -223,6 +230,10 @@ button, a, input, select, textarea { overflow-wrap: anywhere; }
   .fund-member { gap: .25rem; }
   .fund-participant { flex-wrap: wrap; }
   .fund-participant input[type="number"], .compact-input { width: 100%; max-width: none; margin-inline-start: 0; }
+  .fund-history-row { align-items: flex-start; }
+  .fund-actions { width: 100%; }
+  .fund-actions button { flex: 1 1 8rem; min-height: 44px; }
+  .fund-correction { inset: 4vh .75rem; max-height: 92vh; }
   .member-detail, [role="dialog"] { width: calc(100vw - 1rem); max-height: calc(100dvh - 1rem); margin: .5rem; border-radius: 14px; }
   .sticky-form-actions { position: sticky; inset-block-end: 0; padding-block: .75rem; background: #172033; }
 }
