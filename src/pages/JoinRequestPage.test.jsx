@@ -17,3 +17,15 @@ test('renders durable pending state and cancels the request', async () => {
   await waitFor(() => expect(cancelJoinRequest).toHaveBeenCalledWith('r1', null));
   expect(await screen.findByText('home')).toBeInTheDocument();
 });
+
+test('aborts status polling when the waiting page unmounts', async () => {
+  let signal;
+  getJoinRequestStatus.mockImplementation((_requestId, _token, config) => {
+    signal = config.signal;
+    return new Promise(() => {});
+  });
+  const view = render(<MemoryRouter initialEntries={['/join-request/r1']}><Routes><Route path="/join-request/:requestId" element={<JoinRequestPage />} /></Routes></MemoryRouter>);
+  await waitFor(() => expect(signal).toBeDefined());
+  view.unmount();
+  expect(signal.aborted).toBe(true);
+});
