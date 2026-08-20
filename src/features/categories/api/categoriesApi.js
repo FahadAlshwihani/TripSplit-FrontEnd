@@ -1,0 +1,4 @@
+import { apiClient, responseData } from '../../../api/client'; import { tripRequest } from '../../../api/credentials';
+export const getCategories = (id, config) => responseData(apiClient.get(`/trips/${id}/categories/`, tripRequest(id, config)));
+export const createCategory = (id,p) => responseData(apiClient.post(`/trips/${id}/categories/`,p,tripRequest(id))); export const updateCategory=(id,c,p)=>responseData(apiClient.patch(`/trips/${id}/categories/${c}/`,p,tripRequest(id))); export const archiveCategory=(id,c)=>responseData(apiClient.delete(`/trips/${id}/categories/${c}/`,tripRequest(id)));
+export const getCategoryBudgets=(id,config)=>responseData(apiClient.get(`/trips/${id}/category-budgets/`,tripRequest(id,config))); export const setCategoryBudget=(id,p)=>responseData(apiClient.post(`/trips/${id}/category-budgets/`,p,tripRequest(id))); export const resetCategoryBudget=(id,c)=>responseData(apiClient.delete(`/trips/${id}/category-budgets/${c}/`,tripRequest(id)));
