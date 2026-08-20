@@ -40,12 +40,23 @@ Axios sends cookies with `withCredentials: true` and attaches Django's CSRF toke
 ## Structure
 
 ```text
-src/auth/             current-user session state
-src/pages/            home, OTP/onboarding, profile, trip, informational pages
-src/components/       layout, expense form, balances, settlements, members, activity, settings
-src/utils/api.js      versioned API client and guest credential transport
-src/utils/avatars.js  stable local predefined avatar catalog
+src/app/              composition, providers, lazy router, global error boundary
+src/api/              transport configuration, Axios client, credentials, normalized errors
+src/features/*/api/   feature-owned endpoint functions
+src/features/*/       domain components and colocated regression tests
+src/shared/           genuinely cross-feature components and utilities
+src/pages/            route orchestration while remaining pages migrate into features
+src/i18n/             i18next bootstrap; resources remain under public/translations
+src/styles/           existing global visual rules (no Phase 4.2 redesign)
 ```
+
+### Frontend architecture rules
+
+The shared Axios client owns only HTTP transport: the API base URL, credentialed cookies, CSRF, scoped guest/join-request headers, timeout, and error normalization. Domain endpoints belong to their feature API module and must not be added to `api/client.js`.
+
+Trip URLs are nested under `/trips/:tripId/{section}`. The shell loads the trip and lightweight membership context; each active section requests only its required datasets. Secondary GET failures are isolated with a retryable warning, while core 403/404/access failures render an explicit trip-access fallback. Financial mutations are never automatically retried.
+
+Import direction is `app → pages/layouts/features/shared`, `pages/layouts → features/shared`, `features → api/shared`, and `shared → shared`. Shared modules must not import a feature. Feature internals should not be used casually by unrelated features.
 
 The visual direction remains the existing Trip Split card-based experience with its responsive layout and English/Arabic foundation. Phase 1 extends it rather than replacing it.
 
