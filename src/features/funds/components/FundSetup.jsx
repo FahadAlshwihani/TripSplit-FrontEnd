@@ -1,0 +1,2 @@
+import React from'react';import{useTranslation}from'react-i18next';
+export default function FundSetup({canManage,currentMember,onCreate}){const{t}=useTranslation();return<section id="fund" className="card-pc"><h2>{t('fund.title')}</h2><p>{t('fund.empty')}</p>{canManage&&<button className="pc-btn-create" onClick={()=>onCreate({name:t('fund.title'),holder_id:currentMember.id})}>{t('fund.create')}</button>}</section>}
