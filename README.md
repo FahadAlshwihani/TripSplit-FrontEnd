@@ -74,3 +74,9 @@ The trip page includes a mobile-friendly Fund section. Owners/admins can create 
 The full expense form defaults to the trip currency. Selecting a foreign currency reveals an editable manual rate expressed as `1 original currency = X trip currency` and a converted preview. Saved cards show the original value and locked base-currency approximation. Fund payment is available only for shared expenses and deliberately has no personal payer allocation. Quick Expense remains base-currency-first; foreign currency stays under the full options flow.
 
 Small-screen trip navigation is horizontally scrollable and sticky rather than compressing every panel label. Fund statistics, rounds, contributions, and refund controls stack into cards below 768px; primary controls maintain touch-sized targets, numeric inputs request mobile decimal keyboards, dialogs remain viewport-bounded, long names wrap, and reduced-motion preferences disable decorative transitions. The layout uses logical properties so the same rules remain usable in Arabic RTL.
+
+## Phase 4.1 Fund completion
+
+The Fund panel now separates accounting totals, round status, contribution history, correction/void actions, refund preview, and refund history. Managers can complete partially collected rounds after acknowledging the shortfall or cancel an empty round. Corrections require a reason and refresh authoritative statistics.
+
+Refunds support proportional-to-net-contributions, equal, and custom allocations plus partial distribution amounts. Custom inputs show each member allocation before the backend preview; confirmation uses the returned exact allocations and remaining Fund balance. Choosing **Keep in Fund** creates no refund transaction.
