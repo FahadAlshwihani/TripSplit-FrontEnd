@@ -1,4 +1,4 @@
-// FileName: MultipleFiles/Loading.scss
+@use 'sass:math';
 $background-color: #020233;
 $particles-color: #fff;
 $rocket-primarycolor: #ffd700;
@@ -126,14 +126,14 @@ html, body, #root, .loader-container { // Add #root to ensure full height from t
 @for $i from 0 to $nbsmoketail {
   $top: 28 + (8 * $i) + px;
   $leftStart: -50 + px;
-  $leftEnd: -50 - random(250) + px;
-  $speed: (random(10) + 3) / 20;
+  $leftEnd: -50 - math.random(250) + px;
+  $speed: math.div(math.random(10) + 3, 20);
 
   .smoke span:nth-child(#{$i + 1}) {
     top: $top;
     left: $leftStart;
     box-shadow: 0px 0px 5px $particles-color;
-    animation: smokeAnim-#{$i} ease-out ($speed +s) infinite;
+    animation: smokeAnim-#{$i} ease-out #{$speed}s infinite;
   }
   @keyframes smokeAnim-#{$i} {
     from {
@@ -148,14 +148,14 @@ html, body, #root, .loader-container { // Add #root to ensure full height from t
 }
 
 @for $i from 0 to $nbmeteors {
-  $top: (100 / $nbmeteors) * ($i + 1) + '%';
-  $speed: (random(10) + 5) / 20;
+  $top: math.div(100, $nbmeteors) * ($i + 1) + '%';
+  $speed: math.div(math.random(10) + 5, 20);
 
   .meteors-container span:nth-child(#{$i + 1}) {
     top: #{$top};
     left: 100%;
     box-shadow: 0px 0px 5px $particles-color;
-    animation: meteorsAnim-#{$i} linear ($speed +s) infinite;
+    animation: meteorsAnim-#{$i} linear #{$speed}s infinite;
   }
   @keyframes meteorsAnim-#{$i} {
     0% {
