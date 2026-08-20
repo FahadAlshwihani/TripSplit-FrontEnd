@@ -128,7 +128,11 @@
   "quick.title": "مصروف سريع", "quick.sharedDefaults": "دفعته أنت ويقسم بالتساوي على {{count}} أعضاء نشطين.", "quick.personalDefaults": "مصروف شخصي دفعته أنت ولا يؤثر في الديون.", "quick.save": "حفظ المصروف", "quick.more": "خيارات إضافية",
   "members.details": "تفاصيل العضو", "members.active": "نشط", "members.inactive": "غير نشط", "members.joined": "تاريخ الانضمام", "members.lastActivity": "آخر نشاط", "members.personalSpending": "المصروف الشخصي", "members.expenseCount": "المصروفات المنشأة", "common.close": "إغلاق",
   "settlements.pendingCount_one": "تأكيد معلق واحد", "settlements.pendingCount_other": "{{count}} تأكيدات معلقة",
-  "trip.group.active": "نشطة", "trip.group.closed": "مغلقة", "trip.group.archived": "مؤرشفة", "trip.empty.active": "لا توجد رحلات نشطة.", "trip.empty.closed": "لا توجد رحلات مغلقة.", "trip.empty.archived": "لا توجد رحلات مؤرشفة."
+  "trip.group.active": "نشطة", "trip.group.closed": "مغلقة", "trip.group.archived": "مؤرشفة", "trip.empty.active": "لا توجد رحلات نشطة.", "trip.empty.closed": "لا توجد رحلات مغلقة.", "trip.empty.archived": "لا توجد رحلات مؤرشفة.",
+  "trip.sections": "أقسام الرحلة", "trip.overview": "نظرة عامة", "settings.title": "الإعدادات",
+  "expense.paymentSource": "مصدر الدفع", "expense.personalPayment": "دفع شخصي",
+  "currency.original": "عملة المصروف", "currency.rate": "سعر الصرف", "currency.converted": "المبلغ المحول", "currency.locked": "يُحفظ سعر الصرف مع المصروف ولن يتغير لاحقًا.",
+  "fund.title": "صندوق الرحلة", "fund.empty": "لا يوجد صندوق مشترك لهذه الرحلة بعد.", "fund.create": "إنشاء صندوق الرحلة", "fund.holder": "حامل الصندوق", "fund.changeHolder": "تغيير حامل الصندوق", "fund.collected": "المحصل", "fund.spent": "المصروف", "fund.available": "المتاح", "fund.deficit": "العجز", "fund.topup": "تحصيل إضافي", "fund.createTopup": "إنشاء جولة إضافية", "fund.expected": "المتوقع", "fund.paid": "المدفوع", "fund.remaining": "المتبقي", "fund.newRound": "جولة تمويل جديدة", "fund.roundTitle": "عنوان الجولة", "fund.target": "المبلغ المستهدف", "fund.method": "طريقة المساهمة", "fund.equal": "بالتساوي", "fund.custom": "مخصص", "fund.createRound": "إنشاء الجولة", "fund.recordContribution": "تسجيل مساهمة", "fund.round": "جولة التمويل", "fund.member": "العضو", "fund.amount": "المبلغ", "fund.record": "تسجيل الدفع", "fund.refund": "توزيع المبلغ المتبقي", "fund.proportional": "بنسبة المساهمات", "fund.preview": "معاينة التوزيع", "fund.distribute": "تسجيل الاسترداد", "fund.close": "إغلاق الصندوق", "fund.paidFromFund": "مدفوع من صندوق الرحلة"
 
 
 }
