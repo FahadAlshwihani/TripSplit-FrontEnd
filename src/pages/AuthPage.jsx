@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import MainLayout from '../components/Layout/MainLayout';
 import { requestOtp, verifyOtp } from '../features/auth/api/authApi';
 import { useAuth } from '../auth/AuthContext';
-import { AVATARS } from '../utils/avatars';
+import { AVATARS } from '../shared/utils/avatars';
 
 const AuthPage = () => {
   const navigate = useNavigate();
