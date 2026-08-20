@@ -176,6 +176,66 @@
 button {
     -webkit-tap-highlight-color: transparent;
 }
+
+/* Phase 4 task navigation, Fund, and mobile web readiness */
+.trip-section-nav {
+  position: sticky;
+  top: .5rem;
+  z-index: 20;
+  width: min(100%, 720px);
+  display: flex;
+  gap: .5rem;
+  overflow-x: auto;
+  padding: .5rem;
+  background: #172033;
+  border-radius: 12px;
+  scrollbar-width: thin;
+}
+.trip-section-nav a { flex: 0 0 auto; min-height: 44px; display: inline-flex; align-items: center; padding: 0 .9rem; color: #fff; text-decoration: none; border-radius: 8px; }
+.trip-section-nav a:focus-visible, .trip-section-nav a:hover { background: rgba(255,255,255,.12); outline: none; }
+.fund-header, .fund-member, .fund-metrics { display: flex; align-items: center; gap: 1rem; }
+.fund-header { justify-content: space-between; }
+.fund-metrics { flex-wrap: wrap; margin-block: 1rem; }
+.fund-metrics > div { flex: 1 1 9rem; display: flex; flex-direction: column; padding: .85rem; background: rgba(255,255,255,.08); border-radius: 10px; }
+.fund-metrics span { color: rgba(255,255,255,.78); }
+.fund-round { padding-block: 1rem; border-block-end: 1px solid rgba(255,255,255,.14); }
+.fund-round progress { width: 100%; }
+.fund-member { justify-content: space-between; padding-block: .55rem; }
+.fund-form { margin-block-start: 1.25rem; }
+.fund-participant { display: flex; align-items: center; gap: .65rem; min-height: 44px; }
+.fund-participant input[type="number"] { margin-inline-start: auto; width: 8rem; }
+.compact-input { max-width: 15rem; margin: 0; }
+.member-detail, [role="dialog"] { max-height: calc(100dvh - 2rem); overflow-y: auto; overscroll-behavior: contain; }
+button, a, input, select, textarea { overflow-wrap: anywhere; }
+
+@media (hover: none) {
+  .card-pc:hover, .summary-card:hover { transform: none; box-shadow: 0 8px 8px rgba(0,0,0,.14); }
+}
+
+@media (max-width: 768px) {
+  .home-container-pc { padding: .75rem; gap: 1rem; }
+  .card-pc { padding: 1rem; border-radius: 14px; }
+  .card-pc h2 { font-size: 1.4rem; margin-bottom: 1rem; }
+  .pc-input { min-height: 44px; font-size: 1rem; margin-bottom: 1rem; }
+  button, .row-actions button, .form-actions button { min-height: 44px; padding-inline: .75rem; }
+  .trip-section-nav { top: 0; border-radius: 0 0 12px 12px; margin-inline: -.75rem; width: calc(100% + 1.5rem); }
+  .fund-header, .fund-member { align-items: stretch; flex-direction: column; }
+  .fund-member { gap: .25rem; }
+  .fund-participant { flex-wrap: wrap; }
+  .fund-participant input[type="number"], .compact-input { width: 100%; max-width: none; margin-inline-start: 0; }
+  .member-detail, [role="dialog"] { width: calc(100vw - 1rem); max-height: calc(100dvh - 1rem); margin: .5rem; border-radius: 14px; }
+  .sticky-form-actions { position: sticky; inset-block-end: 0; padding-block: .75rem; background: #172033; }
+}
+
+@media (max-width: 360px) {
+  .home-container-pc { padding-inline: .5rem; }
+  .card-pc { padding-inline: .8rem; }
+  .fund-metrics > div { flex-basis: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
      .btn-icon {
          font-size: 1.3rem;
          transition: all 0.3s ease;
