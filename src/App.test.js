@@ -8,12 +8,11 @@ jest.mock('react-i18next', () => ({
     i18n: { language: 'en', on: jest.fn(), off: jest.fn(), changeLanguage: jest.fn() },
   }),
 }));
-jest.mock('./utils/api', () => ({
-  getCurrentUser: jest.fn(() => Promise.resolve({ user: null })),
+jest.mock('./features/trips/api/tripsApi', () => ({
   getTrips: jest.fn(() => Promise.resolve({ results: [] })),
-  logout: jest.fn(),
-  updateProfile: jest.fn(),
+  createTrip: jest.fn(), joinTrip: jest.fn(),
 }));
+jest.mock('./features/auth/api/authApi', () => ({ getCurrentUser: jest.fn(() => Promise.resolve({ user: null })), logout: jest.fn(), updateProfile: jest.fn() }));
 
 test('renders guest trip entry points', async () => {
   render(<App />);

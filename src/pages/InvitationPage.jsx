@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import MainLayout from '../components/Layout/MainLayout';
-import { acceptInvitation, getInvitation } from '../utils/api';
+import { acceptInvitation, getInvitation } from '../features/invitations/api/invitationsApi';
 import { useAuth } from '../auth/AuthContext';
 
 const InvitationPage = () => {

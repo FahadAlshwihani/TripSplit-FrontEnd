@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import MainLayout from '../components/Layout/MainLayout';
 import Loading from '../components/Loading';
-import { createTrip, getTrips, joinTrip } from '../utils/api';
+import { createTrip, getTrips, joinTrip } from '../features/trips/api/tripsApi';
 import { AVATARS, avatarGlyph } from '../utils/avatars';
 import { useAuth } from '../auth/AuthContext';
 import { requestTokenKey } from './JoinRequestPage';

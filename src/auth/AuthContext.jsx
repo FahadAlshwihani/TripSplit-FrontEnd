@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { getCurrentUser, logout as logoutRequest, updateProfile } from '../utils/api';
+import { getCurrentUser, logout as logoutRequest, updateProfile } from '../features/auth/api/authApi';
 
 const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {

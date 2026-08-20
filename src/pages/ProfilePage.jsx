@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import MainLayout from '../components/Layout/MainLayout';
 import { useAuth } from '../auth/AuthContext';
 import { AVATARS } from '../utils/avatars';
-import { requestEmailChange, verifyEmailChange } from '../utils/api';
+import { requestEmailChange, verifyEmailChange } from '../features/auth/api/authApi';
 
 const currencies = ['SAR', 'USD', 'EUR', 'GBP', 'AED', 'QAR', 'KWD', 'BHD', 'OMR'];
 const ProfilePage = () => {

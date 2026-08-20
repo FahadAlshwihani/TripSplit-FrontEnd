@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import MainLayout from '../components/Layout/MainLayout';
-import { cancelJoinRequest, getJoinRequestStatus } from '../utils/api';
+import { cancelJoinRequest, getJoinRequestStatus } from '../features/governance/api/governanceApi';
 
 export const requestTokenKey = (requestId) => `tripsplit:join-request:${requestId}`;
 

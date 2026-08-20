@@ -2,10 +2,10 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import JoinRequestPage from './JoinRequestPage';
-import { cancelJoinRequest, getJoinRequestStatus } from '../utils/api';
+import { cancelJoinRequest, getJoinRequestStatus } from '../features/governance/api/governanceApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: 'en', changeLanguage: jest.fn() } }) }));
-jest.mock('../utils/api', () => ({ getJoinRequestStatus: jest.fn(), cancelJoinRequest: jest.fn() }));
+jest.mock('../features/governance/api/governanceApi', () => ({ getJoinRequestStatus: jest.fn(), cancelJoinRequest: jest.fn() }));
 
 test('renders durable pending state and cancels the request', async () => {
   getJoinRequestStatus.mockResolvedValue({ request_id: 'r1', status: 'pending', trip: { public_id: 't1', title: 'Georgia' }, requested_at: '2026-08-19T12:00:00Z' });

@@ -2,13 +2,13 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import InvitationPage from './InvitationPage';
-import { acceptInvitation, getInvitation } from '../utils/api';
+import { acceptInvitation, getInvitation } from '../features/invitations/api/invitationsApi';
 
 const mockAuth = { user: { email: 'traveler@example.com' }, authLoading: false };
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: 'en', changeLanguage: jest.fn() } }) }));
 jest.mock('../auth/AuthContext', () => ({ useAuth: () => mockAuth }));
-jest.mock('../utils/api', () => ({ getInvitation: jest.fn(), acceptInvitation: jest.fn() }));
+jest.mock('../features/invitations/api/invitationsApi', () => ({ getInvitation: jest.fn(), acceptInvitation: jest.fn() }));
 
 test('resumes and accepts an email invitation after authentication', async () => {
   getInvitation.mockResolvedValue({ valid: true, email_required: true, trip_title: 'Georgia' });

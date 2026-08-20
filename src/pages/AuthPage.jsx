@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MainLayout from '../components/Layout/MainLayout';
-import { requestOtp, verifyOtp } from '../utils/api';
+import { requestOtp, verifyOtp } from '../features/auth/api/authApi';
 import { useAuth } from '../auth/AuthContext';
 import { AVATARS } from '../utils/avatars';
 
