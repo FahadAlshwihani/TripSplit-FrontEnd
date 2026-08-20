@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import ExpenseForm, { toCents } from './ExpenseForm';
+import ExpenseForm, { toCents } from '../components/ExpenseForm';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
 

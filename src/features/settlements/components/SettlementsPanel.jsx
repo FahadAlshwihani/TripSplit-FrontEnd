@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const SettlementsPanel = ({ members, currency, settlements, suggestion, currentMember, pendingCount = 0, onSave, onDelete, onReview, disabled }) => {
+export const SettlementsPanel = ({ members, currency, settlements, suggestion, currentMember, pendingCount = 0, onSave, onDelete, onReview, disabled }) => {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(null);
   const blank = () => ({ from_member_id: suggestion?.from_member || currentMember?.id || '', to_member_id: suggestion?.to_member || '', amount: suggestion?.amount || '', settlement_date: new Date().toISOString().slice(0, 10), note: '' });

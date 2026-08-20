@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { avatarGlyph } from '../utils/avatars';
+import { avatarGlyph } from '../../../shared/utils/avatars';
 
 export const toCents = (value) => Math.round(Number(value || 0) * 100);
 const today = () => new Date().toISOString().slice(0, 10);

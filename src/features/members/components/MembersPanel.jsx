@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { avatarGlyph } from '../utils/avatars';
+import { avatarGlyph } from '../../../shared/utils/avatars';
 
 const MembersPanel = ({ members, currentMember, permissions, onRole, onRemove, onTransfer, onLeave, onDetails }) => {
   const { t } = useTranslation();

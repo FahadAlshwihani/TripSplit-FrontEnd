@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const TripSettings = ({ trip, permissions, onUpdate, onArchive, onRestore }) => {
+export const TripSettings = ({ trip, permissions, onUpdate, onArchive, onRestore }) => {
   const { t } = useTranslation();
   const [form, setForm] = useState({ title: trip.title, budget: trip.budget, currency: trip.currency, password: '', join_policy: trip.join_policy, settlement_confirmation_mode: trip.settlement_confirmation_mode });
   if (!permissions.canEditTrip && !permissions.canArchiveTrip && !permissions.canRestoreTrip) return null;

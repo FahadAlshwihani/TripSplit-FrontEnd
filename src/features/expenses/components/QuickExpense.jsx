@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-const QuickExpense = ({ currentMember, members, categories, onSubmit, onMore }) => {
+export const QuickExpense = ({ currentMember, members, categories, onSubmit, onMore }) => {
   const { t } = useTranslation();
   const [form, setForm] = useState({ amount: '', title: '', category: categories.find((row) => row.code === 'other')?.code || categories[0]?.code || 'other', scope: 'shared' });
   const submit = (event) => {

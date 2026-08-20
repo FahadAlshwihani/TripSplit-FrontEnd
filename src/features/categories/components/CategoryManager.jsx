@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const CategoryManager = ({ categories, budgets, budgetSummary, currency, canManage, onCreate, onUpdate, onArchive, onBudget, onResetBudget }) => {
+export const CategoryManager = ({ categories, budgets, budgetSummary, currency, canManage, onCreate, onUpdate, onArchive, onBudget, onResetBudget }) => {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const budgetFor = (code) => budgets.find((row) => row.category === code);

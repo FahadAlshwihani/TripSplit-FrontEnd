@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { avatarGlyph } from '../utils/avatars';
+import { avatarGlyph } from '../../../shared/utils/avatars';
 
 const GovernancePanel = ({ requests, invitations, bans, members, onReview, onInvite, onRevokeInvite, onResendInvite, onKick, onBan, onUnban }) => {
   const { t } = useTranslation();

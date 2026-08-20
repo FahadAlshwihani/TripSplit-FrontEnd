@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import HomePage from '../../../pages/HomePage';
-import SettlementsPanel from '../../../components/SettlementsPanel';
+import SettlementsPanel from '../../settlements/components/SettlementsPanel';
 import { getTrips } from '../api/tripsApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: 'en', changeLanguage: jest.fn() } }) }));

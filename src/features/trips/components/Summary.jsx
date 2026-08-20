@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import '../styles/CardStyles.css';
+import '../../../styles/CardStyles.css';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const Summary = ({ expenses = [], budget, currency = 'SAR' }) => {

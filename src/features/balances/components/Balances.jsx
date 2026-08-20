@@ -1,5 +1,5 @@
 import React from 'react';
-import { avatarGlyph } from '../utils/avatars';
+import { avatarGlyph } from '../../../shared/utils/avatars';
 import { useTranslation } from 'react-i18next';
 
 const money = (value, currency) => `${value} ${currency}`;
