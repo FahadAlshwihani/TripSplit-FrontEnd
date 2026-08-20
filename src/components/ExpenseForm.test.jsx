@@ -48,3 +48,27 @@ test('personal expense hides split controls and submits explicit scope', () => {
   fireEvent.click(screen.getByText('expense.add'));
   expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ scope: 'personal', amount: '12.00', category: 'food' }));
 });
+
+test('foreign expenses use the locked base amount for payer allocation', () => {
+  const onSubmit = jest.fn();
+  render(<ExpenseForm members={members} currentMember={members[0]} tripCurrency="SAR" onSubmit={onSubmit} />);
+  fireEvent.change(screen.getByLabelText('expense.description'), { target: { value: 'Hotel' } });
+  fireEvent.change(screen.getByLabelText('expense.amount'), { target: { value: '100.00' } });
+  fireEvent.change(screen.getByLabelText('currency.original'), { target: { value: 'USD' } });
+  fireEvent.change(screen.getByLabelText('currency.rate'), { target: { value: '3.75' } });
+  fireEvent.change(screen.getByLabelText('Fahad expense.paidAmount'), { target: { value: '375.00' } });
+  expect(screen.getByText('currency.converted: 375.00 SAR')).toBeInTheDocument();
+  fireEvent.click(screen.getByText('expense.add'));
+  expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ amount: '100.00', original_currency: 'USD', exchange_rate: '3.75', payments: [{ member_id: 'a', amount: '375.00' }] }));
+});
+
+test('fund payment removes personal payer allocation from the request', () => {
+  const onSubmit = jest.fn();
+  render(<ExpenseForm members={members} currentMember={members[0]} hasFund onSubmit={onSubmit} />);
+  fireEvent.change(screen.getByLabelText('expense.description'), { target: { value: 'Bus' } });
+  fireEvent.change(screen.getByLabelText('expense.amount'), { target: { value: '40.00' } });
+  fireEvent.click(screen.getByLabelText('fund.paidFromFund'));
+  fireEvent.click(screen.getByText('expense.add'));
+  expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ payment_source: 'trip_fund' }));
+  expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('payments');
+});
