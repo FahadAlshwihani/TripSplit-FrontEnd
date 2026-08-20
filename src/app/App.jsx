@@ -1,0 +1,2 @@
+import React from 'react'; import 'bootstrap-icons/font/bootstrap-icons.css'; import '../styles/App.css'; import '../styles/Header.css'; import '../styles/Footer.css'; import '../i18n'; import AppProviders from './providers'; import AppRouter from './router';
+const App=()=> <AppProviders><div className="app-container"><div className="area"><ul className="circles">{[...Array(10)].map((_,i)=><li key={i}/>)}</ul></div><AppRouter/></div></AppProviders>; export default App;

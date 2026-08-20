@@ -1,0 +1,6 @@
+import React, { lazy, Suspense } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import Loading from '../components/Loading';
+const HomePage=lazy(()=>import('../pages/HomePage')),TripDetailsPage=lazy(()=>import('../pages/TripDetailsPage')),About=lazy(()=>import('../pages/About')),AuthPage=lazy(()=>import('../pages/AuthPage')),ProfilePage=lazy(()=>import('../pages/ProfilePage')),InvitationPage=lazy(()=>import('../pages/InvitationPage')),JoinRequestPage=lazy(()=>import('../pages/JoinRequestPage')),NotFoundPage=lazy(()=>import('../pages/NotFoundPage'));
+const AppRouter=()=> <BrowserRouter><Suspense fallback={<Loading/>}><Routes><Route path="/" element={<HomePage/>}/><Route path="/trip/:code/*" element={<TripDetailsPage/>}/><Route path="/trips/:code/*" element={<TripDetailsPage/>}/><Route path="/about" element={<About/>}/><Route path="/auth" element={<AuthPage/>}/><Route path="/profile" element={<ProfilePage/>}/><Route path="/invite/:token" element={<InvitationPage/>}/><Route path="/join-request/:requestId" element={<JoinRequestPage/>}/><Route path="/not-found" element={<NotFoundPage/>}/><Route path="*" element={<Navigate to="/not-found" replace/>}/></Routes></Suspense></BrowserRouter>;
+export default AppRouter;
