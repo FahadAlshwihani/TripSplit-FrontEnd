@@ -1,8 +1,8 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import QuickExpense from './QuickExpense';
-import CategoryManager from './CategoryManager';
-import MemberDetail from './MemberDetail';
+import QuickExpense from '../../../components/QuickExpense';
+import CategoryManager from '../../../components/CategoryManager';
+import MemberDetail from '../../../components/MemberDetail';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
 const members = [{ id: 'me', display_name: 'Me', avatar_key: 'avatar_01' }, { id: 'friend', display_name: 'Friend', avatar_key: 'avatar_02' }];
