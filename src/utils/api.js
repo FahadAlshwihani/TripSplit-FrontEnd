@@ -69,4 +69,12 @@ export const getTripSummary = (tripId) => data(api.get(`/trips/${tripId}/summary
 export const reviewSettlement = (tripId, settlementId, decision) => data(api.post(`/trips/${tripId}/settlements/${settlementId}/${decision}/`, {}, guestConfig(tripId)));
 export const closeTrip = (tripId) => data(api.post(`/trips/${tripId}/close/`, {}, guestConfig(tripId)));
 export const reopenTrip = (tripId) => data(api.post(`/trips/${tripId}/reopen/`, {}, guestConfig(tripId)));
+export const getFund = (tripId) => data(api.get(`/trips/${tripId}/fund/`, guestConfig(tripId)));
+export const createFund = (tripId, payload) => data(api.post(`/trips/${tripId}/fund/`, payload, guestConfig(tripId)));
+export const updateFund = (tripId, payload) => data(api.patch(`/trips/${tripId}/fund/`, payload, guestConfig(tripId)));
+export const createFundingRound = (tripId, payload) => data(api.post(`/trips/${tripId}/fund/rounds/`, payload, guestConfig(tripId)));
+export const recordFundContribution = (tripId, roundId, payload) => data(api.post(`/trips/${tripId}/fund/rounds/${roundId}/contributions/`, payload, guestConfig(tripId)));
+export const previewFundRefund = (tripId, payload) => data(api.post(`/trips/${tripId}/fund/refund-preview/`, payload, guestConfig(tripId)));
+export const recordFundRefunds = (tripId, payload) => data(api.post(`/trips/${tripId}/fund/refunds/`, payload, guestConfig(tripId)));
+export const closeFund = (tripId) => data(api.post(`/trips/${tripId}/fund/close/`, {}, guestConfig(tripId)));
 export default api;
