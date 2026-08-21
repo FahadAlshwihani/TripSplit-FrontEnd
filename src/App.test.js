@@ -14,7 +14,11 @@ jest.mock('./features/trips/api/tripsApi', () => ({
 }));
 jest.mock('./features/auth/api/authApi', () => ({ getCurrentUser: jest.fn(() => Promise.resolve({ user: null })), logout: jest.fn(), updateProfile: jest.fn() }));
 
-beforeEach(() => { window.history.pushState({}, '', '/'); });
+beforeEach(() => {
+  window.history.pushState({}, '', '/');
+  window.localStorage.clear();
+  document.documentElement.removeAttribute('data-theme');
+});
 
 test('renders the public Home landing with routed create/join entry points', async () => {
   render(<App />);
@@ -36,4 +40,12 @@ test('Join Trip CTA navigates to the dedicated route and renders the real form',
   render(<App />);
   fireEvent.click(await screen.findByRole('link', { name: 'home.hero.joinTrip' }));
   expect(await screen.findByText('join.existing.trip')).toBeInTheDocument();
+});
+
+test('defaults to the light theme regardless of any saved preference being absent, and never renders the legacy background on Home', async () => {
+  render(<App />);
+  await screen.findByRole('heading', { level: 1 });
+  expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+  expect(document.querySelector('.area')).not.toBeInTheDocument();
+  expect(document.querySelector('.circles')).not.toBeInTheDocument();
 });

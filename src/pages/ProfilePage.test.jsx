@@ -25,3 +25,11 @@ test('groups authenticated trip history by active closed and archived lifecycle'
   expect(screen.getByText('trip.group.closed')).toBeInTheDocument();
   expect(screen.getByText('trip.group.archived')).toBeInTheDocument();
 });
+
+test('still uses the legacy MainLayout background — proves it is scoped there, not deleted app-wide', async () => {
+  getTrips.mockResolvedValue({ results: [] });
+  render(<MemoryRouter><ProfilePage /></MemoryRouter>);
+  await screen.findByText('trip.empty.active');
+  expect(document.querySelector('.area')).toBeInTheDocument();
+  expect(document.querySelector('.circles')).toBeInTheDocument();
+});

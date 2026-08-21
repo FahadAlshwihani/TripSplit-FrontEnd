@@ -2,13 +2,15 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import HomePage from './HomePage';
+import { ThemeProvider } from '../../../components/ThemeProvider';
 
 let mockLanguage = 'en';
-jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: mockLanguage, changeLanguage: jest.fn() } }) }));
+const mockChangeLanguage = jest.fn();
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: mockLanguage, changeLanguage: mockChangeLanguage } }) }));
 
-afterEach(() => { mockLanguage = 'en'; });
+afterEach(() => { mockLanguage = 'en'; mockChangeLanguage.mockClear(); window.localStorage.clear(); document.documentElement.removeAttribute('data-theme'); });
 
-const renderHome = () => render(<MemoryRouter><HomePage /></MemoryRouter>);
+const renderHome = () => render(<MemoryRouter><ThemeProvider><HomePage /></ThemeProvider></MemoryRouter>);
 
 test('renders the approved hero headline', () => {
   renderHome();
@@ -94,4 +96,33 @@ test('renders correctly when the active language is Arabic', () => {
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('home.hero.headline');
   expect(screen.getByText('home.preview.tripName')).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'home.hero.createTrip' })).toHaveAttribute('href', '/create-trip');
+});
+
+test('does not render the legacy animated background anywhere on the page', () => {
+  renderHome();
+  expect(document.querySelector('.area')).not.toBeInTheDocument();
+  expect(document.querySelector('.circles')).not.toBeInTheDocument();
+});
+
+test('public nav exposes language and theme controls and defaults to light', () => {
+  renderHome();
+  expect(screen.getByRole('button', { name: 'language.switchToEnglish' })).toHaveTextContent('EN');
+  expect(screen.getByRole('button', { name: 'language.switchToArabic' })).toHaveTextContent('AR');
+  expect(screen.getByRole('button', { name: 'theme.switchToDark' })).toBeInTheDocument();
+  expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+});
+
+test('the language control switches i18next language', () => {
+  renderHome();
+  fireEvent.click(screen.getByRole('button', { name: 'language.switchToArabic' }));
+  expect(mockChangeLanguage).toHaveBeenCalledWith('ar');
+});
+
+test('the theme control toggles data-theme and persists the choice', () => {
+  renderHome();
+  fireEvent.click(screen.getByRole('button', { name: 'theme.switchToDark' }));
+  expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+  expect(window.localStorage.getItem('tripsplit:theme')).toBe('dark');
+  fireEvent.click(screen.getByRole('button', { name: 'theme.switchToLight' }));
+  expect(document.documentElement.getAttribute('data-theme')).toBe('light');
 });
