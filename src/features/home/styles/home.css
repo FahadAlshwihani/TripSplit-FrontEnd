@@ -269,7 +269,7 @@
 .preview-list__title.text-body { color: var(--color-text); display: block; }
 .preview-list__meta.text-caption { color: var(--color-text-muted); display: block; margin-block-start: 2px; }
 .preview-list__amount.text-financial { color: var(--color-text); flex: 0 0 auto; }
-.preview-list__row--placeholder { color: var(--color-text-faint); justify-content: flex-start; }
+.preview-list__row--placeholder { color: var(--color-text-muted); justify-content: flex-start; }
 .preview-list__row--placeholder::before { display: none; }
 
 .preview-mobile { display: none; }
