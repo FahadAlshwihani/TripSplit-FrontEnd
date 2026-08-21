@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import MainLayout from '../components/Layout/MainLayout';
+import PublicLayout from '../components/Layout/PublicLayout';
+import '../styles/CardStyles.css';
+import '../styles/legacyShell.css';
 import { isRequestCancelled } from '../api/errors';
 import { cancelJoinRequest, getJoinRequestStatus } from '../features/governance/api/governanceApi';
 
@@ -28,7 +30,7 @@ const JoinRequestPage = () => {
     return () => { window.clearInterval(timer); controller?.abort(); };
   }, [requestId, navigate, t]);
   const cancel = async () => { await cancelJoinRequest(requestId, sessionStorage.getItem(requestTokenKey(requestId))); sessionStorage.removeItem(requestTokenKey(requestId)); navigate('/'); };
-  return <MainLayout><main className="home-container-pc mt-5"><section className="card-pc"><h2>{t('joinRequest.sent')}</h2>{error && <p className="error-message" role="alert">{error}</p>}{request && <><h3>{request.trip.title}</h3><p>{request.status === 'rejected' ? t('joinRequest.rejected') : t('joinRequest.waiting')}</p><small>{new Date(request.requested_at).toLocaleString()}</small>{request.status === 'pending' && <button className="pc-btn-danger" onClick={cancel}>{t('joinRequest.cancel')}</button>}</>}</section></main></MainLayout>;
+  return <PublicLayout><div className="legacy-shell"><main className="home-container-pc mt-5"><section className="card-pc"><h2>{t('joinRequest.sent')}</h2>{error && <p className="error-message" role="alert">{error}</p>}{request && <><h3>{request.trip.title}</h3><p>{request.status === 'rejected' ? t('joinRequest.rejected') : t('joinRequest.waiting')}</p><small>{new Date(request.requested_at).toLocaleString()}</small>{request.status === 'pending' && <button className="pc-btn-danger" onClick={cancel}>{t('joinRequest.cancel')}</button>}</>}</section></main></div></PublicLayout>;
 };
 
 export default JoinRequestPage;
