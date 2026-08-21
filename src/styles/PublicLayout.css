@@ -86,6 +86,72 @@
   .public-nav__link[href="/#preview"] {
     display: none;
   }
+  .public-nav__links { gap: var(--space-2); }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Theme / language utility controls — compact bordered editorial controls,
+   not a modern toggle switch. Shared by desktop and mobile nav; on mobile
+   Features/Pricing hide (above) so these plus Sign In are all that remain. */
+
+.public-nav__utilities {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.utility-switch {
+  display: inline-flex;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.utility-switch__option {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: none;
+  padding: 0 var(--space-2);
+  min-width: 32px;
+  min-height: 32px;
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+
+.utility-switch__option + .utility-switch__option {
+  border-inline-start: var(--border-width) solid var(--color-border);
+}
+
+.utility-switch__option:hover:not(.is-active) { background: var(--color-surface-alt); }
+
+.utility-switch__option.is-active {
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.utility-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background-color .15s ease;
+}
+
+.utility-toggle:hover { background: var(--color-surface-alt); }
+
+@media (max-width: 430px) {
+  .utility-switch__option { min-width: 28px; min-height: 28px; padding: 0 var(--space-1); }
+  .utility-toggle { width: 28px; height: 28px; }
+  .public-nav__link--signin.text-label { padding: var(--space-2) var(--space-3); }
 }
 
 /* ---------------------------------------------------------------------- */

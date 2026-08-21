@@ -151,5 +151,10 @@
   "createTrip.passwordPlaceholder": "Room password (optional)",
   "joinTrip.passwordPlaceholder": "Room password (if required)",
   "guest.displayNamePlaceholder": "Your display name",
-  "common.loading": "Loading…"
+  "common.loading": "Loading…",
+  "theme.switchToLight": "Switch to light theme",
+  "theme.switchToDark": "Switch to dark theme",
+  "language.groupLabel": "Language",
+  "language.switchToEnglish": "Switch to English",
+  "language.switchToArabic": "Switch to Arabic"
 }

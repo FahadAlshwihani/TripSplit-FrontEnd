@@ -152,5 +152,10 @@
   "createTrip.passwordPlaceholder": "كلمة مرور الغرفة (اختياري)",
   "joinTrip.passwordPlaceholder": "كلمة مرور الغرفة (إذا لزم الأمر)",
   "guest.displayNamePlaceholder": "اسمك الذي سيظهر للأعضاء",
-  "common.loading": "جارٍ التحميل…"
+  "common.loading": "جارٍ التحميل…",
+  "theme.switchToLight": "التبديل إلى الوضع الفاتح",
+  "theme.switchToDark": "التبديل إلى الوضع الداكن",
+  "language.groupLabel": "اللغة",
+  "language.switchToEnglish": "التبديل إلى الإنجليزية",
+  "language.switchToArabic": "التبديل إلى العربية"
 }
