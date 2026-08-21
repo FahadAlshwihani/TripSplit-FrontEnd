@@ -54,15 +54,19 @@ const ProductPreview = () => {
           <span className="preview-mobile__balance text-financial">{t('home.preview.mobileBalance')}</span>
         </div>
         <ul className="preview-mobile__list">
-          {MOBILE_ITEMS.map((key) => (
-            <li className="preview-mobile__row" key={key}>
-              <span>
-                <span className="preview-mobile__item-title text-label">{t(`home.preview.${key}Title`)}</span>
-                <span className="preview-mobile__item-meta text-caption">{t(`home.preview.${key}Meta`)}</span>
-              </span>
-              <span className="preview-mobile__item-amount text-financial">{t(`home.preview.${key}Amount`)}</span>
-            </li>
-          ))}
+          {MOBILE_ITEMS.map((key) => {
+            const amount = t(`home.preview.${key}Amount`);
+            const isCredit = amount.trim().startsWith('+');
+            return (
+              <li className="preview-mobile__row" key={key}>
+                <span>
+                  <span className="preview-mobile__item-title text-label">{t(`home.preview.${key}Title`)}</span>
+                  <span className="preview-mobile__item-meta text-caption">{t(`home.preview.${key}Meta`)}</span>
+                </span>
+                <span className={`preview-mobile__item-amount text-financial${isCredit ? ' preview-mobile__item-amount--credit' : ''}`}>{amount}</span>
+              </li>
+            );
+          })}
         </ul>
         <a className="preview-mobile__cta text-label" href="#get-started">{t('home.preview.viewDemoLedger')} →</a>
       </div>

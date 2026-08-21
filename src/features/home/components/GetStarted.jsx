@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import '../../../styles/CardStyles.css';
 import Loading from '../../../components/Loading';
 import { createTrip, getTrips, joinTrip } from '../../trips/api/tripsApi';
 import { AVATARS, avatarGlyph } from '../../../shared/utils/avatars';
