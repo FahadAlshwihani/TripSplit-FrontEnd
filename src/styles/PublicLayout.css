@@ -217,7 +217,7 @@
   flex-wrap: wrap;
 }
 
-.public-footer__brand.text-title { color: var(--color-text); }
+.public-footer__brand.text-title { color: var(--color-primary); }
 .public-footer__copyright.text-caption { color: var(--color-text-muted); }
 
 @media (prefers-reduced-motion: reduce) {
