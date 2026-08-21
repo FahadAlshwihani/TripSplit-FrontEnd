@@ -37,7 +37,7 @@ const ProductPreview = () => {
             {DESKTOP_EXPENSES.map((key) => (
               <li className="preview-list__row" key={key}>
                 <span>
-                  <span className="preview-list__title text-body">{t(`home.preview.${key}Title`)}</span>
+                  <span className="preview-list__title text-copy">{t(`home.preview.${key}Title`)}</span>
                   <span className="preview-list__meta text-caption">{t(`home.preview.${key}Meta`)}</span>
                 </span>
                 <span className="preview-list__amount text-financial">{t(`home.preview.${key}Amount`)}</span>

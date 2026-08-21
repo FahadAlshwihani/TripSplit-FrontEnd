@@ -50,12 +50,17 @@
   margin: 0;
 }
 
-.text-body {
+/*
+  Named .text-copy (not .text-body) — Bootstrap already ships a .text-body
+  utility with `color: ... !important`, which would silently win over any
+  token-based color set here regardless of specificity or source order.
+*/
+.text-copy {
   font: var(--text-body);
   margin: 0;
 }
 
-.text-body-sm {
+.text-copy-sm {
   font: var(--text-body-sm);
   margin: 0;
 }
