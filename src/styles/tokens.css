@@ -1,7 +1,10 @@
 /*
   Neo-classic design tokens.
-  Source of truth: approved design-system reference (Primary #384CCA,
-  Secondary #F8FCF8, Tertiary #1A1A1A, Neutral #F9F7F2).
+  Source of truth: Stitch-exported design spec for Home (bg #fbf9f4,
+  primary #1e30b2, primary-container #3b4cca, on-background #1b1c19,
+  surface-lowest #ffffff, surface-low #f5f3ee, secondary #5e5f5c,
+  outline #757685). Superseded the earlier hand-eyeballed reference-card
+  hex values with these exact ones where they differ.
 
   These are additive, global CSS custom properties. Nothing here overrides
   existing selectors, so pages that have not been redesigned yet are
@@ -10,16 +13,17 @@
 
 :root {
   /* Primitive palette */
-  --nc-cream-50: #F9F7F2;
-  --nc-cream-100: #F1EDE2;
-  --nc-paper: #FDFCF8;
-  --nc-ink-900: #1A1A1A;
+  --nc-cream-50: #FBF9F4;
+  --nc-cream-100: #F5F3EE;
+  --nc-paper: #FFFFFF;
+  --nc-ink-900: #1B1C19;
   --nc-ink-700: #3B3A36;
-  --nc-ink-500: #6B6862;
+  --nc-ink-500: #5E5F5C;
   --nc-ink-300: #9A968C;
+  --nc-outline: #757685;
   --nc-white: #F8FCF8;
-  --nc-indigo-700: #2A3599;
-  --nc-indigo-600: #384CCA;
+  --nc-indigo-700: #1E30B2;
+  --nc-indigo-600: #3B4CCA;
   --nc-indigo-500: #4C5FDB;
   --nc-indigo-100: #E3E6FA;
   --nc-green-600: #1C8A4B;
@@ -41,8 +45,9 @@
 
   /* Semantic — borders */
   --color-border: var(--nc-ink-900);
-  --color-border-subtle: rgba(26, 26, 26, 0.14);
-  --color-border-faint: rgba(26, 26, 26, 0.08);
+  --color-border-subtle: rgba(27, 28, 25, 0.14);
+  --color-border-faint: rgba(27, 28, 25, 0.08);
+  --color-outline: var(--nc-outline);
 
   /* Semantic — brand */
   --color-primary: var(--nc-indigo-600);
@@ -59,10 +64,11 @@
   --color-danger: var(--nc-red-600);
   --color-danger-soft: var(--nc-red-100);
 
-  /* Radii — minimal, editorial */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 14px;
+  /* Radii — minimal, editorial. Intentionally sharp: 2 / 4 / 8px per the
+     Stitch spec (default / large / extra-large), not arbitrary SaaS radii. */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
   --radius-pill: 999px;
 
   /* Borders */
@@ -88,9 +94,23 @@
   --space-20: 5rem;
   --space-24: 6rem;
 
+  /* Stitch-named aliases — same numeric scale, exposed under the names the
+     Stitch export uses (xs=4/sm=8/md=16/lg=24/xl=32px = space-1/2/4/6/8).
+     Kept as aliases rather than renaming the whole scale in place, since
+     every existing selector already consumes --space-N and the pixel
+     values already match exactly — only the naming differed. */
+  --space-xs: var(--space-1);
+  --space-sm: var(--space-2);
+  --space-md: var(--space-4);
+  --space-lg: var(--space-6);
+  --space-xl: var(--space-8);
+
   /* Layout */
   --content-max-width: 1200px;
   --nav-height: 64px;
+  --page-margin-mobile: 16px;
+  --page-margin-desktop: 48px;
+  --grid-gutter: 16px;
 }
 
 /* ---------------------------------------------------------------------- */
