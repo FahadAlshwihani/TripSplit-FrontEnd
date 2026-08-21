@@ -1,0 +1,66 @@
+/*
+  Shared light re-skin for the legacy .card-pc / .pc-input / .pc-btn-*
+  primitives (defined in CardStyles.css) when they appear inside a
+  redesigned public route. CardStyles.css itself is untouched, so every
+  page that hasn't opted into .legacy-shell keeps its existing dark-glass
+  appearance; only content wrapped in .legacy-shell takes the cream palette.
+
+  This is a bridge, not a redesign of those primitives: Create Trip, Join
+  Trip, Auth, Invitation and Join Request get a correct, readable Neo-classic
+  foundation now, and each gets fully rebuilt in its own design pass later.
+*/
+
+.legacy-shell {
+  background: var(--color-bg);
+  min-height: 100%;
+}
+
+.legacy-shell__page-title {
+  color: var(--color-text);
+  text-align: center;
+  margin: var(--space-10) 0 0;
+}
+
+.legacy-shell .card-pc {
+  background: var(--color-surface);
+  backdrop-filter: none;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-editorial);
+  color: var(--color-text);
+}
+
+.legacy-shell .card-pc:hover { transform: none; box-shadow: var(--shadow-editorial-md); }
+
+.legacy-shell .card-pc h2 { color: var(--color-text); font: var(--text-title); }
+.legacy-shell .card-pc h3 { color: var(--color-text); }
+.legacy-shell .card-pc p,
+.legacy-shell .card-pc span,
+.legacy-shell .card-pc strong,
+.legacy-shell .card-pc small,
+.legacy-shell .card-pc label { color: var(--color-text-muted); }
+
+.legacy-shell .pc-input {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border-subtle);
+  backdrop-filter: none;
+}
+
+.legacy-shell .pc-input:focus { background: var(--color-surface); outline: 2px solid var(--color-primary); }
+.legacy-shell .pc-input::placeholder { color: var(--color-text-faint); }
+.legacy-shell .pc-input option { color: var(--color-text); background: var(--color-surface); }
+
+.legacy-shell .pc-btn-create { color: var(--color-primary-contrast); background: var(--color-primary); border-color: var(--color-primary); }
+.legacy-shell .pc-btn-create:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+.legacy-shell .pc-btn-join { color: var(--color-text); background: transparent; border-color: var(--color-border); }
+.legacy-shell .pc-btn-join:hover { background: var(--color-surface-alt); }
+.legacy-shell .pc-btn-danger { color: var(--color-danger); border-color: var(--color-danger); }
+.legacy-shell .pc-btn-danger:hover { background: var(--color-danger-soft); }
+
+.legacy-shell .avatar-choice { background: var(--color-surface-alt); }
+.legacy-shell .avatar-choice.selected { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.legacy-shell .expense-item { border-block-end-color: var(--color-border-faint); }
+.legacy-shell .error-message { color: var(--color-danger); }
+.legacy-shell .success-message { color: var(--color-success); }
+.legacy-shell .otp-input { color: var(--color-text); }

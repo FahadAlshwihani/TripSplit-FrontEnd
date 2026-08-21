@@ -1,0 +1,162 @@
+/*
+  Shared shell for every redesigned public route (Home, Create Trip, Join
+  Trip, Auth, Invitation, Join Request). Consumes global tokens only.
+  Everything here is scoped under .public-layout so it cannot leak into (or
+  be affected by) the legacy dark shell that still wraps MainLayout pages.
+*/
+
+.public-layout {
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+
+.public-layout a { text-decoration: none; }
+.public-layout ul { list-style: none; margin: 0; padding: 0; }
+.public-layout button { font-family: inherit; }
+.public-layout__main { flex: 1 1 auto; }
+
+/* ---------------------------------------------------------------------- */
+/* Public nav */
+
+.public-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--color-bg);
+  border-block-end: var(--border-width) solid var(--color-border);
+}
+
+.public-nav__inner {
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  padding-inline: var(--space-6);
+  min-height: var(--nav-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.public-nav__brand.text-title {
+  color: var(--color-text);
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+}
+
+.public-nav__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.public-nav__link.text-label {
+  color: var(--color-text-muted);
+  padding-block: var(--space-2);
+  border-block-end: 2px solid transparent;
+  transition: color .15s ease, border-color .15s ease;
+}
+
+.public-nav__link:hover,
+.public-nav__link:focus-visible {
+  color: var(--color-text);
+  border-block-end-color: var(--color-border-subtle);
+}
+
+.public-nav__link--signin.text-label {
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+}
+
+.public-nav__link--signin:hover,
+.public-nav__link--signin:focus-visible {
+  background: var(--color-text);
+  color: var(--color-bg);
+  border-block-end-color: var(--color-text);
+}
+
+@media (max-width: 767px) {
+  .public-nav__link[href="/#preview"] {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Buttons — shared primitive for every public page */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-sm);
+  border: var(--border-width-lg) solid var(--color-border);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform .15s ease, background-color .15s ease, color .15s ease;
+}
+
+.btn:active { transform: translateY(1px); }
+
+.btn--primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.btn--primary:hover,
+.btn--primary:focus-visible { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+
+.btn--secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.btn--secondary:hover,
+.btn--secondary:focus-visible { background: var(--color-surface-alt); }
+
+.public-layout a.btn:focus-visible,
+.public-layout a:focus-visible,
+.public-layout button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Footer */
+
+.public-footer {
+  border-block-start: var(--border-width) solid var(--color-border);
+}
+
+.public-footer__inner {
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  padding: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.public-footer__brand.text-title { color: var(--color-text); }
+.public-footer__copyright.text-caption { color: var(--color-text-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .public-layout *, .public-layout *::before, .public-layout *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
