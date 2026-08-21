@@ -5,11 +5,28 @@ import { useTranslation } from 'react-i18next';
 const DESKTOP_EXPENSES = ['expense1', 'expense2', 'expense3'];
 const MOBILE_ITEMS = ['mobileItem1', 'mobileItem2', 'mobileItem3'];
 
+const GridIcon = () => (
+  <svg className="preview__eyebrow-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+    <rect x="0.5" y="0.5" width="5.5" height="5.5" rx="1" fill="currentColor" />
+    <rect x="8" y="0.5" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.55" />
+    <rect x="0.5" y="8" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.55" />
+    <rect x="8" y="8" width="5.5" height="5.5" rx="1" fill="currentColor" />
+  </svg>
+);
+
+const FilterIcon = () => (
+  <svg className="preview-list__filter-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
+    <line x1="2" y1="4" x2="14" y2="4" />
+    <line x1="4" y1="8" x2="12" y2="8" />
+    <line x1="6" y1="12" x2="10" y2="12" />
+  </svg>
+);
+
 const ProductPreview = () => {
   const { t } = useTranslation();
   return (
     <section className="preview" id="preview" aria-labelledby="preview-eyebrow">
-      <p id="preview-eyebrow" className="preview__eyebrow text-label">{t('home.preview.eyebrow')}</p>
+      <p id="preview-eyebrow" className="preview__eyebrow text-label"><GridIcon />{t('home.preview.eyebrow')}</p>
 
       {/* Desktop / tablet composition */}
       <div className="preview__grid preview__grid--desktop" aria-hidden={false}>
@@ -32,7 +49,7 @@ const ProductPreview = () => {
           </div>
         </div>
         <div className="preview__col preview__col--wide">
-          <p className="preview-list__label text-label">{t('home.preview.expensesLabel')}</p>
+          <p className="preview-list__label text-label">{t('home.preview.expensesLabel')}<FilterIcon /></p>
           <ul className="preview-list">
             {DESKTOP_EXPENSES.map((key) => (
               <li className="preview-list__row" key={key}>
