@@ -149,5 +149,8 @@
   "home.preview.mobileItem3Title": "لاتيه ماتشا", "home.preview.mobileItem3Meta": "دفعها سام", "home.preview.mobileItem3Amount": "١٢٫٠٠$",
   "home.preview.viewDemoLedger": "عرض دفتر تجريبي",
   "home.footer.copyright": "© {{year}} TripSplit Ledger. محاسبة بسيطة وبلا تعقيد.",
-  "home.getStarted.eyebrow": "ابدأ الآن"
+  "createTrip.passwordPlaceholder": "كلمة مرور الغرفة (اختياري)",
+  "joinTrip.passwordPlaceholder": "كلمة مرور الغرفة (إذا لزم الأمر)",
+  "guest.displayNamePlaceholder": "اسمك الذي سيظهر للأعضاء",
+  "common.loading": "جارٍ التحميل…"
 }

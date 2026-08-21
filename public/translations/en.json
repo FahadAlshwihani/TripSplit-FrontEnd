@@ -148,5 +148,8 @@
   "home.preview.mobileItem3Title": "Matcha latte", "home.preview.mobileItem3Meta": "Paid by Sam", "home.preview.mobileItem3Amount": "$12.00",
   "home.preview.viewDemoLedger": "View demo ledger",
   "home.footer.copyright": "© {{year}} TripSplit Ledger. Brutally simple accounting.",
-  "home.getStarted.eyebrow": "Get started"
+  "createTrip.passwordPlaceholder": "Room password (optional)",
+  "joinTrip.passwordPlaceholder": "Room password (if required)",
+  "guest.displayNamePlaceholder": "Your display name",
+  "common.loading": "Loading…"
 }
