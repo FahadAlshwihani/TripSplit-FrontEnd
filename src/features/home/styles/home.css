@@ -66,7 +66,7 @@
   border-width: var(--border-width);
   border-radius: var(--radius-sm);
   box-shadow: 2px 2px 0 0 var(--nc-ink-900);
-  transition: transform .1s ease, box-shadow .1s ease, background-color .15s ease, filter .15s ease;
+  transition: transform .1s ease, box-shadow .1s ease, background-color .15s ease, border-color .15s ease;
 }
 
 .hero__actions .btn--primary {
@@ -75,9 +75,28 @@
   box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
 }
 
+/* Hover only darkens the fill — text/border/shadow are re-pinned to their
+   normal-state values so they never shift with Bootstrap's global
+   .btn:hover rule (color/background-color/border-color via unset
+   --bs-btn-hover-* custom properties, which resolve to an inherited
+   near-black text color — the actual cause of the "too noticeable"
+   hover) or the shared .btn--primary:hover rule (--color-border drifts
+   in dark mode). Pressed/hover are mutually exclusive pseudo-classes so
+   this never fights the :active collapse below. */
 .hero__actions .btn--primary:hover,
 .hero__actions .btn--primary:focus-visible {
-  filter: brightness(0.92);
+  background: var(--nc-indigo-800);
+  border-color: var(--nc-indigo-700);
+  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+  color: var(--nc-white);
+}
+
+.hero__actions .btn--secondary:hover,
+.hero__actions .btn--secondary:focus-visible {
+  background: var(--color-surface-alt);
+  border-color: var(--color-border);
+  box-shadow: 2px 2px 0 0 var(--nc-ink-900);
+  color: var(--nc-ink-900);
 }
 
 .hero__actions .btn:active {
