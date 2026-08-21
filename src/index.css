@@ -11,6 +11,22 @@
 @import './styles/tokens.css';
 @import './styles/typography.css';
 
+/*
+  Root theme ownership. html/body/#root are the actual document canvas —
+  this is what the browser paints during overscroll/rubber-band bounce, so
+  it must resolve to the current theme's background, not be left to
+  default white (or an old page-specific background). The legacy animated
+  background some unredesigned pages still use is scoped to their own
+  MainLayout now (see Header.css/App.css + components/Layout/MainLayout),
+  never rendered globally, so it can never show through here.
+*/
+html,
+body,
+#root {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
 /* Add RTL text alignment when needed */
 [dir="rtl"] {
   text-align: right;
