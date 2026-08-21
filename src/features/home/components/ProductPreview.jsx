@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const DESKTOP_EXPENSES = ['expense1', 'expense2', 'expense3'];
@@ -68,7 +69,7 @@ const ProductPreview = () => {
             );
           })}
         </ul>
-        <a className="preview-mobile__cta text-label" href="#get-started">{t('home.preview.viewDemoLedger')} →</a>
+        <Link className="preview-mobile__cta text-label" to="/create-trip">{t('home.preview.viewDemoLedger')} →</Link>
       </div>
     </section>
   );

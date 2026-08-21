@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const Hero = () => {
@@ -9,8 +10,8 @@ const Hero = () => {
       <p className="hero__description hero__description--desktop text-body">{t('home.hero.descriptionDesktop')}</p>
       <p className="hero__description hero__description--mobile text-body">{t('home.hero.descriptionMobile')}</p>
       <div className="hero__actions">
-        <a href="#create-trip" className="btn btn--primary">{t('home.hero.createTrip')}</a>
-        <a href="#join-trip" className="btn btn--secondary">{t('home.hero.joinTrip')}</a>
+        <Link to="/create-trip" className="btn btn--primary">{t('home.hero.createTrip')}</Link>
+        <Link to="/join-trip" className="btn btn--secondary">{t('home.hero.joinTrip')}</Link>
       </div>
     </section>
   );
