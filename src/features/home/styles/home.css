@@ -8,65 +8,104 @@
 /* ---------------------------------------------------------------------- */
 /* Hero */
 
+/*
+  Geometry translated directly from the Stitch export's <section class="grid
+  grid-cols-1 md:grid-cols-12 gap-gutter mt-xl md:mt-24"><div
+  class="md:col-span-8 md:col-start-3 ..."> — col-start-3/col-span-8 of 12 is
+  a symmetric centered span, equivalent to 66.667% width centered (the
+  ~0.4% gutter-rounding difference against a true 12-col grid isn't visible).
+  main's own max-w-[1440px] + responsive px-margin-mobile/desktop is applied
+  here directly rather than through the shared --content-max-width (used by
+  Nav/Preview/Footer, all out of scope this pass) so those stay untouched.
+*/
 .hero {
-  max-width: var(--content-max-width);
+  max-width: 1440px;
   margin-inline: auto;
-  padding: var(--space-24) var(--space-6) var(--space-16);
-  text-align: center;
+  padding-inline: var(--page-margin-desktop);
+  padding-block: var(--space-24) var(--space-16); /* mt-24 (96px) ~= --space-24 */
+}
+
+.hero__content {
+  width: 66.667%;
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
+  gap: var(--space-6); /* gap-lg = 24px, uniform between headline/paragraph/CTA row */
 }
 
 .hero__headline.text-display {
   color: var(--color-text);
-  max-width: 72rem;
+  max-width: 56rem; /* max-w-4xl */
 }
 
 .hero__description {
   color: var(--color-text-muted);
-  max-width: 38rem;
-  margin-block-start: var(--space-5);
+  max-width: 42rem; /* max-w-2xl */
 }
 
 .hero__description--mobile { display: none; }
 
 .hero__actions {
   display: flex;
-  gap: var(--space-4);
-  margin-block-start: var(--space-8);
+  gap: var(--space-4); /* gap-md = 16px */
+  margin-block-start: var(--space-4); /* mt-md = 16px, additive on top of the 24px content gap */
 }
 
 /* Neo-classic "print" depth: a crisp, zero-blur offset layer — not a soft/
    material-design elevation shadow — behind each hero CTA. Scoped to the
-   hero only; the shared .btn primitive itself stays flat elsewhere. The
-   offset color is a theme-invariant ink tone (not --color-border, which
-   flips light in dark mode) so the depth cue never turns into a glow. */
+   hero only; the shared .btn primitive itself stays flat/unshadowed
+   elsewhere. Exact Stitch spec (.hard-shadow/.hard-shadow-primary/
+   .interactive-shadow*): 1px border, 2px radius, 2px offset shadow,
+   default #1A1A1A / primary #1e30b2 (== --nc-ink-900 / --nc-indigo-700,
+   both theme-invariant primitives so dark mode can't turn them into a
+   glow). Pressed collapses the offset to 0 as the button moves into it. */
 .hero__actions .btn {
-  box-shadow: 4px 4px 0 0 var(--nc-ink-900);
-  transition: transform .1s ease, box-shadow .1s ease, background-color .15s ease, color .15s ease;
+  padding: var(--space-4) var(--space-6); /* py-md 16px / px-lg 24px */
+  border-width: var(--border-width);
+  border-radius: var(--radius-sm);
+  box-shadow: 2px 2px 0 0 var(--nc-ink-900);
+  transition: transform .1s ease, box-shadow .1s ease, background-color .15s ease, filter .15s ease;
+}
+
+.hero__actions .btn--primary {
+  background: var(--nc-indigo-700);
+  border-color: var(--nc-indigo-700);
+  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+}
+
+.hero__actions .btn--primary:hover,
+.hero__actions .btn--primary:focus-visible {
+  filter: brightness(0.92);
 }
 
 .hero__actions .btn:active {
-  transform: translate(3px, 3px);
-  box-shadow: 1px 1px 0 0 var(--nc-ink-900);
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 var(--nc-ink-900);
+}
+
+.hero__actions .btn--primary:active {
+  box-shadow: 0 0 0 0 var(--nc-indigo-700);
 }
 
 @media (max-width: 767px) {
   .hero {
-    padding: var(--space-12) var(--space-5) var(--space-10);
-    text-align: start;
-    align-items: stretch;
-    border-inline-start: 3px solid var(--color-primary);
-    margin-inline: var(--space-4);
-    max-width: none;
+    padding: var(--space-12) var(--page-margin-mobile) var(--space-10);
   }
-  .hero__headline.text-display { padding-inline-start: var(--space-5); }
-  .hero__description { padding-inline-start: var(--space-5); max-width: none; }
+  .hero__content {
+    width: 100%;
+    align-items: stretch;
+    text-align: start;
+    border-inline-start: 3px solid var(--color-primary);
+    padding-inline-start: var(--space-5);
+  }
+  .hero__headline.text-display,
+  .hero__description { max-width: none; }
   .hero__description--desktop { display: none; }
   .hero__description--mobile { display: block; }
-  .hero__actions { flex-direction: column; padding-inline-start: var(--space-5); margin-block-start: var(--space-6); gap: var(--space-5); }
-  .hero__actions .btn { width: 100%; text-transform: none; letter-spacing: normal; }
+  .hero__actions { flex-direction: column; }
+  .hero__actions .btn { width: 100%; }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -75,7 +114,7 @@
 .preview {
   max-width: var(--content-max-width);
   margin-inline: auto;
-  padding: 0 var(--space-6) var(--space-20);
+  padding: 0 var(--page-margin-desktop) var(--space-20);
 }
 
 .preview__eyebrow.text-label {
@@ -91,7 +130,7 @@
 
 .preview__grid--desktop {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   gap: 1px;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -177,7 +216,7 @@
 @media (max-width: 767px) {
   .preview__grid--desktop { display: none; }
   .preview {
-    padding-inline: var(--space-4);
+    padding-inline: var(--page-margin-mobile);
     padding-block-end: var(--space-14);
   }
   .preview__eyebrow { padding-inline-start: var(--space-1); }
