@@ -44,9 +44,11 @@
 }
 
 .public-nav__brand.text-title {
-  color: var(--color-text);
+  color: var(--color-primary);
   font: var(--text-title);
   letter-spacing: var(--tracking-tight);
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .public-nav__links {
@@ -73,6 +75,8 @@
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-4);
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .public-nav__link--signin:hover,
@@ -98,6 +102,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  flex: 0 0 auto;
 }
 
 .utility-switch {
