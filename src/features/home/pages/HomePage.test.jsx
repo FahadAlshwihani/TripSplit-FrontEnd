@@ -82,6 +82,12 @@ test('renders the static product preview content', () => {
   expect(screen.getByText('home.preview.mobileTripName')).toBeInTheDocument();
 });
 
+test('renders the reference-matching preview eyebrow icon and expenses filter icon', () => {
+  renderHome();
+  expect(document.querySelector('.preview__eyebrow-icon')).toBeInTheDocument();
+  expect(document.querySelector('.preview-list__filter-icon')).toBeInTheDocument();
+});
+
 test('does not render deprecated marketing chrome from the old public shell', () => {
   renderHome();
   expect(screen.queryByText('footer.tagline')).not.toBeInTheDocument();
