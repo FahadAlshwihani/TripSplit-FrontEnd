@@ -94,40 +94,11 @@
 }
 
 /* ---------------------------------------------------------------------- */
-/* Dark-mode token foundation (system preference). Light stays authoritative
-   unless the OS/browser prefers dark and no explicit theme is set. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-bg: #1B1A17;
-    --color-bg-alt: #211F1B;
-    --color-surface: #242220;
-    --color-surface-alt: #2B2925;
-
-    --color-text: #F3F1EA;
-    --color-text-muted: #B6B2A8;
-    --color-text-faint: #7D786D;
-    --color-text-on-primary: var(--nc-white);
-
-    --color-border: #F3F1EA;
-    --color-border-subtle: rgba(243, 241, 234, 0.16);
-    --color-border-faint: rgba(243, 241, 234, 0.08);
-
-    --color-primary: var(--nc-indigo-500);
-    --color-primary-hover: var(--nc-indigo-600);
-    --color-primary-active: var(--nc-indigo-600);
-    --color-primary-soft: rgba(76, 95, 219, 0.18);
-
-    --color-success-soft: rgba(28, 138, 75, 0.18);
-    --color-warning-soft: rgba(181, 121, 10, 0.18);
-    --color-danger-soft: rgba(179, 55, 42, 0.18);
-
-    --shadow-editorial: 0 1px 0 rgba(0, 0, 0, 0.4);
-    --shadow-editorial-md: 0 6px 16px rgba(0, 0, 0, 0.35);
-    --shadow-editorial-lg: 0 16px 40px rgba(0, 0, 0, 0.45);
-  }
-}
-
-/* Explicit theme toggle hook for when a future switcher is wired up. */
+/* Dark theme — explicit only. Applied exclusively via [data-theme="dark"],
+   set by ThemeProvider from an explicit user choice (or a stored
+   preference). There is deliberately NO `@media (prefers-color-scheme:
+   dark)` gate here: OS/browser preference must never silently override the
+   app's own light default. */
 :root[data-theme="dark"] {
   --color-bg: #1B1A17;
   --color-bg-alt: #211F1B;
