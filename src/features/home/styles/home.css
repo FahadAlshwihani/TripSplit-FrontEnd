@@ -20,7 +20,7 @@
 
 .hero__headline.text-display {
   color: var(--color-text);
-  max-width: 46rem;
+  max-width: 72rem;
 }
 
 .hero__description {
@@ -37,6 +37,21 @@
   margin-block-start: var(--space-8);
 }
 
+/* Neo-classic "print" depth: a crisp, zero-blur offset layer — not a soft/
+   material-design elevation shadow — behind each hero CTA. Scoped to the
+   hero only; the shared .btn primitive itself stays flat elsewhere. The
+   offset color is a theme-invariant ink tone (not --color-border, which
+   flips light in dark mode) so the depth cue never turns into a glow. */
+.hero__actions .btn {
+  box-shadow: 4px 4px 0 0 var(--nc-ink-900);
+  transition: transform .1s ease, box-shadow .1s ease, background-color .15s ease, color .15s ease;
+}
+
+.hero__actions .btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 0 var(--nc-ink-900);
+}
+
 @media (max-width: 767px) {
   .hero {
     padding: var(--space-12) var(--space-5) var(--space-10);
@@ -50,8 +65,8 @@
   .hero__description { padding-inline-start: var(--space-5); max-width: none; }
   .hero__description--desktop { display: none; }
   .hero__description--mobile { display: block; }
-  .hero__actions { flex-direction: column; padding-inline-start: var(--space-5); margin-block-start: var(--space-6); }
-  .hero__actions .btn { width: 100%; }
+  .hero__actions { flex-direction: column; padding-inline-start: var(--space-5); margin-block-start: var(--space-6); gap: var(--space-5); }
+  .hero__actions .btn { width: 100%; text-transform: none; letter-spacing: normal; }
 }
 
 /* ---------------------------------------------------------------------- */
