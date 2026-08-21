@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import HomePage from '../../../pages/HomePage';
+import HomePage from '../../home/pages/HomePage';
 import SettlementsPanel from '../../settlements/components/SettlementsPanel';
 import { getTrips } from '../api/tripsApi';
 
