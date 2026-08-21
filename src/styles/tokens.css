@@ -1,0 +1,158 @@
+/*
+  Neo-classic design tokens.
+  Source of truth: approved design-system reference (Primary #384CCA,
+  Secondary #F8FCF8, Tertiary #1A1A1A, Neutral #F9F7F2).
+
+  These are additive, global CSS custom properties. Nothing here overrides
+  existing selectors, so pages that have not been redesigned yet are
+  unaffected until they opt in by consuming the variables.
+*/
+
+:root {
+  /* Primitive palette */
+  --nc-cream-50: #F9F7F2;
+  --nc-cream-100: #F1EDE2;
+  --nc-paper: #FDFCF8;
+  --nc-ink-900: #1A1A1A;
+  --nc-ink-700: #3B3A36;
+  --nc-ink-500: #6B6862;
+  --nc-ink-300: #9A968C;
+  --nc-white: #F8FCF8;
+  --nc-indigo-700: #2A3599;
+  --nc-indigo-600: #384CCA;
+  --nc-indigo-500: #4C5FDB;
+  --nc-indigo-100: #E3E6FA;
+  --nc-green-600: #1C8A4B;
+  --nc-green-100: #DCF1E3;
+  --nc-amber-600: #B5790A;
+  --nc-amber-100: #F6E7C9;
+  --nc-red-600: #B3372A;
+  --nc-red-100: #F5DDDA;
+
+  /* Semantic — surfaces & text */
+  --color-bg: var(--nc-cream-50);
+  --color-bg-alt: var(--nc-cream-100);
+  --color-surface: var(--nc-paper);
+  --color-surface-alt: var(--nc-cream-100);
+  --color-text: var(--nc-ink-900);
+  --color-text-muted: var(--nc-ink-500);
+  --color-text-faint: var(--nc-ink-300);
+  --color-text-on-primary: var(--nc-white);
+
+  /* Semantic — borders */
+  --color-border: var(--nc-ink-900);
+  --color-border-subtle: rgba(26, 26, 26, 0.14);
+  --color-border-faint: rgba(26, 26, 26, 0.08);
+
+  /* Semantic — brand */
+  --color-primary: var(--nc-indigo-600);
+  --color-primary-hover: var(--nc-indigo-700);
+  --color-primary-active: var(--nc-indigo-700);
+  --color-primary-contrast: var(--nc-white);
+  --color-primary-soft: var(--nc-indigo-100);
+
+  /* Semantic — status */
+  --color-success: var(--nc-green-600);
+  --color-success-soft: var(--nc-green-100);
+  --color-warning: var(--nc-amber-600);
+  --color-warning-soft: var(--nc-amber-100);
+  --color-danger: var(--nc-red-600);
+  --color-danger-soft: var(--nc-red-100);
+
+  /* Radii — minimal, editorial */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  /* Borders */
+  --border-width: 1px;
+  --border-width-lg: 2px;
+
+  /* Shadows — restrained, flat product feel */
+  --shadow-editorial: 0 1px 0 rgba(26, 26, 26, 0.05);
+  --shadow-editorial-md: 0 6px 16px rgba(26, 26, 26, 0.07);
+  --shadow-editorial-lg: 0 16px 40px rgba(26, 26, 26, 0.09);
+
+  /* Spacing scale (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Layout */
+  --content-max-width: 1200px;
+  --nav-height: 64px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Dark-mode token foundation (system preference). Light stays authoritative
+   unless the OS/browser prefers dark and no explicit theme is set. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #1B1A17;
+    --color-bg-alt: #211F1B;
+    --color-surface: #242220;
+    --color-surface-alt: #2B2925;
+
+    --color-text: #F3F1EA;
+    --color-text-muted: #B6B2A8;
+    --color-text-faint: #7D786D;
+    --color-text-on-primary: var(--nc-white);
+
+    --color-border: #F3F1EA;
+    --color-border-subtle: rgba(243, 241, 234, 0.16);
+    --color-border-faint: rgba(243, 241, 234, 0.08);
+
+    --color-primary: var(--nc-indigo-500);
+    --color-primary-hover: var(--nc-indigo-600);
+    --color-primary-active: var(--nc-indigo-600);
+    --color-primary-soft: rgba(76, 95, 219, 0.18);
+
+    --color-success-soft: rgba(28, 138, 75, 0.18);
+    --color-warning-soft: rgba(181, 121, 10, 0.18);
+    --color-danger-soft: rgba(179, 55, 42, 0.18);
+
+    --shadow-editorial: 0 1px 0 rgba(0, 0, 0, 0.4);
+    --shadow-editorial-md: 0 6px 16px rgba(0, 0, 0, 0.35);
+    --shadow-editorial-lg: 0 16px 40px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* Explicit theme toggle hook for when a future switcher is wired up. */
+:root[data-theme="dark"] {
+  --color-bg: #1B1A17;
+  --color-bg-alt: #211F1B;
+  --color-surface: #242220;
+  --color-surface-alt: #2B2925;
+
+  --color-text: #F3F1EA;
+  --color-text-muted: #B6B2A8;
+  --color-text-faint: #7D786D;
+  --color-text-on-primary: var(--nc-white);
+
+  --color-border: #F3F1EA;
+  --color-border-subtle: rgba(243, 241, 234, 0.16);
+  --color-border-faint: rgba(243, 241, 234, 0.08);
+
+  --color-primary: var(--nc-indigo-500);
+  --color-primary-hover: var(--nc-indigo-600);
+  --color-primary-active: var(--nc-indigo-600);
+  --color-primary-soft: rgba(76, 95, 219, 0.18);
+
+  --color-success-soft: rgba(28, 138, 75, 0.18);
+  --color-warning-soft: rgba(181, 121, 10, 0.18);
+  --color-danger-soft: rgba(179, 55, 42, 0.18);
+
+  --shadow-editorial: 0 1px 0 rgba(0, 0, 0, 0.4);
+  --shadow-editorial-md: 0 6px 16px rgba(0, 0, 0, 0.35);
+  --shadow-editorial-lg: 0 16px 40px rgba(0, 0, 0, 0.45);
+}

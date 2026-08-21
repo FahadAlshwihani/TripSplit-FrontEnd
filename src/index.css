@@ -7,6 +7,10 @@
 @import '~bootstrap/dist/css/bootstrap.min.css';
 @import './styles/SweetAlertCustom.css'; /* Added this line */
 
+/* Neo-classic design system foundation — additive tokens, safe for every page */
+@import './styles/tokens.css';
+@import './styles/typography.css';
+
 /* Add RTL text alignment when needed */
 [dir="rtl"] {
   text-align: right;
