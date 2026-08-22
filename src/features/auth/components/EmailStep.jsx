@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import Spinner from './Spinner';
+import MobileEditorialImage from './MobileEditorialImage';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,21 +32,25 @@ const PersonIcon = () => (
   </svg>
 );
 
-const EmailStep = ({ busy, error, guestAllowed, onSubmit, onGuest }) => {
+const EmailStep = ({ busy, errorKey, guestAllowed, onSubmit, onGuest }) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
-  const [fieldError, setFieldError] = useState('');
+  // A KEY, not a translated string — see AuthPage's errorKey for why.
+  const [fieldErrorKey, setFieldErrorKey] = useState(null);
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    if (busy) return;
     const trimmed = email.trim();
     if (!EMAIL_PATTERN.test(trimmed)) {
-      setFieldError(t('auth.email.invalid'));
+      setFieldErrorKey('auth.errors.invalidEmail');
       return;
     }
-    setFieldError('');
+    setFieldErrorKey(null);
     onSubmit(trimmed);
   };
+
+  const visibleErrorKey = fieldErrorKey || errorKey;
 
   return (
     <div className="auth-step">
@@ -78,10 +84,23 @@ const EmailStep = ({ busy, error, guestAllowed, onSubmit, onGuest }) => {
             <MailIcon />
           </div>
         </div>
-        {(fieldError || error) && <p className="auth-error" role="alert">{fieldError || error}</p>}
-        <button type="submit" className="auth-btn auth-btn--primary" disabled={busy}>
-          <span>{t('auth.email.submit')}</span>
-          <ArrowForwardIcon />
+        {visibleErrorKey && <p className="auth-error" role="alert">{t(visibleErrorKey)}</p>}
+        <button
+          type="submit"
+          className={`auth-btn auth-btn--primary${busy ? ' auth-btn--loading' : ''}`}
+          disabled={busy}
+        >
+          {busy ? (
+            <>
+              <Spinner />
+              <span>{t('auth.email.sending')}</span>
+            </>
+          ) : (
+            <>
+              <span>{t('auth.email.submit')}</span>
+              <ArrowForwardIcon />
+            </>
+          )}
         </button>
       </form>
       {/*
@@ -116,6 +135,7 @@ const EmailStep = ({ busy, error, guestAllowed, onSubmit, onGuest }) => {
           </>
         )}
       </div>
+      <MobileEditorialImage />
     </div>
   );
 };

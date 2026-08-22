@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AVATARS } from '../../../shared/utils/avatars';
 
-const ProfileStep = ({ busy, error, onSubmit }) => {
+const ProfileStep = ({ busy, errorKey, onSubmit }) => {
   const { t } = useTranslation();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -45,7 +45,7 @@ const ProfileStep = ({ busy, error, onSubmit }) => {
             ))}
           </div>
         </div>
-        {error && <p className="auth-error" role="alert">{error}</p>}
+        {errorKey && <p className="auth-error" role="alert">{t(errorKey)}</p>}
         <button type="submit" className="auth-btn auth-btn--primary" disabled={busy}>
           <span>{t('auth.profile.submit')}</span>
         </button>
