@@ -1,0 +1,466 @@
+/*
+  Auth Gateway — transactional shell, deliberately NOT the marketing
+  PublicLayout (no Features/Pricing links, no footer), per the Stitch
+  brief's own transactional header. Still carries the brand, and the
+  language/theme utility controls stay available on every breakpoint.
+  Feature-owned: nothing here leaks into Home/Pricing/Features/PublicLayout.
+
+  App.css ships a legacy `p, span, a, li { color: white; }` reset with no
+  class in its selector, which wins over inheritance on any un-classed
+  span/li text node regardless of load order (discovered on the Pricing
+  receipt, re-confirmed on Features). Reasserted once for this whole page.
+*/
+
+.auth-page span,
+.auth-page li {
+  color: inherit;
+}
+
+/* .public-layout carries this same reset (see PublicLayout.css) for every
+   other public page; this shell is deliberately NOT wrapped in
+   .public-layout (see file header), so it needs its own copy. Without it,
+   anchors fall through to Bootstrap's underlined link default. */
+.auth-page a { text-decoration: none; }
+.auth-page ul { list-style: none; margin: 0; padding: 0; }
+.auth-page button { font-family: inherit; }
+
+/* Inputs/OTP cells get their own border-based focus treatment below
+   (matching the rest of the app's form fields); this generic ring is only
+   for links and buttons that don't otherwise redraw on focus. */
+.auth-page a:focus-visible,
+.auth-page button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.auth-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Header */
+
+.auth-header {
+  border-block-end: var(--border-width) solid var(--color-border);
+  padding: var(--space-4) var(--page-margin-mobile);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@media (min-width: 768px) {
+  .auth-header {
+    padding-inline: var(--page-margin-desktop);
+    padding-block: var(--space-6);
+    align-items: flex-end;
+  }
+}
+
+.auth-header__brand-group { display: flex; flex-direction: column; }
+
+.auth-header__brand.text-display {
+  color: var(--nc-indigo-700);
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .auth-header__brand.text-display {
+    color: var(--color-text);
+    text-transform: uppercase;
+  }
+}
+
+.auth-header__secure-label.text-label {
+  display: none;
+  color: var(--color-text-muted);
+  letter-spacing: 0.1em;
+  margin-block-start: var(--space-1);
+}
+
+@media (min-width: 768px) { .auth-header__secure-label.text-label { display: block; } }
+
+.auth-header__right { display: flex; align-items: center; gap: var(--space-4); }
+
+.auth-header__status { display: none; align-items: center; gap: var(--space-2); }
+
+@media (min-width: 768px) { .auth-header__status { display: flex; } }
+
+.auth-header__pulse {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--nc-indigo-700);
+  animation: auth-pulse 2s ease-in-out infinite;
+}
+
+@keyframes auth-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-header__pulse { animation: none; }
+}
+
+.auth-header__utilities { display: flex; align-items: center; gap: var(--space-2); }
+
+/* ---------------------------------------------------------------------- */
+/* Main composition — 12-col grid desktop, single column mobile. The
+   editorial context panel is entirely hidden below 768px (mobile Stitch
+   drops it completely; the form's own heading carries the page alone). */
+
+.auth-main {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: var(--page-margin-mobile);
+  padding-block: var(--space-8);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .auth-main {
+    padding-inline: var(--page-margin-desktop);
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--grid-gutter);
+  }
+}
+
+.auth-context { display: none; }
+
+@media (min-width: 768px) {
+  .auth-context {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    grid-column: 1 / span 5;
+    border-inline-end: var(--border-width) solid var(--color-border);
+    padding-inline-end: var(--space-6);
+    padding-block-end: var(--space-8);
+  }
+}
+
+@media (min-width: 1024px) {
+  .auth-context { grid-column: 1 / span 4; }
+}
+
+.auth-context__heading.text-headline-lg {
+  color: var(--color-text);
+  margin-block-end: var(--space-4);
+}
+
+.auth-context__description.text-copy-lg {
+  color: var(--color-text-muted);
+  max-width: 24rem;
+}
+
+.auth-context__visual {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  border: var(--border-width) solid var(--color-border);
+  padding: var(--space-2);
+  background: var(--color-surface-alt);
+}
+
+.auth-context__visual-inner {
+  width: 100%;
+  height: 100%;
+  border: var(--border-width) solid var(--color-border);
+  background:
+    repeating-linear-gradient(135deg, rgba(27, 28, 25, 0.06) 0 2px, transparent 2px 14px),
+    linear-gradient(160deg, #cfcdc6, #e8e6e0);
+  filter: grayscale(1) contrast(1.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--nc-ink-700);
+}
+
+.auth-context__badge.text-financial {
+  position: absolute;
+  inset-block-end: var(--space-2);
+  inset-inline-end: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  background: var(--nc-paper);
+  border: var(--border-width) solid var(--color-border);
+  color: var(--color-text);
+  font-size: 11px;
+}
+
+.auth-form-area { width: 100%; }
+
+@media (min-width: 768px) {
+  .auth-form-area {
+    grid-column: 7 / span 6;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 1024px) {
+  .auth-form-area { grid-column: 6 / span 6; }
+}
+
+.auth-form-area__inner { width: 100%; max-width: 28rem; }
+
+/* ---------------------------------------------------------------------- */
+/* Step content shared by email / otp / profile */
+
+.auth-step__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: none;
+  border: none;
+  padding: 0;
+  margin-block-end: var(--space-4);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.auth-step__back:hover { color: var(--nc-indigo-700); }
+
+.auth-step__heading.text-headline-md {
+  color: var(--color-text);
+  margin-block-end: var(--space-1);
+}
+
+.auth-step__description.text-copy {
+  color: var(--color-text-muted);
+}
+
+.auth-step__notice.text-copy-sm {
+  color: var(--color-text-muted);
+  margin-block-start: var(--space-2);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-block-start: var(--space-8);
+}
+
+.auth-field { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.auth-field__label.text-label { color: var(--color-text); }
+
+.auth-field__control { position: relative; display: flex; align-items: center; }
+
+.auth-field__control svg {
+  position: absolute;
+  inset-inline-end: var(--space-3);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.auth-field__input {
+  width: 100%;
+  min-height: 48px;
+  padding-inline: var(--space-3);
+  padding-inline-end: var(--space-10);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.auth-field__input::placeholder { color: var(--color-text-faint); }
+
+.auth-field__input:focus-visible {
+  outline: none;
+  border-color: var(--nc-indigo-700);
+  border-width: var(--border-width-lg);
+}
+
+.auth-field__otp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-end: var(--space-2);
+}
+
+.auth-resend {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--nc-indigo-700);
+  cursor: pointer;
+}
+
+.auth-resend:hover:not(:disabled) { text-decoration: underline; }
+
+.auth-resend:disabled { color: var(--color-text-muted); cursor: not-allowed; }
+
+.otp-cells { display: flex; gap: var(--space-2); justify-content: space-between; }
+
+.otp-cells__cell {
+  inline-size: 44px;
+  block-size: 52px;
+  text-align: center;
+  font: var(--text-display);
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+@media (min-width: 768px) {
+  .otp-cells__cell { inline-size: 56px; block-size: 64px; }
+}
+
+.otp-cells__cell:focus-visible {
+  outline: none;
+  border-color: var(--nc-indigo-700);
+  border-width: var(--border-width-lg);
+}
+
+.auth-error {
+  margin: 0;
+  color: var(--color-danger);
+  font: var(--text-body-sm);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Buttons — same hard-shadow language as Home/Pricing: hover only darkens
+   the fill, border/shadow/text stay pinned; pressed collapses the offset. */
+
+.auth-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-3) var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.auth-btn--primary {
+  background: var(--nc-indigo-700);
+  border-color: var(--nc-indigo-700);
+  color: var(--nc-white);
+  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+}
+
+.auth-btn--primary:hover:not(:disabled),
+.auth-btn--primary:focus-visible {
+  background: var(--nc-indigo-800);
+  border-color: var(--nc-indigo-700);
+  color: var(--nc-white);
+  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+}
+
+.auth-btn--secondary {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+  box-shadow: 2px 2px 0 0 var(--nc-ink-900);
+}
+
+.auth-btn--secondary:hover:not(:disabled),
+.auth-btn--secondary:focus-visible {
+  background: var(--color-surface-alt);
+  border-color: var(--color-border);
+  color: var(--color-text);
+  box-shadow: 2px 2px 0 0 var(--nc-ink-900);
+}
+
+.auth-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 var(--nc-ink-900);
+}
+
+.auth-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
+
+/* Arrows are directional — mirror in RTL. Lock/mail/check icons are
+   non-directional and deliberately left alone. */
+[dir="rtl"] .auth-btn--primary svg,
+[dir="rtl"] .auth-step__back svg,
+[dir="rtl"] .auth-footer__link svg {
+  transform: scaleX(-1);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Guest + footer */
+
+.auth-guest {
+  margin-block-start: var(--space-6);
+  padding-block-start: var(--space-6);
+  border-block-start: var(--border-width) dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.auth-guest__helper.text-copy-sm {
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0;
+}
+
+.auth-footer {
+  margin-block-start: var(--space-8);
+  padding-block-start: var(--space-6);
+  border-block-start: var(--border-width) solid var(--color-border-subtle);
+}
+
+.auth-footer__link.text-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.auth-footer__link.text-label:hover { color: var(--color-text); }
+
+/* ---------------------------------------------------------------------- */
+/* Profile step (onboarding) avatars */
+
+.auth-avatars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-start: var(--space-1);
+}
+
+.auth-avatars__choice {
+  inline-size: 44px;
+  block-size: 44px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.auth-avatars__choice:hover { background: var(--color-surface-alt); }
+
+.auth-avatars__choice.is-selected {
+  border-color: var(--nc-indigo-700);
+  border-width: var(--border-width-lg);
+  background: var(--color-primary-soft);
+}
