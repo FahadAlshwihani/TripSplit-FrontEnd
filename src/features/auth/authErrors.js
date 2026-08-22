@@ -63,3 +63,15 @@ export const getOtpErrorKey = (error, fallbackKey = 'auth.otp.errors.unknown') =
   if (error.status >= 500) return 'auth.otp.errors.server';
   return fallbackKey;
 };
+
+// Complete-Profile / onboarding save failures — only network vs. generic
+// "couldn't save" distinction is specified for this screen, so there's no
+// per-code map to speak of; a network failure (status 0) is the one case
+// worth telling apart from a plain save failure.
+export const getProfileErrorKey = (error, fallbackKey = 'profile.setup.errors.saveFailed') => {
+  if (!error) return null;
+  if (error.status === 0 || error.code === 'network_error' || error.code === 'request_timeout') {
+    return 'profile.setup.errors.network';
+  }
+  return fallbackKey;
+};

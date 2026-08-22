@@ -237,7 +237,7 @@ test('a new registrant sees the profile step before continuing', async () => {
   await advanceToOtp();
   fillOtp('123456');
   fireEvent.click(screen.getByRole('button', { name: /auth.otp.verify/ }));
-  await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('auth.profile.heading'));
+  await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('profile.setup.title'));
 });
 
 test('an invalid-OTP backend code renders its localized message from the OTP-card namespace, never the raw backend text', async () => {

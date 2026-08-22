@@ -3,12 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { requestOtp, verifyOtp } from '../api/authApi';
 import { useAuth } from '../../../auth/AuthContext';
 import { getSafeNext } from '../../../auth/safeNext';
-import { getAuthErrorKey, getOtpErrorKey } from '../authErrors';
+import { getAuthErrorKey, getOtpErrorKey, getProfileErrorKey } from '../authErrors';
 import AuthHeader from '../components/AuthHeader';
 import AuthContextPanel from '../components/AuthContextPanel';
 import EmailStep from '../components/EmailStep';
 import OtpStep from '../components/OtpStep';
-import ProfileStep from '../components/ProfileStep';
+import ProfileSetupPage from '../../profile/pages/ProfileSetupPage';
 import '../styles/auth.css';
 
 const RESEND_SECONDS = 60;
@@ -91,7 +91,7 @@ const AuthPage = () => {
       await saveProfile(profile);
       navigate(next);
     } catch (err) {
-      setErrorKey(getAuthErrorKey(err, 'auth.errors.unknown'));
+      setErrorKey(getProfileErrorKey(err));
     } finally {
       setIsSavingProfile(false);
     }
@@ -99,10 +99,11 @@ const AuthPage = () => {
 
   const continueAsGuest = () => navigate(next, { state: { fromGateway: true } });
 
-  // The OTP state is its own compact, standalone verification card (see
-  // OtpStep.jsx) — not a step nested inside the two-column Email/Profile
-  // shell below. It renders full-viewport with no AuthHeader/
-  // AuthContextPanel, matching the approved Stitch reference exactly.
+  // OTP and Profile are each their own compact, standalone card (see
+  // OtpStep.jsx / ProfileSetupPage.jsx) — not steps nested inside the
+  // two-column Email shell below. Both render full-viewport with no
+  // AuthHeader/AuthContextPanel, matching their approved Stitch
+  // references exactly.
   if (step === 'otp') {
     return (
       <OtpStep
@@ -118,6 +119,10 @@ const AuthPage = () => {
     );
   }
 
+  if (step === 'profile') {
+    return <ProfileSetupPage busy={isSavingProfile} errorKey={errorKey} onSubmit={submitProfile} />;
+  }
+
   return (
     <div className="auth-page">
       <AuthHeader />
@@ -125,18 +130,13 @@ const AuthPage = () => {
         <AuthContextPanel />
         <div className="auth-form-area">
           <div className="auth-form-area__inner">
-            {step === 'email' && (
-              <EmailStep
-                busy={isSendingOtp}
-                errorKey={errorKey}
-                guestAllowed={guestAllowed}
-                onSubmit={submitEmail}
-                onGuest={continueAsGuest}
-              />
-            )}
-            {step === 'profile' && (
-              <ProfileStep busy={isSavingProfile} errorKey={errorKey} onSubmit={submitProfile} />
-            )}
+            <EmailStep
+              busy={isSendingOtp}
+              errorKey={errorKey}
+              guestAllowed={guestAllowed}
+              onSubmit={submitEmail}
+              onGuest={continueAsGuest}
+            />
           </div>
         </div>
       </main>

@@ -1,0 +1,359 @@
+/*
+  Complete-Profile / onboarding card — same standalone full-page pattern
+  as the OTP card (see auth/styles/auth.css's .otp-page): its own centered
+  composition, no AuthHeader/AuthContextPanel. Reuses .auth-btn/.auth-error/
+  .auth-spinner from auth.css (always loaded — AuthPage.jsx imports it
+  unconditionally) rather than redefining button/error/spinner styling
+  here.
+
+  The two approved Stitch references genuinely disagree on shape at two
+  points — desktop's avatar preview and color swatches are square
+  (small radius), mobile's are circular — and on header alignment
+  (desktop centered, mobile start-aligned). Both are replicated exactly
+  per breakpoint below, not reconciled into one compromise shape.
+*/
+
+.profile-setup-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--page-margin-mobile);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.profile-setup-page a,
+.profile-setup-page button { font-family: inherit; }
+
+.profile-setup-page span,
+.profile-setup-page li { color: inherit; }
+
+.profile-setup-page button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+  .profile-setup-page { padding: var(--page-margin-desktop); }
+}
+
+.profile-setup-card {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  padding: var(--space-6);
+  box-shadow: 4px 4px 0 0 var(--color-border);
+}
+
+@media (min-width: 768px) {
+  .profile-setup-card { padding: var(--space-8); }
+}
+
+.profile-setup-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: start;
+}
+
+@media (min-width: 768px) {
+  .profile-setup-card__header {
+    align-items: center;
+    text-align: center;
+  }
+}
+
+.profile-setup-card__brand {
+  color: var(--nc-indigo-700);
+  letter-spacing: 0.2em;
+}
+
+.profile-setup-card__heading.text-display {
+  color: var(--color-text);
+  margin: 0;
+}
+
+.profile-setup-card__description.text-copy-lg {
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 26rem;
+}
+
+.profile-setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.pf-field { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.pf-field__label.text-label { color: var(--color-text); }
+
+.pf-field__input {
+  width: 100%;
+  min-height: 48px;
+  padding-inline: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.pf-field__input::placeholder { color: var(--color-text-faint); }
+
+.pf-field__input:focus-visible {
+  outline: none;
+  border-color: var(--nc-indigo-700);
+  border-width: var(--border-width-lg);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Avatar Appearance section */
+
+.pf-avatar-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.pf-avatar-section__legend.text-label {
+  color: var(--color-text);
+  margin: 0;
+}
+
+@media (max-width: 767px) {
+  .pf-avatar-section {
+    position: relative;
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface-alt);
+    padding: var(--space-6);
+  }
+
+  .pf-avatar-section__legend {
+    position: absolute;
+    inset-block-start: -12px;
+    inset-inline-start: var(--space-4);
+    background: var(--color-bg);
+    border: var(--border-width) solid var(--color-border);
+    padding: 0 var(--space-2);
+  }
+}
+
+.pf-preview {
+  display: flex;
+  justify-content: center;
+}
+
+.pf-preview__avatar {
+  border-width: var(--border-width-lg);
+  border-radius: var(--radius-sm);
+  box-shadow: 4px 4px 0 0 var(--color-border);
+}
+
+@media (max-width: 767px) {
+  .pf-preview__avatar { border-radius: var(--radius-pill); }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Initials / Characters segmented control */
+
+.pf-tabs {
+  display: flex;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.pf-tabs__tab {
+  flex: 1 1 0;
+  padding-block: var(--space-3);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border: none;
+  border-inline-end: var(--border-width) solid var(--color-border);
+  text-align: center;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.pf-tabs__tab:last-child { border-inline-end: none; }
+
+.pf-tabs__tab:hover:not(.is-active) { background: var(--color-surface-container); }
+
+.pf-tabs__tab.is-active {
+  background: var(--nc-indigo-700);
+  color: var(--nc-white);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Initials color swatches */
+
+.pf-swatches { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); text-align: center; }
+
+.pf-swatches__helper.text-copy-sm { color: var(--color-text-muted); margin: 0; }
+
+.pf-swatches__label.text-label { color: var(--color-text); align-self: flex-start; }
+
+@media (min-width: 768px) {
+  .pf-swatches__label { align-self: center; }
+}
+
+.pf-swatches__row { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); }
+
+.pf-swatch {
+  inline-size: 32px;
+  block-size: 32px;
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.pf-swatch:hover { box-shadow: 2px 2px 0 0 var(--color-border); }
+
+.pf-swatch.is-selected {
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--nc-indigo-700);
+}
+
+@media (max-width: 767px) {
+  .pf-swatch { border-radius: var(--radius-pill); }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Category filter row (Avatars mode) */
+
+.pf-categories {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.pf-categories__chip {
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.pf-categories__chip:hover:not(.is-active) { background: var(--color-surface-alt); }
+
+.pf-categories__chip.is-active {
+  background: var(--nc-indigo-700);
+  border-color: var(--nc-indigo-700);
+  color: var(--nc-white);
+}
+
+/* ---------------------------------------------------------------------- */
+/* DiceBear avatar picker grid + shuffle */
+
+.pf-picker { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
+
+.pf-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .pf-picker-grid { grid-template-columns: repeat(6, 1fr); }
+}
+
+.pf-picker-grid__item {
+  aspect-ratio: 1;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+}
+
+.pf-picker-grid__item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.pf-picker-grid__placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-surface-alt) 25%, var(--color-surface-container) 50%, var(--color-surface-alt) 75%);
+  background-size: 200% 100%;
+  animation: pf-avatar-shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-picker-grid__placeholder { animation: none; }
+}
+
+.pf-picker-grid__item:hover:not(:disabled) { box-shadow: 2px 2px 0 0 var(--color-border); }
+
+.pf-picker-grid__item:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.pf-picker-grid__item.is-selected {
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--nc-indigo-700);
+}
+
+.pf-picker__shuffle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.pf-picker__shuffle:hover { background: var(--color-surface-alt); }
+
+/* ---------------------------------------------------------------------- */
+/* Animation control — only rendered for animation-capable styles */
+
+.pf-animation { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+
+.pf-animation__label.text-label { color: var(--color-text); }
+
+.pf-animation__options {
+  display: inline-flex;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.pf-animation__option {
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: none;
+  border-inline-end: var(--border-width) solid var(--color-border);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.pf-animation__option:last-child { border-inline-end: none; }
+
+.pf-animation__option:hover:not(.is-active) { background: var(--color-surface-alt); }
+
+.pf-animation__option.is-active {
+  background: var(--nc-indigo-700);
+  color: var(--nc-white);
+}

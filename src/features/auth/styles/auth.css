@@ -538,36 +538,6 @@
 }
 
 /* ---------------------------------------------------------------------- */
-/* Profile step (onboarding) avatars */
-
-.auth-avatars {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-block-start: var(--space-1);
-}
-
-.auth-avatars__choice {
-  inline-size: 44px;
-  block-size: 44px;
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.auth-avatars__choice:hover { background: var(--color-surface-alt); }
-
-.auth-avatars__choice.is-selected {
-  border-color: var(--nc-indigo-700);
-  border-width: var(--border-width-lg);
-  background: var(--color-primary-soft);
-}
-
-/* ---------------------------------------------------------------------- */
 /* Shared loading spinner */
 
 .auth-spinner {
