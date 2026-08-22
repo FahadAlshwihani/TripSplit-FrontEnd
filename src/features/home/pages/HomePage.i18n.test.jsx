@@ -6,6 +6,17 @@ import i18n from '../../../i18n';
 import HomePage from './HomePage';
 import { ThemeProvider } from '../../../components/ThemeProvider';
 import LanguageProvider from '../../../components/LanguageProvider';
+import { AuthProvider } from '../../../auth/AuthContext';
+
+// Real AuthProvider (so Hero/ProductPreview's real useAuth() behavior is
+// exercised end-to-end), but its one network dependency is mocked so the
+// anonymous state resolves instantly instead of via a real, unmocked
+// network call to a backend that isn't running in this test environment.
+jest.mock('../../auth/api/authApi', () => ({
+  getCurrentUser: () => Promise.reject(new Error('anonymous')),
+  logout: jest.fn(),
+  updateProfile: jest.fn(),
+}));
 
 beforeEach(async () => {
   window.localStorage.clear();
@@ -13,7 +24,7 @@ beforeEach(async () => {
   await i18n.changeLanguage('en');
 });
 
-const renderHome = () => render(<MemoryRouter><LanguageProvider><ThemeProvider><HomePage /></ThemeProvider></LanguageProvider></MemoryRouter>);
+const renderHome = () => render(<MemoryRouter><LanguageProvider><ThemeProvider><AuthProvider><HomePage /></AuthProvider></ThemeProvider></LanguageProvider></MemoryRouter>);
 const clickByVisibleText = (text) => fireEvent.click(screen.getByText(text, { selector: 'button' }));
 
 test('clicking AR renders real Arabic Home copy and switches direction to RTL', () => {
@@ -38,8 +49,8 @@ test('switching language does not navigate away or blank the page — the same r
   clickByVisibleText('AR');
   expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
   expect(document.querySelector('.neo-loading')).not.toBeInTheDocument();
-  const createLink = screen.getAllByRole('link').find((a) => a.getAttribute('href') === '/create-trip');
-  const joinLink = screen.getAllByRole('link').find((a) => a.getAttribute('href') === '/join-trip');
+  const createLink = screen.getAllByRole('link').find((a) => a.getAttribute('href') === '/auth?next=%2Fcreate-trip');
+  const joinLink = screen.getAllByRole('link').find((a) => a.getAttribute('href') === '/auth?next=%2Fjoin-trip');
   expect(createLink).toBeTruthy();
   expect(joinLink).toBeTruthy();
 });

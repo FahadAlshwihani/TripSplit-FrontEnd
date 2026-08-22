@@ -8,7 +8,14 @@ let mockLanguage = 'en';
 const mockChangeLanguage = jest.fn();
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: mockLanguage, changeLanguage: mockChangeLanguage } }) }));
 
-afterEach(() => { mockLanguage = 'en'; mockChangeLanguage.mockClear(); window.localStorage.clear(); document.documentElement.removeAttribute('data-theme'); });
+// Hero/ProductPreview CTAs read useAuth() to decide whether Create/Join Trip
+// route straight to the page (signed in) or through the Auth Gateway first
+// (anonymous). Defaults to anonymous, matching the guest-first product
+// default; individual tests override mockAuthUser to cover the signed-in path.
+let mockAuthUser = null;
+jest.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: mockAuthUser, authLoading: false, logout: jest.fn() }) }));
+
+afterEach(() => { mockLanguage = 'en'; mockAuthUser = null; mockChangeLanguage.mockClear(); window.localStorage.clear(); document.documentElement.removeAttribute('data-theme'); });
 
 const renderHome = () => render(<MemoryRouter><ThemeProvider><HomePage /></ThemeProvider></MemoryRouter>);
 
@@ -35,7 +42,36 @@ test('does not embed the Create Trip or Join Trip forms', () => {
   expect(document.getElementById('get-started')).not.toBeInTheDocument();
 });
 
-test('Create Trip CTA routes to the dedicated /create-trip page', () => {
+test('anonymous Create Trip CTA routes through the Auth Gateway first', () => {
+  render(
+    <MemoryRouter initialEntries={['/']}>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/auth" element={<p>auth-page</p>} />
+      </Routes>
+    </MemoryRouter>
+  );
+  expect(screen.getByRole('link', { name: 'home.hero.createTrip' })).toHaveAttribute('href', '/auth?next=%2Fcreate-trip');
+  fireEvent.click(screen.getByRole('link', { name: 'home.hero.createTrip' }));
+  expect(screen.getByText('auth-page')).toBeInTheDocument();
+});
+
+test('anonymous Join Trip CTA routes through the Auth Gateway first', () => {
+  render(
+    <MemoryRouter initialEntries={['/']}>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/auth" element={<p>auth-page</p>} />
+      </Routes>
+    </MemoryRouter>
+  );
+  expect(screen.getByRole('link', { name: 'home.hero.joinTrip' })).toHaveAttribute('href', '/auth?next=%2Fjoin-trip');
+  fireEvent.click(screen.getByRole('link', { name: 'home.hero.joinTrip' }));
+  expect(screen.getByText('auth-page')).toBeInTheDocument();
+});
+
+test('signed-in Create Trip CTA routes straight to the dedicated page', () => {
+  mockAuthUser = { id: 'u1' };
   render(
     <MemoryRouter initialEntries={['/']}>
       <Routes>
@@ -48,7 +84,8 @@ test('Create Trip CTA routes to the dedicated /create-trip page', () => {
   expect(screen.getByText('create-trip-page')).toBeInTheDocument();
 });
 
-test('Join Trip CTA routes to the dedicated /join-trip page', () => {
+test('signed-in Join Trip CTA routes straight to the dedicated page', () => {
+  mockAuthUser = { id: 'u1' };
   render(
     <MemoryRouter initialEntries={['/']}>
       <Routes>
@@ -101,7 +138,7 @@ test('renders correctly when the active language is Arabic', () => {
   renderHome();
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('home.hero.headline');
   expect(screen.getByText('home.preview.tripName')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'home.hero.createTrip' })).toHaveAttribute('href', '/create-trip');
+  expect(screen.getByRole('link', { name: 'home.hero.createTrip' })).toHaveAttribute('href', '/auth?next=%2Fcreate-trip');
 });
 
 test('does not render the legacy animated background anywhere on the page', () => {

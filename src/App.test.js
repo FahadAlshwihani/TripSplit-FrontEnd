@@ -20,25 +20,27 @@ beforeEach(() => {
   document.documentElement.removeAttribute('data-theme');
 });
 
-test('renders the public Home landing with routed create/join entry points', async () => {
+test('renders the public Home landing with anonymous create/join entry points routed through the Auth Gateway', async () => {
   render(<App />);
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('home.hero.headline');
-  expect(screen.getByRole('link', { name: 'home.hero.createTrip' })).toHaveAttribute('href', '/create-trip');
-  expect(screen.getByRole('link', { name: 'home.hero.joinTrip' })).toHaveAttribute('href', '/join-trip');
+  expect(screen.getByRole('link', { name: 'home.hero.createTrip' })).toHaveAttribute('href', '/auth?next=%2Fcreate-trip');
+  expect(screen.getByRole('link', { name: 'home.hero.joinTrip' })).toHaveAttribute('href', '/auth?next=%2Fjoin-trip');
   // Home is a pure landing page now — the live forms live on their own routes.
   expect(screen.queryByText('create.new.trip')).not.toBeInTheDocument();
   expect(screen.queryByText('join.existing.trip')).not.toBeInTheDocument();
 });
 
-test('Create Trip CTA navigates to the dedicated route and renders the real form', async () => {
+test('Create Trip CTA routes through the Auth Gateway, and guest continuation reaches the real form', async () => {
   render(<App />);
   fireEvent.click(await screen.findByRole('link', { name: 'home.hero.createTrip' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'auth.guest.action' }));
   expect(await screen.findByText('create.new.trip')).toBeInTheDocument();
 });
 
-test('Join Trip CTA navigates to the dedicated route and renders the real form', async () => {
+test('Join Trip CTA routes through the Auth Gateway, and guest continuation reaches the real form', async () => {
   render(<App />);
   fireEvent.click(await screen.findByRole('link', { name: 'home.hero.joinTrip' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'auth.guest.action' }));
   expect(await screen.findByText('join.existing.trip')).toBeInTheDocument();
 });
 

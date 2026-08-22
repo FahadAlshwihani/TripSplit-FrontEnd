@@ -6,7 +6,11 @@ import accountRoutes from './accountRoutes';
 import tripRoutes from './tripRoutes';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: 'en', changeLanguage: jest.fn() } }) }));
-jest.mock('../../auth/AuthContext', () => ({ useAuth: () => ({ user: null, authLoading: false, logout: jest.fn() }) }));
+
+let mockAuthUser = null;
+jest.mock('../../auth/AuthContext', () => ({ useAuth: () => ({ user: mockAuthUser, authLoading: false, logout: jest.fn() }) }));
+
+afterEach(() => { mockAuthUser = null; });
 
 const renderAt = (entry, routes) => render(
   <MemoryRouter initialEntries={[entry]}>
@@ -31,14 +35,42 @@ test('"/pricing" loads the dedicated pricing route through PublicLayout', async 
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('pricing.titleLine1');
 });
 
-test('"/create-trip" loads the dedicated create-trip route', async () => {
+test('anonymous "/create-trip" is redirected through the Auth Gateway', async () => {
+  renderAt('/create-trip', publicRoutes);
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('auth.email.heading');
+});
+
+test('anonymous "/join-trip" is redirected through the Auth Gateway', async () => {
+  renderAt('/join-trip', publicRoutes);
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('auth.email.heading');
+});
+
+test('signed-in "/create-trip" loads the dedicated create-trip route directly', async () => {
+  mockAuthUser = { id: 'u1' };
   renderAt('/create-trip', publicRoutes);
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('home.hero.createTrip');
 });
 
-test('"/join-trip" loads the dedicated join-trip route', async () => {
+test('signed-in "/join-trip" loads the dedicated join-trip route directly', async () => {
+  mockAuthUser = { id: 'u1' };
   renderAt('/join-trip', publicRoutes);
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('home.hero.joinTrip');
+});
+
+test('"/auth" loads the Auth Gateway', async () => {
+  renderAt('/auth', publicRoutes);
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('auth.email.heading');
+});
+
+test('a "continue as guest" arrival at "/create-trip" bypasses the gate even when anonymous', async () => {
+  render(
+    <MemoryRouter initialEntries={[{ pathname: '/create-trip', state: { fromGateway: true } }]}>
+      <Suspense fallback={<p>loading</p>}>
+        <Routes>{publicRoutes}</Routes>
+      </Suspense>
+    </MemoryRouter>
+  );
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('home.hero.createTrip');
 });
 
 test('legacy "/trip/:code" still redirects into the trip workspace path', () => {

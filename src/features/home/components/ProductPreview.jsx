@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../../auth/AuthContext';
+import { buildAuthUrl } from '../../../auth/safeNext';
 
 const DESKTOP_EXPENSES = ['expense1', 'expense2', 'expense3'];
 const MOBILE_ITEMS = ['mobileItem1', 'mobileItem2', 'mobileItem3'];
@@ -64,6 +66,8 @@ const EXPENSE_ICONS = { expense1: PlaneIcon, expense2: BedIcon, expense3: ForkKn
 
 const ProductPreview = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const createHref = user ? '/create-trip' : buildAuthUrl('/create-trip');
   return (
     <section className="preview" id="preview" aria-labelledby="preview-eyebrow">
       <p id="preview-eyebrow" className="preview__eyebrow text-label"><GridIcon />{t('home.preview.eyebrow')}</p>
@@ -134,7 +138,7 @@ const ProductPreview = () => {
             );
           })}
         </ul>
-        <Link className="preview-mobile__cta text-label" to="/create-trip">{t('home.preview.viewDemoLedger')} →</Link>
+        <Link className="preview-mobile__cta text-label" to={createHref}>{t('home.preview.viewDemoLedger')} →</Link>
       </div>
     </section>
   );
