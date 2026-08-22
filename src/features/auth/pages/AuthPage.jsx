@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { requestOtp, verifyOtp } from '../api/authApi';
 import { useAuth } from '../../../auth/AuthContext';
 import { getSafeNext } from '../../../auth/safeNext';
+import { getAuthErrorKey, getOtpErrorKey } from '../authErrors';
 import AuthHeader from '../components/AuthHeader';
 import AuthContextPanel from '../components/AuthContextPanel';
 import EmailStep from '../components/EmailStep';
@@ -14,7 +14,6 @@ import '../styles/auth.css';
 const RESEND_SECONDS = 60;
 
 const AuthPage = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const next = getSafeNext(location.search);
@@ -24,8 +23,15 @@ const AuthPage = () => {
   const [step, setStep] = useState('email');
   const [email, setEmail] = useState('');
   const [otpId, setOtpId] = useState(null);
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
+  // Stores an i18n KEY (e.g. "auth.errors.otpInvalid"), never a
+  // pre-translated string — so a language switch while an error is
+  // visible re-renders it in the new language instead of leaving it
+  // stale. Step components call t(errorKey) themselves at render time.
+  const [errorKey, setErrorKey] = useState(null);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isResendingOtp, setIsResendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [resendSeconds, setResendSeconds] = useState(0);
 
   useEffect(() => {
@@ -34,9 +40,9 @@ const AuthPage = () => {
     return () => clearInterval(timer);
   }, [resendSeconds]);
 
-  const requestCode = async (targetEmail) => {
-    setBusy(true);
-    setError('');
+  const requestCode = async (targetEmail, { setLoading, onErrorKey }) => {
+    setLoading(true);
+    setErrorKey(null);
     try {
       const result = await requestOtp(targetEmail);
       setEmail(targetEmail);
@@ -44,41 +50,73 @@ const AuthPage = () => {
       setStep('otp');
       setResendSeconds(RESEND_SECONDS);
     } catch (err) {
-      setError(err.response?.data?.message || t('auth.email.genericError'));
+      setErrorKey(onErrorKey(err));
     } finally {
-      setBusy(false);
+      setLoading(false);
     }
   };
 
+  const submitEmail = (targetEmail) => requestCode(targetEmail, {
+    setLoading: setIsSendingOtp,
+    onErrorKey: (err) => getAuthErrorKey(err, 'auth.errors.requestFailed'),
+  });
+  // Resend is only ever triggered from the standalone OTP card, so its
+  // failures render through that card's own auth.otp.errors.* namespace
+  // (falling back to the generic "server" copy) instead of the email
+  // step's "couldn't send the verification code" phrasing.
+  const resendCode = () => requestCode(email, {
+    setLoading: setIsResendingOtp,
+    onErrorKey: (err) => getOtpErrorKey(err, 'auth.otp.errors.server'),
+  });
+
   const submitOtp = async (code) => {
-    setBusy(true);
-    setError('');
+    setIsVerifyingOtp(true);
+    setErrorKey(null);
     try {
       const result = await verifyOtp({ otp_id: otpId, email, code });
       setUser(result.user);
       if (result.onboarding_required) setStep('profile');
       else navigate(next);
     } catch (err) {
-      setError(err.response?.data?.message || t('auth.otp.genericError'));
+      setErrorKey(getOtpErrorKey(err));
     } finally {
-      setBusy(false);
+      setIsVerifyingOtp(false);
     }
   };
 
   const submitProfile = async (profile) => {
-    setBusy(true);
-    setError('');
+    setIsSavingProfile(true);
+    setErrorKey(null);
     try {
       await saveProfile(profile);
       navigate(next);
     } catch (err) {
-      setError(err.response?.data?.message || t('auth.profile.genericError'));
+      setErrorKey(getAuthErrorKey(err, 'auth.errors.unknown'));
     } finally {
-      setBusy(false);
+      setIsSavingProfile(false);
     }
   };
 
   const continueAsGuest = () => navigate(next, { state: { fromGateway: true } });
+
+  // The OTP state is its own compact, standalone verification card (see
+  // OtpStep.jsx) — not a step nested inside the two-column Email/Profile
+  // shell below. It renders full-viewport with no AuthHeader/
+  // AuthContextPanel, matching the approved Stitch reference exactly.
+  if (step === 'otp') {
+    return (
+      <OtpStep
+        email={email}
+        isVerifying={isVerifyingOtp}
+        isResending={isResendingOtp}
+        errorKey={errorKey}
+        resendSeconds={resendSeconds}
+        onSubmit={submitOtp}
+        onResend={resendCode}
+        onBack={() => { setStep('email'); setErrorKey(null); }}
+      />
+    );
+  }
 
   return (
     <div className="auth-page">
@@ -89,26 +127,15 @@ const AuthPage = () => {
           <div className="auth-form-area__inner">
             {step === 'email' && (
               <EmailStep
-                busy={busy}
-                error={error}
+                busy={isSendingOtp}
+                errorKey={errorKey}
                 guestAllowed={guestAllowed}
-                onSubmit={requestCode}
+                onSubmit={submitEmail}
                 onGuest={continueAsGuest}
               />
             )}
-            {step === 'otp' && (
-              <OtpStep
-                email={email}
-                busy={busy}
-                error={error}
-                resendSeconds={resendSeconds}
-                onSubmit={submitOtp}
-                onResend={() => requestCode(email)}
-                onBack={() => { setStep('email'); setError(''); }}
-              />
-            )}
             {step === 'profile' && (
-              <ProfileStep busy={busy} error={error} onSubmit={submitProfile} />
+              <ProfileStep busy={isSavingProfile} errorKey={errorKey} onSubmit={submitProfile} />
             )}
           </div>
         </div>

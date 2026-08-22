@@ -310,6 +310,9 @@
 }
 
 .auth-resend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
   background: none;
   border: none;
   padding: 0;
@@ -321,27 +324,48 @@
 
 .auth-resend:disabled { color: var(--color-text-muted); cursor: not-allowed; }
 
-.otp-cells { display: flex; gap: var(--space-2); justify-content: space-between; }
+/* Sending is still an active state, not an unavailable one — keep the
+   indigo color while disabled-for-in-flight, unlike the plain
+   cooldown/verifying-blocked disabled state above. */
+.auth-resend--loading:disabled { color: var(--nc-indigo-700); cursor: progress; }
+
+.otp-cells { display: flex; gap: var(--space-1); justify-content: space-between; }
 
 .otp-cells__cell {
-  inline-size: 44px;
-  block-size: 52px;
+  /* flex-basis (not width) drives sizing here: flex:0 1 40px keeps cells
+     at exactly 40px whenever there's room (space-between spreads the
+     leftover as gaps), but lets them shrink together below 40px at the
+     320px floor instead of overflowing the card. min-inline-size:0
+     overrides a flex item's automatic min-width, which otherwise blocks
+     shrinking below a text input's intrinsic content size. */
+  flex: 0 1 40px;
+  min-inline-size: 0;
+  max-inline-size: 40px;
+  block-size: 56px;
   text-align: center;
   font: var(--text-display);
   color: var(--color-text);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
+  box-shadow: 2px 2px 0 0 var(--color-border);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
 @media (min-width: 768px) {
-  .otp-cells__cell { inline-size: 56px; block-size: 64px; }
+  .otp-cells__cell { flex-basis: 48px; max-inline-size: 48px; block-size: 64px; }
 }
 
 .otp-cells__cell:focus-visible {
   outline: none;
   border-color: var(--nc-indigo-700);
-  border-width: var(--border-width-lg);
+  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otp-cells__cell { transition: none; }
+  .otp-cells__cell:focus-visible { transform: none; }
 }
 
 .auth-error {
@@ -372,6 +396,16 @@
 }
 
 .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* A loading button is still an active, in-progress button — not an
+   unavailable one. Overrides the generic disabled dimming above (higher
+   specificity: two classes + :disabled vs one class + :disabled) so the
+   fill/border/shadow/text stay exactly as they are normally; only the
+   cursor and duplicate-submit prevention come from `disabled`. */
+.auth-btn--loading.auth-btn:disabled {
+  opacity: 1;
+  cursor: progress;
+}
 
 .auth-btn--primary {
   background: var(--nc-indigo-700);
@@ -532,3 +566,236 @@
   border-width: var(--border-width-lg);
   background: var(--color-primary-soft);
 }
+
+/* ---------------------------------------------------------------------- */
+/* Shared loading spinner */
+
+.auth-spinner {
+  animation: auth-spin 0.7s linear infinite;
+  flex: 0 0 auto;
+}
+
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-spinner { animation: none; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Mobile-only editorial image — hidden entirely on desktop, where the
+   context panel already carries the (larger) desktop version of this
+   same image. Reuses the desktop treatment (grayscale, hard contrast,
+   bordered cream frame, AUTH_REQ overlay) at a smaller scale so the page
+   doesn't end in a large empty area below the guest/back actions. */
+
+.auth-mobile-visual { display: none; }
+
+@media (max-width: 767px) {
+  .auth-mobile-visual {
+    display: block;
+    position: relative;
+    inline-size: 78%;
+    max-inline-size: 280px;
+    margin-inline: auto;
+    margin-block-start: var(--space-8);
+    aspect-ratio: 4 / 3;
+    border: var(--border-width) solid var(--color-border);
+    padding: var(--space-2);
+    background: var(--color-surface-alt);
+  }
+
+  .auth-mobile-visual__inner {
+    width: 100%;
+    height: 100%;
+    border: var(--border-width) solid var(--color-border);
+    overflow: hidden;
+    background: var(--color-surface-alt);
+  }
+
+  .auth-mobile-visual__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(1) contrast(1.15);
+  }
+
+  .auth-mobile-visual__badge {
+    position: absolute;
+    inset-block-end: var(--space-2);
+    inset-inline-end: var(--space-2);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    background: var(--nc-paper);
+    border: var(--border-width) solid var(--color-border);
+    color: var(--color-text);
+    font-size: 10px;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* OTP verification card — a standalone, compact "brutalist ledger" screen
+   (see OtpStep.jsx), deliberately NOT nested in the two-column
+   AuthHeader/AuthContextPanel shell the Email/Profile steps use. Matches
+   the approved Stitch OTP reference: a single centered card, no page
+   chrome. Reuses shared tokens/typography classes throughout so dark mode
+   and RTL fall out of the existing system for free — nothing here is a
+   new one-off color or font. */
+
+.otp-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--page-margin-mobile);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.otp-page a,
+.otp-page button { font-family: inherit; }
+
+/* Same Bootstrap `p, span, a, li { color: white }` collision guard the
+   rest of the Auth shell needs (see auth-page span/li above) — this
+   screen isn't wrapped in .auth-page, so it needs its own copy. */
+.otp-page span,
+.otp-page li { color: inherit; }
+
+.otp-page a:focus-visible,
+.otp-page button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+  .otp-page { padding: var(--page-margin-desktop); }
+}
+
+.otp-card-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+}
+
+.otp-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 40px;
+  block-size: 40px;
+  margin-block-end: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 2px 2px 0 0 var(--color-border);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.otp-back:hover:not(:disabled) { background: var(--color-surface-alt); }
+
+.otp-back:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 var(--color-border);
+}
+
+.otp-back:disabled { opacity: 0.5; cursor: not-allowed; }
+
+[dir="rtl"] .otp-back svg { transform: scaleX(-1); }
+
+@media (min-width: 768px) {
+  /* Floats just outside the card's top-start corner, per the Stitch
+     desktop composition, instead of sitting inline above it. */
+  .otp-back {
+    position: absolute;
+    inset-inline-start: calc(-1 * (40px + var(--space-3)));
+    top: 0;
+    margin-block-end: 0;
+  }
+}
+
+.otp-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  padding: var(--space-6);
+  box-shadow: 4px 4px 0 0 var(--color-border);
+}
+
+@media (min-width: 768px) {
+  .otp-card { padding: var(--space-8); }
+}
+
+.otp-card__header { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.otp-card__heading.text-headline-lg {
+  color: var(--color-text);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.otp-card__description.text-copy { color: var(--color-text-muted); margin: 0; }
+
+.otp-card__email {
+  display: inline;
+  padding: 1px var(--space-2);
+  background: var(--color-surface-alt);
+  border: var(--border-width) solid var(--color-border-subtle);
+  color: var(--color-text);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.otp-card__form { display: flex; flex-direction: column; gap: var(--space-8); }
+
+.otp-card__field { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.otp-card__helper.text-copy-sm { color: var(--color-text-muted); margin: 0; }
+
+.otp-card__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* The verify CTA reuses the shared .auth-btn--primary treatment (same
+   background/hover-darken-only/no-movement behavior as the Email step's
+   submit button) but with the card's own near-black hard shadow instead
+   of the softer indigo-tinted one, per the Stitch spec for this screen. */
+.otp-card .auth-btn--primary,
+.otp-card .auth-btn--primary:hover:not(:disabled),
+.otp-card .auth-btn--primary:focus-visible {
+  box-shadow: 4px 4px 0 0 var(--color-border);
+}
+
+.otp-card .auth-btn:active:not(:disabled) { transform: translate(4px, 4px); }
+
+.otp-card .auth-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--color-border); }
+
+.otp-resend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.otp-resend:hover:not(:disabled) { color: var(--nc-indigo-700); }
+
+.otp-resend:disabled { color: var(--color-text-faint); cursor: not-allowed; }
+
+/* Sending is still an active state, not an unavailable one — same pattern
+   as .auth-resend--loading in the Email step's OTP-adjacent controls. */
+.otp-resend--loading:disabled { color: var(--nc-indigo-700); cursor: progress; }
