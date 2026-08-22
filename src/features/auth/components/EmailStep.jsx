@@ -23,6 +23,13 @@ const ArrowBackIcon = () => (
   </svg>
 );
 
+const PersonIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="8" cy="5" r="2.75" />
+    <path d="M2.5 14c.6-3 2.7-4.5 5.5-4.5S13.4 11 14 14" />
+  </svg>
+);
+
 const EmailStep = ({ busy, error, guestAllowed, onSubmit, onGuest }) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
@@ -77,19 +84,37 @@ const EmailStep = ({ busy, error, guestAllowed, onSubmit, onGuest }) => {
           <ArrowForwardIcon />
         </button>
       </form>
-      {guestAllowed && (
-        <div className="auth-guest">
-          <button type="button" className="auth-btn auth-btn--secondary" onClick={onGuest}>
-            {t('auth.guest.action')}
-          </button>
-          <p className="auth-guest__helper text-copy-sm">{t('auth.guest.helper')}</p>
-        </div>
-      )}
-      <div className="auth-footer">
+      {/*
+        Desktop Stitch presents "Continue as guest" as a small text link
+        sharing one compact footer row with "Back to Home" — not a
+        full-width bordered button. Mobile Stitch keeps it as a full-width
+        secondary action instead. Rather than rendering two separate
+        controls (one hidden), this is a single button whose *presentation*
+        changes per breakpoint in CSS (order/width/border/shadow), so
+        there's exactly one focusable "Continue as guest" control in the
+        DOM at any width. The helper copy becomes an accessible description
+        on desktop (still available to screen readers, not visible) and a
+        small visible caption on mobile, matching each Stitch composition.
+      */}
+      <div className="auth-form-footer">
         <Link to="/" className="auth-footer__link text-label">
           <ArrowBackIcon />
-          {t('auth.backToHome')}
+          <span>{t('auth.backToHome')}</span>
         </Link>
+        {guestAllowed && (
+          <>
+            <button
+              type="button"
+              className="auth-guest-action text-label"
+              onClick={onGuest}
+              aria-describedby="auth-guest-helper"
+            >
+              <span>{t('auth.guest.action')}</span>
+              <PersonIcon />
+            </button>
+            <p id="auth-guest-helper" className="auth-guest__helper text-copy-sm">{t('auth.guest.helper')}</p>
+          </>
+        )}
       </div>
     </div>
   );
