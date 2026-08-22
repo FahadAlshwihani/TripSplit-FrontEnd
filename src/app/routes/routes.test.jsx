@@ -21,6 +21,11 @@ test('"/" loads the public Home route through PublicLayout', async () => {
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('home.hero.headline');
 });
 
+test('"/features" loads the dedicated features route through PublicLayout', async () => {
+  renderAt('/features', publicRoutes);
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('features.title');
+});
+
 test('"/pricing" loads the dedicated pricing route through PublicLayout', async () => {
   renderAt('/pricing', publicRoutes);
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('pricing.titleLine1');
