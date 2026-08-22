@@ -35,6 +35,22 @@ test('renders the email step by default', () => {
   expect(screen.getByRole('button', { name: 'auth.guest.action' })).toBeInTheDocument();
 });
 
+test('the email field control is pinned to LTR regardless of page direction', () => {
+  renderAuth();
+  const input = screen.getByLabelText('auth.email.label');
+  expect(input.closest('.auth-field__control')).toHaveAttribute('dir', 'ltr');
+});
+
+test('renders the local editorial book image, not a placeholder or remote URL', () => {
+  renderAuth();
+  const image = document.querySelector('.auth-context__image');
+  expect(image).toBeInTheDocument();
+  expect(image.tagName).toBe('IMG');
+  expect(image.getAttribute('src')).toBeTruthy();
+  expect(image.getAttribute('src')).not.toMatch(/^https?:\/\//);
+  expect(document.querySelector('.auth-context__visual-inner svg')).not.toBeInTheDocument();
+});
+
 test('rejects an invalid email without calling the API', () => {
   renderAuth();
   fireEvent.change(screen.getByLabelText('auth.email.label'), { target: { value: 'not-an-email' } });
