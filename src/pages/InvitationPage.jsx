@@ -17,7 +17,12 @@ const InvitationPage = () => {
   const accept = useCallback(async (payload) => { if (accepting) return; setAccepting(true); try { const result = await acceptInvitation(token, payload); navigate(`/trip/${result.trip.id}`); } catch (err) { setError(err.response?.data?.message || t('invite.invalid')); setAccepting(false); } }, [accepting, navigate, t, token]);
   useEffect(() => { if (invite?.valid && invite.email_required && user && !authLoading) accept({}); }, [invite, user, authLoading, accept]); // resumes after OTP/onboarding
   const submit = async (event) => { event.preventDefault(); accept({ guest_name: name, avatar_key: avatar }); };
-  const login = () => navigate(`/auth?next=${encodeURIComponent(`/invite/${token}`)}`);
+  // Only ever called from the email_required branch below, so the Auth
+  // Gateway is told up front (guest=0) to hide "Continue as guest" and
+  // explain why — guest continuation would just bounce back here still
+  // unauthenticated, since acceptance for this invitation is backend-gated
+  // on the signed-in email, not a frontend check.
+  const login = () => navigate(`/auth?next=${encodeURIComponent(`/invite/${token}`)}&guest=0`);
   return <PublicLayout><div className="legacy-shell"><main className="home-container-pc mt-5"><section className="card-pc"><h2>{t('invite.title')}</h2>{error && <div className="error-message" role="alert">{error}</div>}{invite && <form onSubmit={submit}><p>{t('invite.trip', { name: invite.trip_title })}</p>{!invite.valid ? <p>{t('invite.invalid')}</p> : invite.email_required ? (!user && !authLoading ? <button type="button" className="pc-btn-create" onClick={login}>{t('invite.continueEmail')}</button> : <p>{t('invite.accepting')}</p>) : <><label>{t('invite.name')}<input className="pc-input" value={name} onChange={(event) => setName(event.target.value)} required /></label><label>{t('invite.avatar')}<select className="pc-input" value={avatar} onChange={(event) => setAvatar(event.target.value)}>{Array.from({ length: 8 }, (_, index) => <option key={index} value={`avatar_0${index + 1}`}>{`Avatar ${index + 1}`}</option>)}</select></label><button className="pc-btn-create" disabled={accepting}>{t('invite.accept')}</button></>}</form>}</section></main></div></PublicLayout>;
 };
 
