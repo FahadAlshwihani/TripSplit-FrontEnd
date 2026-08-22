@@ -1,0 +1,82 @@
+/*
+  Canonical Avatar component styles — shape/size/color only. Context-
+  specific treatment (the onboarding preview's hard shadow and its
+  desktop-square/mobile-circle Stitch distinction) lives in
+  profileSetup.css as an additional modifier on top of this, not here,
+  since every other consumer (member list, member details, profile
+  settings trip history) wants the plain flat mark, not a raised preview.
+*/
+
+.pf-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--nc-white);
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1;
+  overflow: hidden;
+  user-select: none;
+}
+
+.pf-avatar--initials,
+.pf-avatar--dicebear {
+  border-color: var(--color-border);
+}
+
+.pf-avatar--glyph {
+  background: var(--color-surface-alt);
+  border-color: var(--color-border-subtle);
+}
+
+.pf-avatar--dicebear {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--color-surface-alt);
+}
+
+/* A neutral shimmer while a style's chunk is loading — not "generic
+   circular spinner" territory (this is a skeleton matching the avatar's
+   own box), and never a broken <img> if generation fails (Avatar.jsx
+   falls back to an initials rendering instead of reaching this state). */
+.pf-avatar--loading {
+  background: linear-gradient(90deg, var(--color-surface-alt) 25%, var(--color-surface-container) 50%, var(--color-surface-alt) 75%);
+  background-size: 200% 100%;
+  animation: pf-avatar-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes pf-avatar-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* TripSplit-authored motion, not a native DiceBear feature — see
+   AnimationControl.jsx / docs/AVATAR_SYSTEM.md. Deliberately subtle: a
+   slow continuous drift, not a spin or bounce, so it reads as "alive"
+   rather than distracting at avatar scale. */
+.pf-avatar--anim-slow { animation: pf-avatar-drift 6s ease-in-out infinite; }
+.pf-avatar--anim-medium { animation: pf-avatar-drift 3.5s ease-in-out infinite; }
+.pf-avatar--anim-fast { animation: pf-avatar-drift 1.8s ease-in-out infinite; }
+
+@keyframes pf-avatar-drift {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.04) rotate(1.5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-avatar--loading,
+  .pf-avatar--anim-slow,
+  .pf-avatar--anim-medium,
+  .pf-avatar--anim-fast {
+    animation: none;
+  }
+}
+
+.pf-avatar--sm { inline-size: 28px; block-size: 28px; font-size: 12px; }
+.pf-avatar--md { inline-size: 40px; block-size: 40px; font-size: 16px; }
+.pf-avatar--lg { inline-size: 128px; block-size: 128px; font-size: 40px; }

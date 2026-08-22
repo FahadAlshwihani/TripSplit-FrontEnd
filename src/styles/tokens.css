@@ -34,6 +34,18 @@
   --nc-amber-100: #F6E7C9;
   --nc-red-600: #B3372A;
   --nc-red-100: #F5DDDA;
+  --nc-slate-600: #5B6B7C;
+  --nc-coral-600: #C97B6B;
+
+  /* Curated avatar background palette (profile onboarding) — mostly
+     existing tokens reused for consistency; slate/coral are the only two
+     added purely for this purpose. */
+  --avatar-indigo: var(--nc-indigo-700);
+  --avatar-charcoal: var(--nc-ink-700);
+  --avatar-slate: var(--nc-slate-600);
+  --avatar-coral: var(--nc-coral-600);
+  --avatar-sage: var(--nc-green-600);
+  --avatar-mustard: var(--nc-amber-600);
 
   /* Semantic — surfaces & text */
   --color-bg: var(--nc-cream-50);
