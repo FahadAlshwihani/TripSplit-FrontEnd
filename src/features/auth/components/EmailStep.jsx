@@ -42,14 +42,22 @@ const EmailStep = ({ busy, error, guestAllowed, onSubmit, onGuest }) => {
   return (
     <div className="auth-step">
       <div className="auth-step__head">
-        <h1 className="auth-step__heading text-headline-md">{t('auth.email.heading')}</h1>
+        <h1 className="auth-step__heading text-headline">{t('auth.email.heading')}</h1>
         <p className="auth-step__description text-copy">{t('auth.email.description')}</p>
         {!guestAllowed && <p className="auth-step__notice text-copy-sm">{t('auth.invitation.signInRequired')}</p>}
       </div>
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
         <div className="auth-field">
           <label className="auth-field__label text-label" htmlFor="auth-email">{t('auth.email.label')}</label>
-          <div className="auth-field__control">
+          {/* dir="ltr" on the whole control, not just the input: email
+              addresses stay LTR content even on an RTL page, and the icon
+              is absolutely positioned via logical (inset-inline-end)
+              properties, which resolve against the direction of the
+              element they're on — without this, the icon would resolve
+              against the page's RTL direction while the text stays LTR,
+              colliding at the same physical edge instead of the icon
+              sitting past the text's actual end. */}
+          <div className="auth-field__control" dir="ltr">
             <input
               id="auth-email"
               className="auth-field__input text-financial"
@@ -58,7 +66,6 @@ const EmailStep = ({ busy, error, guestAllowed, onSubmit, onGuest }) => {
               onChange={(event) => setEmail(event.target.value)}
               placeholder={t('auth.email.placeholder')}
               autoComplete="email"
-              dir="ltr"
               required
             />
             <MailIcon />

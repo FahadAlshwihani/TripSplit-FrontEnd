@@ -32,7 +32,7 @@ const OtpStep = ({ email, busy, error, resendSeconds, onSubmit, onResend, onBack
         <span className="text-label">{t('auth.otp.changeEmail')}</span>
       </button>
       <div className="auth-step__head">
-        <h1 className="auth-step__heading text-headline-md">{t('auth.otp.heading')}</h1>
+        <h1 className="auth-step__heading text-headline">{t('auth.otp.heading')}</h1>
         <p className="auth-step__description text-copy">{t('auth.otp.description', { email })}</p>
         <p className="auth-step__notice text-copy-sm">{t('auth.otp.expiryHelper')}</p>
       </div>

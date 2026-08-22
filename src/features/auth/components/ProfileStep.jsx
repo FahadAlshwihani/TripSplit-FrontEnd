@@ -16,7 +16,7 @@ const ProfileStep = ({ busy, error, onSubmit }) => {
   return (
     <div className="auth-step">
       <div className="auth-step__head">
-        <h1 className="auth-step__heading text-headline-md">{t('auth.profile.heading')}</h1>
+        <h1 className="auth-step__heading text-headline">{t('auth.profile.heading')}</h1>
         <p className="auth-step__description text-copy">{t('auth.profile.description')}</p>
       </div>
       <form className="auth-form" onSubmit={handleSubmit}>

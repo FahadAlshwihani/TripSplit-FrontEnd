@@ -233,7 +233,7 @@
 
 .auth-step__back:hover { color: var(--nc-indigo-700); }
 
-.auth-step__heading.text-headline-md {
+.auth-step__heading.text-headline {
   color: var(--color-text);
   margin-block-end: var(--space-1);
 }
