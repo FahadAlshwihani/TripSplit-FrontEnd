@@ -87,7 +87,7 @@
 }
 
 @media (max-width: 767px) {
-  .public-nav__link[href="/#preview"] {
+  .public-nav__link--secondary {
     display: none;
   }
   .public-nav__links { gap: var(--space-2); }
