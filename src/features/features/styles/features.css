@@ -1,0 +1,280 @@
+/*
+  Features — "editorial product manual". Feature-owned: nothing here leaks
+  into Home/Pricing/PublicLayout. Geometry translated from the Stitch
+  export's <main class="... max-w-[1440px] mx-auto px-margin-mobile
+  md:px-margin-desktop py-xl gap-xl"> canvas holding a header + two
+  numbered <section class="mb-24"> blocks.
+
+  App.css ships a legacy `p, span, a, li { color: white; }` reset with no
+  class in its selector, which wins over inheritance on any un-classed
+  span/li text node regardless of load order (discovered on the Pricing
+  receipt). Reasserted once here for the whole page rather than per
+  component.
+*/
+
+.features-page span,
+.features-page li {
+  color: inherit;
+}
+
+.features-page {
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: var(--page-margin-mobile);
+  padding-block: var(--space-8); /* py-xl = 32px */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8); /* gap-xl = 32px, uniform rhythm between header/section1/section2 */
+}
+
+@media (min-width: 768px) {
+  .features-page { padding-inline: var(--page-margin-desktop); }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Header */
+
+.features-header {
+  margin-block-end: var(--space-16); /* mb-16 = 64px */
+  border-block-end: var(--border-width-lg) solid var(--color-border);
+  padding-block-end: var(--space-4); /* pb-md = 16px */
+}
+
+.features-header__eyebrow.text-label {
+  color: var(--color-primary);
+  letter-spacing: 0.1em; /* Stitch's wider "tracking-widest" over the 0.05em label-caps preset */
+  margin-block-end: var(--space-2); /* mb-sm = 8px */
+}
+
+.features-header__title.text-display {
+  color: var(--color-text);
+}
+
+.features-header__description.text-copy-lg {
+  color: var(--color-text-muted);
+  max-width: 42rem; /* max-w-2xl */
+  margin-block-start: var(--space-2); /* mt-sm = 8px */
+}
+
+/* ---------------------------------------------------------------------- */
+/* Numbered section head — reused identically by both sections */
+
+.features-section {
+  margin-block-end: var(--space-24); /* mb-24 = 96px, on top of the page's own gap-xl */
+}
+
+.features-section:last-child { margin-block-end: 0; }
+
+.features-section__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4); /* gap-md = 16px */
+  margin-block-end: var(--space-6); /* mb-lg = 24px */
+  border-block-end: var(--border-width) solid var(--color-border);
+  padding-block-end: var(--space-1); /* pb-xs = 4px */
+}
+
+.features-section__number.text-financial {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.features-section__title.text-headline-lg {
+  color: var(--color-text);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Section 01 — Split Engine */
+
+.split-engine {
+  display: flex;
+  flex-direction: column;
+  gap: var(--grid-gutter); /* gap-gutter = 16px */
+}
+
+@media (min-width: 768px) {
+  .split-engine { flex-direction: row; align-items: stretch; }
+  .split-engine__aside {
+    flex: 0 0 41.667%; /* md:col-span-5 of 12 */
+    max-width: 41.667%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .ledger-demo { flex: 1 1 58.333%; } /* md:col-span-7 of 12 */
+}
+
+.split-engine__description.text-copy-lg {
+  color: var(--color-text-muted);
+  margin-block-end: var(--space-4); /* mb-md = 16px */
+}
+
+.feature-mini-list {
+  display: flex;
+  flex-direction: column;
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.feature-mini-list__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2); /* gap-sm = 8px */
+  padding: var(--space-4); /* p-md = 16px */
+  border-block-end: var(--border-width) solid var(--color-border);
+}
+
+.feature-mini-list__row:last-child { border-block-end: none; }
+
+.feature-mini-list__icon {
+  color: var(--nc-indigo-700);
+  flex: 0 0 auto;
+  margin-block-start: 2px;
+}
+
+.feature-mini-list__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-mini-list__title.text-label {
+  color: var(--color-text);
+  margin-block-end: 2px;
+}
+
+.feature-mini-list__description.text-copy-sm {
+  color: var(--color-text-muted);
+}
+
+/* Static mock ledger receipt — decorative illustration only, not a live
+   widget. overflow:hidden is deliberate: the rotated mock intentionally
+   bleeds past the card's own right edge and gets cropped there, matching
+   the Stitch export's own -right-8 + overflow-hidden combination. */
+.ledger-demo {
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  padding: var(--space-6); /* p-lg = 24px */
+  box-shadow: 2px 2px 0 0 var(--nc-ink-900);
+}
+
+.ledger-demo__mock {
+  position: absolute;
+  inset-inline-end: -32px; /* -right-8 */
+  top: 48px; /* top-12 */
+  width: 75%;
+  transform: rotate(2deg);
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4); /* p-md = 16px */
+}
+
+.ledger-demo__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-block-end: var(--border-width) solid var(--color-border);
+  padding-block-end: var(--space-2); /* pb-sm = 8px */
+  margin-block-end: var(--space-2); /* mb-sm = 8px */
+}
+
+.ledger-demo__title.text-label { color: var(--color-text); }
+.ledger-demo__amount.text-financial { color: var(--color-text); font-weight: 700; }
+
+.ledger-demo__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--space-1); /* py-xs = 4px */
+  border-block-end: var(--border-width) dashed var(--color-border);
+}
+
+.ledger-demo__row:last-child { border-block-end: none; }
+
+.ledger-demo__row-name.text-copy-sm { color: var(--color-text); }
+.ledger-demo__row-amount--credit { color: var(--nc-indigo-700); }
+.ledger-demo__row-amount--debit { color: var(--color-danger); }
+
+/* ---------------------------------------------------------------------- */
+/* Section 02 — Settlement Architecture */
+
+.settlement-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--grid-gutter); /* gap-gutter = 16px */
+}
+
+@media (min-width: 768px) {
+  .settlement-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.capability-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  padding: var(--space-6); /* p-lg = 24px */
+  transition: background-color .15s ease;
+}
+
+.capability-card:hover { background: var(--color-surface-alt); }
+
+.capability-card__tag {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  padding: var(--space-2); /* p-sm = 8px */
+  border-block-end: var(--border-width) solid var(--color-border);
+  border-inline-start: var(--border-width) solid var(--color-border);
+  background: var(--nc-indigo-700);
+  color: var(--nc-white);
+}
+
+.capability-card--soon .capability-card__tag { background: var(--color-primary); }
+
+.capability-card__icon {
+  color: var(--color-text);
+  margin-block-end: var(--space-4); /* mb-md = 16px */
+}
+
+.capability-card--soon .capability-card__icon { color: var(--color-text-muted); }
+
+/* Small rotated ledger-annotation stamp — deliberately monochrome (not
+   amber/orange) to stay editorial rather than reading as a warning. Sits
+   above the title, not in the tag ribbon's corner, so the two never
+   collide. */
+.capability-card__soon {
+  display: inline-block;
+  align-self: flex-start;
+  margin-block-end: var(--space-2);
+  padding: 2px var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  transform: rotate(-3deg);
+}
+
+.capability-card__title.text-headline {
+  color: var(--color-text);
+  margin-block-end: var(--space-2); /* mb-sm = 8px */
+}
+
+.capability-card__description.text-copy {
+  color: var(--color-text-muted);
+  flex: 1 1 auto;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Mobile tightening */
+
+@media (max-width: 480px) {
+  .features-header { margin-block-end: var(--space-10); }
+  .features-section { margin-block-end: var(--space-16); }
+  .ledger-demo { min-height: 200px; }
+  .ledger-demo__mock { width: 80%; }
+}
