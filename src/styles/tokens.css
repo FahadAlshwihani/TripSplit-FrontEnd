@@ -14,6 +14,7 @@
 :root {
   /* Primitive palette */
   --nc-cream-50: #FBF9F4;
+  --nc-cream-150: #F0EEE9;
   --nc-cream-100: #F5F3EE;
   --nc-paper: #FFFFFF;
   --nc-ink-900: #1B1C19;
@@ -39,6 +40,7 @@
   --color-bg-alt: var(--nc-cream-100);
   --color-surface: var(--nc-paper);
   --color-surface-alt: var(--nc-cream-100);
+  --color-surface-container: var(--nc-cream-150);
   --color-text: var(--nc-ink-900);
   --color-text-muted: var(--nc-ink-500);
   --color-text-faint: var(--nc-ink-300);
@@ -125,6 +127,7 @@
   --color-bg-alt: #211F1B;
   --color-surface: #242220;
   --color-surface-alt: #2B2925;
+  --color-surface-container: #2B2925;
 
   --color-text: #F3F1EA;
   --color-text-muted: #B6B2A8;

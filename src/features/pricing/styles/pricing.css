@@ -1,0 +1,320 @@
+/*
+  Pricing — "official ledger rate" receipt. Feature-owned: nothing here
+  leaks into Home/PublicLayout, and nothing from those files is duplicated
+  here. Geometry translated from the Stitch export's <main class="... w-full
+  max-w-[1440px] mx-auto px-margin-mobile md:px-margin-desktop py-xl gap-xl
+  relative overflow-hidden"> canvas holding a single <div class="max-w-3xl
+  ... shadow-[8px_8px...] md:shadow-[16px_16px...]"> receipt card.
+*/
+
+/* ---------------------------------------------------------------------- */
+/* Canvas */
+
+.pricing {
+  position: relative;
+  overflow: hidden;
+  min-height: calc(100dvh - var(--nav-height));
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: var(--page-margin-mobile);
+  padding-block: var(--space-8); /* py-xl = 32px */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .pricing { padding-inline: var(--page-margin-desktop); }
+}
+
+/* Decorative ledger-dot texture. Absolutely positioned within .pricing only
+   (never fixed), pointer-events disabled, static (no animation) — cannot
+   leak into other pages or recreate the old animated background. */
+.pricing__texture {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--nc-ink-900) 1px, transparent 1px);
+  background-size: 8px 8px;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Receipt card */
+
+.pricing-receipt {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 48rem; /* max-w-3xl */
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  box-shadow: 8px 8px 0 0 rgba(27, 28, 25, 1);
+  margin-block: var(--space-8); /* mt-xl / mb-xl = 32px */
+}
+
+/* App.css ships a legacy `p, span, a, li { color: white; }` reset for the
+   old dark shell. It has no class in its selector, so its own declared
+   color wins over inheritance on any un-classed span text node here
+   (title line spans, feature-row labels, assurance items, the CTA label)
+   regardless of this file's load order. Reassert inheritance so every
+   span here follows its actual styled ancestor's color instead. (The
+   receipt's one <a> — the CTA — already carries its own explicit color,
+   so it's deliberately not included here.) */
+.pricing-receipt span {
+  color: inherit;
+}
+
+@media (min-width: 768px) {
+  .pricing-receipt {
+    box-shadow: 16px 16px 0 0 rgba(27, 28, 25, 1);
+    margin-block-start: var(--space-24); /* mt-24 = 96px */
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Header */
+
+.pricing-receipt__header {
+  padding: var(--space-8); /* p-xl = 32px */
+  border-block-end: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-container);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.pricing-receipt__eyebrow.text-label {
+  color: var(--color-text-muted);
+  letter-spacing: 0.1em; /* Stitch's wider "tracking-widest" stacked over the 0.05em label-caps preset */
+  margin-block-end: var(--space-2); /* mb-sm = 8px */
+}
+
+.pricing-receipt__title.text-display {
+  color: var(--color-text);
+  text-transform: uppercase;
+}
+
+.pricing-receipt__title span { display: block; }
+
+/* ---------------------------------------------------------------------- */
+/* Price block */
+
+.pricing-receipt__price {
+  position: relative;
+  padding: var(--space-8);
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ticket-stub cutouts: page-background-filled circles straddling the
+   receipt's own left/right edge, vertically centered on the price
+   section (which spans edge-to-edge with the receipt, so -10px pokes
+   exactly through the receipt's own outer border). */
+.pricing-receipt__cutout {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  inset-inline-start: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--color-border);
+  z-index: 2;
+}
+
+.pricing-receipt__cutout--right {
+  inset-inline-start: auto;
+  inset-inline-end: -10px;
+}
+
+.pricing-receipt__price-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-1); /* gap-xs = 4px */
+}
+
+.pricing-receipt__currency.text-headline-lg {
+  color: var(--color-text);
+  margin-block-start: var(--space-2); /* mt-sm = 8px, nudges $ down against the tall 0 */
+}
+
+.pricing-receipt__zero {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(72px, 22vw, 120px); /* 120px exactly from ~545px viewport up, matching Stitch 1:1 on tablet/desktop */
+  line-height: 1;
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text);
+}
+
+.pricing-receipt__badge.text-label {
+  display: inline-block;
+  margin-block-start: var(--space-2); /* mt-sm = 8px */
+  padding: var(--space-1) var(--space-4); /* py-xs=4px px-md=16px */
+  background: var(--nc-indigo-700);
+  color: var(--nc-white);
+  border: var(--border-width) solid var(--color-border);
+  box-shadow: 2px 2px 0 0 var(--nc-ink-900);
+  transform: rotate(-2deg);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Feature ledger + actions */
+
+.pricing-receipt__body {
+  padding: var(--space-6) var(--space-8) var(--space-8); /* pt-lg=24 px-xl=32 pb-xl=32 */
+  border-block-start: var(--border-width) dashed var(--color-border);
+}
+
+.pricing-receipt__list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.pricing-receipt__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--space-4); /* py-md = 16px */
+  border-block-end: var(--border-width) solid var(--color-border);
+  color: var(--color-text);
+}
+
+.pricing-receipt__row-main {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2); /* gap-sm = 8px */
+  color: var(--color-text);
+}
+
+.pricing-receipt__row-icon { color: var(--nc-indigo-700); flex: 0 0 auto; }
+.pricing-receipt__row > svg { color: var(--color-text-muted); flex: 0 0 auto; }
+
+.pricing-receipt__actions {
+  width: 100%;
+  margin-block-start: var(--space-8); /* mt-xl = 32px */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4); /* gap-md = 16px */
+}
+
+/* Hard-shadow CTA in the same neo-classic "print" depth language as the
+   Home hero CTAs: hover only darkens the fill (border/shadow/text pinned),
+   pressed collapses the offset. Deliberately does NOT replicate Stitch's
+   own hover (shadow-shrink + translate on :hover) — that hover behavior
+   was superseded by the just-approved Home CTA interaction language, which
+   this button follows for consistency across the app. */
+.pricing-receipt__cta {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2); /* gap-sm = 8px */
+  padding: var(--space-6) var(--space-8); /* py-lg=24 px-xl=32 */
+  background: var(--nc-indigo-700);
+  color: var(--nc-white);
+  border: var(--border-width-lg) solid var(--color-border);
+  box-shadow: 4px 4px 0 0 var(--nc-ink-900);
+  font: var(--text-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background-color .15s ease, transform .1s ease, box-shadow .1s ease;
+}
+
+.pricing-receipt__cta:hover,
+.pricing-receipt__cta:focus-visible {
+  background: var(--nc-indigo-800);
+  color: var(--nc-white);
+  border-color: var(--color-border);
+  box-shadow: 4px 4px 0 0 var(--nc-ink-900);
+}
+
+.pricing-receipt__cta:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 var(--nc-ink-900);
+}
+
+[dir="rtl"] .pricing-receipt__cta svg {
+  transform: scaleX(-1);
+}
+
+.pricing-receipt__assurance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-4); /* gap-md = 16px */
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.pricing-receipt__assurance-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1); /* gap-xs = 4px */
+}
+
+.pricing-receipt__assurance-sep {
+  display: none;
+  color: var(--color-outline);
+}
+
+@media (min-width: 768px) {
+  .pricing-receipt__assurance-sep { display: inline; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Approved stamp — decorative only, ignored by assistive tech, scaled down
+   so it never pushes the receipt's own scrollable bounds on narrow phones. */
+
+.pricing-receipt__stamp {
+  position: absolute;
+  inset-block-end: var(--space-4);
+  inset-inline-end: var(--space-4);
+  opacity: 0.2;
+  transform: rotate(-15deg);
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(11px, 2.2vw, 18px);
+  line-height: 1;
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-text);
+  border: 3px solid var(--color-border);
+  padding: var(--space-2);
+}
+
+@media (max-width: 480px) {
+  .pricing-receipt__stamp {
+    inset-inline-end: var(--space-2);
+    inset-block-end: var(--space-2);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Mobile tightening */
+
+@media (max-width: 480px) {
+  .pricing-receipt__header,
+  .pricing-receipt__price {
+    padding-inline: var(--space-5); /* 20px, down from 32px */
+  }
+  .pricing-receipt__body {
+    padding-inline: var(--space-5);
+  }
+  .pricing-receipt__cta {
+    padding-inline: var(--space-6);
+  }
+}
