@@ -41,6 +41,17 @@ test('the email field control is pinned to LTR regardless of page direction', ()
   expect(input.closest('.auth-field__control')).toHaveAttribute('dir', 'ltr');
 });
 
+test('renders exactly one guest control, with the back link and accessible helper alongside it', () => {
+  renderAuth();
+  const guestButtons = screen.getAllByRole('button', { name: /auth\.guest\.action/ });
+  expect(guestButtons).toHaveLength(1);
+  const guestButton = guestButtons[0];
+  expect(guestButton).toHaveClass('auth-guest-action');
+  expect(guestButton).toHaveAttribute('aria-describedby', 'auth-guest-helper');
+  expect(document.getElementById('auth-guest-helper')).toHaveTextContent('auth.guest.helper');
+  expect(screen.getByRole('link', { name: /auth\.backToHome/ })).toBeInTheDocument();
+});
+
 test('renders the local editorial book image, not a placeholder or remote URL', () => {
   renderAuth();
   const image = document.querySelector('.auth-context__image');
