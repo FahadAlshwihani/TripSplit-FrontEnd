@@ -46,7 +46,7 @@
 
 .auth-header {
   border-block-end: var(--border-width) solid var(--color-border);
-  padding: var(--space-4) var(--page-margin-mobile);
+  padding: var(--space-3) var(--page-margin-mobile);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -55,20 +55,24 @@
 @media (min-width: 768px) {
   .auth-header {
     padding-inline: var(--page-margin-desktop);
-    padding-block: var(--space-6);
+    padding-block: var(--space-3); /* compact: ~80px total header height, not a hero banner */
     align-items: flex-end;
   }
 }
 
 .auth-header__brand-group { display: flex; flex-direction: column; }
 
-.auth-header__brand.text-display {
+/* headline scale (24/32), not display — a technical document header, not
+   a hero logo. Bold weight to keep the same visual presence Stitch's own
+   (larger but lighter) treatment had. */
+.auth-header__brand.text-headline {
   color: var(--nc-indigo-700);
   margin: 0;
+  font-weight: 700;
 }
 
 @media (min-width: 768px) {
-  .auth-header__brand.text-display {
+  .auth-header__brand.text-headline {
     color: var(--color-text);
     text-transform: uppercase;
   }
@@ -139,11 +143,19 @@
   .auth-context {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    /* content-start, not space-between: the grid row stretches this column
+       to match the form column's height, and space-between was shoving the
+       image all the way to the bottom of that stretched height — pulling
+       it far away from the heading/description instead of sitting close
+       beneath them the way Stitch does. Any leftover height below the
+       image is just left empty. */
+    justify-content: flex-start;
     grid-column: 1 / span 5;
     border-inline-end: var(--border-width) solid var(--color-border);
     padding-inline-end: var(--space-6);
-    padding-block-end: var(--space-8);
+    /* no padding-block-end here: .auth-main already gives the whole row
+       32px of bottom padding; adding more here just for this column was
+       inflating overall page height for no visual benefit. */
   }
 }
 
@@ -158,13 +170,15 @@
 
 .auth-context__description.text-copy-lg {
   color: var(--color-text-muted);
-  max-width: 24rem;
+  max-width: 23rem; /* wide enough for our (longer) approved copy to wrap at 2 lines, not 3 */
 }
 
 .auth-context__visual {
   position: relative;
   aspect-ratio: 4 / 3;
   width: 100%;
+  max-width: 260px; /* Stitch's compact image frame — was stretching to the full column width */
+  margin-block-start: var(--space-6);
   border: var(--border-width) solid var(--color-border);
   padding: var(--space-2);
   background: var(--color-surface-alt);
@@ -252,8 +266,8 @@
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
-  margin-block-start: var(--space-8);
+  gap: var(--space-5);
+  margin-block-start: var(--space-6);
 }
 
 .auth-field { display: flex; flex-direction: column; gap: var(--space-1); }
@@ -374,21 +388,6 @@
   box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
 }
 
-.auth-btn--secondary {
-  background: var(--color-surface);
-  border-color: var(--color-border);
-  color: var(--color-text);
-  box-shadow: 2px 2px 0 0 var(--nc-ink-900);
-}
-
-.auth-btn--secondary:hover:not(:disabled),
-.auth-btn--secondary:focus-visible {
-  background: var(--color-surface-alt);
-  border-color: var(--color-border);
-  color: var(--color-text);
-  box-shadow: 2px 2px 0 0 var(--nc-ink-900);
-}
-
 .auth-btn:active:not(:disabled) {
   transform: translate(2px, 2px);
   box-shadow: 0 0 0 0 var(--nc-ink-900);
@@ -396,8 +395,8 @@
 
 .auth-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
 
-/* Arrows are directional — mirror in RTL. Lock/mail/check icons are
-   non-directional and deliberately left alone. */
+/* Arrows are directional — mirror in RTL. Lock/mail/check/person icons
+   are non-directional and deliberately left alone. */
 [dir="rtl"] .auth-btn--primary svg,
 [dir="rtl"] .auth-step__back svg,
 [dir="rtl"] .auth-footer__link svg {
@@ -405,30 +404,25 @@
 }
 
 /* ---------------------------------------------------------------------- */
-/* Guest + footer */
+/* Footer: "Back to home" + "Continue as guest" share one compact row on
+   desktop (Stitch's own composition — small text actions, not buttons),
+   but Continue as guest becomes a full-width secondary button on mobile
+   (matching the separate mobile Stitch mockup). Same single control in
+   the DOM at every width; only its CSS presentation changes. */
 
-.auth-guest {
+.auth-form-footer {
   margin-block-start: var(--space-6);
-  padding-block-start: var(--space-6);
-  border-block-start: var(--border-width) dashed var(--color-border);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.auth-guest__helper.text-copy-sm {
-  color: var(--color-text-muted);
-  text-align: center;
-  margin: 0;
-}
-
-.auth-footer {
-  margin-block-start: var(--space-8);
-  padding-block-start: var(--space-6);
+  padding-block-start: var(--space-4);
   border-block-start: var(--border-width) solid var(--color-border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
 }
 
 .auth-footer__link.text-label {
+  order: 1;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -436,6 +430,78 @@
 }
 
 .auth-footer__link.text-label:hover { color: var(--color-text); }
+
+.auth-guest-action {
+  order: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: none;
+  border: none;
+  padding: 0;
+  padding-block-end: 2px;
+  border-block-end: var(--border-width) solid var(--color-border);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.auth-guest-action:hover { color: var(--nc-indigo-700); border-color: var(--nc-indigo-700); }
+
+/* Visually hidden (desktop): still a real accessible description via
+   aria-describedby on the guest button, just not part of the compact
+   footer row's geometry. */
+.auth-guest__helper {
+  order: 3;
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 767px) {
+  .auth-form-footer { flex-direction: column; align-items: stretch; }
+
+  .auth-guest-action {
+    order: -1;
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+    padding: var(--space-3) var(--space-6);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    box-shadow: 2px 2px 0 0 var(--nc-ink-900);
+    font: var(--text-label);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+  }
+
+  .auth-guest-action:hover { background: var(--color-surface-alt); color: var(--color-text); border-color: var(--color-border); }
+  .auth-guest-action:active { transform: translate(2px, 2px); box-shadow: 0 0 0 0 var(--nc-ink-900); }
+
+  .auth-guest__helper {
+    order: 0;
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    padding: 0;
+    margin-block: var(--space-2) 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+
+  .auth-footer__link { order: 1; justify-content: center; margin-block-start: var(--space-2); }
+}
 
 /* ---------------------------------------------------------------------- */
 /* Profile step (onboarding) avatars */

@@ -9,7 +9,7 @@ const AuthHeader = () => {
   return (
     <header className="auth-header">
       <div className="auth-header__brand-group">
-        <Link to="/" className="auth-header__brand text-display">{t('auth.brand')}</Link>
+        <Link to="/" className="auth-header__brand text-headline">{t('auth.brand')}</Link>
         <p className="auth-header__secure-label text-label">{t('auth.secureLabel')}</p>
       </div>
       <div className="auth-header__right">
