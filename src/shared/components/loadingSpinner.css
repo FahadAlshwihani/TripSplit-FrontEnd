@@ -1,0 +1,15 @@
+/* Rotation is physical (a spinning ring), not semantic — must behave
+   identically in LTR and RTL. Never gate this animation or its transform
+   behind a [dir="rtl"] rule. */
+.loading-spinner {
+  animation: loading-spin 0.7s linear infinite;
+  flex: 0 0 auto;
+}
+
+@keyframes loading-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner { animation: none; }
+}

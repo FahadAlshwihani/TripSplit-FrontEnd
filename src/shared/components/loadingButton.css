@@ -1,0 +1,20 @@
+/* Purely behavioral — no width/height/border/background/shadow of its own.
+   The caller's own button class (e.g. .auth-btn.auth-btn--primary,
+   .ct-btn--primary) fully owns the visual language; this only adds the
+   flex layout that keeps the spinner+label centered and evenly spaced
+   with `gap` (a logical property — correct in RTL automatically, unlike
+   margin-left/margin-right) plus the loading-specific cursor. */
+.loading-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2, 0.5rem);
+}
+
+.loading-btn:disabled {
+  cursor: not-allowed;
+}
+
+.loading-btn[aria-busy="true"] {
+  cursor: progress;
+}

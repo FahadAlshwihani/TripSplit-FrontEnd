@@ -430,10 +430,16 @@
 .auth-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
 
 /* Arrows are directional — mirror in RTL. Lock/mail/check/person icons
-   are non-directional and deliberately left alone. */
-[dir="rtl"] .auth-btn--primary svg,
-[dir="rtl"] .auth-step__back svg,
-[dir="rtl"] .auth-footer__link svg {
+   are non-directional and deliberately left alone. Excludes
+   .auth-spinner/.loading-spinner explicitly: a bare `svg` descendant
+   selector also matched the loading spinner living in the same button
+   (mutually exclusive with the arrow, but still a DOM descendant), which
+   mirrored its underlying (pre-animation) transform and made the CSS
+   rotation animation interpolate from a horizontal-flip matrix every
+   loop — a visibly distorted, non-circular spin in Arabic only. */
+[dir="rtl"] .auth-btn--primary svg:not(.auth-spinner):not(.loading-spinner),
+[dir="rtl"] .auth-step__back svg:not(.auth-spinner):not(.loading-spinner),
+[dir="rtl"] .auth-footer__link svg:not(.auth-spinner):not(.loading-spinner) {
   transform: scaleX(-1);
 }
 
@@ -676,7 +682,7 @@
 
 .otp-back:disabled { opacity: 0.5; cursor: not-allowed; }
 
-[dir="rtl"] .otp-back svg { transform: scaleX(-1); }
+[dir="rtl"] .otp-back svg:not(.auth-spinner):not(.loading-spinner) { transform: scaleX(-1); }
 
 @media (min-width: 768px) {
   /* Floats just outside the card's top-start corner, per the Stitch

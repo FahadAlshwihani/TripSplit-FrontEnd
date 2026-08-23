@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import Spinner from './Spinner';
+import LoadingButton from '../../../shared/components/LoadingButton';
 import MobileEditorialImage from './MobileEditorialImage';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -85,23 +85,14 @@ const EmailStep = ({ busy, errorKey, guestAllowed, onSubmit, onGuest }) => {
           </div>
         </div>
         {visibleErrorKey && <p className="auth-error" role="alert">{t(visibleErrorKey)}</p>}
-        <button
-          type="submit"
+        <LoadingButton
           className={`auth-btn auth-btn--primary${busy ? ' auth-btn--loading' : ''}`}
-          disabled={busy}
+          loading={busy}
+          loadingLabel={t('auth.email.sending')}
         >
-          {busy ? (
-            <>
-              <Spinner />
-              <span>{t('auth.email.sending')}</span>
-            </>
-          ) : (
-            <>
-              <span>{t('auth.email.submit')}</span>
-              <ArrowForwardIcon />
-            </>
-          )}
-        </button>
+          <span>{t('auth.email.submit')}</span>
+          <ArrowForwardIcon />
+        </LoadingButton>
       </form>
       {/*
         Desktop Stitch presents "Continue as guest" as a small text link

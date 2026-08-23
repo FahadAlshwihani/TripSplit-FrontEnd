@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import OtpInput from './OtpInput';
-import Spinner from './Spinner';
+import LoadingButton from '../../../shared/components/LoadingButton';
 
 const ArrowBackIcon = () => (
   <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -44,8 +44,6 @@ const OtpStep = ({ email, isVerifying, isResending, errorKey, resendSeconds, onS
     onSubmit(code);
   };
 
-  const resendDisabled = resendSeconds > 0 || isResending || isVerifying;
-
   return (
     <div className="otp-page">
       <div className="otp-card-wrap">
@@ -76,40 +74,25 @@ const OtpStep = ({ email, isVerifying, isResending, errorKey, resendSeconds, onS
               {errorKey && <p className="auth-error" role="alert">{t(errorKey)}</p>}
             </div>
             <div className="otp-card__actions">
-              <button
-                type="submit"
+              <LoadingButton
                 className={`auth-btn auth-btn--primary${isVerifying ? ' auth-btn--loading' : ''}`}
-                disabled={isVerifying || code.length !== 6}
+                disabled={code.length !== 6}
+                loading={isVerifying}
+                loadingLabel={t('auth.otp.verifying')}
               >
-                {isVerifying ? (
-                  <>
-                    <Spinner />
-                    <span>{t('auth.otp.verifying')}</span>
-                  </>
-                ) : (
-                  <>
-                    <span>{t('auth.otp.verify')}</span>
-                    <LockOpenIcon />
-                  </>
-                )}
-              </button>
-              <button
+                <span>{t('auth.otp.verify')}</span>
+                <LockOpenIcon />
+              </LoadingButton>
+              <LoadingButton
                 type="button"
                 className={`otp-resend text-label${isResending ? ' otp-resend--loading' : ''}`}
                 onClick={onResend}
-                disabled={resendDisabled}
+                disabled={resendSeconds > 0 || isVerifying}
+                loading={isResending}
+                loadingLabel={t('auth.otp.resending')}
               >
-                {isResending ? (
-                  <>
-                    <Spinner />
-                    <span>{t('auth.otp.resending')}</span>
-                  </>
-                ) : resendSeconds > 0 ? (
-                  t('auth.otp.resendCountdown', { time: formatCountdown(resendSeconds) })
-                ) : (
-                  t('auth.otp.resend')
-                )}
-              </button>
+                {resendSeconds > 0 ? t('auth.otp.resendCountdown', { time: formatCountdown(resendSeconds) }) : t('auth.otp.resend')}
+              </LoadingButton>
             </div>
           </form>
         </div>

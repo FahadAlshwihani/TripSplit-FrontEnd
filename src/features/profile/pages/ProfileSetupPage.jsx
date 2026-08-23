@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Spinner from '../../auth/components/Spinner';
+import LoadingButton from '../../../shared/components/LoadingButton';
 import AvatarPreview from '../components/AvatarPreview';
 import AvatarModeTabs from '../components/AvatarModeTabs';
 import InitialsAvatarOptions from '../components/InitialsAvatarOptions';
@@ -137,16 +137,13 @@ const ProfileSetupPage = ({ busy, errorKey, onSubmit, mode: pageMode = 'register
 
           {visibleErrorKey && <p className="auth-error" role="alert">{t(visibleErrorKey)}</p>}
 
-          <button type="submit" className={`auth-btn auth-btn--primary${busy ? ' auth-btn--loading' : ''}`} disabled={busy}>
-            {busy ? (
-              <>
-                <Spinner />
-                <span>{t('profile.setup.saving')}</span>
-              </>
-            ) : (
-              <span>{t('profile.setup.finish')}</span>
-            )}
-          </button>
+          <LoadingButton
+            className={`auth-btn auth-btn--primary${busy ? ' auth-btn--loading' : ''}`}
+            loading={busy}
+            loadingLabel={t('profile.setup.saving')}
+          >
+            <span>{t('profile.setup.finish')}</span>
+          </LoadingButton>
         </form>
       </div>
     </div>

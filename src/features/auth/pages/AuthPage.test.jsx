@@ -163,7 +163,7 @@ test('the send button shows loading copy and a spinner while sending, and return
   const loadingButton = await screen.findByRole('button', { name: /auth\.email\.sending/ });
   expect(loadingButton).toHaveClass('auth-btn--loading');
   expect(loadingButton).toBeDisabled();
-  expect(loadingButton.querySelector('.auth-spinner')).toBeInTheDocument();
+  expect(loadingButton.querySelector('.loading-spinner')).toBeInTheDocument();
 
   // A second click while the request is in flight must not fire a duplicate request.
   fireEvent.click(loadingButton);
@@ -299,7 +299,7 @@ test('the verify button shows loading copy and a spinner while verifying, and re
 
   const loadingButton = await screen.findByRole('button', { name: /auth\.otp\.verifying/ });
   expect(loadingButton).toHaveClass('auth-btn--loading');
-  expect(loadingButton.querySelector('.auth-spinner')).toBeInTheDocument();
+  expect(loadingButton.querySelector('.loading-spinner')).toBeInTheDocument();
   expect(verifyOtp).toHaveBeenCalledTimes(1);
 
   rejectVerify({ status: 400, code: 'otp_expired', message: 'expired' });
@@ -334,7 +334,7 @@ test('resend shows loading copy and a spinner while a resend request is in fligh
   );
   const loadingResend = screen.getByRole('button', { name: /auth\.otp\.resending/ });
   expect(loadingResend).toHaveClass('otp-resend--loading');
-  expect(loadingResend.querySelector('.auth-spinner')).toBeInTheDocument();
+  expect(loadingResend.querySelector('.loading-spinner')).toBeInTheDocument();
   expect(loadingResend).toBeDisabled();
 });
 

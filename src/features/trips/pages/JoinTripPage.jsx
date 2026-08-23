@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import PublicLayout from '../../../components/Layout/PublicLayout';
 import NeoLoading from '../../../shared/components/NeoLoading';
 import GuestFields from '../../../shared/components/GuestFields';
+import LoadingButton from '../../../shared/components/LoadingButton';
 import '../../../styles/CardStyles.css';
 import '../../../styles/legacyShell.css';
 import { joinTrip } from '../api/tripsApi';
@@ -48,14 +49,16 @@ const JoinTripPage = () => {
       <div className="legacy-shell">
         <h1 className="legacy-shell__page-title text-headline">{t('home.hero.joinTrip')}</h1>
         <div className="home-container-pc mt-5">
-          {loading || authLoading ? <NeoLoading /> : (
+          {authLoading ? <NeoLoading /> : (
             <div className="card-pc join-trip-card">
               <h2>{t('join.existing.trip')}</h2>
               <form onSubmit={submit}>
                 <input className="pc-input" value={form.join_code} onChange={(e) => setForm({ ...form, join_code: e.target.value.toUpperCase() })} placeholder={t('enter.trip.code')} required />
                 <input className="pc-input" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={t('joinTrip.passwordPlaceholder')} />
                 {!user && !guestProfile && <GuestFields values={form} onChange={setForm} namePlaceholder={t('guest.displayNamePlaceholder')} />}
-                <button className="pc-btn-join">{t('join.trip.button')}</button>
+                <LoadingButton className="pc-btn-join" loading={loading} loadingLabel={t('joinTrip.joining')}>
+                  {t('join.trip.button')}
+                </LoadingButton>
               </form>
               {error && <div className="error-message" role="alert">{error}</div>}
             </div>
