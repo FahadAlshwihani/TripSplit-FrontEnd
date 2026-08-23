@@ -93,15 +93,15 @@ test('an animation-capable selection reveals the Off/Slow/Medium/Fast control; a
   await waitFor(() => expect(screen.queryByRole('radiogroup', { name: 'Animation' })).not.toBeInTheDocument());
 });
 
-test('submitting Initials mode sends the trimmed display name and an initials avatar_key', () => {
+test('submitting Initials mode sends the trimmed display name and a structured initials payload', () => {
   const onSubmit = jest.fn();
   render(<ProfileSetupPage busy={false} errorKey={null} onSubmit={onSubmit} />);
   fireEvent.change(screen.getByLabelText('Display name'), { target: { value: '  Alex Smith  ' } });
   fireEvent.click(screen.getByRole('button', { name: 'Finish setup' }));
-  expect(onSubmit).toHaveBeenCalledWith({ display_name: 'Alex Smith', avatar_key: 'initials_indigo' });
+  expect(onSubmit).toHaveBeenCalledWith({ display_name: 'Alex Smith', avatar_type: 'initials', avatar_color: 'indigo' });
 });
 
-test('submitting Avatars mode with an animation selected sends a dicebear avatar_key encoding the animation', async () => {
+test('submitting Avatars mode with an animation selected sends a structured dicebear payload (not a legacy avatar_key)', async () => {
   const onSubmit = jest.fn();
   render(<ProfileSetupPage busy={false} errorKey={null} onSubmit={onSubmit} />);
   fireEvent.change(screen.getByLabelText('Display name'), { target: { value: 'Alex Smith' } });
@@ -114,8 +114,12 @@ test('submitting Avatars mode with an animation selected sends a dicebear avatar
 
   fireEvent.click(screen.getByRole('button', { name: 'Finish setup' }));
   expect(onSubmit).toHaveBeenCalledTimes(1);
-  const { avatar_key: avatarKey } = onSubmit.mock.calls[0][0];
-  expect(avatarKey).toMatch(/^dicebear_(glass|planets|shapes|waves|loops)_[a-z0-9]+_slow$/);
+  const payload = onSubmit.mock.calls[0][0];
+  expect(payload.avatar_key).toBeUndefined();
+  expect(payload.avatar_type).toBe('dicebear');
+  expect(payload.avatar_style).toMatch(/^(glass|planets|shapes|waves|loops)$/);
+  expect(payload.avatar_seed).toMatch(/^[a-z0-9]+$/);
+  expect(payload.avatar_animation).toBe('slow');
 });
 
 test('rejects an empty display name without calling onSubmit', () => {

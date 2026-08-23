@@ -1,5 +1,6 @@
 import {
   encodeInitialsKey, encodeDicebearKey, decodeDicebearKey, decodeInitialsKey,
+  buildAvatarPayload, avatarKeyFromUser,
 } from './avatarKey';
 
 test('encodes and decodes an initials key round-trip', () => {
@@ -39,4 +40,31 @@ test('legacy/unrelated keys decode as neither initials nor dicebear', () => {
   expect(decodeDicebearKey('avatar_01')).toBeNull();
   expect(decodeInitialsKey(undefined)).toBeNull();
   expect(decodeDicebearKey(undefined)).toBeNull();
+});
+
+test('buildAvatarPayload builds a structured initials payload with no dicebear fields', () => {
+  expect(buildAvatarPayload({ mode: 'initials', colorId: 'coral', selected: { style: 'lorelei', seed: 'abc' }, animation: 'slow' }))
+    .toEqual({ avatar_type: 'initials', avatar_color: 'coral' });
+});
+
+test('buildAvatarPayload builds a structured dicebear payload with no legacy avatar_key', () => {
+  const payload = buildAvatarPayload({ mode: 'avatars', colorId: 'coral', selected: { style: 'lorelei', seed: 'abc123' }, animation: 'medium' });
+  expect(payload).toEqual({ avatar_type: 'dicebear', avatar_style: 'lorelei', avatar_seed: 'abc123', avatar_animation: 'medium' });
+  expect(payload.avatar_key).toBeUndefined();
+});
+
+test('avatarKeyFromUser reconstructs a dicebear avatarKey from structured backend fields', () => {
+  const key = avatarKeyFromUser({ avatar_type: 'dicebear', avatar_style: 'lorelei', avatar_seed: 'abc123', avatar_animation: 'slow' });
+  expect(key).toBe('dicebear_lorelei_abc123_slow');
+});
+
+test('avatarKeyFromUser reconstructs an initials avatarKey from structured backend fields', () => {
+  expect(avatarKeyFromUser({ avatar_type: 'initials', avatar_color: 'coral' })).toBe('initials_coral');
+});
+
+test('avatarKeyFromUser falls back to the legacy avatar_key for legacy/unset avatar_type', () => {
+  expect(avatarKeyFromUser({ avatar_type: 'legacy', avatar_key: 'avatar_03' })).toBe('avatar_03');
+  expect(avatarKeyFromUser({ avatar_type: 'dicebear', avatar_style: '', avatar_seed: '', avatar_key: 'avatar_03' })).toBe('avatar_03');
+  expect(avatarKeyFromUser(null)).toBe('');
+  expect(avatarKeyFromUser({})).toBe('');
 });

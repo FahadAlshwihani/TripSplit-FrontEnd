@@ -240,6 +240,44 @@ test('a new registrant sees the profile step before continuing', async () => {
   await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('profile.setup.title'));
 });
 
+const advanceToProfile = async () => {
+  verifyOtp.mockResolvedValue({ user: { id: 'u2' }, onboarding_required: true });
+  await advanceToOtp();
+  fillOtp('123456');
+  fireEvent.click(screen.getByRole('button', { name: /auth.otp.verify/ }));
+  await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('profile.setup.title'));
+};
+
+test('completing profile setup saves the structured avatar payload and continues to the preserved next destination', async () => {
+  mockSaveProfile.mockResolvedValue({ id: 'u2', display_name: 'Alex Smith', avatar_type: 'initials', avatar_color: 'indigo' });
+  renderAuth('/auth?next=%2Fcreate-trip');
+  await advanceToProfile();
+  fireEvent.change(screen.getByLabelText('profile.setup.displayName'), { target: { value: 'Alex Smith' } });
+  fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
+  await waitFor(() => expect(mockSaveProfile).toHaveBeenCalledWith({ display_name: 'Alex Smith', avatar_type: 'initials', avatar_color: 'indigo' }));
+  await screen.findByText('create-trip-page');
+});
+
+test('a validation-error response from PATCH /profile/ renders the generic localized save-failure copy, never raw backend field errors', async () => {
+  mockSaveProfile.mockRejectedValue({ status: 400, code: 'validation_error', message: 'Please correct the highlighted fields.', fields: { avatar_style: ['Select a supported avatar style.'] } });
+  renderAuth();
+  await advanceToProfile();
+  fireEvent.change(screen.getByLabelText('profile.setup.displayName'), { target: { value: 'Alex Smith' } });
+  fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
+  const alert = await screen.findByRole('alert');
+  expect(alert).toHaveTextContent('profile.setup.errors.saveFailed');
+  expect(alert).not.toHaveTextContent('avatar_style');
+});
+
+test('a network failure while saving the profile renders the network-specific error copy', async () => {
+  mockSaveProfile.mockRejectedValue({ status: 0, code: 'network_error', message: 'Network request failed' });
+  renderAuth();
+  await advanceToProfile();
+  fireEvent.change(screen.getByLabelText('profile.setup.displayName'), { target: { value: 'Alex Smith' } });
+  fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('profile.setup.errors.network');
+});
+
 test('an invalid-OTP backend code renders its localized message from the OTP-card namespace, never the raw backend text', async () => {
   verifyOtp.mockRejectedValue({ status: 400, code: 'otp_invalid', message: 'OTP code mismatch for otp_id=otp-1' });
   renderAuth();
