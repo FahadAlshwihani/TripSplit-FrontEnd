@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import MainLayout from '../components/Layout/MainLayout';
 import '../styles/CardStyles.css';
@@ -13,15 +13,16 @@ import { getTrips } from '../features/trips/api/tripsApi';
 const currencies = ['SAR', 'USD', 'EUR', 'GBP', 'AED', 'QAR', 'KWD', 'BHD', 'OMR'];
 const ProfilePage = () => {
   const { t } = useTranslation();
-  const { user, authLoading, saveProfile } = useAuth();
+  // GatedRoute (see accountRoutes.jsx) already ensures this only renders
+  // for an authenticated, restored user — no separate loading/redirect
+  // check needed here.
+  const { user, saveProfile } = useAuth();
   const [form, setForm] = useState(null);
   const [message, setMessage] = useState('');
   const [emailChange, setEmailChange] = useState({ email: '', otp_id: null, code: '' });
   const [trips, setTrips] = useState([]);
   useEffect(() => { if (user) setForm({ first_name: user.first_name, last_name: user.last_name, phone_number: user.phone_number || '', avatar_key: user.avatar_key, preferred_language: user.preferred_language, preferred_currency: user.preferred_currency }); }, [user]);
   useEffect(() => { if (user) getTrips().then((result) => setTrips(result.results)); }, [user]);
-  if (authLoading) return null;
-  if (!user) return <Navigate to="/auth" replace />;
   if (!form) return null;
   const tripGroups = { active: trips.filter((trip) => !trip.archived_at && trip.lifecycle_status !== 'closed'), closed: trips.filter((trip) => !trip.archived_at && trip.lifecycle_status === 'closed'), archived: trips.filter((trip) => trip.archived_at) };
   const save = async (event) => { event.preventDefault(); await saveProfile(form); setMessage('Profile saved.'); };

@@ -1,0 +1,25 @@
+.dashboard-identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.dashboard-identity__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.dashboard-identity__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
