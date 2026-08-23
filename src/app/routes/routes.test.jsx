@@ -51,7 +51,7 @@ test('anonymous "/join-trip" is redirected through the Auth Gateway', async () =
 test('signed-in "/create-trip" loads the dedicated create-trip route directly', async () => {
   mockAuthUser = { id: 'u1' };
   renderAt('/create-trip', publicRoutes);
-  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('home.hero.createTrip');
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('createTrip.pageTitle');
 });
 
 test('signed-in "/join-trip" loads the dedicated join-trip route directly', async () => {
@@ -73,7 +73,7 @@ test('a "continue as guest" arrival at "/create-trip" bypasses the gate even whe
       </Suspense>
     </MemoryRouter>
   );
-  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('home.hero.createTrip');
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('createTrip.pageTitle');
 });
 
 test('legacy "/trip/:code" still redirects into the trip workspace path', () => {

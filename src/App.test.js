@@ -36,7 +36,10 @@ test('Create Trip CTA routes through the Auth Gateway, and guest continuation re
   fireEvent.click(await screen.findByRole('button', { name: 'auth.guest.action' }));
   fireEvent.change(await screen.findByLabelText('profile.setup.displayName'), { target: { value: 'Guest Traveler' } });
   fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
-  expect(await screen.findByText('create.new.trip')).toBeInTheDocument();
+  expect(await screen.findByText('createTrip.pageTitle')).toBeInTheDocument();
+  // The guest profile was already collected on the previous screen, so
+  // Create Trip must not ask for a display name/avatar a second time.
+  expect(screen.queryByPlaceholderText('guest.displayNamePlaceholder')).not.toBeInTheDocument();
 });
 
 test('Join Trip CTA routes through the Auth Gateway, and guest continuation reaches the real form via Guest Profile Setup', async () => {
