@@ -35,8 +35,13 @@ const generateBatch = (category) => {
   fields (via buildAvatarPayload()), not the "initials_*"/"dicebear_*"
   avatarKey string below — that string stays purely local, feeding only
   the live <AvatarPreview>. See utils/avatarKey.js.
+
+  mode="guest" reuses this exact component/layout for guest onboarding
+  (Continue as Guest → Create/Join Trip) — only the heading copy differs;
+  no email/OTP/account creation happens either way, onSubmit's shape is
+  identical, and the caller decides what to do with it.
 */
-const ProfileSetupPage = ({ busy, errorKey, onSubmit }) => {
+const ProfileSetupPage = ({ busy, errorKey, onSubmit, mode: pageMode = 'registered' }) => {
   const { t } = useTranslation();
   const [displayName, setDisplayName] = useState('');
   const [mode, setMode] = useState('initials');
@@ -85,8 +90,8 @@ const ProfileSetupPage = ({ busy, errorKey, onSubmit }) => {
       <div className="profile-setup-card">
         <header className="profile-setup-card__header">
           <span className="profile-setup-card__brand text-label">{t('profile.setup.brand')}</span>
-          <h1 className="profile-setup-card__heading text-display">{t('profile.setup.title')}</h1>
-          <p className="profile-setup-card__description text-copy-lg">{t('profile.setup.description')}</p>
+          <h1 className="profile-setup-card__heading text-display">{t(pageMode === 'guest' ? 'auth.guest.action' : 'profile.setup.title')}</h1>
+          <p className="profile-setup-card__description text-copy-lg">{t(pageMode === 'guest' ? 'profile.setup.guestDescription' : 'profile.setup.description')}</p>
         </header>
         <form className="profile-setup-form" onSubmit={handleSubmit} noValidate>
           <div className="pf-field">

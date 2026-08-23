@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PublicLayout from '../../../components/Layout/PublicLayout';
 import NeoLoading from '../../../shared/components/NeoLoading';
@@ -15,7 +15,13 @@ const CreateTripPage = () => {
   const { t } = useTranslation();
   const { user, authLoading } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ title: '', budget: '', currency: user?.preferred_currency || 'SAR', password: '', guest_name: '', avatar_key: 'avatar_01' });
+  // Set when arriving via AuthPage's "Continue as guest" -> Guest Profile
+  // Setup step (display_name + avatar_type/... in the same shape saveProfile
+  // sends) — when present, the guest's name/avatar are already decided and
+  // GuestFields is skipped entirely, matching "no redirect to Home in
+  // between" for the guest continuation flow.
+  const guestProfile = useLocation().state?.guestProfile || null;
+  const [form, setForm] = useState({ title: '', budget: '', currency: user?.preferred_currency || 'SAR', password: '', guest_name: guestProfile?.display_name || '', avatar_key: 'avatar_01' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -23,7 +29,13 @@ const CreateTripPage = () => {
     event.preventDefault(); setLoading(true); setError('');
     try {
       const payload = { ...form, budget: form.budget.replace(/,/g, '') };
-      if (user) { delete payload.guest_name; delete payload.avatar_key; }
+      if (user) {
+        delete payload.guest_name; delete payload.avatar_key;
+      } else if (guestProfile) {
+        const { display_name, ...avatarFields } = guestProfile;
+        Object.assign(payload, avatarFields, { guest_name: display_name });
+        delete payload.avatar_key;
+      }
       const result = await createTrip(payload);
       navigate(`/trip/${result.trip.id}`);
     } catch (err) { setError(err.response?.data?.message || t('set.Error')); }
@@ -45,7 +57,7 @@ const CreateTripPage = () => {
                   {CURRENCIES.map((item) => <option key={item}>{item}</option>)}
                 </select>
                 <input className="pc-input" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={t('createTrip.passwordPlaceholder')} />
-                {!user && <GuestFields values={form} onChange={setForm} namePlaceholder={t('guest.displayNamePlaceholder')} />}
+                {!user && !guestProfile && <GuestFields values={form} onChange={setForm} namePlaceholder={t('guest.displayNamePlaceholder')} />}
                 <button className="pc-btn-create">{t('create.trip.button')}</button>
               </form>
               {error && <div className="error-message" role="alert">{error}</div>}

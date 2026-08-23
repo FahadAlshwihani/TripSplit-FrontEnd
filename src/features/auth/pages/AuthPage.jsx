@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { requestOtp, verifyOtp } from '../api/authApi';
 import { useAuth } from '../../../auth/AuthContext';
 import { getSafeNext } from '../../../auth/safeNext';
@@ -18,7 +18,7 @@ const AuthPage = () => {
   const location = useLocation();
   const next = getSafeNext(location.search);
   const guestAllowed = new URLSearchParams(location.search).get('guest') !== '0';
-  const { setUser, saveProfile } = useAuth();
+  const { user, authLoading, setUser, saveProfile } = useAuth();
 
   const [step, setStep] = useState('email');
   const [email, setEmail] = useState('');
@@ -39,6 +39,14 @@ const AuthPage = () => {
     const timer = setInterval(() => setResendSeconds((value) => Math.max(0, value - 1)), 1000);
     return () => clearInterval(timer);
   }, [resendSeconds]);
+
+  // SessionLifecycle (idle timeout) and GatedRoute (server session_expired)
+  // both land an anonymous visitor here with this router-state reason —
+  // shown once, on the Email step, then not re-shown on a later re-render.
+  useEffect(() => {
+    if (location.state?.reason === 'idle') setErrorKey('auth.errors.sessionExpired');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const requestCode = async (targetEmail, { setLoading, onErrorKey }) => {
     setLoading(true);
@@ -97,7 +105,24 @@ const AuthPage = () => {
     }
   };
 
-  const continueAsGuest = () => navigate(next, { state: { fromGateway: true } });
+  // Guests get their own onboarding step (same profile/avatar component,
+  // no email/OTP/account creation) instead of jumping straight to
+  // Create/Join Trip — the destination page reads location.state.guestProfile
+  // instead of showing its own inline name/avatar fields.
+  const continueAsGuest = () => setStep('guest-profile');
+  const submitGuestProfile = (profile) => navigate(next, { state: { fromGateway: true, guestProfile: profile } });
+
+  // An already-authenticated visitor opening /auth directly (not mid-flow —
+  // step is still 'email', its initial value, so this never fires for a
+  // user who just verified an OTP in THIS page instance) shouldn't be asked
+  // for another OTP. Onboarding-incomplete still routes through Complete
+  // Profile; otherwise continue to `next` if one was given, else Dashboard.
+  if (step === 'email' && !authLoading && user) {
+    if (!user.onboarding_complete) {
+      return <Navigate to={`/profile/setup${next !== '/' ? `?next=${encodeURIComponent(next)}` : ''}`} replace />;
+    }
+    return <Navigate to={next !== '/' ? next : '/dashboard'} replace />;
+  }
 
   // OTP and Profile are each their own compact, standalone card (see
   // OtpStep.jsx / ProfileSetupPage.jsx) — not steps nested inside the
@@ -121,6 +146,10 @@ const AuthPage = () => {
 
   if (step === 'profile') {
     return <ProfileSetupPage busy={isSavingProfile} errorKey={errorKey} onSubmit={submitProfile} />;
+  }
+
+  if (step === 'guest-profile') {
+    return <ProfileSetupPage busy={false} errorKey={null} onSubmit={submitGuestProfile} mode="guest" />;
   }
 
   return (

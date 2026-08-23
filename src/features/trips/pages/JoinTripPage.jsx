@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PublicLayout from '../../../components/Layout/PublicLayout';
 import NeoLoading from '../../../shared/components/NeoLoading';
@@ -14,7 +14,10 @@ const JoinTripPage = () => {
   const { t } = useTranslation();
   const { user, authLoading } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ join_code: '', password: '', guest_name: '', avatar_key: 'avatar_02' });
+  // See CreateTripPage — same "Continue as guest" -> Guest Profile Setup
+  // handoff, so GuestFields is skipped when a guest profile already exists.
+  const guestProfile = useLocation().state?.guestProfile || null;
+  const [form, setForm] = useState({ join_code: '', password: '', guest_name: guestProfile?.display_name || '', avatar_key: 'avatar_02' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -22,7 +25,13 @@ const JoinTripPage = () => {
     event.preventDefault(); setLoading(true); setError('');
     try {
       const payload = { ...form };
-      if (user) { delete payload.guest_name; delete payload.avatar_key; }
+      if (user) {
+        delete payload.guest_name; delete payload.avatar_key;
+      } else if (guestProfile) {
+        const { display_name, ...avatarFields } = guestProfile;
+        Object.assign(payload, avatarFields, { guest_name: display_name });
+        delete payload.avatar_key;
+      }
       const result = await joinTrip(payload);
       if (result.join_request) {
         if (result.request_token) sessionStorage.setItem(requestTokenKey(result.join_request.id), result.request_token);
@@ -45,7 +54,7 @@ const JoinTripPage = () => {
               <form onSubmit={submit}>
                 <input className="pc-input" value={form.join_code} onChange={(e) => setForm({ ...form, join_code: e.target.value.toUpperCase() })} placeholder={t('enter.trip.code')} required />
                 <input className="pc-input" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={t('joinTrip.passwordPlaceholder')} />
-                {!user && <GuestFields values={form} onChange={setForm} namePlaceholder={t('guest.displayNamePlaceholder')} />}
+                {!user && !guestProfile && <GuestFields values={form} onChange={setForm} namePlaceholder={t('guest.displayNamePlaceholder')} />}
                 <button className="pc-btn-join">{t('join.trip.button')}</button>
               </form>
               {error && <div className="error-message" role="alert">{error}</div>}
