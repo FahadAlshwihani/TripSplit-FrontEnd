@@ -1,6 +1,6 @@
 import {
   encodeInitialsKey, encodeDicebearKey, decodeDicebearKey, decodeInitialsKey,
-  buildAvatarPayload, avatarKeyFromUser,
+  buildAvatarPayload, avatarKeyFromUser, avatarKeyFromAvatar,
 } from './avatarKey';
 
 test('encodes and decodes an initials key round-trip', () => {
@@ -67,4 +67,23 @@ test('avatarKeyFromUser falls back to the legacy avatar_key for legacy/unset ava
   expect(avatarKeyFromUser({ avatar_type: 'dicebear', avatar_style: '', avatar_seed: '', avatar_key: 'avatar_03' })).toBe('avatar_03');
   expect(avatarKeyFromUser(null)).toBe('');
   expect(avatarKeyFromUser({})).toBe('');
+});
+
+// avatarKeyFromAvatar consumes the canonical {type, ...} shape every trip
+// member/join-request API now exposes (see apps.accounts.avatars.avatar_payload
+// on the backend) — distinct from avatarKeyFromUser()'s flat avatar_type/
+// avatar_style/... shape used by the profile endpoints.
+test('avatarKeyFromAvatar reconstructs a dicebear avatarKey from the canonical member.avatar shape', () => {
+  expect(avatarKeyFromAvatar({ type: 'dicebear', style: 'bottts', seed: 'seed123', animation: 'fast' })).toBe('dicebear_bottts_seed123_fast');
+});
+
+test('avatarKeyFromAvatar reconstructs an initials avatarKey from the canonical member.avatar shape', () => {
+  expect(avatarKeyFromAvatar({ type: 'initials', color: 'mustard' })).toBe('initials_mustard');
+});
+
+test('avatarKeyFromAvatar falls back to the legacy key for a legacy/missing avatar', () => {
+  expect(avatarKeyFromAvatar({ type: 'legacy', key: 'avatar_04' })).toBe('avatar_04');
+  expect(avatarKeyFromAvatar({ type: 'dicebear', style: '', seed: '', key: 'avatar_04' })).toBe('avatar_04');
+  expect(avatarKeyFromAvatar(null)).toBe('');
+  expect(avatarKeyFromAvatar(undefined)).toBe('');
 });

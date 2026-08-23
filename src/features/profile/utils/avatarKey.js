@@ -69,3 +69,25 @@ export const avatarKeyFromUser = (user) => {
   }
   return user.avatar_key || '';
 };
+
+// Same idea as avatarKeyFromUser(), but for the canonical `avatar` object
+// every trip-member-facing endpoint now exposes (MemberSerializer,
+// JoinRequestSerializer, funds/balances APIs — see apps.accounts.avatars.
+// avatar_payload on the backend):
+//   {type: "dicebear", style, seed, animation} | {type: "initials", color}
+//   | {type: "legacy", key}
+// A registered member's avatar here always reflects their CURRENT profile
+// (derived server-side at read time), not a stale snapshot from when they
+// joined — so this is the one shape every trip surface (members, activity,
+// governance, funds) should render through, instead of reading a raw
+// avatar_key.
+export const avatarKeyFromAvatar = (avatar) => {
+  if (!avatar) return '';
+  if (avatar.type === 'dicebear' && avatar.style && avatar.seed) {
+    return encodeDicebearKey({ style: avatar.style, seed: avatar.seed, animation: avatar.animation || 'none' });
+  }
+  if (avatar.type === 'initials' && avatar.color) {
+    return encodeInitialsKey(avatar.color);
+  }
+  return avatar.key || '';
+};
