@@ -1,10 +1,14 @@
 /*
-  avatar_key stays the single backend-facing field (no schema/migration
-  needed — see docs/AVATAR_SYSTEM.md "Persistence" section for why this
-  was chosen over adding avatar_type/avatar_style/avatar_seed/
-  avatar_animation as separate fields): every mode's config is encoded
-  into that one string, and this module is the only place that builds or
-  parses the encoding.
+  "avatar_key" (the "initials_<colorId>" / "dicebear_<style>_<seed>_
+  <animation>" encoding below) is now purely an INTERNAL representation
+  used to feed the canonical <Avatar avatarKey=.../> renderer — it is no
+  longer what's sent to the backend. The backend has its own structured
+  fields (avatar_type/avatar_color/avatar_style/avatar_seed/
+  avatar_animation — see PATCH /profile/) since a DiceBear seed alone is
+  32 chars and doesn't fit the legacy 20-char avatar_key column that this
+  encoding used to be squeezed into. buildAvatarPayload()/avatarKeyFromUser()
+  below are the two conversion points between this local encoding and the
+  backend's wire shape.
 
     "initials_<colorId>"                      e.g. initials_indigo
     "dicebear_<style>_<seed>_<animation>"      e.g. dicebear_lorelei_a1b2c3_slow
@@ -40,3 +44,28 @@ export const decodeDicebearKey = (avatarKey) => {
 export const decodeInitialsKey = (avatarKey) => (
   avatarKey?.startsWith(INITIALS_PREFIX) ? avatarKey.slice(INITIALS_PREFIX.length) : null
 );
+
+// Builds the semantic PATCH /profile/ payload from onboarding picker state
+// — only the fields relevant to the selected mode are sent; the backend
+// clears the other mode's stale fields server-side on save.
+export const buildAvatarPayload = ({ mode, colorId, selected, animation }) => (
+  mode === 'initials'
+    ? { avatar_type: 'initials', avatar_color: colorId }
+    : { avatar_type: 'dicebear', avatar_style: selected.style, avatar_seed: selected.seed, avatar_animation: animation }
+);
+
+// Reconstructs the local avatarKey encoding from a backend user object's
+// structured avatar_* fields, so the canonical Avatar component can render
+// the current user's own avatar (e.g. Profile settings, header) purely from
+// what the backend persisted — never from transient picker/session state.
+// Falls back to the legacy avatar_key string for avatar_type "legacy".
+export const avatarKeyFromUser = (user) => {
+  if (!user) return '';
+  if (user.avatar_type === 'dicebear' && user.avatar_style && user.avatar_seed) {
+    return encodeDicebearKey({ style: user.avatar_style, seed: user.avatar_seed, animation: user.avatar_animation || 'none' });
+  }
+  if (user.avatar_type === 'initials' && user.avatar_color) {
+    return encodeInitialsKey(user.avatar_color);
+  }
+  return user.avatar_key || '';
+};

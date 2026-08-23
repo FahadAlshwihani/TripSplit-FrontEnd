@@ -10,7 +10,7 @@ import AnimationControl from '../components/AnimationControl';
 import { DEFAULT_AVATAR_COLOR_ID } from '../data/avatarColors';
 import { stylesForCategory, isAnimationCapable } from '../data/avatarCatalog';
 import { createSeed } from '../services/avatarGenerator';
-import { encodeInitialsKey, encodeDicebearKey } from '../utils/avatarKey';
+import { encodeInitialsKey, encodeDicebearKey, buildAvatarPayload } from '../utils/avatarKey';
 import '../styles/profileSetup.css';
 
 const MAX_DISPLAY_NAME_LENGTH = 60;
@@ -31,8 +31,10 @@ const generateBatch = (category) => {
   DiceBear-backed avatar picker replaces only the INITIALS/AVATARS
   selection engine underneath, not the surrounding card layout.
 
-  avatar_key stays a single string on the wire — see utils/avatarKey.js
-  for the "initials_*" / "dicebear_*" encoding this builds.
+  The submitted payload is the backend's structured avatar_type/avatar_*
+  fields (via buildAvatarPayload()), not the "initials_*"/"dicebear_*"
+  avatarKey string below — that string stays purely local, feeding only
+  the live <AvatarPreview>. See utils/avatarKey.js.
 */
 const ProfileSetupPage = ({ busy, errorKey, onSubmit }) => {
   const { t } = useTranslation();
@@ -73,7 +75,7 @@ const ProfileSetupPage = ({ busy, errorKey, onSubmit }) => {
       return;
     }
     setFieldErrorKey(null);
-    onSubmit({ display_name: trimmed, avatar_key: avatarKey });
+    onSubmit({ display_name: trimmed, ...buildAvatarPayload({ mode, colorId, selected, animation }) });
   };
 
   const visibleErrorKey = fieldErrorKey || errorKey;
