@@ -157,17 +157,56 @@ The persisted `avatar_animation` value (`none|slow|medium|fast`) is real
 and round-trips correctly — it's the *mechanism* (native DiceBear
 animated SVG) that doesn't exist, not the feature.
 
-## Persistence — `avatar_key` stays the one backend field
+## Persistence — structured `avatar_*` fields on the backend User model
 
-TripSplit's existing member/profile model already has a single
-`avatar_key` string field, read via `avatarGlyph(member.avatar_key)`
-across member lists, activity feed, funds, governance, and the guest
-create/join flows (`src/shared/utils/avatars.js`). This is a
-frontend-only repository with no visibility into (or ability to migrate)
-the backend schema, so rather than inventing new fields
-(`avatar_type`/`avatar_style`/`avatar_seed`/`avatar_animation`) that
-would need a real backend migration, the whole configuration is encoded
-into that one existing string — see `src/features/profile/utils/avatarKey.js`:
+Earlier revisions of this doc assumed the frontend had no way to change
+the backend schema and squeezed the whole DiceBear configuration into
+the legacy `avatar_key` string field (`"dicebear_<style>_<seed>_
+<animation>"`). That assumption was wrong in a way that broke onboarding:
+a DiceBear seed alone is a 32-character `crypto.randomUUID()`-derived
+string, and the legacy `avatar_key` column is `CharField(max_length=20)`
+— every Avatars-mode (non-Initials) profile save was rejected by the
+backend with a 400 `max_length` validation error.
+
+The registered-user **profile** (`apps.accounts.models.User`, exposed via
+`GET`/`PATCH /api/v1/profile/`) now has its own structured fields instead
+of overloading `avatar_key`:
+
+```
+avatar_type       "legacy" | "initials" | "dicebear"
+avatar_color      palette id, e.g. "indigo"           (initials mode)
+avatar_style      DiceBear style id, e.g. "lorelei"    (dicebear mode)
+avatar_seed       DiceBear seed string                 (dicebear mode)
+avatar_animation  "none" | "slow" | "medium" | "fast"  (dicebear mode)
+avatar_key        legacy CharField(20) — still used by the old
+                   Profile-settings emoji picker; cleared server-side
+                   whenever avatar_type is set to initials/dicebear
+```
+
+`src/features/profile/utils/avatarKey.js`'s `buildAvatarPayload()` builds
+this shape from onboarding picker state for `PATCH /profile/`, and
+`avatarKeyFromUser()` does the reverse — reconstructing the local
+`"initials_<colorId>"` / `"dicebear_<style>_<seed>_<animation>"` encoding
+below from a backend user object, so the canonical `<Avatar>` component
+can render a registered user's own avatar (Profile settings page, etc.)
+straight from what the backend persisted, with no dependency on
+transient picker/session state. This is also what makes a DiceBear
+selection survive a refresh or a login from a different device — the
+seed/style/animation are read back from the backend, not regenerated.
+
+Trip members (`TripMember`/`TripJoinRequest` — guest identities and
+registered users joining a trip) still use the original `avatar_key`
+scheme (`"avatar_01"`..`"avatar_12"`) unchanged; a registered user's
+DiceBear/Initials selection is not yet propagated onto their trip
+membership rows (they fall back to `"avatar_01"`), matching the existing
+"not wired into every surface" gap noted below. This keeps the fix
+scoped to the profile/onboarding contract that was actually broken,
+without touching the separate trip-membership avatar/join-flow schema.
+
+`src/features/profile/utils/avatarKey.js` is still the one place that
+builds/parses the **local** rendering encoding used by the canonical
+`<Avatar avatarKey=.../>` component (see next section) — this is now
+purely an internal representation, not the wire format:
 
 ```
 initials_<colorId>                        e.g. initials_indigo
