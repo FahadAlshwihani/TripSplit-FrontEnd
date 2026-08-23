@@ -1,0 +1,95 @@
+.currency-picker {
+  position: relative;
+}
+
+.currency-picker__input {
+  width: 100%;
+  min-height: 48px;
+  padding-inline: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--text-body);
+}
+
+.currency-picker__input::placeholder {
+  color: var(--color-text-faint);
+}
+
+.currency-picker__input:focus-visible {
+  outline: none;
+  border-color: var(--nc-indigo-700);
+  border-width: var(--border-width-lg);
+}
+
+.currency-picker__listbox {
+  position: absolute;
+  z-index: 20;
+  inset-inline: 0;
+  top: calc(100% + var(--space-1));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 18rem;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-editorial-md);
+}
+
+.currency-picker__empty {
+  padding: var(--space-3);
+  color: var(--color-text-muted);
+  font: var(--text-body-sm);
+}
+
+.currency-picker__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+.currency-picker__option.is-active {
+  background: var(--color-surface-alt);
+}
+
+.currency-picker__option.is-selected {
+  background: var(--color-primary-soft);
+}
+
+.currency-picker__flag {
+  font-size: 1.25rem;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+.currency-picker__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.currency-picker__country {
+  font: var(--text-body-sm);
+  color: var(--color-text);
+}
+
+.currency-picker__detail {
+  font: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+.currency-picker__code {
+  font-family: var(--font-label);
+  unicode-bidi: isolate;
+}
+
+.currency-picker__error {
+  margin-block-start: var(--space-1);
+  color: var(--color-danger);
+}
