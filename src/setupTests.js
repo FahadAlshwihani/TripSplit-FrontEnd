@@ -3,6 +3,15 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
+import { configure } from '@testing-library/react';
+
+// findBy*/waitFor's default 1000ms budget is tight for routes that mount
+// a React.lazy chunk plus an async data fetch (e.g. Create Trip's
+// CurrencyPicker) under a fully parallel CI test run, where worker CPU
+// contention alone can push resolution past it — flaky failures with no
+// underlying logic bug. 5000ms matches real user patience for a page
+// load without hiding a genuinely broken/never-resolving assertion.
+configure({ asyncUtilTimeout: 5000 });
 
 // jsdom's test-environment global doesn't include structuredClone (a
 // standard global in every real browser and in Node 17+, but not wired
