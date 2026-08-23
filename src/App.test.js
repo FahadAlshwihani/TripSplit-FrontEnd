@@ -30,17 +30,21 @@ test('renders the public Home landing with anonymous create/join entry points ro
   expect(screen.queryByText('join.existing.trip')).not.toBeInTheDocument();
 });
 
-test('Create Trip CTA routes through the Auth Gateway, and guest continuation reaches the real form', async () => {
+test('Create Trip CTA routes through the Auth Gateway, and guest continuation reaches the real form via Guest Profile Setup', async () => {
   render(<App />);
   fireEvent.click(await screen.findByRole('link', { name: 'home.hero.createTrip' }));
   fireEvent.click(await screen.findByRole('button', { name: 'auth.guest.action' }));
+  fireEvent.change(await screen.findByLabelText('profile.setup.displayName'), { target: { value: 'Guest Traveler' } });
+  fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
   expect(await screen.findByText('create.new.trip')).toBeInTheDocument();
 });
 
-test('Join Trip CTA routes through the Auth Gateway, and guest continuation reaches the real form', async () => {
+test('Join Trip CTA routes through the Auth Gateway, and guest continuation reaches the real form via Guest Profile Setup', async () => {
   render(<App />);
   fireEvent.click(await screen.findByRole('link', { name: 'home.hero.joinTrip' }));
   fireEvent.click(await screen.findByRole('button', { name: 'auth.guest.action' }));
+  fireEvent.change(await screen.findByLabelText('profile.setup.displayName'), { target: { value: 'Guest Traveler' } });
+  fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
   expect(await screen.findByText('join.existing.trip')).toBeInTheDocument();
 });
 

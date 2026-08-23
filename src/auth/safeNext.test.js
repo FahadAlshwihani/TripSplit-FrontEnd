@@ -1,4 +1,4 @@
-import { getSafeNext, buildAuthUrl } from './safeNext';
+import { getSafeNext, buildAuthUrl, nextFromLocation } from './safeNext';
 
 describe('getSafeNext', () => {
   test('accepts a plain internal path', () => {
@@ -45,5 +45,15 @@ describe('buildAuthUrl', () => {
 
   test('omits the next param when no destination is given', () => {
     expect(buildAuthUrl()).toBe('/auth');
+  });
+});
+
+describe('nextFromLocation', () => {
+  test('combines pathname and search from a router location', () => {
+    expect(nextFromLocation({ pathname: '/trips/create', search: '' })).toBe('/trips/create');
+  });
+
+  test('preserves a query string, e.g. a join code', () => {
+    expect(nextFromLocation({ pathname: '/join-trip', search: '?code=ABC123' })).toBe('/join-trip?code=ABC123');
   });
 });

@@ -338,15 +338,20 @@ test('resend shows loading copy and a spinner while a resend request is in fligh
   expect(loadingResend).toBeDisabled();
 });
 
-test('continue as guest navigates to the safe next destination with gateway state', async () => {
+test('continue as guest shows Guest Profile Setup, then navigates to the safe next destination with gateway state', async () => {
   renderAuth('/auth?next=%2Fcreate-trip');
   fireEvent.click(screen.getByRole('button', { name: 'auth.guest.action' }));
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('auth.guest.action');
+  fireEvent.change(screen.getByLabelText('profile.setup.displayName'), { target: { value: 'Guest Traveler' } });
+  fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
   expect(await screen.findByText('create-trip-page')).toBeInTheDocument();
 });
 
-test('an unsafe next destination falls back to home', async () => {
+test('an unsafe next destination falls back to home after guest profile setup', async () => {
   renderAuth('/auth?next=https%3A%2F%2Fevil.example.com');
   fireEvent.click(screen.getByRole('button', { name: 'auth.guest.action' }));
+  fireEvent.change(await screen.findByLabelText('profile.setup.displayName'), { target: { value: 'Guest Traveler' } });
+  fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
   expect(await screen.findByText('home-page')).toBeInTheDocument();
 });
 

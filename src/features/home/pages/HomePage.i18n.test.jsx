@@ -76,8 +76,9 @@ test('theme and language preferences are independent of each other', () => {
   expect(document.documentElement.dir).toBe('ltr');
 });
 
-test('desktop nav places Sign In before the language/theme utility controls', () => {
+test('desktop nav places Sign In before the language/theme utility controls', async () => {
   renderHome();
+  await screen.findByText('Sign In', { selector: 'a' });
   const links = document.querySelector('.public-nav__links');
   const order = Array.from(links.children).map((el) =>
     el.classList.contains('public-nav__link--signin') ? 'signin'
