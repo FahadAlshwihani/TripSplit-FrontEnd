@@ -5,15 +5,25 @@ import publicRoutes from './publicRoutes';
 import accountRoutes from './accountRoutes';
 import tripRoutes from './tripRoutes';
 import { getTrips } from '../../features/trips/api/tripsApi';
+import { getCurrencies } from '../../features/currencies/api/currenciesApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: 'en', changeLanguage: jest.fn() } }) }));
 jest.mock('../../features/trips/api/tripsApi', () => ({ getTrips: jest.fn() }));
+jest.mock('../../features/currencies/api/currenciesApi', () => ({ getCurrencies: jest.fn() }));
 
 let mockAuthUser = null;
 jest.mock('../../auth/AuthContext', () => ({ useAuth: () => ({ user: mockAuthUser, authLoading: false, logout: jest.fn(), saveProfile: jest.fn() }) }));
 
 afterEach(() => { mockAuthUser = null; });
-beforeEach(() => { getTrips.mockResolvedValue({ results: [] }); });
+beforeEach(() => {
+  getTrips.mockResolvedValue({ results: [] });
+  // CreateTripPage mounts CurrencyPicker, which fetches the currency
+  // catalog on mount -- without this mock it fires a real, unmocked XHR
+  // in jsdom ("Cross origin http://localhost forbidden"), which is flaky
+  // under parallel test-suite load even though it doesn't fail the
+  // specific assertions in this file.
+  getCurrencies.mockResolvedValue({ currencies: [] });
+});
 
 const renderAt = (entry, routes) => render(
   <MemoryRouter initialEntries={[entry]}>

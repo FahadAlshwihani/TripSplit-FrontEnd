@@ -13,6 +13,10 @@ jest.mock('./features/trips/api/tripsApi', () => ({
   createTrip: jest.fn(), joinTrip: jest.fn(),
 }));
 jest.mock('./features/auth/api/authApi', () => ({ getCurrentUser: jest.fn(() => Promise.resolve({ user: null })), logout: jest.fn(), updateProfile: jest.fn() }));
+// CreateTripPage mounts CurrencyPicker, which fetches the currency
+// catalog on mount -- without this mock it fires a real, unmocked XHR in
+// jsdom ("Cross origin http://localhost forbidden").
+jest.mock('./features/currencies/api/currenciesApi', () => ({ getCurrencies: jest.fn(() => Promise.resolve({ currencies: [] })) }));
 
 beforeEach(() => {
   window.history.pushState({}, '', '/');
