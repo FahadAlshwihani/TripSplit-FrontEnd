@@ -1,0 +1,266 @@
+/*
+  Join Trip — translated from the approved Stitch reference onto the
+  existing Neo-classic token system (no Tailwind), mirroring the
+  hard-shadow recipe already established by createTrip.css. Kept
+  self-contained on purpose (its own jt-* classes) rather than importing
+  createTrip.css across features, matching that file's own precedent.
+*/
+
+.jt-page {
+  max-width: 640px;
+  margin-inline: auto;
+  padding: var(--space-8) var(--space-4) var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.jt-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.jt-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.jt-back:hover { background: var(--color-surface-alt); }
+
+[dir="rtl"] .jt-back__icon { transform: scaleX(-1); }
+
+.jt-title { margin: 0; color: var(--color-text); }
+
+.jt-card {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 6px 6px 0 0 var(--color-border);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.jt-card form { display: flex; flex-direction: column; gap: var(--space-6); }
+
+.jt-field { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.jt-field__label.text-label { color: var(--color-text); }
+
+.jt-field__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.jt-field__icon {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.jt-field__input {
+  width: 100%;
+  min-height: 48px;
+  padding-inline: var(--space-8) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--text-body);
+}
+
+.jt-field__input::placeholder { color: var(--color-text-faint); }
+
+.jt-field__input:focus-visible {
+  outline: none;
+  border-color: var(--nc-indigo-700);
+  border-width: var(--border-width-lg);
+}
+
+.jt-field__helper.text-copy-sm { margin: 0; color: var(--color-text-muted); }
+
+.jt-status {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.jt-error {
+  margin: 0;
+  color: var(--color-danger);
+  font: var(--text-body-sm);
+}
+
+/* Trip Found sub-panel */
+
+.jt-found-panel {
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-container);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.jt-found-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-block-end: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-alt);
+}
+
+.jt-found-panel__header .text-label { color: var(--color-text-muted); text-transform: uppercase; }
+
+.jt-found-panel__check { color: var(--nc-indigo-700); }
+
+.jt-found-panel__body {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.jt-found-panel__title { margin: 0; color: var(--color-text); }
+
+.jt-found-panel__dates {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.jt-found-panel__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  padding-block-start: var(--space-2);
+  border-block-start: var(--border-width) solid var(--color-border-subtle);
+}
+
+.jt-found-panel__grid > div { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.jt-found-panel__grid .text-label { color: var(--color-text-muted); text-transform: uppercase; }
+
+@media (max-width: 560px) {
+  .jt-found-panel__grid { grid-template-columns: 1fr; }
+}
+
+.jt-found-panel__policy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.jt-found-panel__policy .text-label { color: var(--color-text-muted); text-transform: uppercase; }
+
+.jt-found-panel__policy .text-copy-sm {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text);
+}
+
+/* Identity strip */
+
+.jt-identity-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-container);
+}
+
+.jt-identity-strip__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.jt-identity-strip__text .text-label { color: var(--color-text-muted); text-transform: uppercase; font-size: 10px; }
+
+.jt-identity-strip__change {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--nc-indigo-700);
+  text-transform: uppercase;
+  text-decoration: underline;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.jt-identity-strip__change:hover { color: var(--nc-indigo-800); }
+
+/* Actions */
+
+.jt-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.jt-btn {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-3) var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.jt-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.jt-btn--secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 2px 2px 0 0 var(--color-border);
+}
+
+.jt-btn--secondary:hover:not(:disabled) { background: var(--color-surface-alt); }
+
+.jt-btn--primary {
+  background: var(--nc-indigo-700);
+  border-color: var(--nc-indigo-700);
+  color: var(--nc-white);
+  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+}
+
+.jt-btn--primary:hover:not(:disabled),
+.jt-btn--primary:focus-visible {
+  background: var(--nc-indigo-800);
+  border-color: var(--nc-indigo-700);
+  color: var(--nc-white);
+  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+}
+
+.jt-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 var(--color-border);
+}
+
+.jt-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
+
+[dir="rtl"] .jt-submit__icon:not(.loading-spinner) { transform: scaleX(-1); }

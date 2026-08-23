@@ -65,7 +65,7 @@ test('anonymous Join Trip CTA routes through the Auth Gateway first', () => {
       </Routes>
     </MemoryRouter>
   );
-  expect(screen.getByRole('link', { name: 'home.hero.joinTrip' })).toHaveAttribute('href', '/auth?next=%2Fjoin-trip');
+  expect(screen.getByRole('link', { name: 'home.hero.joinTrip' })).toHaveAttribute('href', '/auth?next=%2Ftrips%2Fjoin');
   fireEvent.click(screen.getByRole('link', { name: 'home.hero.joinTrip' }));
   expect(screen.getByText('auth-page')).toBeInTheDocument();
 });
@@ -90,7 +90,7 @@ test('signed-in Join Trip CTA routes straight to the dedicated page', () => {
     <MemoryRouter initialEntries={['/']}>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/join-trip" element={<p>join-trip-page</p>} />
+        <Route path="/trips/join" element={<p>join-trip-page</p>} />
       </Routes>
     </MemoryRouter>
   );

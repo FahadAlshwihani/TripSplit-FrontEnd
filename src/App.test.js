@@ -28,7 +28,7 @@ test('renders the public Home landing with anonymous create/join entry points ro
   render(<App />);
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('home.hero.headline');
   expect(screen.getByRole('link', { name: 'home.hero.createTrip' })).toHaveAttribute('href', '/auth?next=%2Fcreate-trip');
-  expect(screen.getByRole('link', { name: 'home.hero.joinTrip' })).toHaveAttribute('href', '/auth?next=%2Fjoin-trip');
+  expect(screen.getByRole('link', { name: 'home.hero.joinTrip' })).toHaveAttribute('href', '/auth?next=%2Ftrips%2Fjoin');
   // Home is a pure landing page now — the live forms live on their own routes.
   expect(screen.queryByText('create.new.trip')).not.toBeInTheDocument();
   expect(screen.queryByText('join.existing.trip')).not.toBeInTheDocument();
@@ -52,7 +52,10 @@ test('Join Trip CTA routes through the Auth Gateway, and guest continuation reac
   fireEvent.click(await screen.findByRole('button', { name: 'auth.guest.action' }));
   fireEvent.change(await screen.findByLabelText('profile.setup.displayName'), { target: { value: 'Guest Traveler' } });
   fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
-  expect(await screen.findByText('join.existing.trip')).toBeInTheDocument();
+  expect(await screen.findByText('joinTrip.pageTitle')).toBeInTheDocument();
+  // The guest profile was already collected on the previous screen, so
+  // Join Trip must not ask for a display name/avatar a second time.
+  expect(screen.queryByPlaceholderText('guest.displayNamePlaceholder')).not.toBeInTheDocument();
 });
 
 test('defaults to the light theme regardless of any saved preference being absent, and never renders the legacy background on Home', async () => {

@@ -52,5 +52,5 @@ test('Create Trip and Join Trip actions are direct links, not routed through Aut
   render(<MemoryRouter><DashboardPage /></MemoryRouter>);
   await screen.findByText('dashboard.empty.title');
   expect(screen.getByRole('link', { name: 'home.hero.createTrip' })).toHaveAttribute('href', '/create-trip');
-  expect(screen.getByRole('link', { name: 'home.hero.joinTrip' })).toHaveAttribute('href', '/join-trip');
+  expect(screen.getByRole('link', { name: 'home.hero.joinTrip' })).toHaveAttribute('href', '/trips/join');
 });

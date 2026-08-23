@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import publicRoutes from './publicRoutes';
 import accountRoutes from './accountRoutes';
 import tripRoutes from './tripRoutes';
@@ -53,8 +53,8 @@ test('anonymous "/create-trip" is redirected through the Auth Gateway', async ()
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('auth.email.heading');
 });
 
-test('anonymous "/join-trip" is redirected through the Auth Gateway', async () => {
-  renderAt('/join-trip', publicRoutes);
+test('anonymous "/trips/join" is redirected through the Auth Gateway', async () => {
+  renderAt('/trips/join', publicRoutes);
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('auth.email.heading');
 });
 
@@ -64,10 +64,24 @@ test('signed-in "/create-trip" loads the dedicated create-trip route directly', 
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('createTrip.pageTitle');
 });
 
-test('signed-in "/join-trip" loads the dedicated join-trip route directly', async () => {
+test('signed-in "/trips/join" loads the dedicated join-trip route directly', async () => {
   mockAuthUser = { id: 'u1' };
-  renderAt('/join-trip', publicRoutes);
-  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('home.hero.joinTrip');
+  renderAt('/trips/join', publicRoutes);
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('joinTrip.pageTitle');
+});
+
+test('legacy "/join-trip" redirects to "/trips/join" and preserves the query string', () => {
+  const legacyRoute = publicRoutes.find((route) => route.key === 'join-trip-legacy');
+  const ShowSearch = () => <p>search: {useLocation().search}</p>;
+  render(
+    <MemoryRouter initialEntries={['/join-trip?code=ABC12345']}>
+      <Routes>
+        {legacyRoute}
+        <Route path="/trips/join" element={<ShowSearch />} />
+      </Routes>
+    </MemoryRouter>
+  );
+  expect(screen.getByText('search: ?code=ABC12345')).toBeInTheDocument();
 });
 
 test('"/auth" loads the Auth Gateway', async () => {

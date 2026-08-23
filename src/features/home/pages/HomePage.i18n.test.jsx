@@ -50,7 +50,7 @@ test('switching language does not navigate away or blank the page — the same r
   expect(screen.queryByText('common.loading')).not.toBeInTheDocument();
   expect(document.querySelector('.neo-loading')).not.toBeInTheDocument();
   const createLink = screen.getAllByRole('link').find((a) => a.getAttribute('href') === '/auth?next=%2Fcreate-trip');
-  const joinLink = screen.getAllByRole('link').find((a) => a.getAttribute('href') === '/auth?next=%2Fjoin-trip');
+  const joinLink = screen.getAllByRole('link').find((a) => a.getAttribute('href') === '/auth?next=%2Ftrips%2Fjoin');
   expect(createLink).toBeTruthy();
   expect(joinLink).toBeTruthy();
 });

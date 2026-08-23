@@ -8,7 +8,7 @@ const Hero = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const createHref = user ? '/create-trip' : buildAuthUrl('/create-trip');
-  const joinHref = user ? '/join-trip' : buildAuthUrl('/join-trip');
+  const joinHref = user ? '/trips/join' : buildAuthUrl('/trips/join');
   return (
     <section className="hero" aria-labelledby="hero-headline">
       <div className="hero__content">

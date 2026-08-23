@@ -52,7 +52,7 @@ const DashboardPage = () => {
 
           <div className="dashboard-actions">
             <Link className="pc-btn-create" to="/create-trip">{t('home.hero.createTrip')}</Link>
-            <Link className="pc-btn-join" to="/join-trip">{t('home.hero.joinTrip')}</Link>
+            <Link className="pc-btn-join" to="/trips/join">{t('home.hero.joinTrip')}</Link>
           </div>
 
           {trips.length === 0 ? (
