@@ -1,16 +1,22 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import { buildAuthUrl } from './safeNext';
+import { buildAuthUrl, nextFromLocation } from './safeNext';
 import NeoLoading from '../shared/components/NeoLoading';
 
 /*
-  Gates a route behind the Auth Gateway for anonymous visitors, while
-  leaving CreateTripPage/JoinTripPage themselves completely untouched (they
-  keep working exactly as already tested when rendered directly). An
-  anonymous visitor lands here in one of two ways:
-    - typing/bookmarking/reloading the URL directly -> redirected to
-      /auth?next=<path>, same as any other unauthenticated arrival.
+  The one canonical guard for every route that requires a signed-in user —
+  Dashboard, Profile, Create/Join Trip, etc. all wrap in this instead of
+  each inventing its own redirect. `next` defaults to the CURRENT location
+  (path + query string), so a route never has to hard-code where it lives;
+  pass an explicit `next` only to override that (rare).
+
+  An anonymous visitor lands here in one of two ways:
+    - typing/bookmarking/reloading the URL directly -> sent to
+      /auth?next=<path>. (An idle/server session expiry while sitting on a
+      protected route is instead caught by SessionLifecycle, mounted once
+      at the router root — it owns navigating with the idle-expiry reason,
+      so this guard doesn't duplicate that redirect.)
     - navigated here by AuthPage's "Continue as guest" action, which passes
       router state { fromGateway: true } -> renders through immediately,
       since the gateway has already been shown and guest continuation was
@@ -23,7 +29,7 @@ const GatedRoute = ({ next, children }) => {
 
   if (authLoading) return <NeoLoading />;
   if (!user && !location.state?.fromGateway) {
-    return <Navigate to={buildAuthUrl(next)} replace />;
+    return <Navigate to={buildAuthUrl(next || nextFromLocation(location))} replace />;
   }
   return children;
 };

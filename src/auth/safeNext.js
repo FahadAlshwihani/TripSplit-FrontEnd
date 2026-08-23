@@ -15,3 +15,11 @@ export const getSafeNext = (search, fallback = '/') => {
 export const buildAuthUrl = (next) => (
   next && next !== '/' ? `/auth?next=${encodeURIComponent(next)}` : '/auth'
 );
+
+// A React Router `location` is always same-origin by construction (it comes
+// from in-app navigation or the browser's own address bar), so reusing its
+// pathname+search as a continuation target needs no extra sanitization —
+// unlike getSafeNext() above, which validates untrusted input (a `?next=`
+// query param someone could hand-craft). The one canonical place every
+// protected-route guard derives "where was the user trying to go" from.
+export const nextFromLocation = (location) => `${location.pathname}${location.search}`;
