@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitch from './LanguageSwitch';
 import ThemeSwitch from './ThemeSwitch';
+import AccountMenu from './AccountMenu';
 import { useAuth } from '../../auth/AuthContext';
 
 const PublicNav = () => {
@@ -19,17 +20,26 @@ const PublicNav = () => {
         <nav className="public-nav__links" aria-label={t('home.nav.brand')}>
           <Link className="public-nav__link public-nav__link--secondary text-label" to="/features">{t('home.nav.features')}</Link>
           <Link className="public-nav__link public-nav__link--secondary text-label" to="/pricing">{t('home.nav.pricing')}</Link>
-          {/* Suppressed while auth is still restoring, rather than flashing
-              Sign In and then flipping to Dashboard once /auth/me/ resolves. */}
+          {/* The identity-dependent control (Sign In link vs. account menu)
+              is suppressed while auth is still restoring, rather than
+              flashing Sign In and then flipping to the account menu once
+              /auth/me/ resolves. The standalone theme/language utilities
+              below are identity-agnostic and stay visible in that same
+              window -- only once we KNOW the visitor is authenticated do
+              they move into the account menu instead (which persists them
+              server-side via usePreferenceSave), so there's never a
+              duplicated pair of controls for an authenticated visitor. */}
           {authLoading ? null : isAuthenticated ? (
-            <Link className="public-nav__link public-nav__link--signin text-label" to="/dashboard">{t('home.nav.dashboard')}</Link>
+            <AccountMenu />
           ) : (
             <Link className="public-nav__link public-nav__link--signin text-label" to="/auth">{t('home.nav.signIn')}</Link>
           )}
-          <div className="public-nav__utilities">
-            <LanguageSwitch />
-            <ThemeSwitch />
-          </div>
+          {!isAuthenticated && (
+            <div className="public-nav__utilities">
+              <LanguageSwitch />
+              <ThemeSwitch />
+            </div>
+          )}
         </nav>
       </div>
     </header>
