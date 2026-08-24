@@ -75,8 +75,8 @@ const AccountMenu = () => {
       {open && (
         <div id="account-menu-panel" className="account-menu__panel" role="region" aria-label={user.display_name}>
           <div className="account-menu__header">
-            <strong className="text-copy">{user.display_name}</strong>
-            <span className="text-copy-sm">{user.email}</span>
+            <strong className="account-menu__identity-name text-copy">{user.display_name}</strong>
+            <span className="account-menu__identity-email text-copy-sm">{user.email}</span>
           </div>
 
           <button type="button" className="account-menu__item" onClick={goToAccount}>

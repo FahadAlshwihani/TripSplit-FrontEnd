@@ -94,3 +94,26 @@ test('clicking outside the panel closes it', () => {
   fireEvent.mouseDown(document.body);
   expect(screen.queryByText('fahad@example.com')).not.toBeInTheDocument();
 });
+
+test('the display name uses the dedicated contrast-hardened identity class, not a bare/inherited color', () => {
+  renderMenu();
+  fireEvent.click(screen.getByRole('button', { name: /Fahad/ }));
+  expect(screen.getByText('fahad@example.com')).toHaveClass('account-menu__identity-email');
+  const nameNodes = screen.getAllByText('Fahad');
+  expect(nameNodes.some((node) => node.classList.contains('account-menu__identity-name'))).toBe(true);
+});
+
+test('the Theme and Language segmented controls share the same layout class (equal shared width)', () => {
+  renderMenu();
+  fireEvent.click(screen.getByRole('button', { name: /Fahad/ }));
+  const themeControl = screen.getByRole('group', { name: 'account.preferences.theme' });
+  const languageControl = screen.getByRole('group', { name: 'account.preferences.language' });
+  expect(themeControl).toHaveClass('account-menu__toggle');
+  expect(languageControl).toHaveClass('account-menu__toggle');
+});
+
+test('never shows a Dashboard action', () => {
+  renderMenu();
+  fireEvent.click(screen.getByRole('button', { name: /Fahad/ }));
+  expect(screen.queryByText(/dashboard/i)).not.toBeInTheDocument();
+});

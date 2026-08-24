@@ -183,6 +183,7 @@
 .account-menu__trigger:hover { background: var(--color-surface-alt); }
 
 .account-menu__name {
+  color: var(--color-text);
   max-width: 12ch;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -212,8 +213,14 @@
 }
 
 .account-menu__header { display: flex; flex-direction: column; gap: 2px; padding: var(--space-2) var(--space-2) var(--space-3); }
-.account-menu__header strong { color: var(--color-text); }
-.account-menu__header span { color: var(--color-text-muted); overflow-wrap: anywhere; }
+/* Explicit, same defensive pattern used elsewhere in this app (Join
+   Trip's identity footer, the Trip Found panel) -- the display name is
+   the one piece of information in this popover that must always read as
+   clearly legible primary text, never inherit something paler. Named
+   classes instead of bare strong/span selectors so nothing with higher
+   specificity elsewhere can win over an element-level rule. */
+.account-menu__identity-name { display: block; color: var(--color-text); }
+.account-menu__identity-email { display: block; color: var(--color-text-muted); overflow-wrap: anywhere; }
 
 .account-menu__item {
   display: block;
@@ -238,14 +245,21 @@
 .account-menu__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-1) var(--space-2); }
 .account-menu__row .text-label { color: var(--color-text-muted); }
 
+/* Theme and Language are both two-option segmented controls -- they
+   must share one fixed total width (never sized to their own label
+   text) so the two rows visually line up instead of Theme ("LIGHT" /
+   "DARK") reading wider than Language ("EN" / "AR"). */
 .account-menu__toggle {
-  display: inline-flex;
+  display: flex;
+  width: 132px;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
 .account-menu__toggle-option {
+  flex: 1 1 0;
+  text-align: center;
   background: var(--color-surface);
   color: var(--color-text-muted);
   border: none;
