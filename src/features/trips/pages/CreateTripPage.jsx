@@ -140,6 +140,7 @@ const CreateTripPage = () => {
                         className="ct-field__input"
                         type="date"
                         value={form.start_date}
+                        max={form.end_date || undefined}
                         onChange={setField('start_date')}
                       />
                     </div>
