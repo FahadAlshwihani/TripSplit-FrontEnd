@@ -118,6 +118,21 @@ test('an owner trip preserves its owner-only lifecycle actions behind more-actio
   expect(screen.queryByText('account.trips.leaveTrip')).not.toBeInTheDocument();
 });
 
+test('badges, title, and date render in the same fixed DOM order regardless of dir (RTL uses only logical CSS, never a different element order)', async () => {
+  getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [{ ...activeOwnerTrip, start_date: '2026-12-12', end_date: '2026-12-24' }] });
+  document.documentElement.dir = 'rtl';
+  try {
+    await renderTrips();
+    const main = (await screen.findByText('Georgia Winter Trip')).closest('.acc-trip__main');
+    const children = Array.from(main.children).map((el) => el.className);
+    expect(children[0]).toContain('acc-trip__badges');
+    expect(children[1]).toContain('acc-trip__title');
+    expect(children[2]).toContain('acc-trip__dates');
+  } finally {
+    document.documentElement.dir = 'ltr';
+  }
+});
+
 test('an owner sees a transfer-before-leave hint instead of a Leave button', async () => {
   getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [activeOwnerTrip] });
   await renderTrips();

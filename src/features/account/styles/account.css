@@ -248,29 +248,49 @@
 .acc-trips__error { display: flex; flex-direction: column; gap: var(--space-3); align-items: flex-start; }
 
 /*
-  One compact horizontal ledger entry, not a modern SaaS card: content
-  determines the height (no stretched-empty columns), the right/aside
-  column stays narrow (~140px) and vertically centered, and a single
-  primary action plus a small kebab disclosure for anything secondary
-  (Leave Trip included) keep that column from ever growing taller than
-  the main content beside it.
+  One compact horizontal ledger entry, not two boxes side by side: a
+  single outer border/shadow/rounded-corner around the whole row, with
+  the aside merely a shaded surface one step darker than the main area
+  (not its own separately-bordered card) and only a subtle inline
+  divider between them -- the surface-color contrast does the visual
+  separation, not a heavy border. Both zones are top-anchored (never
+  vertically centered) so badges/title/date and the currency/action
+  stack start at the same position on every card regardless of how tall
+  the other zone happens to be.
 */
 .acc-trip {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   box-shadow: 2px 2px 0 0 var(--color-border);
   overflow: hidden;
+  cursor: default;
 }
 
 @media (min-width: 561px) {
   .acc-trip { grid-template-columns: minmax(0, 1fr) 150px; }
 }
 
-.acc-trip__main { padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: 2px; min-width: 0; justify-content: center; }
+/* A restrained whole-row hover -- both zones step one surface level
+   darker together, keeping their relative contrast, rather than a
+   modern soft drop-shadow lift. Interactive controls inside (buttons,
+   the more-actions trigger) keep their own separate hover states. */
+.acc-trip:hover .acc-trip__main { background: var(--color-surface-alt); }
+.acc-trip:hover .acc-trip__side { background: var(--color-surface-container); }
+
+.acc-trip__main {
+  padding: var(--space-3) var(--space-4);
+  display: grid;
+  grid-template-rows: auto auto auto;
+  align-content: start;
+  gap: 2px;
+  min-width: 0;
+  background: var(--color-surface);
+}
 .acc-trip__badges { display: flex; gap: var(--space-1); margin-block-end: 2px; }
-.acc-trip__title { margin: 0; color: var(--color-text); }
+.acc-trip__title { margin: 0; color: var(--color-text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .acc-trip__dates { margin: 0; color: var(--color-text-muted); }
 .acc-trip__notice { margin: 0; color: var(--color-text-muted); }
 
@@ -280,16 +300,16 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 2px;
   background: var(--color-surface-alt);
-  border-inline-start: var(--border-width) solid var(--color-border);
+  border-inline-start: var(--border-width) solid var(--color-border-subtle);
 }
 
 @media (max-width: 560px) {
   .acc-trip__side {
     border-inline-start: none;
-    border-block-start: var(--border-width) solid var(--color-border);
+    border-block-start: var(--border-width) solid var(--color-border-subtle);
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -304,34 +324,41 @@
 .acc-trip__primary-action { min-height: 36px; padding-block: var(--space-1); padding-inline: var(--space-3); }
 .acc-trip__transfer-hint { color: var(--color-text-muted); font-size: 0.85em; }
 
-.acc-trip__more summary { list-style: none; cursor: pointer; display: inline-flex; }
-.acc-trip__more summary::-webkit-details-marker { display: none; }
+/* Same control height as the primary action (36px), same border/shadow/
+   press treatment as .acc-btn -- a secondary icon-only trigger must not
+   read as visually lighter-weight than the CTA beside it just because
+   it's narrower. */
 .acc-trip__more-trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text-muted);
+  box-shadow: 2px 2px 0 0 var(--color-border);
+  cursor: pointer;
 }
 .acc-trip__more-trigger:hover { background: var(--color-surface-container); color: var(--color-text); }
+.acc-trip__more-trigger:active { transform: translate(2px, 2px); box-shadow: 0 0 0 0 var(--color-border); }
+
+/* Rendered through a portal to <body> (see TripMoreActionsMenu) -- these
+   rules are visual only, positioning comes from the component's own
+   inline style (computed from the trigger's real screen position). */
 .acc-trip__more-actions {
-  position: absolute;
-  inset-inline-end: 0;
-  margin-block-start: var(--space-1);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-2);
   min-width: 160px;
   background: var(--color-surface);
+  color: var(--color-text);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   box-shadow: 2px 2px 0 0 var(--color-border);
-  z-index: 10;
+  z-index: 60;
 }
 .acc-link--danger { color: var(--color-danger); }
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { archiveTrip, closeTrip, leaveTrip, restoreTrip } from '../../trips/api/tripsApi';
 import LeaveTripDialog from './LeaveTripDialog';
+import TripMoreActionsMenu from './TripMoreActionsMenu';
 
 const formatDateRange = (start, end) => {
   if (!start && !end) return null;
@@ -49,8 +50,15 @@ const AccountTripRow = ({ trip, onChanged }) => {
 
   const confirmLeave = () => run('leave', () => leaveTrip(trip.id)).finally(() => setConfirmingLeave(false));
 
+  const hasMoreActions = trip.capabilities.can_leave || trip.capabilities.can_archive || trip.capabilities.can_restore || trip.capabilities.can_close;
+
   return (
     <article className="acc-trip">
+      {/* Fixed three-row anchor (badges / title / date) -- top-anchored,
+          never vertically centered, so badges/title/date sit at the same
+          position on every card regardless of how tall the aside column
+          next to it happens to be (a longer title, a missing date, or an
+          aside with/without a secondary action must not shift them). */}
       <div className="acc-trip__main">
         <div className="acc-trip__badges">
           <span className={`acc-badge acc-badge--role-${trip.role}`}>{t(`account.trips.role.${trip.role}`)}</span>
@@ -82,28 +90,31 @@ const AccountTripRow = ({ trip, onChanged }) => {
           )}
           {/* A destructive Leave action doesn't get equal visual weight to
               Open Trip -- it lives behind the same compact "more actions"
-              disclosure owner-only lifecycle actions already use, not as a
-              second full-width button stacked under the primary one. */}
-          {(trip.capabilities.can_leave || trip.capabilities.can_archive || trip.capabilities.can_restore || trip.capabilities.can_close) && (
-            <details className="acc-trip__more">
-              <summary className="acc-trip__more-trigger" aria-label={t('account.trips.moreActions')} title={t('account.trips.moreActions')}>
-                <i className="bi bi-three-dots-vertical" aria-hidden="true" />
-              </summary>
-              <div className="acc-trip__more-actions">
-                {trip.capabilities.can_close && (
-                  <button type="button" className="acc-link" disabled={busyAction === 'close'} onClick={() => run('close', () => closeTrip(trip.id))}>{t('account.trips.closeTrip')}</button>
-                )}
-                {trip.capabilities.can_archive && (
-                  <button type="button" className="acc-link" disabled={busyAction === 'archive'} onClick={() => run('archive', () => archiveTrip(trip.id))}>{t('account.trips.archiveTrip')}</button>
-                )}
-                {trip.capabilities.can_restore && (
-                  <button type="button" className="acc-link" disabled={busyAction === 'restore'} onClick={() => run('restore', () => restoreTrip(trip.id))}>{t('account.trips.restoreTrip')}</button>
-                )}
-                {trip.capabilities.can_leave && (
-                  <button type="button" className="acc-link acc-link--danger" onClick={() => setConfirmingLeave(true)}>{t('account.trips.leaveTrip')}</button>
-                )}
-              </div>
-            </details>
+              popover owner-only lifecycle actions already use, not as a
+              second full-width button stacked under the primary one.
+              Portaled to <body> (see TripMoreActionsMenu) so it floats
+              above every surrounding trip row instead of being clipped by
+              this row's own overflow:hidden (needed to keep the main/aside
+              background split contained to one shared rounded corner). */}
+          {hasMoreActions && (
+            <TripMoreActionsMenu label={t('account.trips.moreActions')}>
+              {({ close }) => (
+                <>
+                  {trip.capabilities.can_close && (
+                    <button type="button" className="acc-link" disabled={busyAction === 'close'} onClick={() => { close(); run('close', () => closeTrip(trip.id)); }}>{t('account.trips.closeTrip')}</button>
+                  )}
+                  {trip.capabilities.can_archive && (
+                    <button type="button" className="acc-link" disabled={busyAction === 'archive'} onClick={() => { close(); run('archive', () => archiveTrip(trip.id)); }}>{t('account.trips.archiveTrip')}</button>
+                  )}
+                  {trip.capabilities.can_restore && (
+                    <button type="button" className="acc-link" disabled={busyAction === 'restore'} onClick={() => { close(); run('restore', () => restoreTrip(trip.id)); }}>{t('account.trips.restoreTrip')}</button>
+                  )}
+                  {trip.capabilities.can_leave && (
+                    <button type="button" className="acc-link acc-link--danger" onClick={() => { close(); setConfirmingLeave(true); }}>{t('account.trips.leaveTrip')}</button>
+                  )}
+                </>
+              )}
+            </TripMoreActionsMenu>
           )}
         </div>
       </div>
