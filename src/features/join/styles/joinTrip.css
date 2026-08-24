@@ -63,6 +63,13 @@
 }
 
 .jt-back:hover { background: var(--color-surface-alt); }
+.jt-back:active { background: var(--color-surface-alt); transform: translate(1px, 1px); }
+
+/* Kept deliberately subtle and structural (no hard-shadow offset of its
+   own) -- the card already carries the large hard shadow; a second one on
+   this small control would make it compete with the card instead of
+   sitting quietly inside its header, per the Stitch reference. */
+.jt-back__icon { font-size: 1rem; line-height: 1; }
 
 [dir="rtl"] .jt-back__icon { transform: scaleX(-1); }
 
@@ -261,6 +268,12 @@
 }
 
 .jt-footer__identity-text .text-label { color: var(--color-text-muted); text-transform: uppercase; font-size: 10px; }
+
+/* Explicit, same defensive pattern as .jt-found-panel__grid .text-copy
+   above: the display name is the one piece of information in this footer
+   that must always read as clearly legible primary text, never inherit
+   something paler from an ancestor. */
+.jt-footer__identity-text .text-copy { color: var(--color-text); }
 
 .jt-footer__change {
   background: none;
