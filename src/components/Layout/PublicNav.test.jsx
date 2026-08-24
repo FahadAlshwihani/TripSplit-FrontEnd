@@ -1,14 +1,15 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PublicNav from './PublicNav';
+import { ThemeProvider } from '../ThemeProvider';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: 'en', changeLanguage: jest.fn() } }) }));
 
 let mockAuth = { isAuthenticated: false, authLoading: false, user: null };
 jest.mock('../../auth/AuthContext', () => ({ useAuth: () => mockAuth }));
 
-const renderNav = () => render(<MemoryRouter><PublicNav /></MemoryRouter>);
+const renderNav = () => render(<MemoryRouter><ThemeProvider><PublicNav /></ThemeProvider></MemoryRouter>);
 
 beforeEach(() => {
   mockAuth = { isAuthenticated: false, authLoading: false, user: null };
@@ -18,6 +19,15 @@ test('an anonymous visitor sees Sign In and the standalone theme/language utilit
   renderNav();
   expect(screen.getByRole('link', { name: 'home.nav.signIn' })).toHaveAttribute('href', '/auth');
   expect(screen.getByRole('group', { name: 'language.groupLabel' })).toBeInTheDocument();
+});
+
+test('the language control stays a segmented two-option group, not a generic button pair, and the theme control stays a single compact toggle', () => {
+  renderNav();
+  const group = screen.getByRole('group', { name: 'language.groupLabel' });
+  const options = within(group).getAllByRole('button');
+  expect(options).toHaveLength(2);
+  options.forEach((option) => expect(option).toHaveClass('utility-switch__option'));
+  expect(screen.getByRole('button', { name: 'theme.switchToDark' })).toHaveClass('utility-toggle');
 });
 
 test('an authenticated visitor never sees a Dashboard link', () => {

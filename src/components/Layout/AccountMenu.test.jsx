@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import AccountMenu from './AccountMenu';
 
@@ -110,6 +110,23 @@ test('the Theme and Language segmented controls share the same layout class (equ
   const languageControl = screen.getByRole('group', { name: 'account.preferences.language' });
   expect(themeControl).toHaveClass('account-menu__toggle');
   expect(languageControl).toHaveClass('account-menu__toggle');
+});
+
+test('Theme and Language stay segmented option rows (not generic menu items), and the current selection is marked active', () => {
+  renderMenu();
+  fireEvent.click(screen.getByRole('button', { name: /Fahad/ }));
+  const themeControl = screen.getByRole('group', { name: 'account.preferences.theme' });
+  const options = within(themeControl).getAllByRole('button');
+  expect(options).toHaveLength(2);
+  options.forEach((option) => expect(option).toHaveClass('account-menu__toggle-option'));
+  expect(screen.getByText('account.preferences.themeLight').closest('button')).toHaveClass('is-active');
+});
+
+test('My Account / Log Out remain real menu-item rows, distinct from the segmented Theme/Language controls', () => {
+  renderMenu();
+  fireEvent.click(screen.getByRole('button', { name: /Fahad/ }));
+  expect(screen.getByText('account.pageTitle').closest('button')).toHaveClass('account-menu__item');
+  expect(screen.getByText('common.logOut').closest('button')).toHaveClass('account-menu__item');
 });
 
 test('never shows a Dashboard action', () => {

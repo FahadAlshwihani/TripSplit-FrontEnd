@@ -148,7 +148,7 @@
   color: var(--color-text);
   border-inline-end: var(--border-width) solid var(--color-border);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, transform var(--press-duration) ease;
 }
 
 /* Unselected icon/text get their own explicit color instead of relying
@@ -167,16 +167,25 @@
 .ct-segmented__option:last-child { border-inline-end: none; }
 
 .ct-segmented__option:hover:not(.is-active) { background: var(--color-surface-container); }
+.ct-segmented__option:hover { transform: var(--press-sm-hover); }
+.ct-segmented__option:active { transform: var(--press-sm-active); }
 
 .ct-segmented__option.is-active {
   background: var(--nc-indigo-700);
   color: var(--nc-white);
 }
 
+.ct-segmented__option.is-active:hover { background: var(--nc-indigo-800); }
+
 .ct-segmented__option.is-active i,
 .ct-segmented__option.is-active span {
   color: var(--nc-white);
   opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-segmented__option { transition: background-color 0.15s ease, color 0.15s ease; }
+  .ct-segmented__option:hover, .ct-segmented__option:active { transform: none; }
 }
 
 .ct-segmented__input {

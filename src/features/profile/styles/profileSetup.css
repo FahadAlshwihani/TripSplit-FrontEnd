@@ -179,16 +179,25 @@
   text-align: center;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, transform var(--press-duration) ease;
 }
 
 .pf-tabs__tab:last-child { border-inline-end: none; }
 
 .pf-tabs__tab:hover:not(.is-active) { background: var(--color-surface-container); }
+.pf-tabs__tab:hover { transform: var(--press-sm-hover); }
+.pf-tabs__tab:active { transform: var(--press-sm-active); }
 
 .pf-tabs__tab.is-active {
   background: var(--nc-indigo-700);
   color: var(--nc-white);
+}
+
+.pf-tabs__tab.is-active:hover { background: var(--nc-indigo-800); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-tabs__tab { transition: background-color 0.15s ease, color 0.15s ease; }
+  .pf-tabs__tab:hover, .pf-tabs__tab:active { transform: none; }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -206,19 +215,30 @@
 
 .pf-swatches__row { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); }
 
+/* These tiles use a selection-ring language, not the rest-elevated hard
+   shadow family (a whole grid permanently "elevated" would be visual
+   noise) -- kept as-is. Only a small press-on-click is added so clicking
+   still reads as physically tactile, consistent with every other
+   interactive control in the app. */
 .pf-swatch {
   inline-size: 32px;
   block-size: 32px;
   border: var(--border-width-lg) solid var(--color-border);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.1s ease;
+  transition: box-shadow 0.15s ease, transform var(--press-duration) ease;
 }
 
 .pf-swatch:hover { box-shadow: 2px 2px 0 0 var(--color-border); }
+.pf-swatch:active { transform: var(--press-sm-active); }
 
 .pf-swatch.is-selected {
   box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--nc-indigo-700);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-swatch { transition: box-shadow 0.15s ease; }
+  .pf-swatch:active { transform: none; }
 }
 
 @media (max-width: 767px) {
@@ -243,15 +263,24 @@
   color: var(--color-text);
   text-transform: uppercase;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, transform var(--press-duration) ease;
 }
 
 .pf-categories__chip:hover:not(.is-active) { background: var(--color-surface-alt); }
+.pf-categories__chip:hover { transform: var(--press-sm-hover); }
+.pf-categories__chip:active { transform: var(--press-sm-active); }
 
 .pf-categories__chip.is-active {
   background: var(--nc-indigo-700);
   border-color: var(--nc-indigo-700);
   color: var(--nc-white);
+}
+
+.pf-categories__chip.is-active:hover { background: var(--nc-indigo-800); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-categories__chip { transition: background-color 0.15s ease, color 0.15s ease; }
+  .pf-categories__chip:hover, .pf-categories__chip:active { transform: none; }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -283,7 +312,7 @@
   background: var(--color-surface);
   overflow: hidden;
   cursor: pointer;
-  transition: box-shadow 0.15s ease;
+  transition: box-shadow 0.15s ease, transform var(--press-duration) ease;
 }
 
 .pf-picker-grid__item img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -301,6 +330,7 @@
 }
 
 .pf-picker-grid__item:hover:not(:disabled) { box-shadow: 2px 2px 0 0 var(--color-border); }
+.pf-picker-grid__item:active:not(:disabled) { transform: var(--press-sm-active); }
 
 .pf-picker-grid__item:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -308,6 +338,14 @@
   box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--nc-indigo-700);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .pf-picker-grid__item { transition: box-shadow 0.15s ease; }
+  .pf-picker-grid__item:active:not(:disabled) { transform: none; }
+}
+
+/* A real compact secondary button (bordered, hard shadow, physical
+   press) -- not a plain hover-tinted chip -- matching every other
+   secondary control's contract. */
 .pf-picker__shuffle {
   display: inline-flex;
   align-items: center;
@@ -319,10 +357,17 @@
   color: var(--color-text);
   text-transform: uppercase;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  box-shadow: var(--shadow-hard-sm);
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
 
-.pf-picker__shuffle:hover { background: var(--color-surface-alt); }
+.pf-picker__shuffle:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.pf-picker__shuffle:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-picker__shuffle { transition: background-color 0.15s ease; }
+  .pf-picker__shuffle:hover, .pf-picker__shuffle:active { transform: none; }
+}
 
 /* ---------------------------------------------------------------------- */
 /* Animation control — only rendered for animation-capable styles */
@@ -346,14 +391,23 @@
   border-inline-end: var(--border-width) solid var(--color-border);
   text-transform: uppercase;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, transform var(--press-duration) ease;
 }
 
 .pf-animation__option:last-child { border-inline-end: none; }
 
 .pf-animation__option:hover:not(.is-active) { background: var(--color-surface-alt); }
+.pf-animation__option:hover { transform: var(--press-sm-hover); }
+.pf-animation__option:active { transform: var(--press-sm-active); }
 
 .pf-animation__option.is-active {
   background: var(--nc-indigo-700);
   color: var(--nc-white);
+}
+
+.pf-animation__option.is-active:hover { background: var(--nc-indigo-800); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-animation__option { transition: background-color 0.15s ease, color 0.15s ease; }
+  .pf-animation__option:hover, .pf-animation__option:active { transform: none; }
 }
