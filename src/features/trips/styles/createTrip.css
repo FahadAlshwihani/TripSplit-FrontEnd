@@ -232,6 +232,7 @@
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   cursor: pointer;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
 
 .ct-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -241,10 +242,10 @@
 .ct-btn--secondary {
   background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: 2px 2px 0 0 var(--color-border);
+  box-shadow: var(--shadow-hard-sm);
 }
 
-.ct-btn--secondary:hover:not(:disabled) { background: var(--color-surface-alt); }
+.ct-btn--secondary:hover:not(:disabled) { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
 
 .ct-btn--primary {
   background: var(--nc-indigo-700);
@@ -258,15 +259,20 @@
   background: var(--nc-indigo-800);
   border-color: var(--nc-indigo-700);
   color: var(--nc-white);
-  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+  box-shadow: 1px 1px 0 0 var(--nc-indigo-700);
+  transform: var(--press-sm-hover);
 }
 
 .ct-btn:active:not(:disabled) {
-  transform: translate(2px, 2px);
+  transform: var(--press-sm-active);
   box-shadow: 0 0 0 0 var(--color-border);
 }
 
 .ct-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-btn { transition: background-color 0.15s ease; }
+}
 
 /* Arrow is directional; mirror in RTL. Excludes the loading spinner the
    same way auth.css does, so the spin never inherits a flipped matrix. */

@@ -316,6 +316,7 @@
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   cursor: pointer;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
 
 .jt-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -323,10 +324,10 @@
 .jt-btn--secondary {
   background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: 2px 2px 0 0 var(--color-border);
+  box-shadow: var(--shadow-hard-sm);
 }
 
-.jt-btn--secondary:hover:not(:disabled) { background: var(--color-surface-container); }
+.jt-btn--secondary:hover:not(:disabled) { background: var(--color-surface-container); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
 
 .jt-btn--primary {
   background: var(--nc-indigo-700);
@@ -340,14 +341,19 @@
   background: var(--nc-indigo-800);
   border-color: var(--nc-indigo-700);
   color: var(--nc-white);
-  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+  box-shadow: 1px 1px 0 0 var(--nc-indigo-700);
+  transform: var(--press-sm-hover);
 }
 
 .jt-btn:active:not(:disabled) {
-  transform: translate(2px, 2px);
+  transform: var(--press-sm-active);
   box-shadow: 0 0 0 0 var(--color-border);
 }
 
 .jt-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
+
+@media (prefers-reduced-motion: reduce) {
+  .jt-btn { transition: background-color 0.15s ease; }
+}
 
 [dir="rtl"] .jt-submit__icon:not(.loading-spinner) { transform: scaleX(-1); }

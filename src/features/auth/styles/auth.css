@@ -386,8 +386,10 @@
 }
 
 /* ---------------------------------------------------------------------- */
-/* Buttons — same hard-shadow language as Home/Pricing: hover only darkens
-   the fill, border/shadow/text stay pinned; pressed collapses the offset. */
+/* Buttons — canonical Neo-classic hard-shadow press (tokens.css's
+   --shadow-hard-sm*/--press-sm-*): hover presses the surface partway in
+   (not just a color darken re-pinned to the resting shadow), active
+   completes the press by collapsing the offset entirely. */
 
 .auth-btn {
   width: 100%;
@@ -403,7 +405,8 @@
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: var(--shadow-hard-sm);
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
 
 .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -425,20 +428,26 @@
   box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
 }
 
+.auth-btn:hover:not(:disabled) { transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+
 .auth-btn--primary:hover:not(:disabled),
 .auth-btn--primary:focus-visible {
   background: var(--nc-indigo-800);
   border-color: var(--nc-indigo-700);
   color: var(--nc-white);
-  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+  box-shadow: 1px 1px 0 0 var(--nc-indigo-700);
 }
 
 .auth-btn:active:not(:disabled) {
-  transform: translate(2px, 2px);
+  transform: var(--press-sm-active);
   box-shadow: 0 0 0 0 var(--nc-ink-900);
 }
 
 .auth-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-btn { transition: background-color 0.15s ease; }
+}
 
 /* Arrows are directional — mirror in RTL. Lock/mail/check/person icons
    are non-directional and deliberately left alone. Excludes
@@ -527,15 +536,15 @@
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-sm);
     background: var(--color-surface);
-    box-shadow: 2px 2px 0 0 var(--nc-ink-900);
+    box-shadow: var(--shadow-hard-sm);
     font: var(--text-label);
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
-    transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+    transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
   }
 
-  .auth-guest-action:hover { background: var(--color-surface-alt); color: var(--color-text); border-color: var(--color-border); }
-  .auth-guest-action:active { transform: translate(2px, 2px); box-shadow: 0 0 0 0 var(--nc-ink-900); }
+  .auth-guest-action:hover { background: var(--color-surface-alt); color: var(--color-text); border-color: var(--color-border); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+  .auth-guest-action:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--nc-ink-900); }
 
   .auth-guest__helper {
     order: 0;
@@ -679,15 +688,15 @@
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: 2px 2px 0 0 var(--color-border);
+  box-shadow: var(--shadow-hard-sm);
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
 
-.otp-back:hover:not(:disabled) { background: var(--color-surface-alt); }
+.otp-back:hover:not(:disabled) { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
 
 .otp-back:active:not(:disabled) {
-  transform: translate(2px, 2px);
+  transform: var(--press-sm-active);
   box-shadow: 0 0 0 0 var(--color-border);
 }
 
@@ -758,13 +767,17 @@
    background/hover-darken-only/no-movement behavior as the Email step's
    submit button) but with the card's own near-black hard shadow instead
    of the softer indigo-tinted one, per the Stitch spec for this screen. */
-.otp-card .auth-btn--primary,
-.otp-card .auth-btn--primary:hover:not(:disabled),
-.otp-card .auth-btn--primary:focus-visible {
-  box-shadow: 4px 4px 0 0 var(--color-border);
+.otp-card .auth-btn--primary {
+  box-shadow: var(--shadow-hard-md);
 }
 
-.otp-card .auth-btn:active:not(:disabled) { transform: translate(4px, 4px); }
+.otp-card .auth-btn--primary:hover:not(:disabled),
+.otp-card .auth-btn--primary:focus-visible {
+  box-shadow: var(--shadow-hard-md-hover);
+}
+
+.otp-card .auth-btn:hover:not(:disabled) { transform: var(--press-md-hover); }
+.otp-card .auth-btn:active:not(:disabled) { transform: var(--press-md-active); }
 
 .otp-card .auth-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--color-border); }
 

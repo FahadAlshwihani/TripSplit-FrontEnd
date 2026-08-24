@@ -208,12 +208,11 @@
   gap: var(--space-4); /* gap-md = 16px */
 }
 
-/* Hard-shadow CTA in the same neo-classic "print" depth language as the
-   Home hero CTAs: hover only darkens the fill (border/shadow/text pinned),
-   pressed collapses the offset. Deliberately does NOT replicate Stitch's
-   own hover (shadow-shrink + translate on :hover) — that hover behavior
-   was superseded by the just-approved Home CTA interaction language, which
-   this button follows for consistency across the app. */
+/* Hard-shadow CTA in the same neo-classic "print" depth language used
+   across the whole app: rest = elevated, hover = presses partway in
+   (fill darkens too), active = fully pressed flat. Uses the shared
+   elevation tokens so this button tracks the same physical-press system
+   as every other elevated control instead of its own bespoke values. */
 .pricing-receipt__cta {
   width: 100%;
   display: inline-flex;
@@ -224,11 +223,11 @@
   background: var(--nc-indigo-700);
   color: var(--nc-white);
   border: var(--border-width-lg) solid var(--color-border);
-  box-shadow: 4px 4px 0 0 var(--nc-ink-900);
+  box-shadow: var(--shadow-hard-md);
   font: var(--text-label);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  transition: background-color .15s ease, transform .1s ease, box-shadow .1s ease;
+  transition: background-color .15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
 
 .pricing-receipt__cta:hover,
@@ -236,12 +235,18 @@
   background: var(--nc-indigo-800);
   color: var(--nc-white);
   border-color: var(--color-border);
-  box-shadow: 4px 4px 0 0 var(--nc-ink-900);
+  transform: var(--press-md-hover);
+  box-shadow: var(--shadow-hard-md-hover);
 }
 
 .pricing-receipt__cta:active {
-  transform: translate(4px, 4px);
-  box-shadow: 0 0 0 0 var(--nc-ink-900);
+  transform: var(--press-md-active);
+  box-shadow: var(--shadow-hard-md-active);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-receipt__cta { transition: background-color .15s ease; }
+  .pricing-receipt__cta:hover, .pricing-receipt__cta:focus-visible, .pricing-receipt__cta:active { transform: none; }
 }
 
 [dir="rtl"] .pricing-receipt__cta svg {

@@ -204,7 +204,7 @@
   background: var(--color-surface);
   border: var(--border-width-lg) solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: 4px 4px 0 0 var(--color-border);
+  box-shadow: var(--shadow-hard-md);
   padding: var(--space-3);
   display: flex;
   flex-direction: column;
@@ -235,10 +235,22 @@
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   cursor: pointer;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease;
 }
 
-.account-menu__item:hover { background: var(--color-surface-alt); }
+/* Rows inside an already-elevated popover get the same restrained
+   hover/press response as the Account trip more-actions menu (they
+   don't carry their own hard shadow -- the panel around them already
+   has one, so a second shadow per row would be visual noise). */
+.account-menu__item:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); }
+.account-menu__item:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: -2px; }
 .account-menu__item--danger { color: var(--color-danger); }
+.account-menu__item--danger:hover { background: var(--color-danger-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  .account-menu__item { transition: background-color 0.15s ease; }
+  .account-menu__item:hover { transform: none; }
+}
 
 .account-menu__divider { border-block-end: var(--border-width) solid var(--color-border-subtle); margin-block: var(--space-1); }
 

@@ -65,8 +65,8 @@
   padding: var(--space-4) var(--space-6); /* py-md 16px / px-lg 24px */
   border-width: var(--border-width);
   border-radius: var(--radius-sm);
-  box-shadow: 2px 2px 0 0 var(--nc-ink-900);
-  transition: transform .1s ease, box-shadow .1s ease, background-color .15s ease, border-color .15s ease;
+  box-shadow: var(--shadow-hard-sm);
+  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease, background-color .15s ease, border-color .15s ease;
 }
 
 .hero__actions .btn--primary {
@@ -75,19 +75,27 @@
   box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
 }
 
-/* Hover only darkens the fill — text/border/shadow are re-pinned to their
-   normal-state values so they never shift with Bootstrap's global
-   .btn:hover rule (color/background-color/border-color via unset
-   --bs-btn-hover-* custom properties, which resolve to an inherited
-   near-black text color — the actual cause of the "too noticeable"
-   hover) or the shared .btn--primary:hover rule (--color-border drifts
+/* Hover now also presses the surface partway in (the canonical Neo-
+   classic interaction -- see the --shadow-hard and --press tokens in
+   tokens.css), not just a color darken re-pinned to the resting shadow
+   like before.
+   Fill still darkens too; text/border are re-pinned to their normal-
+   state values so they never shift with Bootstrap's global .btn:hover
+   rule (color/background-color/border-color via unset --bs-btn-hover-*
+   custom properties, which resolve to an inherited near-black text
+   color) or the shared .btn--primary:hover rule (--color-border drifts
    in dark mode). Pressed/hover are mutually exclusive pseudo-classes so
    this never fights the :active collapse below. */
+.hero__actions .btn:hover,
+.hero__actions .btn:focus-visible {
+  transform: var(--press-sm-hover);
+}
+
 .hero__actions .btn--primary:hover,
 .hero__actions .btn--primary:focus-visible {
   background: var(--nc-indigo-800);
   border-color: var(--nc-indigo-700);
-  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+  box-shadow: 1px 1px 0 0 var(--nc-indigo-700);
   color: var(--nc-white);
 }
 
@@ -95,12 +103,12 @@
 .hero__actions .btn--secondary:focus-visible {
   background: var(--color-surface-alt);
   border-color: var(--color-border);
-  box-shadow: 2px 2px 0 0 var(--nc-ink-900);
+  box-shadow: var(--shadow-hard-sm-hover);
   color: var(--nc-ink-900);
 }
 
 .hero__actions .btn:active {
-  transform: translate(2px, 2px);
+  transform: var(--press-sm-active);
   box-shadow: 0 0 0 0 var(--nc-ink-900);
 }
 
