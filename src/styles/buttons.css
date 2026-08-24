@@ -1,0 +1,101 @@
+/*
+  Canonical Neo-classic transactional button family -- the ONE shared
+  definition for Create Trip, Join Trip, and Auth's primary-action
+  buttons (.ct-btn / .jt-btn / .auth-btn). These three were previously
+  maintained as separate, hand-copied implementations that were already
+  byte-for-byte identical in every property that isn't page-specific
+  layout -- exactly the kind of drift risk this file removes: a change
+  made here can never silently apply to two of the three and miss the
+  third. Each page's own stylesheet keeps only what's genuinely
+  page-specific on top of this (Auth's full width vs Create/Join's
+  auto-sized flex item, Auth's mobile guest-action variant, OTP's
+  card-scoped md-depth override).
+
+  .acc-btn (Account) and .pricing-receipt__cta intentionally keep their
+  own separate, slightly different geometry (compact 44px height /
+  denser padding for Account, oversized receipt-CTA padding for
+  Pricing) -- same interaction contract, deliberately different
+  dimensions, which is the correct outcome per the design system, not
+  something to force into this shared base.
+*/
+
+.ct-btn,
+.jt-btn,
+.auth-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-3) var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+
+.ct-btn:disabled,
+.jt-btn:disabled,
+.auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* A loading button is still an active, in-progress button, not an
+   unavailable one -- keeps fill/border/shadow/text exactly as normal;
+   only cursor and duplicate-submit prevention come from `disabled`. */
+.ct-btn--loading.ct-btn:disabled,
+.jt-btn--loading.jt-btn:disabled,
+.auth-btn--loading.auth-btn:disabled { opacity: 1; cursor: progress; }
+
+/* Secondary fill: light surface, dark text, hard shadow. .auth-btn's
+   own base class IS this secondary fill -- two real screens (Saved
+   Guest's "Edit Guest Profile", Profile Setup's "Cancel") render it
+   with no modifier class at all, so it must be a complete button on
+   its own. .ct-btn/.jt-btn only reach the same fill via --secondary. */
+.ct-btn--secondary,
+.jt-btn--secondary,
+.auth-btn {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.ct-btn--secondary:hover:not(:disabled),
+.jt-btn--secondary:hover:not(:disabled),
+.auth-btn:hover:not(:disabled) {
+  background: var(--color-surface-alt);
+  transform: var(--press-sm-hover);
+  box-shadow: var(--shadow-hard-sm-hover);
+}
+
+.ct-btn--primary,
+.jt-btn--primary,
+.auth-btn--primary {
+  background: var(--nc-indigo-700);
+  border-color: var(--nc-indigo-700);
+  color: var(--nc-white);
+  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+}
+
+.ct-btn--primary:hover:not(:disabled), .ct-btn--primary:focus-visible,
+.jt-btn--primary:hover:not(:disabled), .jt-btn--primary:focus-visible,
+.auth-btn--primary:hover:not(:disabled), .auth-btn--primary:focus-visible {
+  background: var(--nc-indigo-800);
+  border-color: var(--nc-indigo-700);
+  color: var(--nc-white);
+  box-shadow: 1px 1px 0 0 var(--nc-indigo-700);
+  transform: var(--press-sm-hover);
+}
+
+.ct-btn:active:not(:disabled),
+.jt-btn:active:not(:disabled),
+.auth-btn:active:not(:disabled) { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
+
+.ct-btn--primary:active:not(:disabled),
+.jt-btn--primary:active:not(:disabled),
+.auth-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-btn, .jt-btn, .auth-btn { transition: background-color 0.15s ease; }
+}

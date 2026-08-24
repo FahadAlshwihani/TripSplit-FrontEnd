@@ -227,61 +227,10 @@
   .ct-btn { width: 100%; }
 }
 
-.ct-btn {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 48px;
-  padding: var(--space-3) var(--space-6);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font: var(--text-label);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
-}
-
-.ct-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-.ct-btn--loading.ct-btn:disabled { opacity: 1; cursor: progress; }
-
-.ct-btn--secondary {
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: var(--shadow-hard-sm);
-}
-
-.ct-btn--secondary:hover:not(:disabled) { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
-
-.ct-btn--primary {
-  background: var(--nc-indigo-700);
-  border-color: var(--nc-indigo-700);
-  color: var(--nc-white);
-  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
-}
-
-.ct-btn--primary:hover:not(:disabled),
-.ct-btn--primary:focus-visible {
-  background: var(--nc-indigo-800);
-  border-color: var(--nc-indigo-700);
-  color: var(--nc-white);
-  box-shadow: 1px 1px 0 0 var(--nc-indigo-700);
-  transform: var(--press-sm-hover);
-}
-
-.ct-btn:active:not(:disabled) {
-  transform: var(--press-sm-active);
-  box-shadow: 0 0 0 0 var(--color-border);
-}
-
-.ct-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
-
-@media (prefers-reduced-motion: reduce) {
-  .ct-btn { transition: background-color 0.15s ease; }
-}
+/* Geometry/variants/press live in the shared src/styles/buttons.css
+   (.ct-btn/.jt-btn/.auth-btn are one canonical family there) -- only
+   this page's own layout tweak stays here. */
+.ct-btn { flex: 0 0 auto; }
 
 /* Arrow is directional; mirror in RTL. Excludes the loading spinner the
    same way auth.css does, so the spin never inherits a flipped matrix. */
