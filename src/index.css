@@ -10,6 +10,7 @@
 /* Neo-classic design system foundation — additive tokens, safe for every page */
 @import './styles/tokens.css';
 @import './styles/typography.css';
+@import './styles/elevation.css';
 
 /*
   Root theme ownership. html/body/#root are the actual document canvas —

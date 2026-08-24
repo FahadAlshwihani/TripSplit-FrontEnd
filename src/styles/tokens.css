@@ -95,6 +95,35 @@
   --shadow-editorial-md: 0 6px 16px rgba(26, 26, 26, 0.07);
   --shadow-editorial-lg: 0 16px 40px rgba(26, 26, 26, 0.09);
 
+  /*
+    Neo-classic hard elevation / physical press interaction — the ONE
+    canonical system every hard-shadow control/card in the app should
+    consume (see src/styles/elevation.css for the reusable .pressable*
+    classes built on these). Two depths: sm (2px, the default for
+    buttons/controls) and md (4px, for cards/panels that read as more
+    substantially "elevated" at rest). Hover already presses the surface
+    partway in -- not just :active -- because on this design the shadow
+    IS the elevation, and hover is "the surface acknowledges the
+    pointer," not merely a color change. --shadow-hard-color rides on
+    --color-border, which is already theme-aware (near-black in light,
+    near-white in dark), so dark mode gets a correctly light-on-dark
+    shadow for free with no separate dark override needed here.
+  */
+  --shadow-hard-color: var(--color-border);
+  --press-duration: 100ms;
+
+  --shadow-hard-sm: 2px 2px 0 0 var(--shadow-hard-color);
+  --shadow-hard-sm-hover: 1px 1px 0 0 var(--shadow-hard-color);
+  --shadow-hard-sm-active: 0 0 0 0 var(--shadow-hard-color);
+  --press-sm-hover: translate(1px, 1px);
+  --press-sm-active: translate(2px, 2px);
+
+  --shadow-hard-md: 4px 4px 0 0 var(--shadow-hard-color);
+  --shadow-hard-md-hover: 2px 2px 0 0 var(--shadow-hard-color);
+  --shadow-hard-md-active: 0 0 0 0 var(--shadow-hard-color);
+  --press-md-hover: translate(2px, 2px);
+  --press-md-active: translate(4px, 4px);
+
   /* Spacing scale (4px base) */
   --space-1: 0.25rem;
   --space-2: 0.5rem;

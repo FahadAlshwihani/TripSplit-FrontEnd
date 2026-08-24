@@ -1,0 +1,49 @@
+/*
+  Canonical Neo-classic physical-press interaction, built on the shared
+  tokens in tokens.css (--shadow-hard-*, --press-*-hover/active). This is
+  the ONE reusable primitive for "this hard-shadow control/card presses
+  into the page" -- apply .pressable-sm (buttons/compact controls, 2px
+  shadow) or .pressable-md (cards/panels, 4px shadow) alongside a
+  component's own visual classes (background/border/color unaffected).
+
+  Existing hard-shadow classes across the app (.btn, .auth-btn, .ct-btn,
+  .jt-btn, .acc-btn, .acc-trip, etc.) were migrated in place to consume
+  the same --shadow-hard and --press tokens directly rather than being
+  renamed to use these classes -- same canonical values, zero JSX
+  className changes required across dozens of call sites. New elevated
+  controls should prefer composing .pressable-sm/-md directly.
+*/
+
+.pressable-sm,
+.pressable-md {
+  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+
+.pressable-sm { box-shadow: var(--shadow-hard-sm); }
+.pressable-sm:hover:not(:disabled):not([aria-disabled="true"]) {
+  transform: var(--press-sm-hover);
+  box-shadow: var(--shadow-hard-sm-hover);
+}
+.pressable-sm:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: var(--press-sm-active);
+  box-shadow: var(--shadow-hard-sm-active);
+}
+
+.pressable-md { box-shadow: var(--shadow-hard-md); }
+.pressable-md:hover:not(:disabled):not([aria-disabled="true"]) {
+  transform: var(--press-md-hover);
+  box-shadow: var(--shadow-hard-md-hover);
+}
+.pressable-md:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: var(--press-md-active);
+  box-shadow: var(--shadow-hard-md-active);
+}
+
+.pressable-sm:disabled, .pressable-sm[aria-disabled="true"],
+.pressable-md:disabled, .pressable-md[aria-disabled="true"] {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pressable-sm, .pressable-md { transition: none; }
+}
