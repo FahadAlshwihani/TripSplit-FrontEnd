@@ -30,6 +30,19 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>React App</title>
+    <script>
+      // Applies the last-known theme before React mounts, so an
+      // authenticated visitor who prefers dark doesn't see a flash of the
+      // light page first. Reconciled against the server profile (which
+      // wins on conflict) once auth resolves -- see src/app/PreferencesSync.jsx.
+      (function () {
+        try {
+          if (window.localStorage.getItem('tripsplit:theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+        } catch (e) { /* storage unavailable -- default light applies */ }
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
