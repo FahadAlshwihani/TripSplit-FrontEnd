@@ -53,7 +53,7 @@ const AccountTrips = () => {
             ))}
           </div>
           {hasMore && (
-            <LoadingButton type="button" className="acc-btn" loading={loadingMore} loadingLabel={t('account.trips.loadingMore')} onClick={loadNextPage}>
+            <LoadingButton type="button" className={`acc-btn${loadingMore ? ' acc-btn--loading' : ''}`} loading={loadingMore} loadingLabel={t('account.trips.loadingMore')} onClick={loadNextPage}>
               {t('account.trips.loadMore')}
             </LoadingButton>
           )}

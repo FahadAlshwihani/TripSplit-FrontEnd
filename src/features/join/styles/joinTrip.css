@@ -321,6 +321,8 @@
 
 .jt-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
+.jt-btn--loading.jt-btn:disabled { opacity: 1; cursor: progress; transform: none; }
+
 .jt-btn--secondary {
   background: var(--color-surface);
   color: var(--color-text);

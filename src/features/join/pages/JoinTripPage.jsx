@@ -218,7 +218,7 @@ const JoinTripPage = () => {
                   <p className="jt-field__helper text-copy-sm">{t('joinTrip.codeOrLinkHelper')}</p>
                   <LoadingButton
                     type="button"
-                    className="jt-btn jt-btn--primary jt-find-btn"
+                    className={`jt-btn jt-btn--primary jt-find-btn${lookingUp ? ' jt-btn--loading' : ''}`}
                     onClick={() => commitLookup()}
                     disabled={!inputValue.trim()}
                     loading={lookingUp}
@@ -284,7 +284,7 @@ const JoinTripPage = () => {
                   <button type="button" className="jt-btn jt-btn--secondary" onClick={cancel}>{t('common.cancel')}</button>
                   {canSubmit && (
                     <LoadingButton
-                      className="jt-btn jt-btn--primary"
+                      className={`jt-btn jt-btn--primary${submitting ? ' jt-btn--loading' : ''}`}
                       loading={submitting}
                       loadingLabel={action === 'ready_request' ? t('joinTrip.requesting') : t('joinTrip.joiningLoading')}
                     >

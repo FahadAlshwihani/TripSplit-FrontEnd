@@ -55,7 +55,7 @@ const ChangeEmailPanel = ({ onDone }) => {
         <>
           <label className="acc-preferences__label text-copy" htmlFor="acc-new-email">{t('account.identity.newEmail')}</label>
           <input id="acc-new-email" className="acc-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
-          <LoadingButton type="submit" className="acc-btn acc-btn--primary" loading={sending} loadingLabel={t('account.identity.sending')}>
+          <LoadingButton type="submit" className={`acc-btn acc-btn--primary${sending ? ' acc-btn--loading' : ''}`} loading={sending} loadingLabel={t('account.identity.sending')}>
             {t('account.identity.sendCode')}
           </LoadingButton>
         </>
@@ -63,7 +63,7 @@ const ChangeEmailPanel = ({ onDone }) => {
         <>
           <label className="acc-preferences__label text-copy" htmlFor="acc-email-code">{t('account.identity.enterCode')}</label>
           <input id="acc-email-code" className="acc-input" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))} maxLength={6} required />
-          <LoadingButton type="submit" className="acc-btn acc-btn--primary" loading={confirming} loadingLabel={t('account.identity.confirming')}>
+          <LoadingButton type="submit" className={`acc-btn acc-btn--primary${confirming ? ' acc-btn--loading' : ''}`} loading={confirming} loadingLabel={t('account.identity.confirming')}>
             {t('account.identity.confirmCode')}
           </LoadingButton>
         </>
