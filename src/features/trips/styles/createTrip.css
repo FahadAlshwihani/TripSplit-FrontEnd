@@ -45,25 +45,26 @@
 .ct-card {
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: 6px 6px 0 0 var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 4px 4px 0 0 var(--color-border);
   padding: var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-4);
 }
 
+/* Divider belongs to the section HEADING (title -> divider -> content),
+   not the end of the section's content -- matches the Stitch reference
+   exactly, and reads correctly regardless of which section is last since
+   the border always sits directly under its own title. */
 .ct-section {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  padding-block-end: var(--space-6);
-  border-block-end: var(--border-width) solid var(--color-border-subtle);
 }
 
-.ct-section:last-of-type {
-  border-block-end: none;
-  padding-block-end: 0;
+.ct-section:not(:first-child) {
+  margin-block-start: var(--space-4);
 }
 
 .ct-section__title {
@@ -72,9 +73,11 @@
   align-items: center;
   gap: var(--space-2);
   color: var(--color-text);
+  padding-block-end: var(--space-3);
+  border-block-end: var(--border-width) solid var(--color-border-subtle);
 }
 
-.ct-section__icon { color: var(--nc-indigo-700); }
+.ct-section__icon { color: var(--color-text); }
 
 .ct-field { display: flex; flex-direction: column; gap: var(--space-1); }
 
@@ -173,11 +176,19 @@
 
 .ct-actions {
   display: flex;
+  justify-content: flex-end;
   gap: var(--space-3);
+  padding-block-start: var(--space-4);
+  border-block-start: var(--border-width) solid var(--color-border-subtle);
+}
+
+@media (max-width: 560px) {
+  .ct-actions { flex-direction: column-reverse; }
+  .ct-btn { width: 100%; }
 }
 
 .ct-btn {
-  flex: 1 1 0;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
