@@ -21,7 +21,7 @@ const ProfileSetupRoute = () => {
     setErrorKey(null);
     try {
       await saveProfile(profile);
-      navigate(getSafeNext(location.search, '/dashboard'));
+      navigate(getSafeNext(location.search, '/account'));
     } catch (err) {
       setErrorKey(getProfileErrorKey(err));
     } finally {

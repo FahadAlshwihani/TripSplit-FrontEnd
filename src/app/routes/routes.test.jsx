@@ -4,11 +4,11 @@ import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import publicRoutes from './publicRoutes';
 import accountRoutes from './accountRoutes';
 import tripRoutes from './tripRoutes';
-import { getTrips } from '../../features/trips/api/tripsApi';
+import { getTrips, getAccountTrips } from '../../features/trips/api/tripsApi';
 import { getCurrencies } from '../../features/currencies/api/currenciesApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: 'en', changeLanguage: jest.fn() } }) }));
-jest.mock('../../features/trips/api/tripsApi', () => ({ getTrips: jest.fn() }));
+jest.mock('../../features/trips/api/tripsApi', () => ({ getTrips: jest.fn(), getAccountTrips: jest.fn(), leaveTrip: jest.fn(), archiveTrip: jest.fn(), restoreTrip: jest.fn(), closeTrip: jest.fn() }));
 jest.mock('../../features/currencies/api/currenciesApi', () => ({ getCurrencies: jest.fn() }));
 
 let mockAuthUser = null;
@@ -17,6 +17,7 @@ jest.mock('../../auth/AuthContext', () => ({ useAuth: () => ({ user: mockAuthUse
 afterEach(() => { mockAuthUser = null; });
 beforeEach(() => {
   getTrips.mockResolvedValue({ results: [] });
+  getAccountTrips.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
   // CreateTripPage mounts CurrencyPicker, which fetches the currency
   // catalog on mount -- without this mock it fires a real, unmocked XHR
   // in jsdom ("Cross origin http://localhost forbidden"), which is flaky
@@ -118,16 +119,16 @@ test('anonymous "/dashboard" is redirected through the Auth Gateway', async () =
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('auth.email.heading');
 });
 
-test('signed-in "/dashboard" renders the authenticated trip hub', async () => {
-  mockAuthUser = { id: 'u1', display_name: 'Fahad', email: 'fahad@example.com', avatar_type: 'legacy', avatar_key: 'avatar_01' };
+test('signed-in "/dashboard" redirects to the Account hub -- there is no generic Dashboard page any more', async () => {
+  mockAuthUser = { id: 'u1', display_name: 'Fahad', email: 'fahad@example.com', preferred_theme: 'light', preferred_language: 'en', preferred_currency: 'SAR', avatar_type: 'legacy', avatar_key: 'avatar_01' };
   renderAt('/dashboard', [...publicRoutes, ...accountRoutes]);
-  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('dashboard.title');
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('account.pageTitle');
 });
 
-test('authenticated "/auth" with a complete profile and no pending continuation redirects to Dashboard', async () => {
-  mockAuthUser = { id: 'u1', display_name: 'Fahad', email: 'fahad@example.com', onboarding_complete: true, avatar_type: 'legacy', avatar_key: 'avatar_01' };
+test('authenticated "/auth" with a complete profile and no pending continuation redirects to the Account hub', async () => {
+  mockAuthUser = { id: 'u1', display_name: 'Fahad', email: 'fahad@example.com', onboarding_complete: true, preferred_theme: 'light', preferred_language: 'en', preferred_currency: 'SAR', avatar_type: 'legacy', avatar_key: 'avatar_01' };
   renderAt('/auth', [...publicRoutes, ...accountRoutes]);
-  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('dashboard.title');
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('account.pageTitle');
 });
 
 test('authenticated "/auth" with an incomplete profile redirects to Complete Profile, not another OTP request', async () => {
@@ -136,10 +137,10 @@ test('authenticated "/auth" with an incomplete profile redirects to Complete Pro
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('profile.setup.title');
 });
 
-test('a complete-profile user visiting "/profile/setup" directly is bounced to Dashboard, not shown onboarding again', async () => {
-  mockAuthUser = { id: 'u1', display_name: 'Fahad', email: 'fahad@example.com', onboarding_complete: true, avatar_type: 'legacy', avatar_key: 'avatar_01' };
+test('a complete-profile user visiting "/profile/setup" directly is bounced to the Account hub, not shown onboarding again', async () => {
+  mockAuthUser = { id: 'u1', display_name: 'Fahad', email: 'fahad@example.com', onboarding_complete: true, preferred_theme: 'light', preferred_language: 'en', preferred_currency: 'SAR', avatar_type: 'legacy', avatar_key: 'avatar_01' };
   renderAt('/profile/setup', [...publicRoutes, ...accountRoutes]);
-  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('dashboard.title');
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('account.pageTitle');
 });
 
 test('legacy "/profile" still redirects into the account route', () => {

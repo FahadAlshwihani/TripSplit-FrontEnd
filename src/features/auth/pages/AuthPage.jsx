@@ -21,7 +21,12 @@ const AuthPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const next = getSafeNext(location.search);
+  // No explicit ?next= means there was no pending intent (not "go Home") --
+  // the Account hub is the global authenticated home post-login. Keep the
+  // raw value too so the onboarding-redirect URL below only appends
+  // ?next= when there was a REAL intent to preserve, not this default.
+  const rawNext = getSafeNext(location.search);
+  const next = rawNext === '/' ? '/account' : rawNext;
   const guestAllowed = new URLSearchParams(location.search).get('guest') !== '0';
   const { user, authLoading, setUser, saveProfile } = useAuth();
 
@@ -120,19 +125,24 @@ const AuthPage = () => {
   const continueAsGuest = () => setStep(loadGuestProfile() ? 'guest-returning' : 'guest-profile');
   const submitGuestProfile = (profile) => {
     saveGuestProfile(profile);
-    navigate(next, { state: { fromGateway: true, guestProfile: profile } });
+    // Guests have no /account (it's GatedRoute-protected, registered-only)
+    // -- unlike the registered paths below, a guest with no real pending
+    // intent falls back to Home, not Account, using the raw (un-remapped)
+    // next so an unsafe/absent ?next= still lands somewhere guests can see.
+    navigate(rawNext, { state: { fromGateway: true, guestProfile: profile } });
   };
 
   // An already-authenticated visitor opening /auth directly (not mid-flow —
   // step is still 'email', its initial value, so this never fires for a
   // user who just verified an OTP in THIS page instance) shouldn't be asked
   // for another OTP. Onboarding-incomplete still routes through Complete
-  // Profile; otherwise continue to `next` if one was given, else Dashboard.
+  // Profile; otherwise continue to `next` if one was given, else the
+  // Account hub -- the global authenticated home, no intermediate page.
   if (step === 'email' && !authLoading && user) {
     if (!user.onboarding_complete) {
-      return <Navigate to={`/profile/setup${next !== '/' ? `?next=${encodeURIComponent(next)}` : ''}`} replace />;
+      return <Navigate to={`/profile/setup${rawNext !== '/' ? `?next=${encodeURIComponent(rawNext)}` : ''}`} replace />;
     }
-    return <Navigate to={next !== '/' ? next : '/dashboard'} replace />;
+    return <Navigate to={next} replace />;
   }
 
   // OTP and Profile are each their own compact, standalone card (see

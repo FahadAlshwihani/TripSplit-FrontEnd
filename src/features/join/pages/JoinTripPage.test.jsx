@@ -21,7 +21,6 @@ const renderPage = async (entry = '/trips/join') => {
         <Route path="/trips/:id/overview" element={<p>trip workspace overview</p>} />
         <Route path="/join-request/:id" element={<p>join request page</p>} />
         <Route path="/invite/:token" element={<p>invitation page</p>} />
-        <Route path="/dashboard" element={<p>dashboard page</p>} />
         <Route path="/account" element={<p>account profile page</p>} />
         <Route path="/" element={<p>home page</p>} />
       </Routes>
@@ -158,11 +157,11 @@ test('cancel navigates anonymous visitors to Home', async () => {
   expect(screen.getByText('home page')).toBeInTheDocument();
 });
 
-test('cancel navigates authenticated visitors to Dashboard', async () => {
+test('cancel navigates authenticated visitors to the Account hub', async () => {
   mockAuthUser = { id: 'u1', display_name: 'Fahad', avatar_type: 'legacy', avatar_key: 'avatar_01' };
   await renderPage();
   fireEvent.click(screen.getByLabelText('common.cancel'));
-  expect(screen.getByText('dashboard page')).toBeInTheDocument();
+  expect(screen.getByText('account profile page')).toBeInTheDocument();
 });
 
 describe('explicit Find Trip action', () => {

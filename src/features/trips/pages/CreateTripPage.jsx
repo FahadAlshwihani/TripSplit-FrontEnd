@@ -48,7 +48,7 @@ const CreateTripPage = () => {
 
   const setField = (field) => (event) => setForm({ ...form, [field]: event.target.value });
 
-  const cancel = () => navigate(user ? '/dashboard' : '/', { replace: false });
+  const cancel = () => navigate(user ? '/account' : '/', { replace: false });
 
   const submit = async (event) => {
     event.preventDefault();

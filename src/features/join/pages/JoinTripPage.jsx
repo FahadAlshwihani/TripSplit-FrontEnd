@@ -118,7 +118,7 @@ const JoinTripPage = () => {
     }
   };
 
-  const cancel = () => navigate(user ? '/dashboard' : '/');
+  const cancel = () => navigate(user ? '/account' : '/');
   // A registered user edits their real account profile (the Global
   // Account Hub's inline Edit Profile); a guest edits the local device
   // profile inline, right here, without ever being sent through the login

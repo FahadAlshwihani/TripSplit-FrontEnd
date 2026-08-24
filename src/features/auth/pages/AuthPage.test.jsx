@@ -37,6 +37,8 @@ const renderAuth = (entry = '/auth') => render(
     <Routes>
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/create-trip" element={<p>create-trip-page</p>} />
+      <Route path="/trips/join" element={<p>join-trip-page</p>} />
+      <Route path="/account" element={<p>account-page</p>} />
       <Route path="/" element={<p>home-page</p>} />
     </Routes>
   </MemoryRouter>
@@ -231,6 +233,24 @@ test('verifying a correct 6-digit code signs the user in and returns to the safe
   await waitFor(() => expect(verifyOtp).toHaveBeenCalledWith({ otp_id: 'otp-1', email: 'nomad@tripsplit.io', code: '123456' }));
   expect(mockSetUser).toHaveBeenCalledWith({ id: 'u1' });
   expect(await screen.findByText('create-trip-page')).toBeInTheDocument();
+});
+
+test('logging in with no pending intent lands on the Account hub, not Home or a generic Dashboard', async () => {
+  verifyOtp.mockResolvedValue({ user: { id: 'u1' }, onboarding_required: false });
+  renderAuth('/auth');
+  await advanceToOtp();
+  fillOtp('123456');
+  fireEvent.click(screen.getByRole('button', { name: /auth.otp.verify/ }));
+  expect(await screen.findByText('account-page')).toBeInTheDocument();
+});
+
+test('logging in with a join-trip intent preserves the original code/token query string', async () => {
+  verifyOtp.mockResolvedValue({ user: { id: 'u1' }, onboarding_required: false });
+  renderAuth('/auth?next=%2Ftrips%2Fjoin%3Fcode%3DABCD1234');
+  await advanceToOtp();
+  fillOtp('123456');
+  fireEvent.click(screen.getByRole('button', { name: /auth.otp.verify/ }));
+  expect(await screen.findByText('join-trip-page')).toBeInTheDocument();
 });
 
 test('a new registrant sees the profile step before continuing', async () => {
