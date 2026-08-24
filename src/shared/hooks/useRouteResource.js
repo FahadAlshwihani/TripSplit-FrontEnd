@@ -5,7 +5,13 @@ const emptyValue = (value) => value == null
   || (Array.isArray(value) && value.length === 0)
   || (Array.isArray(value?.results) && value.results.length === 0);
 
-export default function useRouteResource(loader, key) {
+// `resetOnKeyChange` opts a caller into clearing `data` the instant a new
+// lookup starts (rather than leaving the previous successful result
+// visible for the full duration of the new request, including through an
+// error). Default stays false so existing list/detail pages that rely on
+// keeping the last-good data visible during a background refetch are
+// unaffected -- this is a per-caller trade-off, not a global one.
+export default function useRouteResource(loader, key, resetOnKeyChange = false) {
   const loaderRef = useRef(loader);
   loaderRef.current = loader;
   const stableKey = JSON.stringify(key);
@@ -22,6 +28,7 @@ export default function useRouteResource(loader, key) {
     const controller = new AbortController();
     const generation = ++generationRef.current;
     controllerRef.current = controller;
+    if (resetOnKeyChange) setData(null);
     setLoading(true);
     setError(null);
     try {
@@ -35,7 +42,7 @@ export default function useRouteResource(loader, key) {
         controllerRef.current = null;
       }
     }
-  }, [stableKey]);
+  }, [stableKey, resetOnKeyChange]);
 
   useEffect(() => {
     load();

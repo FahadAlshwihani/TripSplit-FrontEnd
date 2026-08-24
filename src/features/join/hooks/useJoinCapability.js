@@ -10,7 +10,8 @@ export default function useJoinCapability(committedInput) {
   const parsed = parseJoinInput(committedInput);
   const resource = useRouteResource(
     (signal) => (parsed ? getJoinCapability(parsed, { signal }) : Promise.resolve(null)),
-    [parsed?.mode, parsed?.value]
+    [parsed?.mode, parsed?.value],
+    true
   );
   return { ...resource, parsed };
 }

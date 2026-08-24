@@ -10,8 +10,8 @@ const deferred = () => {
   return { promise, resolve, reject };
 };
 
-const Harness = ({ loader, resourceKey }) => {
-  const resource = useRouteResource(loader, [resourceKey]);
+const Harness = ({ loader, resourceKey, resetOnKeyChange }) => {
+  const resource = useRouteResource(loader, [resourceKey], resetOnKeyChange);
   return (
     <div>
       {resource.loading && <span>loading</span>}
@@ -64,6 +64,26 @@ test('does not expose an expected cancellation as a route error', async () => {
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   expect(consoleError).not.toHaveBeenCalled();
   consoleError.mockRestore();
+});
+
+test('with resetOnKeyChange, the previous data is cleared the instant a new key starts loading', async () => {
+  const requests = { 'trip-a': deferred(), 'trip-b': deferred() };
+  const loaderFor = (tripId) => () => requests[tripId].promise;
+  const view = render(<Harness loader={loaderFor('trip-a')} resourceKey="trip-a" resetOnKeyChange />);
+  await act(async () => requests['trip-a'].resolve({ value: 'trip A' }));
+  expect(await screen.findByText('trip A')).toBeInTheDocument();
+  view.rerender(<Harness loader={loaderFor('trip-b')} resourceKey="trip-b" resetOnKeyChange />);
+  expect(screen.queryByText('trip A')).not.toBeInTheDocument();
+});
+
+test('without resetOnKeyChange (default), the previous data stays visible while a new key loads', async () => {
+  const requests = { 'trip-a': deferred(), 'trip-b': deferred() };
+  const loaderFor = (tripId) => () => requests[tripId].promise;
+  const view = render(<Harness loader={loaderFor('trip-a')} resourceKey="trip-a" />);
+  await act(async () => requests['trip-a'].resolve({ value: 'trip A' }));
+  expect(await screen.findByText('trip A')).toBeInTheDocument();
+  view.rerender(<Harness loader={loaderFor('trip-b')} resourceKey="trip-b" />);
+  expect(screen.getByText('trip A')).toBeInTheDocument();
 });
 
 test('retry clears the previous error and starts a fresh read', async () => {
