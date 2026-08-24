@@ -1,7 +1,8 @@
 import { apiClient, responseData } from '../../../api/client';
 import { saveGuestToken, tripRequest } from '../../../api/credentials';
-export const createTrip = async (payload) => { const response = await responseData(apiClient.post('/trips/', payload)); if (response.guest_token) saveGuestToken(response.trip.id, response.guest_token); return response; };
-export const joinTrip = async (payload) => { const response = await responseData(apiClient.post('/trips/join/', payload)); if (response.guest_token && response.trip) saveGuestToken(response.trip.id, response.guest_token); return response; };
+import { recordGuestTrip } from '../../../shared/guestTripsStore';
+export const createTrip = async (payload) => { const response = await responseData(apiClient.post('/trips/', payload)); if (response.guest_token) { saveGuestToken(response.trip.id, response.guest_token); recordGuestTrip({ tripId: response.trip.id, title: response.trip.title, relationship: 'owner' }); } return response; };
+export const joinTrip = async (payload) => { const response = await responseData(apiClient.post('/trips/join/', payload)); if (response.guest_token && response.trip) { saveGuestToken(response.trip.id, response.guest_token); recordGuestTrip({ tripId: response.trip.id, title: response.trip.title, relationship: 'member' }); } return response; };
 export const getTrips = () => responseData(apiClient.get('/trips/'));
 export const getTrip = (id, config) => responseData(apiClient.get(`/trips/${id}/`, tripRequest(id, config)));
 export const updateTrip = (id, payload) => responseData(apiClient.patch(`/trips/${id}/`, payload, tripRequest(id)));
