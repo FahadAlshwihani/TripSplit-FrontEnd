@@ -87,3 +87,84 @@ test('cancel navigates anonymous visitors to Home', async () => {
   fireEvent.click(screen.getByLabelText('common.cancel'));
   expect(screen.getByText('home page')).toBeInTheDocument();
 });
+
+describe('join policy states', () => {
+  test('Open is selected by default: checked radio, active class, white/full-opacity text', async () => {
+    await renderPage();
+    const openRadio = screen.getByRole('radio', { name: 'joinPolicy.open' });
+    expect(openRadio).toBeChecked();
+    expect(openRadio.closest('label')).toHaveClass('is-active');
+  });
+
+  test('Approval required is unselected by default and is a readable, non-disabled option', async () => {
+    await renderPage();
+    const approvalRadio = screen.getByRole('radio', { name: 'joinPolicy.approval_required' });
+    expect(approvalRadio).not.toBeChecked();
+    expect(approvalRadio).not.toBeDisabled();
+    expect(approvalRadio.closest('label')).not.toHaveClass('is-active');
+  });
+
+  test('Invite only is unselected by default and is a readable, non-disabled option', async () => {
+    await renderPage();
+    const inviteRadio = screen.getByRole('radio', { name: 'joinPolicy.invite_only' });
+    expect(inviteRadio).not.toBeChecked();
+    expect(inviteRadio).not.toBeDisabled();
+    expect(inviteRadio.closest('label')).not.toHaveClass('is-active');
+  });
+
+  test('selecting Approval required makes it active and returns Open to a normal unselected option', async () => {
+    await renderPage();
+    fireEvent.click(screen.getByRole('radio', { name: 'joinPolicy.approval_required' }));
+    expect(screen.getByRole('radio', { name: 'joinPolicy.approval_required' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'joinPolicy.approval_required' }).closest('label')).toHaveClass('is-active');
+    expect(screen.getByRole('radio', { name: 'joinPolicy.open' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'joinPolicy.open' }).closest('label')).not.toHaveClass('is-active');
+  });
+
+  test('Arabic: the same selected/unselected state behavior holds under RTL', async () => {
+    document.documentElement.setAttribute('dir', 'rtl');
+    try {
+      await renderPage();
+      fireEvent.click(screen.getByRole('radio', { name: 'joinPolicy.invite_only' }));
+      expect(screen.getByRole('radio', { name: 'joinPolicy.invite_only' })).toBeChecked();
+      expect(screen.getByRole('radio', { name: 'joinPolicy.invite_only' }).closest('label')).toHaveClass('is-active');
+      expect(screen.getByRole('radio', { name: 'joinPolicy.approval_required' })).not.toBeChecked();
+      expect(screen.getByRole('radio', { name: 'joinPolicy.approval_required' })).not.toBeDisabled();
+    } finally {
+      document.documentElement.removeAttribute('dir');
+    }
+  });
+});
+
+describe('date inputs', () => {
+  test('changing Start Date updates form state (reflected in the input value)', async () => {
+    await renderPage();
+    fireEvent.change(screen.getByLabelText('createTrip.startDate'), { target: { value: '2026-10-12' } });
+    expect(screen.getByLabelText('createTrip.startDate')).toHaveValue('2026-10-12');
+  });
+
+  test('changing End Date updates form state (reflected in the input value)', async () => {
+    await renderPage();
+    fireEvent.change(screen.getByLabelText('createTrip.endDate'), { target: { value: '2026-10-20' } });
+    expect(screen.getByLabelText('createTrip.endDate')).toHaveValue('2026-10-20');
+  });
+
+  test('End Date gets a min matching Start Date, and Start Date gets a max matching End Date', async () => {
+    await renderPage();
+    fireEvent.change(screen.getByLabelText('createTrip.startDate'), { target: { value: '2026-10-12' } });
+    expect(screen.getByLabelText('createTrip.endDate')).toHaveAttribute('min', '2026-10-12');
+    fireEvent.change(screen.getByLabelText('createTrip.endDate'), { target: { value: '2026-10-20' } });
+    expect(screen.getByLabelText('createTrip.startDate')).toHaveAttribute('max', '2026-10-20');
+  });
+
+  test('submits dates exactly as ISO YYYY-MM-DD, never locale-formatted', async () => {
+    createTrip.mockResolvedValue({ trip: { id: 'trip-1' } });
+    await renderPage();
+    fireEvent.change(screen.getByPlaceholderText('createTrip.namePlaceholder'), { target: { value: 'Tokyo' } });
+    fireEvent.change(screen.getByPlaceholderText('guest.displayNamePlaceholder'), { target: { value: 'Alex' } });
+    fireEvent.change(screen.getByLabelText('createTrip.startDate'), { target: { value: '2026-10-12' } });
+    fireEvent.change(screen.getByLabelText('createTrip.endDate'), { target: { value: '2026-10-20' } });
+    fireEvent.click(screen.getByText('createTrip.submit'));
+    await waitFor(() => expect(createTrip).toHaveBeenCalledWith(expect.objectContaining({ start_date: '2026-10-12', end_date: '2026-10-20' })));
+  });
+});
