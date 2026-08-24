@@ -26,7 +26,9 @@
 .profile-setup-page a,
 .profile-setup-page button { font-family: inherit; }
 
+.profile-setup-page p,
 .profile-setup-page span,
+.profile-setup-page a,
 .profile-setup-page li { color: inherit; }
 
 .profile-setup-page button:focus-visible {

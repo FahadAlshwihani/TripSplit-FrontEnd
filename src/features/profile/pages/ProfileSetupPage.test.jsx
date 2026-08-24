@@ -15,6 +15,15 @@ const waitForGridReady = async () => {
   }, { timeout: 8000 });
 };
 
+test('Finish Setup and Cancel consume the same canonical button family as Create Trip (primary/secondary), not a bespoke variant', () => {
+  render(<ProfileSetupPage busy={false} errorKey={null} onSubmit={jest.fn()} onCancel={jest.fn()} />);
+  const finish = screen.getByRole('button', { name: 'Finish setup' });
+  expect(finish).toHaveClass('auth-btn', 'auth-btn--primary');
+  const cancel = screen.getByRole('button', { name: 'Cancel' });
+  expect(cancel).toHaveClass('auth-btn');
+  expect(cancel).not.toHaveClass('auth-btn--primary');
+});
+
 test('defaults to Initials mode with the display-name field empty', () => {
   render(<ProfileSetupPage busy={false} errorKey={null} onSubmit={jest.fn()} />);
   expect(screen.getByRole('tab', { name: 'Initials' })).toHaveAttribute('aria-selected', 'true');
