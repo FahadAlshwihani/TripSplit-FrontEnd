@@ -48,6 +48,24 @@ test('renders the code/link field and no preview before any lookup', async () =>
   expect(screen.queryByText('joinTrip.tripFound')).not.toBeInTheDocument();
 });
 
+test('the back button and title live inside the same card, not a separate page-level header', async () => {
+  await renderPage();
+  const card = screen.getByLabelText('common.cancel').closest('.jt-card');
+  expect(card).not.toBeNull();
+  expect(card).toContainElement(screen.getByText('joinTrip.pageTitle'));
+});
+
+test('the trip preview renders real member avatars from member_preview data', async () => {
+  const memberPreview = [
+    { display_name: 'Fahad', avatar: { type: 'initials', color: 'indigo' } },
+    { display_name: 'Sara', avatar: { type: 'legacy', key: 'avatar_03' } },
+  ];
+  getJoinCapability.mockResolvedValue({ mode: 'code', trip: { ...TRIP_PREVIEW, member_preview: memberPreview }, action: 'ready_open' });
+  await renderPage();
+  await lookup();
+  expect(document.querySelectorAll('.jt-avatar-stack__item')).toHaveLength(2);
+});
+
 test('an open trip shows the preview and a Join Trip action', async () => {
   getJoinCapability.mockResolvedValue({ mode: 'code', trip: TRIP_PREVIEW, action: 'ready_open' });
   await renderPage();

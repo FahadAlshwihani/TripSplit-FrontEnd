@@ -4,21 +4,48 @@
   hard-shadow recipe already established by createTrip.css. Kept
   self-contained on purpose (its own jt-* classes) rather than importing
   createTrip.css across features, matching that file's own precedent.
+
+  Structure matches the Stitch source's own DOM shape exactly: one card
+  (border+shadow, no padding of its own) containing a header (back button
+  + title, its own padding + bottom divider), a body (form fields/preview,
+  its own padding), and a footer (identity strip left + actions right on
+  desktop, stacked on mobile, its own padding + top divider + a slightly
+  different surface tone) -- not a page-level header floating above a
+  separate card.
 */
 
 .jt-page {
   max-width: 640px;
   margin-inline: auto;
   padding: var(--space-8) var(--space-4) var(--space-16);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
 }
 
-.jt-header {
+.jt-card {
+  background: var(--color-surface);
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 4px 4px 0 0 var(--color-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.jt-card__header {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  padding: var(--space-6);
+  border-block-end: var(--border-width-lg) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.jt-card__form { display: flex; flex-direction: column; }
+
+.jt-card__body {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
 }
 
 .jt-back {
@@ -39,20 +66,7 @@
 
 [dir="rtl"] .jt-back__icon { transform: scaleX(-1); }
 
-.jt-title { margin: 0; color: var(--color-text); }
-
-.jt-card {
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: 6px 6px 0 0 var(--color-border);
-  padding: var(--space-6);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.jt-card form { display: flex; flex-direction: column; gap: var(--space-6); }
+.jt-title { margin: 0; color: var(--nc-indigo-700); }
 
 .jt-field { display: flex; flex-direction: column; gap: var(--space-1); }
 
@@ -164,6 +178,28 @@
 
 .jt-found-panel__grid .text-label { color: var(--color-text-muted); text-transform: uppercase; }
 
+/* Values (currency code, member count) get an explicit color rather
+   than relying purely on inheritance -- same defensive pattern used for
+   Create Trip's join-policy text, so no unrelated rule could ever make
+   this read as pale/muted the way the label above it deliberately is. */
+.jt-found-panel__grid .text-copy { color: var(--color-text); }
+
+.jt-found-panel__members {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.jt-avatar-stack { display: flex; }
+
+.jt-avatar-stack__item {
+  margin-inline-start: -8px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: 50%;
+}
+
+.jt-avatar-stack__item:first-child { margin-inline-start: 0; }
+
 @media (max-width: 560px) {
   .jt-found-panel__grid { grid-template-columns: 1fr; }
 }
@@ -183,19 +219,40 @@
   color: var(--color-text);
 }
 
-/* Identity strip */
+/* Footer: identity (left) + actions (right) share one bottom region of
+   the same card, exactly like the Stitch source's <footer> -- not two
+   separate, visually detached blocks. */
 
-.jt-identity-strip {
+.jt-footer {
+  display: flex;
+  flex-direction: column;
+  border-block-start: var(--border-width-lg) solid var(--color-border);
+  background: var(--color-surface-alt);
+}
+
+@media (min-width: 561px) {
+  .jt-footer { flex-direction: row; }
+}
+
+.jt-footer__identity {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  flex: 1 1 auto;
+  min-width: 0;
+  border-block-end: var(--border-width) solid var(--color-border);
   background: var(--color-surface-container);
 }
 
-.jt-identity-strip__text {
+@media (min-width: 561px) {
+  .jt-footer__identity {
+    border-block-end: none;
+    border-inline-end: var(--border-width) solid var(--color-border);
+  }
+}
+
+.jt-footer__identity-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -203,9 +260,9 @@
   min-width: 0;
 }
 
-.jt-identity-strip__text .text-label { color: var(--color-text-muted); text-transform: uppercase; font-size: 10px; }
+.jt-footer__identity-text .text-label { color: var(--color-text-muted); text-transform: uppercase; font-size: 10px; }
 
-.jt-identity-strip__change {
+.jt-footer__change {
   background: none;
   border: none;
   padding: 0;
@@ -216,17 +273,24 @@
   flex: 0 0 auto;
 }
 
-.jt-identity-strip__change:hover { color: var(--nc-indigo-800); }
-
-/* Actions */
+.jt-footer__change:hover { color: var(--nc-indigo-800); }
 
 .jt-actions {
   display: flex;
+  justify-content: flex-end;
+  align-items: center;
   gap: var(--space-3);
+  padding: var(--space-4);
+  flex: 0 0 auto;
+}
+
+@media (max-width: 560px) {
+  .jt-actions { flex-direction: column-reverse; }
+  .jt-btn { width: 100%; }
 }
 
 .jt-btn {
-  flex: 1 1 0;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -249,7 +313,7 @@
   box-shadow: 2px 2px 0 0 var(--color-border);
 }
 
-.jt-btn--secondary:hover:not(:disabled) { background: var(--color-surface-alt); }
+.jt-btn--secondary:hover:not(:disabled) { background: var(--color-surface-container); }
 
 .jt-btn--primary {
   background: var(--nc-indigo-700);

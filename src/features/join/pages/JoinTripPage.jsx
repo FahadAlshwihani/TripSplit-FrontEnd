@@ -137,121 +137,124 @@ const JoinTripPage = () => {
   return (
     <PublicLayout>
       <div className="jt-page">
-        <header className="jt-header">
-          <button type="button" className="jt-back" onClick={cancel} aria-label={t('common.cancel')}>
-            <i className="bi bi-arrow-left jt-back__icon" aria-hidden="true" />
-          </button>
-          <h1 className="jt-title text-display">{t('joinTrip.pageTitle')}</h1>
-        </header>
-
         <div className="jt-card">
+          <header className="jt-card__header">
+            <button type="button" className="jt-back" onClick={cancel} aria-label={t('common.cancel')}>
+              <i className="bi bi-arrow-left jt-back__icon" aria-hidden="true" />
+            </button>
+            <h1 className="jt-title text-headline-lg">{t('joinTrip.pageTitle')}</h1>
+          </header>
+
           {authLoading ? (
-            <NeoLoading />
+            <div className="jt-card__body"><NeoLoading /></div>
           ) : (
-            <form onSubmit={submit} noValidate>
-              <div className="jt-field">
-                <label className="jt-field__label text-label" htmlFor="jt-code">{t('joinTrip.codeOrLink')}</label>
-                <div className="jt-field__control">
-                  <i className="bi bi-link-45deg jt-field__icon" aria-hidden="true" />
-                  <input
-                    id="jt-code"
-                    className="jt-field__input"
-                    type="text"
-                    value={inputValue}
-                    onChange={(event) => setInputValue(event.target.value)}
-                    onKeyDown={handleKeyDown}
-                    onPaste={handlePaste}
-                    placeholder={t('joinTrip.codeOrLinkPlaceholder')}
-                    autoComplete="off"
-                  />
-                </div>
-                <p className="jt-field__helper text-copy-sm">{t('joinTrip.codeOrLinkHelper')}</p>
-                <LoadingButton
-                  type="button"
-                  className="jt-btn jt-btn--secondary jt-find-btn"
-                  onClick={() => commitLookup()}
-                  disabled={!inputValue.trim()}
-                  loading={lookingUp}
-                  loadingLabel={t('joinTrip.findingTrip')}
-                >
-                  <span>{t('joinTrip.findTrip')}</span>
-                  <i className="bi bi-search jt-find-btn__icon" aria-hidden="true" />
-                </LoadingButton>
-              </div>
-
-              {!lookingUp && lookupError && <p className="jt-error" role="alert">{t(getJoinErrorKey(lookupError))}</p>}
-
-              {!lookingUp && trip && <TripJoinPreview trip={trip} />}
-
-              {action === 'already_member' && <p className="jt-status text-copy">{t('joinTrip.states.alreadyMember')}</p>}
-              {action === 'invite_required' && <p className="jt-status text-copy">{t('joinTrip.states.inviteRequired')}</p>}
-              {action === 'already_requested' && <p className="jt-status text-copy">{t('joinRequest.waiting')}</p>}
-              {action === 'banned' && (
-                <p className="jt-error" role="alert">
-                  {capability.banned_until ? t('joinTrip.states.bannedUntil', { date: new Date(capability.banned_until).toLocaleString() }) : t('joinTrip.states.banned')}
-                </p>
-              )}
-
-              {trip?.password_required && canSubmit && (
+            <form onSubmit={submit} noValidate className="jt-card__form">
+              <div className="jt-card__body">
                 <div className="jt-field">
-                  <label className="jt-field__label text-label" htmlFor="jt-password">{t('joinTrip.roomPassword')}</label>
+                  <label className="jt-field__label text-label" htmlFor="jt-code">{t('joinTrip.codeOrLink')}</label>
                   <div className="jt-field__control">
-                    <i className="bi bi-key jt-field__icon" aria-hidden="true" />
+                    <i className="bi bi-link-45deg jt-field__icon" aria-hidden="true" />
                     <input
-                      id="jt-password"
+                      id="jt-code"
                       className="jt-field__input"
-                      type="password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      placeholder={t('joinTrip.roomPasswordPlaceholder')}
-                      autoComplete="current-password"
+                      type="text"
+                      value={inputValue}
+                      onChange={(event) => setInputValue(event.target.value)}
+                      onKeyDown={handleKeyDown}
+                      onPaste={handlePaste}
+                      placeholder={t('joinTrip.codeOrLinkPlaceholder')}
+                      autoComplete="off"
                     />
                   </div>
-                </div>
-              )}
-
-              {!identity && canSubmit && (
-                <GuestFields values={formGuest} onChange={setFormGuest} namePlaceholder={t('guest.displayNamePlaceholder')} />
-              )}
-
-              {identity && canSubmit && (
-                <div className="jt-identity-strip">
-                  <Avatar avatarKey={identity.avatarKey} displayName={identity.displayName} size="sm" />
-                  <div className="jt-identity-strip__text">
-                    <span className="text-label">{t('joinTrip.joiningAs')}</span>
-                    <span className="text-copy">{identity.displayName}</span>
-                  </div>
-                  <button type="button" className="jt-identity-strip__change text-label" onClick={changeIdentity}>
-                    {t('joinTrip.change')}
-                  </button>
-                </div>
-              )}
-
-              {serverErrorKey && <p className="jt-error" role="alert">{t(serverErrorKey)}</p>}
-
-              <div className="jt-actions">
-                <button type="button" className="jt-btn jt-btn--secondary" onClick={cancel}>{t('common.cancel')}</button>
-                {canSubmit && (
+                  <p className="jt-field__helper text-copy-sm">{t('joinTrip.codeOrLinkHelper')}</p>
                   <LoadingButton
-                    className="jt-btn jt-btn--primary"
-                    loading={submitting}
-                    loadingLabel={action === 'ready_request' ? t('joinTrip.requesting') : t('joinTrip.joiningLoading')}
+                    type="button"
+                    className="jt-btn jt-btn--primary jt-find-btn"
+                    onClick={() => commitLookup()}
+                    disabled={!inputValue.trim()}
+                    loading={lookingUp}
+                    loadingLabel={t('joinTrip.findingTrip')}
                   >
-                    <span>{action === 'ready_request' ? t('joinTrip.requestToJoin') : t('joinTrip.joinTripButton')}</span>
-                    <i className="bi bi-arrow-right jt-submit__icon" aria-hidden="true" />
+                    <span>{t('joinTrip.findTrip')}</span>
+                    <i className="bi bi-search jt-find-btn__icon" aria-hidden="true" />
                   </LoadingButton>
+                </div>
+
+                {!lookingUp && lookupError && <p className="jt-error" role="alert">{t(getJoinErrorKey(lookupError))}</p>}
+
+                {!lookingUp && trip && <TripJoinPreview trip={trip} />}
+
+                {action === 'already_member' && <p className="jt-status text-copy">{t('joinTrip.states.alreadyMember')}</p>}
+                {action === 'invite_required' && <p className="jt-status text-copy">{t('joinTrip.states.inviteRequired')}</p>}
+                {action === 'already_requested' && <p className="jt-status text-copy">{t('joinRequest.waiting')}</p>}
+                {action === 'banned' && (
+                  <p className="jt-error" role="alert">
+                    {capability.banned_until ? t('joinTrip.states.bannedUntil', { date: new Date(capability.banned_until).toLocaleString() }) : t('joinTrip.states.banned')}
+                  </p>
                 )}
-                {action === 'already_member' && (
-                  <button type="button" className="jt-btn jt-btn--primary" onClick={() => navigate(`/trips/${capability.trip_id}/overview`)}>
-                    {t('joinTrip.openTrip')}
-                  </button>
+
+                {trip?.password_required && canSubmit && (
+                  <div className="jt-field">
+                    <label className="jt-field__label text-label" htmlFor="jt-password">{t('joinTrip.roomPassword')}</label>
+                    <div className="jt-field__control">
+                      <i className="bi bi-key jt-field__icon" aria-hidden="true" />
+                      <input
+                        id="jt-password"
+                        className="jt-field__input"
+                        type="password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        placeholder={t('joinTrip.roomPasswordPlaceholder')}
+                        autoComplete="current-password"
+                      />
+                    </div>
+                  </div>
                 )}
-                {action === 'already_requested' && (
-                  <button type="button" className="jt-btn jt-btn--primary" onClick={() => navigate(`/join-request/${capability.request_id}`)}>
-                    {t('joinRequest.sent')}
-                  </button>
+
+                {!identity && canSubmit && (
+                  <GuestFields values={formGuest} onChange={setFormGuest} namePlaceholder={t('guest.displayNamePlaceholder')} />
                 )}
+
+                {serverErrorKey && <p className="jt-error" role="alert">{t(serverErrorKey)}</p>}
               </div>
+
+              <footer className="jt-footer">
+                {identity && canSubmit && (
+                  <div className="jt-footer__identity">
+                    <Avatar avatarKey={identity.avatarKey} displayName={identity.displayName} size="sm" />
+                    <div className="jt-footer__identity-text">
+                      <span className="text-label">{t('joinTrip.joiningAs')}</span>
+                      <span className="text-copy">{identity.displayName}</span>
+                    </div>
+                    <button type="button" className="jt-footer__change text-label" onClick={changeIdentity}>
+                      {t('joinTrip.change')}
+                    </button>
+                  </div>
+                )}
+                <div className="jt-actions">
+                  <button type="button" className="jt-btn jt-btn--secondary" onClick={cancel}>{t('common.cancel')}</button>
+                  {canSubmit && (
+                    <LoadingButton
+                      className="jt-btn jt-btn--primary"
+                      loading={submitting}
+                      loadingLabel={action === 'ready_request' ? t('joinTrip.requesting') : t('joinTrip.joiningLoading')}
+                    >
+                      <span>{action === 'ready_request' ? t('joinTrip.requestToJoin') : t('joinTrip.joinTripButton')}</span>
+                      <i className="bi bi-arrow-right jt-submit__icon" aria-hidden="true" />
+                    </LoadingButton>
+                  )}
+                  {action === 'already_member' && (
+                    <button type="button" className="jt-btn jt-btn--primary" onClick={() => navigate(`/trips/${capability.trip_id}/overview`)}>
+                      {t('joinTrip.openTrip')}
+                    </button>
+                  )}
+                  {action === 'already_requested' && (
+                    <button type="button" className="jt-btn jt-btn--primary" onClick={() => navigate(`/join-request/${capability.request_id}`)}>
+                      {t('joinRequest.sent')}
+                    </button>
+                  )}
+                </div>
+              </footer>
             </form>
           )}
         </div>

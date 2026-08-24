@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import Avatar from '../../profile/components/Avatar';
+import { avatarKeyFromAvatar } from '../../profile/utils/avatarKey';
 
 const POLICY_ICONS = { open: 'bi-globe2', approval_required: 'bi-shield-check', invite_only: 'bi-envelope' };
 
@@ -37,7 +39,17 @@ const TripJoinPreview = ({ trip }) => {
           </div>
           <div>
             <span className="text-label">{t('joinTrip.members')}</span>
-            <span className="text-copy">{trip.member_count}</span>
+            <div className="jt-found-panel__members">
+              <span className="text-copy">{trip.member_count}</span>
+              {trip.member_preview?.length > 0 && (
+                <div className="jt-avatar-stack">
+                  {trip.member_preview.map((member, index) => (
+                    // eslint-disable-next-line react/no-array-index-key
+                    <Avatar key={index} avatarKey={avatarKeyFromAvatar(member.avatar)} displayName={member.display_name} size="sm" className="jt-avatar-stack__item" />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div className="jt-found-panel__policy">

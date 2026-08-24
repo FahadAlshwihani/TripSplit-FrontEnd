@@ -191,77 +191,91 @@ const InvitationPage = () => {
   return (
     <PublicLayout>
       <div className="jt-page">
-        <header className="jt-header">
-          <button type="button" className="jt-back" onClick={() => navigate('/')} aria-label={t('common.cancel')}>
-            <i className="bi bi-arrow-left jt-back__icon" aria-hidden="true" />
-          </button>
-          <h1 className="jt-title text-display">{t('joinTrip.pageTitle')}</h1>
-        </header>
-
         <div className="jt-card">
+          <header className="jt-card__header">
+            <button type="button" className="jt-back" onClick={() => navigate('/')} aria-label={t('common.cancel')}>
+              <i className="bi bi-arrow-left jt-back__icon" aria-hidden="true" />
+            </button>
+            <h1 className="jt-title text-headline-lg">{t('joinTrip.pageTitle')}</h1>
+          </header>
+
           {(capabilityLoading || authLoading || isSendingOtp) ? (
-            <NeoLoading />
+            <div className="jt-card__body"><NeoLoading /></div>
           ) : capabilityError ? (
-            <p className="jt-error" role="alert">{t('invite.invalid')}</p>
+            <div className="jt-card__body"><p className="jt-error" role="alert">{t('invite.invalid')}</p></div>
           ) : capability ? (
             <>
               {capability.action === 'invalid_or_expired_invite' && (
                 <>
-                  <p className="jt-error" role="alert">{t(INVALID_REASON_KEYS[capability.invalid_reason] || 'invite.invalid')}</p>
-                  <div className="jt-actions">
-                    <button type="button" className="jt-btn jt-btn--secondary" onClick={() => navigate('/')}>{t('common.cancel')}</button>
-                    <button type="button" className="jt-btn jt-btn--primary" onClick={() => navigate('/trips/join')}>{t('joinTrip.findTrip')}</button>
+                  <div className="jt-card__body">
+                    <p className="jt-error" role="alert">{t(INVALID_REASON_KEYS[capability.invalid_reason] || 'invite.invalid')}</p>
                   </div>
+                  <footer className="jt-footer">
+                    <div className="jt-actions">
+                      <button type="button" className="jt-btn jt-btn--secondary" onClick={() => navigate('/')}>{t('common.cancel')}</button>
+                      <button type="button" className="jt-btn jt-btn--primary" onClick={() => navigate('/trips/join')}>{t('joinTrip.findTrip')}</button>
+                    </div>
+                  </footer>
                 </>
               )}
 
               {capability.action === 'already_member' && (
                 <>
-                  <p className="jt-status text-copy">{t('joinTrip.states.alreadyMember')}</p>
-                  <div className="jt-actions">
-                    <button type="button" className="jt-btn jt-btn--primary" onClick={() => navigate(`/trips/${capability.trip_id}/overview`)}>
-                      {t('joinTrip.openTrip')}
-                    </button>
-                  </div>
+                  <div className="jt-card__body"><p className="jt-status text-copy">{t('joinTrip.states.alreadyMember')}</p></div>
+                  <footer className="jt-footer">
+                    <div className="jt-actions">
+                      <button type="button" className="jt-btn jt-btn--primary" onClick={() => navigate(`/trips/${capability.trip_id}/overview`)}>
+                        {t('joinTrip.openTrip')}
+                      </button>
+                    </div>
+                  </footer>
                 </>
               )}
 
               {capability.action === 'banned' && (
-                <p className="jt-error" role="alert">
-                  {capability.banned_until ? t('joinTrip.states.bannedUntil', { date: new Date(capability.banned_until).toLocaleString() }) : t('joinTrip.states.banned')}
-                </p>
+                <div className="jt-card__body">
+                  <p className="jt-error" role="alert">
+                    {capability.banned_until ? t('joinTrip.states.bannedUntil', { date: new Date(capability.banned_until).toLocaleString() }) : t('joinTrip.states.banned')}
+                  </p>
+                </div>
               )}
 
               {matchesSession === false && (
                 <>
-                  <p className="jt-status text-copy">{t('invitation.wrongAccount.title')}</p>
-                  <div className="jt-actions">
-                    <button type="button" className="jt-btn jt-btn--primary" onClick={signOutAndContinue}>{t('invitation.wrongAccount.action')}</button>
-                  </div>
+                  <div className="jt-card__body"><p className="jt-status text-copy">{t('invitation.wrongAccount.title')}</p></div>
+                  <footer className="jt-footer">
+                    <div className="jt-actions">
+                      <button type="button" className="jt-btn jt-btn--primary" onClick={signOutAndContinue}>{t('invitation.wrongAccount.action')}</button>
+                    </div>
+                  </footer>
                 </>
               )}
 
               {matchesSession === true && (
                 <>
-                  <span className="text-label jt-status">{t('invitation.youreInvited')}</span>
-                  <TripJoinPreview trip={capability.trip} />
-                  {capability.masked_email && (
-                    <p className="jt-status text-copy-sm">{t('invitation.invitedAs', { email: capability.masked_email })}</p>
-                  )}
-                  {acceptError && <p className="jt-error" role="alert">{acceptError}</p>}
-                  <div className="jt-actions">
-                    <button type="button" className="jt-btn jt-btn--secondary" onClick={() => navigate('/')}>{t('common.cancel')}</button>
-                    <LoadingButton
-                      type="button"
-                      className="jt-btn jt-btn--primary"
-                      loading={accepting}
-                      loadingLabel={t('joinTrip.joiningLoading')}
-                      onClick={() => accept({})}
-                    >
-                      <span>{t('joinTrip.joinTripButton')}</span>
-                      <i className="bi bi-arrow-right jt-submit__icon" aria-hidden="true" />
-                    </LoadingButton>
+                  <div className="jt-card__body">
+                    <span className="text-label jt-status">{t('invitation.youreInvited')}</span>
+                    <TripJoinPreview trip={capability.trip} />
+                    {capability.masked_email && (
+                      <p className="jt-status text-copy-sm">{t('invitation.invitedAs', { email: capability.masked_email })}</p>
+                    )}
+                    {acceptError && <p className="jt-error" role="alert">{acceptError}</p>}
                   </div>
+                  <footer className="jt-footer">
+                    <div className="jt-actions">
+                      <button type="button" className="jt-btn jt-btn--secondary" onClick={() => navigate('/')}>{t('common.cancel')}</button>
+                      <LoadingButton
+                        type="button"
+                        className="jt-btn jt-btn--primary"
+                        loading={accepting}
+                        loadingLabel={t('joinTrip.joiningLoading')}
+                        onClick={() => accept({})}
+                      >
+                        <span>{t('joinTrip.joinTripButton')}</span>
+                        <i className="bi bi-arrow-right jt-submit__icon" aria-hidden="true" />
+                      </LoadingButton>
+                    </div>
+                  </footer>
                 </>
               )}
             </>
