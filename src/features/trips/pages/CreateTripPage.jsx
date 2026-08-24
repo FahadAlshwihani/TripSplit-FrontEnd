@@ -8,6 +8,7 @@ import LoadingButton from '../../../shared/components/LoadingButton';
 import CurrencyPicker from '../../../shared/components/CurrencyPicker';
 import { createTrip } from '../api/tripsApi';
 import { useAuth } from '../../../auth/AuthContext';
+import { loadGuestProfile, saveGuestProfile } from '../../../shared/guestProfileStore';
 import '../styles/createTrip.css';
 
 const JOIN_POLICIES = [
@@ -28,7 +29,7 @@ const CreateTripPage = () => {
   const { user, authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const guestProfile = location.state?.guestProfile || null;
+  const guestProfile = location.state?.guestProfile || loadGuestProfile();
 
   const [form, setForm] = useState({
     title: '',
@@ -75,13 +76,10 @@ const CreateTripPage = () => {
         end_date: form.end_date || undefined,
       };
       if (!user) {
-        if (guestProfile) {
-          const { display_name, ...avatarFields } = guestProfile;
-          Object.assign(payload, avatarFields, { guest_name: display_name });
-        } else {
-          payload.guest_name = form.guest_name;
-          payload.avatar_key = form.avatar_key;
-        }
+        const profile = guestProfile || { display_name: form.guest_name, avatar_key: form.avatar_key };
+        const { display_name, ...avatarFields } = profile;
+        Object.assign(payload, avatarFields, { guest_name: display_name });
+        saveGuestProfile(profile);
       }
       const result = await createTrip(payload);
       navigate(`/trips/${result.trip.id}/overview`);

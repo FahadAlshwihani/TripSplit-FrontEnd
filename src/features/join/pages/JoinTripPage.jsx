@@ -6,11 +6,13 @@ import NeoLoading from '../../../shared/components/NeoLoading';
 import GuestFields from '../../../shared/components/GuestFields';
 import LoadingButton from '../../../shared/components/LoadingButton';
 import Avatar from '../../profile/components/Avatar';
+import ProfileSetupPage from '../../profile/pages/ProfileSetupPage';
 import { avatarKeyFromUser } from '../../profile/utils/avatarKey';
 import { joinTrip } from '../../trips/api/tripsApi';
 import { useAuth } from '../../../auth/AuthContext';
-import { buildAuthUrl, nextFromLocation } from '../../../auth/safeNext';
+import { nextFromLocation } from '../../../auth/safeNext';
 import { requestTokenKey } from '../../../pages/JoinRequestPage';
+import { loadGuestProfile, saveGuestProfile } from '../../../shared/guestProfileStore';
 import useJoinCapability from '../hooks/useJoinCapability';
 import { parseJoinInput } from '../utils/parseJoinInput';
 import { getJoinErrorKey } from '../joinErrors';
@@ -40,7 +42,13 @@ const JoinTripPage = () => {
   const { user, authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const guestProfile = location.state?.guestProfile || null;
+  // A device that already picked a guest identity (this session's AuthPage
+  // hand-off, or a saved profile from an earlier visit -- see
+  // shared/guestProfileStore.js) never has to redo name/avatar setup.
+  // Kept as local state (not re-derived from location.state every render)
+  // so editing it via "Change" below takes effect immediately.
+  const [guestProfile, setGuestProfile] = useState(() => location.state?.guestProfile || loadGuestProfile());
+  const [editingGuestIdentity, setEditingGuestIdentity] = useState(false);
 
   const [inputValue, setInputValue] = useState('');
   const [committedInput, setCommittedInput] = useState('');
@@ -50,6 +58,20 @@ const JoinTripPage = () => {
   const [formGuest, setFormGuest] = useState({ guest_name: guestProfile?.display_name || '', avatar_key: 'avatar_02' });
 
   const { data: capability, loading: lookingUp, error: lookupError, parsed } = useJoinCapability(committedInput);
+
+  // The displayed result must always correspond to the latest COMMITTED
+  // search, not merely the latest resolved one: the instant the field's
+  // raw text diverges from what was last committed, the previous
+  // trip/action/error/password state is stale and must stop rendering as
+  // if it still applies -- without waiting for a new request to fail or
+  // even to start. useJoinCapability's underlying useRouteResource call
+  // also clears `data` itself the moment a NEW lookup starts (see its
+  // `resetOnKeyChange` flag), so a late response can never resurrect a
+  // stale preview either way -- this covers the gap in between.
+  const isStale = Boolean(committedInput) && inputValue !== committedInput;
+  const action = isStale ? undefined : capability?.action;
+  const trip = isStale ? undefined : capability?.trip;
+  const effectiveLookupError = isStale ? null : lookupError;
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -71,7 +93,11 @@ const JoinTripPage = () => {
       navigate(`/invite/${parsedNow.value}`);
       return;
     }
+    // A brand-new lookup starts with a clean slate -- the previous trip's
+    // password entry and any submit error from a previous attempt must not
+    // silently carry over onto whatever this new code/link resolves to.
     setServerErrorKey('');
+    setPassword('');
     setCommittedInput(raw ?? inputValue);
   };
 
@@ -93,10 +119,22 @@ const JoinTripPage = () => {
   };
 
   const cancel = () => navigate(user ? '/dashboard' : '/');
-  const changeIdentity = () => navigate(buildAuthUrl(nextFromLocation(location)));
+  // A registered user edits their real account profile (existing
+  // /account/profile route); a guest edits the local device profile
+  // inline, right here, without ever being sent through the login
+  // gateway. Both cases return to this exact Join Trip attempt afterwards
+  // -- the registered case via safe internal `next` continuation, the
+  // guest case because it never actually leaves the page.
+  const changeIdentity = () => {
+    if (user) navigate('/account/profile', { state: { next: nextFromLocation(location) } });
+    else setEditingGuestIdentity(true);
+  };
+  const saveGuestIdentity = (profile) => {
+    saveGuestProfile(profile);
+    setGuestProfile(profile);
+    setEditingGuestIdentity(false);
+  };
 
-  const action = capability?.action;
-  const trip = capability?.trip;
   const canSubmit = action === 'ready_open' || action === 'ready_request';
 
   const submit = async (event) => {
@@ -107,12 +145,10 @@ const JoinTripPage = () => {
     try {
       const payload = { join_code: parsed.value, password };
       if (!user) {
-        if (guestProfile) {
-          const { display_name, ...avatarFields } = guestProfile;
-          Object.assign(payload, avatarFields, { guest_name: display_name });
-        } else {
-          Object.assign(payload, formGuest);
-        }
+        const profile = guestProfile || { display_name: formGuest.guest_name, avatar_key: formGuest.avatar_key };
+        const { display_name, ...avatarFields } = profile;
+        Object.assign(payload, avatarFields, { guest_name: display_name });
+        saveGuestProfile(profile);
       }
       const result = await joinTrip(payload);
       if (result.join_request) {
@@ -133,6 +169,19 @@ const JoinTripPage = () => {
     : guestProfile
       ? { avatarKey: avatarKeyFromUser(guestProfile), displayName: guestProfile.display_name }
       : null;
+
+  if (editingGuestIdentity) {
+    return (
+      <ProfileSetupPage
+        mode="guest"
+        busy={false}
+        errorKey={null}
+        initialValues={guestProfile}
+        onSubmit={saveGuestIdentity}
+        onCancel={() => setEditingGuestIdentity(false)}
+      />
+    );
+  }
 
   return (
     <PublicLayout>
@@ -180,7 +229,7 @@ const JoinTripPage = () => {
                   </LoadingButton>
                 </div>
 
-                {!lookingUp && lookupError && <p className="jt-error" role="alert">{t(getJoinErrorKey(lookupError))}</p>}
+                {!lookingUp && effectiveLookupError && <p className="jt-error" role="alert">{t(getJoinErrorKey(effectiveLookupError))}</p>}
 
                 {!lookingUp && trip && <TripJoinPreview trip={trip} />}
 
@@ -215,7 +264,7 @@ const JoinTripPage = () => {
                   <GuestFields values={formGuest} onChange={setFormGuest} namePlaceholder={t('guest.displayNamePlaceholder')} />
                 )}
 
-                {serverErrorKey && <p className="jt-error" role="alert">{t(serverErrorKey)}</p>}
+                {!isStale && serverErrorKey && <p className="jt-error" role="alert">{t(serverErrorKey)}</p>}
               </div>
 
               <footer className="jt-footer">

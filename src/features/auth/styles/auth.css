@@ -231,6 +231,17 @@
 
 .auth-form-area__inner { width: 100%; max-width: 28rem; }
 
+.auth-guest-returning {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.auth-guest-returning__notice { color: var(--color-text-muted); margin: 0; }
+.auth-guest-returning .auth-btn { margin-block-start: var(--space-2); }
+
 /* ---------------------------------------------------------------------- */
 /* Step content shared by email / otp / profile */
 

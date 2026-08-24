@@ -22,6 +22,7 @@ const renderPage = async (entry = '/trips/join') => {
         <Route path="/join-request/:id" element={<p>join request page</p>} />
         <Route path="/invite/:token" element={<p>invitation page</p>} />
         <Route path="/dashboard" element={<p>dashboard page</p>} />
+        <Route path="/account/profile" element={<p>account profile page</p>} />
         <Route path="/" element={<p>home page</p>} />
       </Routes>
     </MemoryRouter>
@@ -39,6 +40,7 @@ const lookup = async (code = 'ABCD1234') => {
 
 beforeEach(() => {
   mockAuthUser = null;
+  localStorage.clear();
 });
 
 test('renders the code/link field and no preview before any lookup', async () => {
@@ -221,5 +223,104 @@ describe('differentiated lookup errors', () => {
     await renderPage();
     await lookup();
     expect(screen.getByRole('alert')).toHaveTextContent('joinTrip.errors.network');
+  });
+});
+
+describe('stale preview clearing', () => {
+  test('editing the input after a successful search immediately hides the previous preview', async () => {
+    getJoinCapability.mockResolvedValue({ mode: 'code', trip: TRIP_PREVIEW, action: 'ready_open' });
+    await renderPage();
+    await lookup('ABCD1234');
+    expect(screen.getByText('Georgia Winter Trip')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('joinTrip.codeOrLink'), { target: { value: 'NOTREAL9' } });
+    expect(screen.queryByText('Georgia Winter Trip')).not.toBeInTheDocument();
+  });
+
+  test('a not-found search after a successful one shows only the not-found message, no stale preview', async () => {
+    getJoinCapability.mockResolvedValueOnce({ mode: 'code', trip: TRIP_PREVIEW, action: 'ready_open' });
+    await renderPage();
+    await lookup('ABCD1234');
+    expect(screen.getByText('Georgia Winter Trip')).toBeInTheDocument();
+    getJoinCapability.mockRejectedValueOnce({ status: 400, code: 'trip_not_found', message: 'No trip matches that code.' });
+    fireEvent.change(screen.getByLabelText('joinTrip.codeOrLink'), { target: { value: 'NOTREAL9' } });
+    await act(async () => {
+      fireEvent.keyDown(screen.getByLabelText('joinTrip.codeOrLink'), { key: 'Enter' });
+    });
+    expect(screen.queryByText('Georgia Winter Trip')).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('joinTrip.errors.notFound');
+  });
+
+  test('searching the original valid code again re-renders its preview', async () => {
+    getJoinCapability.mockResolvedValue({ mode: 'code', trip: TRIP_PREVIEW, action: 'ready_open' });
+    await renderPage();
+    await lookup('ABCD1234');
+    expect(screen.getByText('Georgia Winter Trip')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('joinTrip.codeOrLink'), { target: { value: 'ABCD1234' } });
+    await act(async () => {
+      fireEvent.keyDown(screen.getByLabelText('joinTrip.codeOrLink'), { key: 'Enter' });
+    });
+    expect(screen.getByText('Georgia Winter Trip')).toBeInTheDocument();
+  });
+
+  test('a late-resolving earlier search cannot overwrite a faster later one', async () => {
+    let resolveFirst;
+    const first = new Promise((resolve) => { resolveFirst = resolve; });
+    getJoinCapability.mockImplementationOnce(() => first);
+    getJoinCapability.mockResolvedValueOnce({ mode: 'code', trip: { ...TRIP_PREVIEW, title: 'Trip B' }, action: 'ready_open' });
+    await renderPage();
+    fireEvent.change(screen.getByLabelText('joinTrip.codeOrLink'), { target: { value: 'AAAA1111' } });
+    await act(async () => { fireEvent.keyDown(screen.getByLabelText('joinTrip.codeOrLink'), { key: 'Enter' }); });
+    fireEvent.change(screen.getByLabelText('joinTrip.codeOrLink'), { target: { value: 'BBBB2222' } });
+    await act(async () => { fireEvent.keyDown(screen.getByLabelText('joinTrip.codeOrLink'), { key: 'Enter' }); });
+    expect(screen.getByText('Trip B')).toBeInTheDocument();
+    await act(async () => { resolveFirst({ mode: 'code', trip: { ...TRIP_PREVIEW, title: 'Trip A' }, action: 'ready_open' }); });
+    expect(screen.queryByText('Trip A')).not.toBeInTheDocument();
+    expect(screen.getByText('Trip B')).toBeInTheDocument();
+  });
+
+  test('an error clears the previously shown password field and submit error', async () => {
+    getJoinCapability.mockResolvedValueOnce({ mode: 'code', trip: { ...TRIP_PREVIEW, password_required: true }, action: 'ready_open' });
+    await renderPage();
+    await lookup('ABCD1234');
+    expect(screen.getByLabelText('joinTrip.roomPassword')).toBeInTheDocument();
+    getJoinCapability.mockRejectedValueOnce({ status: 400, code: 'trip_not_found', message: 'No trip matches that code.' });
+    fireEvent.change(screen.getByLabelText('joinTrip.codeOrLink'), { target: { value: 'NOTREAL9' } });
+    await act(async () => {
+      fireEvent.keyDown(screen.getByLabelText('joinTrip.codeOrLink'), { key: 'Enter' });
+    });
+    expect(screen.queryByLabelText('joinTrip.roomPassword')).not.toBeInTheDocument();
+  });
+});
+
+describe('Change identity routing', () => {
+  test('a registered user\'s Change navigates to their account profile', async () => {
+    mockAuthUser = { id: 'u1', display_name: 'Fahad', avatar_type: 'legacy', avatar_key: 'avatar_01' };
+    getJoinCapability.mockResolvedValue({ mode: 'code', trip: TRIP_PREVIEW, action: 'ready_open' });
+    await renderPage();
+    await lookup();
+    fireEvent.click(screen.getByText('joinTrip.change'));
+    expect(await screen.findByText('account profile page')).toBeInTheDocument();
+  });
+
+  test('a guest\'s Change opens the inline guest profile editor, prefilled, instead of navigating to auth', async () => {
+    localStorage.setItem('tripsplit:guest-profile', JSON.stringify({ version: 1, local_profile_id: 'g1', display_name: 'Sara', avatar_type: 'initials', avatar_color: 'indigo', created_at: 'x', updated_at: 'x' }));
+    getJoinCapability.mockResolvedValue({ mode: 'code', trip: TRIP_PREVIEW, action: 'ready_open' });
+    await renderPage();
+    await lookup();
+    fireEvent.click(screen.getByText('joinTrip.change'));
+    expect(screen.getByText('guest.editProfile')).toBeInTheDocument();
+    expect(screen.getByLabelText('profile.setup.displayName')).toHaveValue('Sara');
+  });
+
+  test('saving an edited guest profile updates the identity shown and persists it locally', async () => {
+    localStorage.setItem('tripsplit:guest-profile', JSON.stringify({ version: 1, local_profile_id: 'g1', display_name: 'Sara', avatar_type: 'initials', avatar_color: 'indigo', created_at: 'x', updated_at: 'x' }));
+    getJoinCapability.mockResolvedValue({ mode: 'code', trip: TRIP_PREVIEW, action: 'ready_open' });
+    await renderPage();
+    await lookup();
+    fireEvent.click(screen.getByText('joinTrip.change'));
+    fireEvent.change(screen.getByLabelText('profile.setup.displayName'), { target: { value: 'Sara Updated' } });
+    fireEvent.click(screen.getByText('profile.setup.finish'));
+    expect(await screen.findByText('Sara Updated')).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('tripsplit:guest-profile')).display_name).toBe('Sara Updated');
   });
 });

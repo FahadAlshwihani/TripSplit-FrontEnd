@@ -42,6 +42,8 @@ const renderAuth = (entry = '/auth') => render(
   </MemoryRouter>
 );
 
+beforeEach(() => localStorage.clear());
+
 const fillOtp = (code) => {
   const cells = screen.getAllByLabelText(/auth\.otp\.label \d/);
   code.split('').forEach((digit, index) => fireEvent.change(cells[index], { target: { value: digit } }));
@@ -353,6 +355,24 @@ test('an unsafe next destination falls back to home after guest profile setup', 
   fireEvent.change(await screen.findByLabelText('profile.setup.displayName'), { target: { value: 'Guest Traveler' } });
   fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
   expect(await screen.findByText('home-page')).toBeInTheDocument();
+});
+
+test('a device with a saved guest profile skips setup and offers to continue as that guest', async () => {
+  localStorage.setItem('tripsplit:guest-profile', JSON.stringify({ version: 1, local_profile_id: 'g1', display_name: 'Sara', avatar_type: 'initials', avatar_color: 'indigo', created_at: 'x', updated_at: 'x' }));
+  renderAuth('/auth?next=%2Fcreate-trip');
+  fireEvent.click(screen.getByRole('button', { name: 'auth.guest.action' }));
+  expect(await screen.findByText('guest.continueAs:{"name":"Sara"}')).toBeInTheDocument();
+  expect(screen.queryByLabelText('profile.setup.displayName')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByText('guest.continueAs:{"name":"Sara"}'));
+  expect(await screen.findByText('create-trip-page')).toBeInTheDocument();
+});
+
+test('a returning guest can still edit their saved profile before continuing', async () => {
+  localStorage.setItem('tripsplit:guest-profile', JSON.stringify({ version: 1, local_profile_id: 'g1', display_name: 'Sara', avatar_type: 'initials', avatar_color: 'indigo', created_at: 'x', updated_at: 'x' }));
+  renderAuth('/auth?next=%2Fcreate-trip');
+  fireEvent.click(screen.getByRole('button', { name: 'auth.guest.action' }));
+  fireEvent.click(await screen.findByText('guest.editProfile'));
+  expect(screen.getByLabelText('profile.setup.displayName')).toHaveValue('Sara');
 });
 
 test('guest=0 hides guest continuation and explains sign-in is required', () => {

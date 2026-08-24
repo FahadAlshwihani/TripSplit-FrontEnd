@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { requestOtp, verifyOtp } from '../api/authApi';
 import { useAuth } from '../../../auth/AuthContext';
 import { getSafeNext } from '../../../auth/safeNext';
@@ -9,11 +10,15 @@ import AuthContextPanel from '../components/AuthContextPanel';
 import EmailStep from '../components/EmailStep';
 import OtpStep from '../components/OtpStep';
 import ProfileSetupPage from '../../profile/pages/ProfileSetupPage';
+import Avatar from '../../profile/components/Avatar';
+import { avatarKeyFromUser } from '../../profile/utils/avatarKey';
+import { loadGuestProfile, saveGuestProfile } from '../../../shared/guestProfileStore';
 import '../styles/auth.css';
 
 const RESEND_SECONDS = 60;
 
 const AuthPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const next = getSafeNext(location.search);
@@ -108,9 +113,15 @@ const AuthPage = () => {
   // Guests get their own onboarding step (same profile/avatar component,
   // no email/OTP/account creation) instead of jumping straight to
   // Create/Join Trip — the destination page reads location.state.guestProfile
-  // instead of showing its own inline name/avatar fields.
-  const continueAsGuest = () => setStep('guest-profile');
-  const submitGuestProfile = (profile) => navigate(next, { state: { fromGateway: true, guestProfile: profile } });
+  // instead of showing its own inline name/avatar fields. A device that
+  // already has a saved guest profile (shared/guestProfileStore.js) skips
+  // straight to a "Continue as <name>" confirmation instead of asking the
+  // guest to redo name/avatar setup from scratch every time.
+  const continueAsGuest = () => setStep(loadGuestProfile() ? 'guest-returning' : 'guest-profile');
+  const submitGuestProfile = (profile) => {
+    saveGuestProfile(profile);
+    navigate(next, { state: { fromGateway: true, guestProfile: profile } });
+  };
 
   // An already-authenticated visitor opening /auth directly (not mid-flow —
   // step is still 'email', its initial value, so this never fires for a
@@ -149,7 +160,32 @@ const AuthPage = () => {
   }
 
   if (step === 'guest-profile') {
-    return <ProfileSetupPage busy={false} errorKey={null} onSubmit={submitGuestProfile} mode="guest" />;
+    return <ProfileSetupPage busy={false} errorKey={null} onSubmit={submitGuestProfile} mode="guest" initialValues={loadGuestProfile()} onCancel={loadGuestProfile() ? () => setStep('guest-returning') : undefined} />;
+  }
+
+  if (step === 'guest-returning') {
+    const persisted = loadGuestProfile();
+    return (
+      <div className="auth-page">
+        <AuthHeader />
+        <main className="auth-main">
+          <AuthContextPanel />
+          <div className="auth-form-area">
+            <div className="auth-form-area__inner auth-guest-returning">
+              <Avatar avatarKey={avatarKeyFromUser(persisted)} displayName={persisted.display_name} size="lg" />
+              <p className="text-copy-lg">{persisted.display_name}</p>
+              <p className="text-copy-sm auth-guest-returning__notice">{t('guest.profileSavedNotice')}</p>
+              <button type="button" className="auth-btn auth-btn--primary" onClick={() => submitGuestProfile(persisted)}>
+                {t('guest.continueAs', { name: persisted.display_name })}
+              </button>
+              <button type="button" className="auth-btn" onClick={() => setStep('guest-profile')}>
+                {t('guest.editProfile')}
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (

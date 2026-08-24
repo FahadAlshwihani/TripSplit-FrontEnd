@@ -11,6 +11,7 @@ import { acceptInvitation } from '../features/invitations/api/invitationsApi';
 import { requestInvitationOtp, verifyInvitationOtp } from '../features/join/api/joinApi';
 import useJoinCapability from '../features/join/hooks/useJoinCapability';
 import { getOtpErrorKey, getProfileErrorKey } from '../features/auth/authErrors';
+import { loadGuestProfile, saveGuestProfile } from '../shared/guestProfileStore';
 import { useAuth } from '../auth/AuthContext';
 import '../features/join/styles/joinTrip.css';
 
@@ -161,6 +162,7 @@ const InvitationPage = () => {
   };
 
   const submitGuestProfile = (profile) => {
+    saveGuestProfile(profile);
     const { display_name, ...avatarFields } = profile;
     accept({ guest_name: display_name, ...avatarFields });
   };
@@ -185,7 +187,7 @@ const InvitationPage = () => {
   }
 
   if (capability?.action === 'ready_open') {
-    return <ProfileSetupPage busy={accepting} errorKey={acceptError ? 'invite.invalid' : null} onSubmit={submitGuestProfile} mode="guest" />;
+    return <ProfileSetupPage busy={accepting} errorKey={acceptError ? 'invite.invalid' : null} onSubmit={submitGuestProfile} mode="guest" initialValues={loadGuestProfile()} />;
   }
 
   return (

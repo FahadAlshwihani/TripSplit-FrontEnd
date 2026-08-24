@@ -40,16 +40,28 @@ const generateBatch = (category) => {
   (Continue as Guest → Create/Join Trip) — only the heading copy differs;
   no email/OTP/account creation happens either way, onSubmit's shape is
   identical, and the caller decides what to do with it.
+
+  initialValues (optional) prefills the form from a previously-saved
+  identity -- the returning-guest "Edit guest profile" path passes the
+  device's persisted guest profile (shared/guestProfileStore.js) here so
+  editing never starts from a blank name/avatar. Same {display_name,
+  avatar_type, avatar_color, avatar_style, avatar_seed, avatar_animation}
+  shape join_trip/create_trip already accept, decoded back into picker
+  state via the same decode*Key helpers the canonical Avatar renderer uses.
 */
-const ProfileSetupPage = ({ busy, errorKey, onSubmit, mode: pageMode = 'registered' }) => {
+const ProfileSetupPage = ({ busy, errorKey, onSubmit, onCancel, mode: pageMode = 'registered', initialValues = null }) => {
   const { t } = useTranslation();
-  const [displayName, setDisplayName] = useState('');
-  const [mode, setMode] = useState('initials');
-  const [colorId, setColorId] = useState(DEFAULT_AVATAR_COLOR_ID);
+  const initialDicebear = (initialValues?.avatar_type === 'dicebear' && initialValues.avatar_style && initialValues.avatar_seed)
+    ? { style: initialValues.avatar_style, seed: initialValues.avatar_seed, animation: initialValues.avatar_animation || 'none' }
+    : null;
+  const initialInitialsColor = (initialValues?.avatar_type === 'initials' && initialValues.avatar_color) ? initialValues.avatar_color : null;
+  const [displayName, setDisplayName] = useState(initialValues?.display_name || '');
+  const [mode, setMode] = useState(initialDicebear ? 'dicebear' : 'initials');
+  const [colorId, setColorId] = useState(initialInitialsColor || DEFAULT_AVATAR_COLOR_ID);
   const [category, setCategory] = useState('all');
   const [batch, setBatch] = useState(() => generateBatch('all'));
-  const [selected, setSelected] = useState(() => ({ style: batch[0].style, seed: batch[0].seed }));
-  const [animation, setAnimation] = useState('none');
+  const [selected, setSelected] = useState(() => (initialDicebear ? { style: initialDicebear.style, seed: initialDicebear.seed } : { style: batch[0].style, seed: batch[0].seed }));
+  const [animation, setAnimation] = useState(initialDicebear?.animation || 'none');
   const [fieldErrorKey, setFieldErrorKey] = useState(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,7 +102,7 @@ const ProfileSetupPage = ({ busy, errorKey, onSubmit, mode: pageMode = 'register
       <div className="profile-setup-card">
         <header className="profile-setup-card__header">
           <span className="profile-setup-card__brand text-label">{t('profile.setup.brand')}</span>
-          <h1 className="profile-setup-card__heading text-display">{t(pageMode === 'guest' ? 'auth.guest.action' : 'profile.setup.title')}</h1>
+          <h1 className="profile-setup-card__heading text-display">{t(pageMode === 'guest' ? (initialValues ? 'guest.editProfile' : 'auth.guest.action') : 'profile.setup.title')}</h1>
           <p className="profile-setup-card__description text-copy-lg">{t(pageMode === 'guest' ? 'profile.setup.guestDescription' : 'profile.setup.description')}</p>
         </header>
         <form className="profile-setup-form" onSubmit={handleSubmit} noValidate>
@@ -144,6 +156,11 @@ const ProfileSetupPage = ({ busy, errorKey, onSubmit, mode: pageMode = 'register
           >
             <span>{t('profile.setup.finish')}</span>
           </LoadingButton>
+          {onCancel && (
+            <button type="button" className="auth-btn" onClick={onCancel} disabled={busy}>
+              {t('common.cancel')}
+            </button>
+          )}
         </form>
       </div>
     </div>

@@ -34,6 +34,7 @@ const renderPage = async () => {
 
 beforeEach(() => {
   getCurrencies.mockResolvedValue(CATALOG);
+  localStorage.clear();
 });
 
 test('renders the Stitch-style create-trip sections with guest fields for anonymous visitors', async () => {

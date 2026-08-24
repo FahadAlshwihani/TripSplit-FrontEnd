@@ -52,6 +52,7 @@ const renderPage = async (entry = '/invite/secrettoken1234567890') => {
 beforeEach(() => {
   mockUser = null;
   jest.clearAllMocks();
+  localStorage.clear();
 });
 
 test('anonymous email-bound invitation requests and auto-starts the invitation-scoped OTP step', async () => {
