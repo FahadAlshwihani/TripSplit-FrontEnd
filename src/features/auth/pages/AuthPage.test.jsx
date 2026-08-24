@@ -395,6 +395,17 @@ test('a returning guest can still edit their saved profile before continuing', a
   expect(screen.getByLabelText('profile.setup.displayName')).toHaveValue('Sara');
 });
 
+test('the saved guest screen renders both actions as full members of the shared button system (primary + secondary), not a raw/unstyled control', async () => {
+  localStorage.setItem('tripsplit:guest-profile', JSON.stringify({ version: 1, local_profile_id: 'g1', display_name: 'Sara', avatar_type: 'initials', avatar_color: 'indigo', created_at: 'x', updated_at: 'x' }));
+  renderAuth('/auth?next=%2Fcreate-trip');
+  fireEvent.click(screen.getByRole('button', { name: 'auth.guest.action' }));
+  const continueBtn = await screen.findByText('guest.continueAs:{"name":"Sara"}');
+  expect(continueBtn).toHaveClass('auth-btn', 'auth-btn--primary');
+  const editBtn = screen.getByText('guest.editProfile');
+  expect(editBtn).toHaveClass('auth-btn');
+  expect(editBtn).not.toHaveClass('auth-btn--primary');
+});
+
 test('guest=0 hides guest continuation and explains sign-in is required', () => {
   renderAuth('/auth?next=%2Finvite%2Ftok123&guest=0');
   expect(screen.queryByRole('button', { name: 'auth.guest.action' })).not.toBeInTheDocument();

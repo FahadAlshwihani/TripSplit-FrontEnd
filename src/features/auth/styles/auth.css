@@ -391,6 +391,12 @@
    (not just a color darken re-pinned to the resting shadow), active
    completes the press by collapsing the offset entirely. */
 
+/* The base class is a complete secondary/neutral button on its own (light
+   surface, dark text, dark border) -- .auth-btn--primary then overrides
+   fill/text/shadow for the indigo variant. Two real screens render the
+   bare base class with no modifier (Saved Guest Profile's "Edit Guest
+   Profile", Profile Setup's "Cancel"), so it must never depend on a
+   modifier class to look like a real button. */
 .auth-btn {
   width: 100%;
   display: inline-flex;
@@ -401,6 +407,8 @@
   padding: var(--space-3) var(--space-6);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
   font: var(--text-label);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
@@ -428,7 +436,7 @@
   box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
 }
 
-.auth-btn:hover:not(:disabled) { transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.auth-btn:hover:not(:disabled) { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
 
 .auth-btn--primary:hover:not(:disabled),
 .auth-btn--primary:focus-visible {
