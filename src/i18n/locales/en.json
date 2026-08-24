@@ -255,6 +255,7 @@
   "account.trips.state.active": "Active", "account.trips.state.closed": "Trip Closed", "account.trips.state.archived": "Archived", "account.trips.state.left": "Left",
   "account.trips.role.owner": "Owner", "account.trips.role.member": "Member", "account.trips.currency": "Currency",
   "account.trips.closedNotice": "This trip was closed by its organizer and is no longer available.", "account.trips.empty": "No trips yet.", "account.trips.loadMore": "Load more", "account.trips.loadingMore": "Loading…",
+  "account.trips.emptyAll.title": "No trips yet.", "account.trips.emptyAll.description": "Create a trip or join one to start keeping your travel money organized.",
   "account.trips.leaveDialog.title": "Leave {{title}}?", "account.trips.leaveDialog.body": "You will lose access to this trip, but your previous financial records will remain in the trip history.",
   "account.errors.saveFailed": "We couldn't save your preferences. Please try again.", "account.errors.tripsLoadFailed": "We couldn't load your trips. Try again.", "account.errors.emailChangeFailed": "We couldn't update your email.", "account.errors.retry": "Retry", "account.errors.tripActionFailed": "That didn't work. Please try again.",
   "common.loading": "Loading…",

@@ -104,10 +104,21 @@ test('an owner sees a transfer-before-leave hint instead of a Leave button', asy
   expect(screen.queryByText('account.trips.leaveTrip')).not.toBeInTheDocument();
 });
 
-test('an empty history shows the empty-state copy', async () => {
+test('an empty "all" history shows the rich empty state with Create/Join actions', async () => {
   getAccountTrips.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
   await renderTrips();
+  expect(await screen.findByText('account.trips.emptyAll.title')).toBeInTheDocument();
+  expect(screen.getByText('account.trips.emptyAll.description')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'home.hero.createTrip' })).toHaveAttribute('href', '/create-trip');
+  expect(screen.getByRole('link', { name: 'home.hero.joinTrip' })).toHaveAttribute('href', '/trips/join');
+});
+
+test('an empty filtered (non-"all") history shows the plain empty message, no Create/Join actions', async () => {
+  getAccountTrips.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
+  await renderTrips();
+  fireEvent.click(screen.getByText('account.trips.filters.closed'));
   expect(await screen.findByText('account.trips.empty')).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'home.hero.createTrip' })).not.toBeInTheDocument();
 });
 
 test('a load failure shows a retry action', async () => {

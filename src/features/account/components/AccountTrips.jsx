@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LoadingButton from '../../../shared/components/LoadingButton';
 import NeoLoading from '../../../shared/components/NeoLoading';
@@ -30,7 +31,20 @@ const AccountTrips = () => {
           <button type="button" className="acc-btn" onClick={retry}>{t('account.errors.retry')}</button>
         </div>
       ) : trips.length === 0 ? (
-        <p className="acc-trips__empty text-copy">{t('account.trips.empty')}</p>
+        <div className="acc-trips__empty">
+          <p className="acc-trips__empty-text text-copy">
+            {filterValue === 'all' ? t('account.trips.emptyAll.title') : t('account.trips.empty')}
+          </p>
+          {filterValue === 'all' && (
+            <>
+              <p className="acc-trips__empty-text text-copy-sm">{t('account.trips.emptyAll.description')}</p>
+              <div className="acc-trips__empty-actions">
+                <Link className="acc-btn acc-btn--primary" to="/create-trip">{t('home.hero.createTrip')}</Link>
+                <Link className="acc-btn" to="/trips/join">{t('home.hero.joinTrip')}</Link>
+              </div>
+            </>
+          )}
+        </div>
       ) : (
         <>
           <div className="acc-trips__list">

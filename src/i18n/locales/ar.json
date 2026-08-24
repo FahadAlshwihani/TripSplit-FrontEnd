@@ -256,6 +256,7 @@
   "account.trips.state.active": "نشطة", "account.trips.state.closed": "الرحلة مغلقة", "account.trips.state.archived": "مؤرشفة", "account.trips.state.left": "غادرتها",
   "account.trips.role.owner": "المالك", "account.trips.role.member": "عضو", "account.trips.currency": "العملة",
   "account.trips.closedNotice": "تم إغلاق هذه الرحلة من قبل منظّمها ولم تعد متاحة.", "account.trips.empty": "لا توجد رحلات بعد.", "account.trips.loadMore": "عرض المزيد", "account.trips.loadingMore": "جارٍ التحميل…",
+  "account.trips.emptyAll.title": "لا توجد رحلات حتى الآن", "account.trips.emptyAll.description": "أنشئ رحلة أو انضم إلى رحلة وابدأ بتنظيم مصاريف سفرك بسهولة.",
   "account.trips.leaveDialog.title": "مغادرة {{title}}؟", "account.trips.leaveDialog.body": "ستفقد إمكانية الوصول إلى هذه الرحلة، لكن سجلاتك المالية السابقة ستبقى محفوظة ضمن سجل الرحلة.",
   "account.errors.saveFailed": "تعذر حفظ تفضيلاتك. حاول مرة أخرى.", "account.errors.tripsLoadFailed": "تعذر تحميل رحلاتك. حاول مرة أخرى.", "account.errors.emailChangeFailed": "تعذر تحديث بريدك الإلكتروني.", "account.errors.retry": "إعادة المحاولة", "account.errors.tripActionFailed": "لم ينجح الإجراء. حاول مرة أخرى.",
   "common.loading": "جارٍ التحميل…",

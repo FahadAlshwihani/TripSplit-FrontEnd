@@ -3,36 +3,54 @@
   references onto the existing Neo-classic token system (no Tailwind),
   reusing the same hard-border/hard-shadow recipe already established by
   createTrip.css/joinTrip.css rather than inventing a new visual language.
+  Deliberately compact/ledger-like -- not a spacious modern SaaS dashboard.
 */
 
 .acc-page {
   max-width: 1200px;
   margin-inline: auto;
-  padding: var(--space-8) var(--space-4) var(--space-16);
+  padding: var(--space-6) var(--space-4) var(--space-12);
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-5);
 }
 
-.acc-header { display: flex; flex-direction: column; gap: var(--space-2); }
+.acc-header { display: flex; flex-direction: column; gap: var(--space-1); }
 .acc-header__title { margin: 0; color: var(--color-text); }
 .acc-header__subtitle { margin: 0; color: var(--color-text-muted); }
 
+/*
+  Desktop hierarchy (Identity+Quick Actions, then Preferences+
+  Notifications, then Logout, stacked at the bottom of the left column;
+  Trips dominant on the right, spanning the full column height) and
+  mobile hierarchy (the same two left blocks, then Trips, then Logout
+  last) can't both be satisfied by one DOM order -- each block gets an
+  explicit grid placement per breakpoint instead. Mobile: plain DOM
+  order (grid-template-columns: 1fr, no explicit row/column overrides).
+  Desktop: named row/column placement below.
+*/
 .acc-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-6);
+  gap: var(--space-5);
   align-items: start;
 }
 
 @media (min-width: 1024px) {
-  .acc-grid { grid-template-columns: minmax(280px, 380px) 1fr; }
+  .acc-grid {
+    grid-template-columns: minmax(260px, 340px) 1fr;
+    grid-template-rows: auto auto 1fr;
+  }
+  .acc-grid__identity { grid-column: 1; grid-row: 1; }
+  .acc-grid__preferences { grid-column: 1; grid-row: 2; }
+  .acc-grid__logout { grid-column: 1; grid-row: 3; align-self: end; }
+  .acc-grid__trips { grid-column: 2; grid-row: 1 / span 3; }
 }
 
-.acc-grid__left, .acc-grid__right {
+.acc-grid__identity, .acc-grid__preferences {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-4);
 }
 
 .acc-card {
@@ -40,13 +58,13 @@
   border: var(--border-width-lg) solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: 2px 2px 0 0 var(--color-border);
-  padding: var(--space-6);
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
-.acc-card__title { margin: 0; color: var(--color-text); border-block-end: var(--border-width) solid var(--color-border-subtle); padding-block-end: var(--space-3); }
+.acc-card__title { margin: 0; color: var(--color-text); border-block-end: var(--border-width) solid var(--color-border-subtle); padding-block-end: var(--space-2); }
 
 .acc-card__header-row {
   display: flex;
@@ -55,15 +73,15 @@
   flex-wrap: wrap;
   gap: var(--space-3);
   border-block-end: var(--border-width) solid var(--color-border-subtle);
-  padding-block-end: var(--space-3);
+  padding-block-end: var(--space-2);
 }
 
 .acc-card__header-row .acc-card__title { border-block-end: none; padding-block-end: 0; }
 
-/* Identity */
+/* Identity -- kept dense, not an oversized hero card */
 
-.acc-identity__row { display: flex; align-items: center; gap: var(--space-4); }
-.acc-identity__meta { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.acc-identity__row { display: flex; align-items: center; gap: var(--space-3); }
+.acc-identity__meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .acc-identity__name { margin: 0; color: var(--color-text); }
 .acc-identity__email { margin: 0; color: var(--color-text-muted); overflow-wrap: anywhere; }
 .acc-identity__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
@@ -82,18 +100,22 @@
   color: var(--color-success);
 }
 
-.acc-change-email { display: flex; flex-direction: column; gap: var(--space-2); border-block-start: var(--border-width) solid var(--color-border-subtle); padding-block-start: var(--space-4); }
+.acc-change-email { display: flex; flex-direction: column; gap: var(--space-2); border-block-start: var(--border-width) solid var(--color-border-subtle); padding-block-start: var(--space-3); }
 
-/* Preferences */
+/* Preferences -- all three selectors share one fixed-width shell so the
+   row never looks unfinished with mismatched control widths. */
 
-.acc-preferences { display: flex; flex-direction: column; gap: var(--space-4); }
+.acc-preferences { display: flex; flex-direction: column; gap: var(--space-3); }
 .acc-preferences__row { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
-.acc-preferences__row--currency { align-items: flex-start; }
 .acc-preferences__label { color: var(--color-text-muted); }
 .acc-preferences__control { display: flex; align-items: center; gap: var(--space-2); }
 
-.acc-select, .acc-input {
-  min-height: 40px;
+.acc-select-shell { width: 200px; max-width: 100%; }
+.acc-select-shell .currency-picker { width: 100%; }
+
+.acc-select, .acc-input, .acc-select-shell .currency-picker__input {
+  width: 100%;
+  min-height: 44px;
   padding: var(--space-2) var(--space-3);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -104,7 +126,10 @@
 
 .acc-retry { background: none; border: none; padding: 0; color: var(--color-danger); text-decoration: underline; cursor: pointer; font: var(--text-label); }
 
-/* Notifications */
+/* Notifications -- labels get an explicit foreground color rather than
+   relying purely on inheritance, the same defensive pattern used
+   elsewhere in this app (Join Trip's Trip Found panel, the identity
+   footer) so no ambient rule can ever make a row read as pale/invisible. */
 
 .acc-notifications__bulk { display: flex; gap: var(--space-3); }
 .acc-notifications__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
@@ -112,12 +137,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-block: var(--space-3);
+  gap: var(--space-3);
+  padding-block: var(--space-2);
   border-block-end: var(--border-width) solid var(--color-border-faint);
 }
 .acc-notifications__item:last-child { border-block-end: none; }
+.acc-notifications__item span { color: var(--color-text); }
 
-.acc-switch { position: relative; display: inline-flex; width: 40px; height: 22px; }
+.acc-switch { position: relative; display: inline-flex; flex: 0 0 auto; width: 40px; height: 22px; }
 .acc-switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
 .acc-switch__track {
   position: absolute;
@@ -185,7 +212,7 @@
 
 .acc-error { margin: 0; color: var(--color-danger); font: var(--text-body-sm); }
 
-/* Trips */
+/* Trips -- the dominant right-column panel */
 
 .acc-trip-filters { display: flex; gap: var(--space-3); flex-wrap: wrap; }
 .acc-trip-filters__tab {
@@ -201,8 +228,16 @@
 }
 .acc-trip-filters__tab.is-active { color: var(--nc-indigo-700); border-block-end-color: var(--nc-indigo-700); }
 
-.acc-trips__list { display: flex; flex-direction: column; gap: var(--space-4); }
-.acc-trips__empty { color: var(--color-text-muted); }
+.acc-trips__list { display: flex; flex-direction: column; gap: var(--space-3); }
+.acc-trips__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+}
+.acc-trips__empty-text { margin: 0; color: var(--color-text-muted); }
+.acc-trips__empty-actions { display: flex; gap: var(--space-3); }
 .acc-trips__error { display: flex; flex-direction: column; gap: var(--space-3); align-items: flex-start; }
 
 .acc-trip {
@@ -218,30 +253,38 @@
   .acc-trip { flex-direction: row; }
 }
 
-.acc-trip__main { padding: var(--space-4); flex: 1 1 auto; display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.acc-trip__main { padding: var(--space-3); flex: 1 1 auto; display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
 .acc-trip__badges { display: flex; gap: var(--space-2); }
 .acc-trip__title { margin: 0; color: var(--color-text); }
 .acc-trip__dates { margin: 0; color: var(--color-text-muted); }
 .acc-trip__notice { margin: 0; color: var(--color-text-muted); }
 
 .acc-trip__side {
-  padding: var(--space-4);
+  padding: var(--space-3);
   flex: 0 0 auto;
-  min-width: 200px;
+  min-width: 170px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
   background: var(--color-surface-alt);
   border-inline-start: var(--border-width) solid var(--color-border);
 }
 
 @media (max-width: 560px) {
-  .acc-trip__side { border-inline-start: none; border-block-start: var(--border-width) solid var(--color-border); }
+  .acc-trip__side {
+    border-inline-start: none;
+    border-block-start: var(--border-width) solid var(--color-border);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .acc-trip__actions { margin-block-start: 0; }
 }
 
 .acc-trip__currency { color: var(--color-text-muted); text-transform: uppercase; }
 .acc-trip__currency-value { color: var(--color-text); font-size: 1.1em; }
-.acc-trip__actions { display: flex; flex-direction: column; gap: var(--space-2); margin-block-start: var(--space-2); }
+.acc-trip__actions { display: flex; flex-direction: column; gap: var(--space-2); margin-block-start: var(--space-1); }
 .acc-trip__transfer-hint { color: var(--color-text-muted); }
 .acc-trip__more { margin-block-start: var(--space-1); }
 .acc-trip__more summary { list-style: none; cursor: pointer; }

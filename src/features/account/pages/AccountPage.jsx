@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import PublicLayout from '../../../components/Layout/PublicLayout';
 import NeoLoading from '../../../shared/components/NeoLoading';
 import ProfileSetupPage from '../../profile/pages/ProfileSetupPage';
+import ClaimGuestTripsBanner from '../../auth/components/ClaimGuestTripsBanner';
 import { useAuth } from '../../../auth/AuthContext';
 import AccountIdentity from '../components/AccountIdentity';
 import AccountPreferences from '../components/AccountPreferences';
@@ -76,22 +77,38 @@ const AccountPage = () => {
           <p className="acc-header__subtitle text-copy-lg">{t('account.pageSubtitle')}</p>
         </header>
 
+        {/*
+          Desktop hierarchy: Identity+Quick Actions, then Preferences+
+          Notifications, then Logout -- stacked in that order at the
+          BOTTOM of the left column, with Trips dominant on the right,
+          spanning the full column height. Mobile hierarchy: the same
+          two left blocks, then Trips, then Logout LAST -- Logout must
+          never sit before trip history on a long page. A single DOM
+          order can't satisfy both (desktop wants Logout mid-column,
+          mobile wants it after Trips), so each block is its own grid
+          item positioned explicitly per breakpoint in account.css
+          (mobile: plain DOM order top-to-bottom; desktop: named
+          grid-row/grid-column placement) rather than nested containers.
+        */}
         <div className="acc-grid">
-          <div className="acc-grid__left">
+          <section className="acc-grid__identity">
             <AccountIdentity onEditProfile={() => setEditingProfile(true)} />
-            <AccountPreferences />
-            <AccountNotifications />
             <section className="acc-quick-actions">
               <Link className="acc-btn acc-btn--primary" to="/create-trip">{t('home.hero.createTrip')}</Link>
               <Link className="acc-btn" to="/trips/join">{t('home.hero.joinTrip')}</Link>
             </section>
-            <button type="button" className="acc-btn acc-btn--danger acc-logout" onClick={handleLogout}>
-              {t('common.logOut')}
-            </button>
-          </div>
-          <div className="acc-grid__right">
+            <ClaimGuestTripsBanner />
+          </section>
+          <section className="acc-grid__preferences">
+            <AccountPreferences />
+            <AccountNotifications />
+          </section>
+          <section className="acc-grid__trips">
             <AccountTrips />
-          </div>
+          </section>
+          <button type="button" className="acc-btn acc-btn--danger acc-logout acc-grid__logout" onClick={handleLogout}>
+            {t('common.logOut')}
+          </button>
         </div>
       </div>
     </PublicLayout>
