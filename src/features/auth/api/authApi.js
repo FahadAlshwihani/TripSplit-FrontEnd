@@ -6,3 +6,4 @@ export const logout = () => responseData(apiClient.post('/auth/logout/'));
 export const updateProfile = (payload) => responseData(apiClient.patch('/profile/', payload));
 export const requestEmailChange = (email) => responseData(apiClient.post('/profile/email/change/request/', { email }));
 export const verifyEmailChange = (payload) => responseData(apiClient.post('/profile/email/change/verify/', payload));
+export const claimGuestMemberships = (claims) => responseData(apiClient.post('/account/claim-guest-memberships/', { claims }));

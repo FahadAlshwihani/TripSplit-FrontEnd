@@ -5,6 +5,7 @@ import PublicLayout from '../../../components/Layout/PublicLayout';
 import NeoLoading from '../../../shared/components/NeoLoading';
 import Avatar from '../../profile/components/Avatar';
 import { avatarKeyFromUser } from '../../profile/utils/avatarKey';
+import ClaimGuestTripsBanner from '../../auth/components/ClaimGuestTripsBanner';
 import { useAuth } from '../../../auth/AuthContext';
 import { getTrips } from '../../trips/api/tripsApi';
 import '../../../styles/CardStyles.css';
@@ -49,6 +50,8 @@ const DashboardPage = () => {
               <button type="button" className="pc-btn-join" onClick={logout}>{t('common.logOut')}</button>
             </div>
           </div>
+
+          <ClaimGuestTripsBanner />
 
           <div className="dashboard-actions">
             <Link className="pc-btn-create" to="/create-trip">{t('home.hero.createTrip')}</Link>
