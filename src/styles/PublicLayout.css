@@ -19,6 +19,23 @@
 .public-layout a { text-decoration: none; }
 .public-layout ul { list-style: none; margin: 0; padding: 0; }
 .public-layout button { font-family: inherit; }
+
+/* App.css ships a legacy `p, span, a, li { color: white; }` reset (an
+   un-classed element selector) left over from the old dark dashboard
+   shell -- it wins over plain inheritance on any bare <p>/<span>/<a>/<li>
+   in this layout that doesn't carry its own color-bearing class,
+   regardless of stylesheet load order. Reasserted once here, for every
+   page that mounts through PublicLayout, instead of every individual
+   page having to remember its own copy of this guard (which is exactly
+   how one such node -- the Saved Guest screen's display name -- went
+   unnoticed and rendered white-on-cream). */
+.public-layout p,
+.public-layout span,
+.public-layout a,
+.public-layout li {
+  color: inherit;
+}
+
 .public-layout__main { flex: 1 1 auto; }
 
 /* ---------------------------------------------------------------------- */

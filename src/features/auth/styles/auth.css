@@ -1,116 +1,15 @@
 /*
-  Auth Gateway — transactional shell, deliberately NOT the marketing
-  PublicLayout (no Features/Pricing links, no footer), per the Stitch
-  brief's own transactional header. Still carries the brand, and the
-  language/theme utility controls stay available on every breakpoint.
-  Feature-owned: nothing here leaks into Home/Pricing/Features/PublicLayout.
-
-  App.css ships a legacy `p, span, a, li { color: white; }` reset with no
-  class in its selector, which wins over inheritance on any un-classed
-  span/li text node regardless of load order (discovered on the Pricing
-  receipt, re-confirmed on Features). Reasserted once for this whole page.
+  Auth Gateway — mounted through the same canonical PublicLayout (nav +
+  footer) as Create Trip / Join Trip / the marketing pages, per the
+  "one public shell" architecture. This file owns only the two-column
+  transactional content below (.auth-main and down) -- no page-level
+  header/nav/footer of its own; PublicNav/PublicLayout already reassert
+  the App.css `p, span, a, li { color: white; }` legacy collision guard
+  (see PublicLayout.css), so this file doesn't need its own copy either.
+  OTP and Profile Setup remain their own deliberately standalone,
+  chrome-less full-page cards (see .otp-page below / profileSetup.css)
+  and keep their own copy of that same guard.
 */
-
-.auth-page span,
-.auth-page li {
-  color: inherit;
-}
-
-/* .public-layout carries this same reset (see PublicLayout.css) for every
-   other public page; this shell is deliberately NOT wrapped in
-   .public-layout (see file header), so it needs its own copy. Without it,
-   anchors fall through to Bootstrap's underlined link default. */
-.auth-page a { text-decoration: none; }
-.auth-page ul { list-style: none; margin: 0; padding: 0; }
-.auth-page button { font-family: inherit; }
-
-/* Inputs/OTP cells get their own border-based focus treatment below
-   (matching the rest of the app's form fields); this generic ring is only
-   for links and buttons that don't otherwise redraw on focus. */
-.auth-page a:focus-visible,
-.auth-page button:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.auth-page {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  background: var(--color-bg);
-  color: var(--color-text);
-}
-
-/* ---------------------------------------------------------------------- */
-/* Header */
-
-.auth-header {
-  border-block-end: var(--border-width) solid var(--color-border);
-  padding: var(--space-3) var(--page-margin-mobile);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-@media (min-width: 768px) {
-  .auth-header {
-    padding-inline: var(--page-margin-desktop);
-    padding-block: var(--space-3); /* compact: ~80px total header height, not a hero banner */
-    align-items: flex-end;
-  }
-}
-
-.auth-header__brand-group { display: flex; flex-direction: column; }
-
-/* headline scale (24/32), not display — a technical document header, not
-   a hero logo. Bold weight to keep the same visual presence Stitch's own
-   (larger but lighter) treatment had. */
-.auth-header__brand.text-headline {
-  color: var(--nc-indigo-700);
-  margin: 0;
-  font-weight: 700;
-}
-
-@media (min-width: 768px) {
-  .auth-header__brand.text-headline {
-    color: var(--color-text);
-    text-transform: uppercase;
-  }
-}
-
-.auth-header__secure-label.text-label {
-  display: none;
-  color: var(--color-text-muted);
-  letter-spacing: 0.1em;
-  margin-block-start: var(--space-1);
-}
-
-@media (min-width: 768px) { .auth-header__secure-label.text-label { display: block; } }
-
-.auth-header__right { display: flex; align-items: center; gap: var(--space-4); }
-
-.auth-header__status { display: none; align-items: center; gap: var(--space-2); }
-
-@media (min-width: 768px) { .auth-header__status { display: flex; } }
-
-.auth-header__pulse {
-  inline-size: 8px;
-  block-size: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--nc-indigo-700);
-  animation: auth-pulse 2s ease-in-out infinite;
-}
-
-@keyframes auth-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .auth-header__pulse { animation: none; }
-}
-
-.auth-header__utilities { display: flex; align-items: center; gap: var(--space-2); }
 
 /* ---------------------------------------------------------------------- */
 /* Main composition — 12-col grid desktop, single column mobile. The
@@ -239,6 +138,13 @@
   text-align: center;
 }
 
+/* App.css ships a legacy `p, span, a, li { color: white; }` reset for the
+   old dark shell (element selector, no class) -- this bare <p> had no
+   component class of its own to reassert a real color, so it fell
+   straight through to that white default and rendered invisible on this
+   light surface. Every other piece of text on this screen happened to
+   already carry a color-bearing class; this was the one gap. */
+.auth-guest-returning__name { color: var(--color-text); }
 .auth-guest-returning__notice { color: var(--color-text-muted); margin: 0; }
 .auth-guest-returning .auth-btn { margin-block-start: var(--space-2); }
 
@@ -386,76 +292,13 @@
 }
 
 /* ---------------------------------------------------------------------- */
-/* Buttons — canonical Neo-classic hard-shadow press (tokens.css's
-   --shadow-hard-sm*/--press-sm-*): hover presses the surface partway in
-   (not just a color darken re-pinned to the resting shadow), active
-   completes the press by collapsing the offset entirely. */
-
-/* The base class is a complete secondary/neutral button on its own (light
-   surface, dark text, dark border) -- .auth-btn--primary then overrides
-   fill/text/shadow for the indigo variant. Two real screens render the
-   bare base class with no modifier (Saved Guest Profile's "Edit Guest
-   Profile", Profile Setup's "Cancel"), so it must never depend on a
-   modifier class to look like a real button. */
-.auth-btn {
-  width: 100%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 48px;
-  padding: var(--space-3) var(--space-6);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font: var(--text-label);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  cursor: pointer;
-  box-shadow: var(--shadow-hard-sm);
-  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
-}
-
-.auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-/* A loading button is still an active, in-progress button — not an
-   unavailable one. Overrides the generic disabled dimming above (higher
-   specificity: two classes + :disabled vs one class + :disabled) so the
-   fill/border/shadow/text stay exactly as they are normally; only the
-   cursor and duplicate-submit prevention come from `disabled`. */
-.auth-btn--loading.auth-btn:disabled {
-  opacity: 1;
-  cursor: progress;
-}
-
-.auth-btn--primary {
-  background: var(--nc-indigo-700);
-  border-color: var(--nc-indigo-700);
-  color: var(--nc-white);
-  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
-}
-
-.auth-btn:hover:not(:disabled) { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
-
-.auth-btn--primary:hover:not(:disabled),
-.auth-btn--primary:focus-visible {
-  background: var(--nc-indigo-800);
-  border-color: var(--nc-indigo-700);
-  color: var(--nc-white);
-  box-shadow: 1px 1px 0 0 var(--nc-indigo-700);
-}
-
-.auth-btn:active:not(:disabled) {
-  transform: var(--press-sm-active);
-  box-shadow: 0 0 0 0 var(--nc-ink-900);
-}
-
-.auth-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
-
-@media (prefers-reduced-motion: reduce) {
-  .auth-btn { transition: background-color 0.15s ease; }
-}
+/* Buttons — geometry/variants/press live in the shared
+   src/styles/buttons.css now (.ct-btn/.jt-btn/.auth-btn are one
+   canonical family there, so Auth can never again drift out of sync
+   with Create/Join the way it previously did). This page only adds its
+   own layout tweak: Auth buttons are full-width, Create/Join's are
+   auto-sized flex items. */
+.auth-btn { width: 100%; }
 
 /* Arrows are directional — mirror in RTL. Lock/mail/check/person icons
    are non-directional and deliberately left alone. Excludes
@@ -663,10 +506,13 @@
 .otp-page a,
 .otp-page button { font-family: inherit; }
 
-/* Same Bootstrap `p, span, a, li { color: white }` collision guard the
-   rest of the Auth shell needs (see auth-page span/li above) — this
-   screen isn't wrapped in .auth-page, so it needs its own copy. */
+/* Same App.css `p, span, a, li { color: white }` collision guard
+   PublicLayout carries for every page that mounts through it — this
+   screen is deliberately standalone (no page chrome), so it needs its
+   own copy. */
+.otp-page p,
 .otp-page span,
+.otp-page a,
 .otp-page li { color: inherit; }
 
 .otp-page a:focus-visible,

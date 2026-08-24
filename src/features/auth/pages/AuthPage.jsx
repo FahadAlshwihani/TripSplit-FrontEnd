@@ -5,7 +5,7 @@ import { requestOtp, verifyOtp } from '../api/authApi';
 import { useAuth } from '../../../auth/AuthContext';
 import { getSafeNext } from '../../../auth/safeNext';
 import { getAuthErrorKey, getOtpErrorKey, getProfileErrorKey } from '../authErrors';
-import AuthHeader from '../components/AuthHeader';
+import PublicLayout from '../../../components/Layout/PublicLayout';
 import AuthContextPanel from '../components/AuthContextPanel';
 import EmailStep from '../components/EmailStep';
 import OtpStep from '../components/OtpStep';
@@ -176,14 +176,13 @@ const AuthPage = () => {
   if (step === 'guest-returning') {
     const persisted = loadGuestProfile();
     return (
-      <div className="auth-page">
-        <AuthHeader />
-        <main className="auth-main">
+      <PublicLayout>
+        <div className="auth-main">
           <AuthContextPanel />
           <div className="auth-form-area">
             <div className="auth-form-area__inner auth-guest-returning">
               <Avatar avatarKey={avatarKeyFromUser(persisted)} displayName={persisted.display_name} size="lg" />
-              <p className="text-copy-lg">{persisted.display_name}</p>
+              <p className="auth-guest-returning__name text-copy-lg">{persisted.display_name}</p>
               <p className="text-copy-sm auth-guest-returning__notice">{t('guest.profileSavedNotice')}</p>
               <button type="button" className="auth-btn auth-btn--primary" onClick={() => submitGuestProfile(persisted)}>
                 {t('guest.continueAs', { name: persisted.display_name })}
@@ -193,15 +192,14 @@ const AuthPage = () => {
               </button>
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </PublicLayout>
     );
   }
 
   return (
-    <div className="auth-page">
-      <AuthHeader />
-      <main className="auth-main">
+    <PublicLayout>
+      <div className="auth-main">
         <AuthContextPanel />
         <div className="auth-form-area">
           <div className="auth-form-area__inner">
@@ -214,8 +212,8 @@ const AuthPage = () => {
             />
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </PublicLayout>
   );
 };
 

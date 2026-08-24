@@ -67,6 +67,26 @@ test('renders the email step by default', () => {
   expect(screen.getByRole('button', { name: 'auth.guest.action' })).toBeInTheDocument();
 });
 
+test('Auth mounts through the same canonical PublicNav/PublicFooter shell as Create Trip and Join Trip, not a deprecated Auth-specific header', () => {
+  renderAuth();
+  // PublicNav content -- the shared shell, not a duplicate implementation.
+  expect(screen.getByRole('link', { name: 'home.nav.features' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'home.nav.pricing' })).toBeInTheDocument();
+  // PublicFooter content.
+  expect(screen.getByText('home.footer.copyright:{"year":' + new Date().getFullYear() + '}')).toBeInTheDocument();
+  // The retired AuthHeader's own copy must never render again.
+  expect(screen.queryByText('auth.secureLabel')).not.toBeInTheDocument();
+  expect(screen.queryByText('auth.secureStatus')).not.toBeInTheDocument();
+  // Already on /auth -- no pointless self-link in the shared nav.
+  expect(screen.queryByRole('link', { name: 'home.nav.signIn' })).not.toBeInTheDocument();
+});
+
+test('the primary email-step action consumes the canonical shared button variant (same family as Create Trip/Join Trip)', () => {
+  renderAuth();
+  const submit = screen.getByRole('button', { name: /auth.email.submit/ });
+  expect(submit).toHaveClass('auth-btn', 'auth-btn--primary');
+});
+
 test('the email field control is pinned to LTR regardless of page direction', () => {
   renderAuth();
   const input = screen.getByLabelText('auth.email.label');

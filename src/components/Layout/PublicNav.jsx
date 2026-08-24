@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitch from './LanguageSwitch';
 import ThemeSwitch from './ThemeSwitch';
@@ -8,11 +8,17 @@ import { useAuth } from '../../auth/AuthContext';
 
 const PublicNav = () => {
   const { t } = useTranslation();
+  const location = useLocation();
   // Defensive fallback: PublicNav is a shared leaf layout component used by
   // pages some tests render without an AuthProvider ancestor (it used to be
   // fully auth-agnostic). Treat a missing provider as "still loading"
   // rather than crashing.
   const { isAuthenticated, authLoading } = useAuth() || { authLoading: true };
+  // A signed-out visitor already on the Sign In screen doesn't need a link
+  // back to the page they're standing on -- the nav structure stays the
+  // same either way, this control is just omitted rather than pointing at
+  // itself.
+  const onAuthPage = location.pathname === '/auth';
   return (
     <header className="public-nav">
       <div className="public-nav__inner">
@@ -31,7 +37,7 @@ const PublicNav = () => {
               duplicated pair of controls for an authenticated visitor. */}
           {authLoading ? null : isAuthenticated ? (
             <AccountMenu />
-          ) : (
+          ) : onAuthPage ? null : (
             <Link className="public-nav__link public-nav__link--signin text-label" to="/auth">{t('home.nav.signIn')}</Link>
           )}
           {!isAuthenticated && (
