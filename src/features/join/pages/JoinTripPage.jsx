@@ -13,15 +13,9 @@ import { buildAuthUrl, nextFromLocation } from '../../../auth/safeNext';
 import { requestTokenKey } from '../../../pages/JoinRequestPage';
 import useJoinCapability from '../hooks/useJoinCapability';
 import { parseJoinInput } from '../utils/parseJoinInput';
+import { getJoinErrorKey } from '../joinErrors';
+import TripJoinPreview from '../components/TripJoinPreview';
 import '../styles/joinTrip.css';
-
-const POLICY_ICONS = { open: 'bi-globe2', approval_required: 'bi-shield-check', invite_only: 'bi-envelope' };
-
-const formatDateRange = (start, end) => {
-  if (!start && !end) return null;
-  const format = (value) => (value ? new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '?');
-  return `${format(start)} – ${format(end)}`;
-};
 
 /*
   Capability-driven state machine -- every meaningful decision (can this
@@ -31,6 +25,11 @@ const formatDateRange = (start, end) => {
   Submitting still independently re-validates everything server-side (see
   apps.trips.views.join_view) -- this page never treats a capability read
   as authorization on its own.
+
+  Lookup always requires an explicit action -- the FIND TRIP button click
+  or Enter as a convenience -- never a passive trigger like blur. Pasting
+  a complete code/link auto-commits the lookup (optional enhancement) but
+  never fires on every keystroke.
 
   A parsed "token" input (an invitation link, as opposed to a plain join
   code) hands off to the dedicated /invite/:token flow immediately rather
@@ -47,7 +46,7 @@ const JoinTripPage = () => {
   const [committedInput, setCommittedInput] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [serverError, setServerError] = useState('');
+  const [serverErrorKey, setServerErrorKey] = useState('');
   const [formGuest, setFormGuest] = useState({ guest_name: guestProfile?.display_name || '', avatar_key: 'avatar_02' });
 
   const { data: capability, loading: lookingUp, error: lookupError, parsed } = useJoinCapability(committedInput);
@@ -66,20 +65,30 @@ const JoinTripPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const commitLookup = () => {
-    const parsedNow = parseJoinInput(inputValue);
+  const commitLookup = (raw) => {
+    const parsedNow = parseJoinInput(raw ?? inputValue);
     if (parsedNow?.mode === 'token') {
       navigate(`/invite/${parsedNow.value}`);
       return;
     }
-    setServerError('');
-    setCommittedInput(inputValue);
+    setServerErrorKey('');
+    setCommittedInput(raw ?? inputValue);
   };
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
       commitLookup();
+    }
+  };
+
+  // Pasting a complete code/link may auto-start the lookup -- convenience
+  // only, the FIND TRIP button always remains the primary, visible action.
+  const handlePaste = (event) => {
+    const pasted = event.clipboardData?.getData('text');
+    if (pasted && parseJoinInput(pasted)) {
+      setInputValue(pasted);
+      commitLookup(pasted);
     }
   };
 
@@ -94,7 +103,7 @@ const JoinTripPage = () => {
     event.preventDefault();
     if (submitting || !canSubmit || parsed?.mode !== 'code') return;
     setSubmitting(true);
-    setServerError('');
+    setServerErrorKey('');
     try {
       const payload = { join_code: parsed.value, password };
       if (!user) {
@@ -113,7 +122,7 @@ const JoinTripPage = () => {
         navigate(`/trips/${result.trip.id}/overview`);
       }
     } catch (err) {
-      setServerError(err.message || t('show.Error.alert2'));
+      setServerErrorKey(getJoinErrorKey(err));
     } finally {
       setSubmitting(false);
     }
@@ -150,52 +159,29 @@ const JoinTripPage = () => {
                     type="text"
                     value={inputValue}
                     onChange={(event) => setInputValue(event.target.value)}
-                    onBlur={commitLookup}
                     onKeyDown={handleKeyDown}
+                    onPaste={handlePaste}
                     placeholder={t('joinTrip.codeOrLinkPlaceholder')}
                     autoComplete="off"
                   />
                 </div>
                 <p className="jt-field__helper text-copy-sm">{t('joinTrip.codeOrLinkHelper')}</p>
+                <LoadingButton
+                  type="button"
+                  className="jt-btn jt-btn--secondary jt-find-btn"
+                  onClick={() => commitLookup()}
+                  disabled={!inputValue.trim()}
+                  loading={lookingUp}
+                  loadingLabel={t('joinTrip.findingTrip')}
+                >
+                  <span>{t('joinTrip.findTrip')}</span>
+                  <i className="bi bi-search jt-find-btn__icon" aria-hidden="true" />
+                </LoadingButton>
               </div>
 
-              {lookingUp && <p className="jt-status text-copy-sm">{t('joinTrip.lookingUp')}</p>}
-              {!lookingUp && lookupError && <p className="jt-error" role="alert">{t('joinTrip.states.notFound')}</p>}
+              {!lookingUp && lookupError && <p className="jt-error" role="alert">{t(getJoinErrorKey(lookupError))}</p>}
 
-              {!lookingUp && trip && (
-                <section className="jt-found-panel">
-                  <header className="jt-found-panel__header">
-                    <span className="text-label">{t('joinTrip.tripFound')}</span>
-                    <i className="bi bi-check-circle-fill jt-found-panel__check" aria-hidden="true" />
-                  </header>
-                  <div className="jt-found-panel__body">
-                    <h2 className="jt-found-panel__title text-title">{trip.title}</h2>
-                    {formatDateRange(trip.start_date, trip.end_date) && (
-                      <p className="jt-found-panel__dates text-copy-sm">
-                        <i className="bi bi-calendar3" aria-hidden="true" />
-                        {formatDateRange(trip.start_date, trip.end_date)}
-                      </p>
-                    )}
-                    <div className="jt-found-panel__grid">
-                      <div>
-                        <span className="text-label">{t('joinTrip.baseCurrency')}</span>
-                        <bdi className="text-copy">{trip.currency}</bdi>
-                      </div>
-                      <div>
-                        <span className="text-label">{t('joinTrip.members')}</span>
-                        <span className="text-copy">{trip.member_count}</span>
-                      </div>
-                    </div>
-                    <div className="jt-found-panel__policy">
-                      <span className="text-label">{t('joinTrip.joinPolicyLabel')}</span>
-                      <span className="text-copy-sm">
-                        <i className={`bi ${POLICY_ICONS[trip.join_policy]}`} aria-hidden="true" />
-                        {t(`joinPolicy.${trip.join_policy}`)}
-                      </span>
-                    </div>
-                  </div>
-                </section>
-              )}
+              {!lookingUp && trip && <TripJoinPreview trip={trip} />}
 
               {action === 'already_member' && <p className="jt-status text-copy">{t('joinTrip.states.alreadyMember')}</p>}
               {action === 'invite_required' && <p className="jt-status text-copy">{t('joinTrip.states.inviteRequired')}</p>}
@@ -241,7 +227,7 @@ const JoinTripPage = () => {
                 </div>
               )}
 
-              {serverError && <p className="jt-error" role="alert">{serverError}</p>}
+              {serverErrorKey && <p className="jt-error" role="alert">{t(serverErrorKey)}</p>}
 
               <div className="jt-actions">
                 <button type="button" className="jt-btn jt-btn--secondary" onClick={cancel}>{t('common.cancel')}</button>

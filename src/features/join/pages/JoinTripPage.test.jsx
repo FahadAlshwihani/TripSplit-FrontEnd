@@ -144,3 +144,64 @@ test('cancel navigates authenticated visitors to Dashboard', async () => {
   fireEvent.click(screen.getByLabelText('common.cancel'));
   expect(screen.getByText('dashboard page')).toBeInTheDocument();
 });
+
+describe('explicit Find Trip action', () => {
+  test('the Find Trip button is disabled with empty input and enabled once text is entered', async () => {
+    await renderPage();
+    expect(screen.getByText('joinTrip.findTrip').closest('button')).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('joinTrip.codeOrLink'), { target: { value: 'ABCD1234' } });
+    expect(screen.getByText('joinTrip.findTrip').closest('button')).not.toBeDisabled();
+  });
+
+  test('clicking Find Trip triggers the lookup without needing Enter or blur', async () => {
+    getJoinCapability.mockResolvedValue({ mode: 'code', trip: TRIP_PREVIEW, action: 'ready_open' });
+    await renderPage();
+    fireEvent.change(screen.getByLabelText('joinTrip.codeOrLink'), { target: { value: 'ABCD1234' } });
+    await act(async () => {
+      fireEvent.click(screen.getByText('joinTrip.findTrip'));
+    });
+    expect(screen.getByText('Georgia Winter Trip')).toBeInTheDocument();
+    expect(getJoinCapability).toHaveBeenCalledWith({ mode: 'code', value: 'ABCD1234' }, expect.anything());
+  });
+
+  test('leaving the field (blur) alone does not trigger a lookup', async () => {
+    await renderPage();
+    fireEvent.change(screen.getByLabelText('joinTrip.codeOrLink'), { target: { value: 'ABCD1234' } });
+    fireEvent.blur(screen.getByLabelText('joinTrip.codeOrLink'));
+    await act(async () => {});
+    expect(getJoinCapability).not.toHaveBeenCalled();
+  });
+
+  test('pasting a complete code auto-starts the lookup while the button remains the primary action', async () => {
+    getJoinCapability.mockResolvedValue({ mode: 'code', trip: TRIP_PREVIEW, action: 'ready_open' });
+    await renderPage();
+    await act(async () => {
+      fireEvent.paste(screen.getByLabelText('joinTrip.codeOrLink'), { clipboardData: { getData: () => 'ABCD1234' } });
+    });
+    expect(screen.getByText('Georgia Winter Trip')).toBeInTheDocument();
+    expect(screen.getByText('joinTrip.findTrip').closest('button')).toBeInTheDocument();
+  });
+});
+
+describe('differentiated lookup errors', () => {
+  test('a trip-not-found response shows the not-found message', async () => {
+    getJoinCapability.mockRejectedValue({ status: 400, code: 'trip_not_found', message: 'No trip matches that code.' });
+    await renderPage();
+    await lookup();
+    expect(screen.getByRole('alert')).toHaveTextContent('joinTrip.errors.notFound');
+  });
+
+  test('a rate-limited response shows the rate-limit message, distinct from not-found', async () => {
+    getJoinCapability.mockRejectedValue({ status: 429, code: 'join_lookup_rate_limited', message: 'Too many lookups.' });
+    await renderPage();
+    await lookup();
+    expect(screen.getByRole('alert')).toHaveTextContent('joinTrip.errors.rateLimited');
+  });
+
+  test('a network failure shows the network-error message, distinct from not-found', async () => {
+    getJoinCapability.mockRejectedValue({ status: 0, code: 'network_error', message: 'Unable to reach the server.' });
+    await renderPage();
+    await lookup();
+    expect(screen.getByRole('alert')).toHaveTextContent('joinTrip.errors.network');
+  });
+});
