@@ -68,26 +68,27 @@ const AccountTripRow = ({ trip, onChanged }) => {
         <span className="acc-trip__currency-value text-copy">{trip.currency}</span>
         <div className="acc-trip__actions">
           {trip.capabilities.can_open && (
-            <button type="button" className="acc-btn acc-btn--primary" onClick={() => navigate(`/trips/${trip.id}/overview`)}>
+            <button type="button" className="acc-btn acc-btn--primary acc-trip__primary-action" onClick={() => navigate(`/trips/${trip.id}/overview`)}>
               {t('account.trips.openTrip')}
             </button>
           )}
           {trip.capabilities.can_rejoin && (
-            <button type="button" className="acc-btn acc-btn--primary" onClick={() => navigate(`/trips/join?code=${trip.join_code}`)}>
+            <button type="button" className="acc-btn acc-btn--primary acc-trip__primary-action" onClick={() => navigate(`/trips/join?code=${trip.join_code}`)}>
               {t('account.trips.rejoin')}
-            </button>
-          )}
-          {trip.capabilities.can_leave && (
-            <button type="button" className="acc-btn acc-btn--danger" onClick={() => setConfirmingLeave(true)}>
-              {t('account.trips.leaveTrip')}
             </button>
           )}
           {trip.capabilities.requires_transfer_before_leave && (
             <span className="acc-trip__transfer-hint text-copy-sm">{t('account.trips.transferBeforeLeave')}</span>
           )}
-          {(trip.capabilities.can_archive || trip.capabilities.can_restore || trip.capabilities.can_close) && (
+          {/* A destructive Leave action doesn't get equal visual weight to
+              Open Trip -- it lives behind the same compact "more actions"
+              disclosure owner-only lifecycle actions already use, not as a
+              second full-width button stacked under the primary one. */}
+          {(trip.capabilities.can_leave || trip.capabilities.can_archive || trip.capabilities.can_restore || trip.capabilities.can_close) && (
             <details className="acc-trip__more">
-              <summary className="acc-link">{t('account.trips.moreActions')}</summary>
+              <summary className="acc-trip__more-trigger" aria-label={t('account.trips.moreActions')} title={t('account.trips.moreActions')}>
+                <i className="bi bi-three-dots-vertical" aria-hidden="true" />
+              </summary>
               <div className="acc-trip__more-actions">
                 {trip.capabilities.can_close && (
                   <button type="button" className="acc-link" disabled={busyAction === 'close'} onClick={() => run('close', () => closeTrip(trip.id))}>{t('account.trips.closeTrip')}</button>
@@ -97,6 +98,9 @@ const AccountTripRow = ({ trip, onChanged }) => {
                 )}
                 {trip.capabilities.can_restore && (
                   <button type="button" className="acc-link" disabled={busyAction === 'restore'} onClick={() => run('restore', () => restoreTrip(trip.id))}>{t('account.trips.restoreTrip')}</button>
+                )}
+                {trip.capabilities.can_leave && (
+                  <button type="button" className="acc-link acc-link--danger" onClick={() => setConfirmingLeave(true)}>{t('account.trips.leaveTrip')}</button>
                 )}
               </div>
             </details>

@@ -58,6 +58,14 @@ test('renders the canonical identity, preferences, and notifications from the se
   expect(screen.getAllByRole('checkbox')[0]).toBeChecked();
 });
 
+test('Edit Profile and Change Email share the same equal-width layout container', async () => {
+  await renderPage();
+  const editButton = screen.getByText('account.identity.editProfile');
+  const emailButton = screen.getByText('account.identity.changeEmail');
+  expect(editButton.parentElement).toBe(emailButton.parentElement);
+  expect(editButton.parentElement).toHaveClass('acc-identity__actions');
+});
+
 test('editing display name saves through the canonical profile editor and returns to the hub', async () => {
   mockSaveProfile.mockResolvedValue({ ...baseUser, display_name: 'Fahad S.' });
   await renderPage();

@@ -84,7 +84,14 @@
 .acc-identity__meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .acc-identity__name { margin: 0; color: var(--color-text); }
 .acc-identity__email { margin: 0; color: var(--color-text-muted); overflow-wrap: anywhere; }
-.acc-identity__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+/* Grid, not flex -- Edit Profile / Change Email must be EXACTLY equal
+   width regardless of label length, never content-dependent sizing. */
+.acc-identity__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.acc-identity__actions .acc-btn { width: 100%; }
+
+@media (max-width: 359px) {
+  .acc-identity__actions { grid-template-columns: 1fr; }
+}
 
 .acc-badge {
   display: inline-flex;
@@ -228,7 +235,7 @@
 }
 .acc-trip-filters__tab.is-active { color: var(--nc-indigo-700); border-block-end-color: var(--nc-indigo-700); }
 
-.acc-trips__list { display: flex; flex-direction: column; gap: var(--space-3); }
+.acc-trips__list { display: flex; flex-direction: column; gap: var(--space-2); }
 .acc-trips__empty {
   display: flex;
   flex-direction: column;
@@ -240,9 +247,17 @@
 .acc-trips__empty-actions { display: flex; gap: var(--space-3); }
 .acc-trips__error { display: flex; flex-direction: column; gap: var(--space-3); align-items: flex-start; }
 
+/*
+  One compact horizontal ledger entry, not a modern SaaS card: content
+  determines the height (no stretched-empty columns), the right/aside
+  column stays narrow (~140px) and vertically centered, and a single
+  primary action plus a small kebab disclosure for anything secondary
+  (Leave Trip included) keep that column from ever growing taller than
+  the main content beside it.
+*/
 .acc-trip {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   box-shadow: 2px 2px 0 0 var(--color-border);
@@ -250,22 +265,23 @@
 }
 
 @media (min-width: 561px) {
-  .acc-trip { flex-direction: row; }
+  .acc-trip { grid-template-columns: minmax(0, 1fr) 150px; }
 }
 
-.acc-trip__main { padding: var(--space-3); flex: 1 1 auto; display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
-.acc-trip__badges { display: flex; gap: var(--space-2); }
+.acc-trip__main { padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: 2px; min-width: 0; justify-content: center; }
+.acc-trip__badges { display: flex; gap: var(--space-1); margin-block-end: 2px; }
 .acc-trip__title { margin: 0; color: var(--color-text); }
 .acc-trip__dates { margin: 0; color: var(--color-text-muted); }
 .acc-trip__notice { margin: 0; color: var(--color-text-muted); }
 
 .acc-trip__side {
-  padding: var(--space-3);
-  flex: 0 0 auto;
-  min-width: 170px;
+  position: relative;
+  padding: var(--space-2) var(--space-3);
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
   background: var(--color-surface-alt);
   border-inline-start: var(--border-width) solid var(--color-border);
 }
@@ -282,14 +298,42 @@
   .acc-trip__actions { margin-block-start: 0; }
 }
 
-.acc-trip__currency { color: var(--color-text-muted); text-transform: uppercase; }
-.acc-trip__currency-value { color: var(--color-text); font-size: 1.1em; }
-.acc-trip__actions { display: flex; flex-direction: column; gap: var(--space-2); margin-block-start: var(--space-1); }
-.acc-trip__transfer-hint { color: var(--color-text-muted); }
-.acc-trip__more { margin-block-start: var(--space-1); }
-.acc-trip__more summary { list-style: none; cursor: pointer; }
+.acc-trip__currency { color: var(--color-text-muted); text-transform: uppercase; font-size: 0.85em; }
+.acc-trip__currency-value { color: var(--color-text); }
+.acc-trip__actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-block-start: var(--space-1); }
+.acc-trip__primary-action { min-height: 36px; padding-block: var(--space-1); padding-inline: var(--space-3); }
+.acc-trip__transfer-hint { color: var(--color-text-muted); font-size: 0.85em; }
+
+.acc-trip__more summary { list-style: none; cursor: pointer; display: inline-flex; }
 .acc-trip__more summary::-webkit-details-marker { display: none; }
-.acc-trip__more-actions { display: flex; flex-direction: column; gap: var(--space-2); margin-block-start: var(--space-2); }
+.acc-trip__more-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+.acc-trip__more-trigger:hover { background: var(--color-surface-container); color: var(--color-text); }
+.acc-trip__more-actions {
+  position: absolute;
+  inset-inline-end: 0;
+  margin-block-start: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  min-width: 160px;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 2px 2px 0 0 var(--color-border);
+  z-index: 10;
+}
+.acc-link--danger { color: var(--color-danger); }
 
 .acc-badge--role-owner { background: var(--nc-indigo-100); color: var(--nc-indigo-700); }
 .acc-badge--role-member { background: var(--color-surface-alt); color: var(--color-text-muted); }

@@ -84,17 +84,38 @@ test('a closed trip shows the closed notice and no rejoin action', async () => {
   expect(screen.queryByText('account.trips.rejoin')).not.toBeInTheDocument();
 });
 
-test('leaving a trip opens a confirmation dialog before calling the leave endpoint', async () => {
+test('leaving a trip (behind the compact more-actions disclosure) opens a confirmation dialog before calling the leave endpoint', async () => {
   getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [activeMemberTrip] });
   leaveTrip.mockResolvedValue();
   await renderTrips();
-  fireEvent.click(await screen.findByText('account.trips.leaveTrip'));
+  // Leave Trip is not a standalone button -- it lives behind the same
+  // compact kebab disclosure owner-only lifecycle actions use, so it
+  // never carries the same visual weight as the primary Open Trip action.
+  fireEvent.click(await screen.findByLabelText('account.trips.moreActions'));
+  fireEvent.click(screen.getByText('account.trips.leaveTrip'));
   expect(screen.getByRole('alertdialog')).toBeInTheDocument();
   expect(leaveTrip).not.toHaveBeenCalled();
   await act(async () => {
     fireEvent.click(screen.getAllByText('account.trips.leaveTrip').at(-1));
   });
   expect(leaveTrip).toHaveBeenCalledWith('trip-b');
+});
+
+test('a member trip still exposes both Open Trip and (behind more-actions) Leave Trip', async () => {
+  getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [activeMemberTrip] });
+  await renderTrips();
+  expect(await screen.findByText('account.trips.openTrip')).toBeInTheDocument();
+  fireEvent.click(screen.getByLabelText('account.trips.moreActions'));
+  expect(screen.getByText('account.trips.leaveTrip')).toBeInTheDocument();
+});
+
+test('an owner trip preserves its owner-only lifecycle actions behind more-actions', async () => {
+  getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [activeOwnerTrip] });
+  await renderTrips();
+  fireEvent.click(await screen.findByLabelText('account.trips.moreActions'));
+  expect(screen.getByText('account.trips.closeTrip')).toBeInTheDocument();
+  expect(screen.getByText('account.trips.archiveTrip')).toBeInTheDocument();
+  expect(screen.queryByText('account.trips.leaveTrip')).not.toBeInTheDocument();
 });
 
 test('an owner sees a transfer-before-leave hint instead of a Leave button', async () => {
