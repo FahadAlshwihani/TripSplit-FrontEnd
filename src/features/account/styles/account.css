@@ -57,11 +57,21 @@
   background: var(--color-surface);
   border: var(--border-width-lg) solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: 2px 2px 0 0 var(--color-border);
+  box-shadow: var(--shadow-hard-sm);
   padding: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+
+/* A restrained whole-card press on hover, like the trip ledger rows --
+   excludes .acc-trips (the Your Trips panel), which hosts its own
+   individually-pressable trip rows and would otherwise double up. */
+.acc-card:not(.acc-trips):hover { transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+
+@media (prefers-reduced-motion: reduce) {
+  .acc-card { transition: none; }
 }
 
 .acc-card__title { margin: 0; color: var(--color-text); border-block-end: var(--border-width) solid var(--color-border-subtle); padding-block-end: var(--space-2); }
@@ -201,18 +211,24 @@
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 2px 2px 0 0 var(--color-border);
+  box-shadow: var(--shadow-hard-sm);
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
-.acc-btn:hover:not(:disabled) { background: var(--color-surface-container); }
-.acc-btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 0 0 0 0 var(--color-border); }
-.acc-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.acc-btn:hover:not(:disabled) { background: var(--color-surface-container); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.acc-btn:active:not(:disabled) { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
+.acc-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
 .acc-btn--primary { background: var(--nc-indigo-700); border-color: var(--nc-indigo-700); color: var(--nc-white); box-shadow: 2px 2px 0 0 var(--nc-indigo-700); }
-.acc-btn--primary:hover:not(:disabled) { background: var(--nc-indigo-800); }
+.acc-btn--primary:hover:not(:disabled) { background: var(--nc-indigo-800); box-shadow: 1px 1px 0 0 var(--nc-indigo-700); }
 .acc-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
 
 .acc-btn--danger { background: var(--color-danger-soft); border-color: var(--color-danger); color: var(--color-danger); box-shadow: 2px 2px 0 0 var(--color-danger); }
+.acc-btn--danger:hover:not(:disabled) { box-shadow: 1px 1px 0 0 var(--color-danger); }
 .acc-btn--danger:active:not(:disabled) { box-shadow: 0 0 0 0 var(--color-danger); }
+
+@media (prefers-reduced-motion: reduce) {
+  .acc-btn { transition: background-color 0.15s ease; }
+}
 
 .acc-link { background: none; border: none; padding: 0; color: var(--nc-indigo-700); text-decoration: underline; cursor: pointer; font: var(--text-label); text-transform: uppercase; letter-spacing: var(--tracking-label); }
 .acc-link:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -264,21 +280,34 @@
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
-  box-shadow: 2px 2px 0 0 var(--color-border);
+  box-shadow: var(--shadow-hard-sm);
   overflow: hidden;
   cursor: default;
+  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
 
 @media (min-width: 561px) {
   .acc-trip { grid-template-columns: minmax(0, 1fr) 150px; }
 }
 
-/* A restrained whole-row hover -- both zones step one surface level
-   darker together, keeping their relative contrast, rather than a
-   modern soft drop-shadow lift. Interactive controls inside (buttons,
-   the more-actions trigger) keep their own separate hover states. */
+/* A restrained whole-row press: the card moves inward and its shadow
+   collapses, exactly like a button, while both zones also step one
+   surface level darker together (keeping their relative contrast) --
+   not a modern soft drop-shadow lift. Interactive controls inside
+   (buttons, the more-actions trigger) keep their own separate hover
+   states on top of this. Safe with the more-actions popover specifically
+   BECAUSE that popover is rendered through a Portal to document.body
+   (see TripMoreActionsMenu) -- it is not a descendant of this
+   transformed element, so hovering/pressing the row can never drag the
+   already-open popover along with it or trap it in a new stacking
+   context created by this transform. */
+.acc-trip:hover { transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
 .acc-trip:hover .acc-trip__main { background: var(--color-surface-alt); }
 .acc-trip:hover .acc-trip__side { background: var(--color-surface-container); }
+
+@media (prefers-reduced-motion: reduce) {
+  .acc-trip { transition: background-color 0.15s ease; }
+}
 
 .acc-trip__main {
   padding: var(--space-3) var(--space-4);
@@ -338,11 +367,16 @@
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text-muted);
-  box-shadow: 2px 2px 0 0 var(--color-border);
+  box-shadow: var(--shadow-hard-sm);
   cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
-.acc-trip__more-trigger:hover { background: var(--color-surface-container); color: var(--color-text); }
-.acc-trip__more-trigger:active { transform: translate(2px, 2px); box-shadow: 0 0 0 0 var(--color-border); }
+.acc-trip__more-trigger:hover { background: var(--color-surface-container); color: var(--color-text); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.acc-trip__more-trigger:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
+
+@media (prefers-reduced-motion: reduce) {
+  .acc-trip__more-trigger { transition: background-color 0.15s ease, color 0.15s ease; }
+}
 
 /* Rendered through a portal to <body> (see TripMoreActionsMenu) -- these
    rules are visual only, positioning comes from the component's own
@@ -350,17 +384,53 @@
 .acc-trip__more-actions {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-2);
-  min-width: 160px;
+  gap: 2px;
+  padding: var(--space-1);
+  min-width: 190px;
   background: var(--color-surface);
   color: var(--color-text);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
-  box-shadow: 2px 2px 0 0 var(--color-border);
+  box-shadow: var(--shadow-hard-sm);
   z-index: 60;
 }
-.acc-link--danger { color: var(--color-danger); }
+
+/* Real menu-action controls (icon + label, full-row hit target) instead
+   of naked underlined text links -- each still gets the same hard-shadow
+   press treatment on hover as every other pressable control, just at a
+   compact menu-row scale (no visible border/shadow at rest, since a
+   whole stack of individually-elevated rows inside one already-elevated
+   popover would be visual overkill; the press communicates
+   interactivity on approach instead). */
+.acc-trip__more-action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease;
+}
+.acc-trip__more-action:hover:not(:disabled) { background: var(--color-surface-alt); transform: var(--press-sm-hover); }
+.acc-trip__more-action:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: -2px; }
+.acc-trip__more-action:disabled { opacity: 0.6; cursor: not-allowed; }
+.acc-trip__more-action-icon { flex: 0 0 auto; font-size: 1rem; color: var(--color-text-muted); }
+.acc-trip__more-action--danger { color: var(--color-danger); }
+.acc-trip__more-action--danger .acc-trip__more-action-icon { color: var(--color-danger); }
+.acc-trip__more-action--danger:hover:not(:disabled) { background: var(--color-danger-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  .acc-trip__more-action { transition: background-color 0.15s ease; }
+}
 
 .acc-badge--role-owner { background: var(--nc-indigo-100); color: var(--nc-indigo-700); }
 .acc-badge--role-member { background: var(--color-surface-alt); color: var(--color-text-muted); }

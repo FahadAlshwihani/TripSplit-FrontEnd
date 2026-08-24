@@ -41,6 +41,7 @@ const renderTrips = async () => {
       <Routes>
         <Route path="/account" element={<AccountTrips />} />
         <Route path="/trips/:id/overview" element={<p>trip overview page</p>} />
+        <Route path="/trips/:id/members" element={<p>trip members page</p>} />
         <Route path="/trips/join" element={<p>join trip page</p>} />
       </Routes>
     </MemoryRouter>
@@ -116,6 +117,27 @@ test('an owner trip preserves its owner-only lifecycle actions behind more-actio
   expect(screen.getByText('account.trips.closeTrip')).toBeInTheDocument();
   expect(screen.getByText('account.trips.archiveTrip')).toBeInTheDocument();
   expect(screen.queryByText('account.trips.leaveTrip')).not.toBeInTheDocument();
+});
+
+test('secondary trip actions render as real interactive controls, not naked text links', async () => {
+  getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [activeOwnerTrip] });
+  await renderTrips();
+  fireEvent.click(await screen.findByLabelText('account.trips.moreActions'));
+  const closeAction = screen.getByText('account.trips.closeTrip').closest('button');
+  expect(closeAction).not.toBeNull();
+  expect(closeAction).toHaveClass('acc-trip__more-action');
+  expect(closeAction.tagName).toBe('BUTTON');
+});
+
+test('an owner who cannot leave sees a Manage Ownership control (not just informational text) that hands off to the existing Members flow', async () => {
+  getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [activeOwnerTrip] });
+  await renderTrips();
+  expect(await screen.findByText('account.trips.transferBeforeLeave')).toBeInTheDocument();
+  fireEvent.click(screen.getByLabelText('account.trips.moreActions'));
+  const manageAction = screen.getByText('account.trips.manageOwnership').closest('button');
+  expect(manageAction).toHaveClass('acc-trip__more-action');
+  fireEvent.click(manageAction);
+  expect(await screen.findByText('trip members page')).toBeInTheDocument();
 });
 
 test('badges, title, and date render in the same fixed DOM order regardless of dir (RTL uses only logical CSS, never a different element order)', async () => {

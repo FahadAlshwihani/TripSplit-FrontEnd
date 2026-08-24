@@ -50,7 +50,8 @@ const AccountTripRow = ({ trip, onChanged }) => {
 
   const confirmLeave = () => run('leave', () => leaveTrip(trip.id)).finally(() => setConfirmingLeave(false));
 
-  const hasMoreActions = trip.capabilities.can_leave || trip.capabilities.can_archive || trip.capabilities.can_restore || trip.capabilities.can_close;
+  const hasMoreActions = trip.capabilities.can_leave || trip.capabilities.can_archive || trip.capabilities.can_restore
+    || trip.capabilities.can_close || trip.capabilities.requires_transfer_before_leave;
 
   return (
     <article className="acc-trip">
@@ -85,6 +86,12 @@ const AccountTripRow = ({ trip, onChanged }) => {
               {t('account.trips.rejoin')}
             </button>
           )}
+          {/* Information stays text; the actual action is always a real
+              button -- never naked instructional text pretending to be
+              interactive. The Account page has no member list to pick a
+              transfer target from, so this hands off to the existing
+              Members page (where transferOwnership already lives) rather
+              than inventing a transfer flow here. */}
           {trip.capabilities.requires_transfer_before_leave && (
             <span className="acc-trip__transfer-hint text-copy-sm">{t('account.trips.transferBeforeLeave')}</span>
           )}
@@ -95,22 +102,47 @@ const AccountTripRow = ({ trip, onChanged }) => {
               Portaled to <body> (see TripMoreActionsMenu) so it floats
               above every surrounding trip row instead of being clipped by
               this row's own overflow:hidden (needed to keep the main/aside
-              background split contained to one shared rounded corner). */}
+              background split contained to one shared rounded corner) and
+              is unaffected by this row's own hover/press transform. Rows
+              inside render as real menu-action controls (icon + label,
+              full hit target, hard-shadow press on hover) instead of
+              naked underlined text links. Only Leave is styled
+              destructive -- Close/Archive/Restore are all reversible
+              (a closed trip can be reopened, an archived one restored),
+              so they don't get red treatment just for being secondary. */}
           {hasMoreActions && (
             <TripMoreActionsMenu label={t('account.trips.moreActions')}>
               {({ close }) => (
                 <>
+                  {trip.capabilities.requires_transfer_before_leave && (
+                    <button type="button" className="acc-trip__more-action" onClick={() => { close(); navigate(`/trips/${trip.id}/members`); }}>
+                      <i className="bi bi-people acc-trip__more-action-icon" aria-hidden="true" />
+                      {t('account.trips.manageOwnership')}
+                    </button>
+                  )}
                   {trip.capabilities.can_close && (
-                    <button type="button" className="acc-link" disabled={busyAction === 'close'} onClick={() => { close(); run('close', () => closeTrip(trip.id)); }}>{t('account.trips.closeTrip')}</button>
+                    <button type="button" className="acc-trip__more-action" disabled={busyAction === 'close'} onClick={() => { close(); run('close', () => closeTrip(trip.id)); }}>
+                      <i className="bi bi-lock acc-trip__more-action-icon" aria-hidden="true" />
+                      {t('account.trips.closeTrip')}
+                    </button>
                   )}
                   {trip.capabilities.can_archive && (
-                    <button type="button" className="acc-link" disabled={busyAction === 'archive'} onClick={() => { close(); run('archive', () => archiveTrip(trip.id)); }}>{t('account.trips.archiveTrip')}</button>
+                    <button type="button" className="acc-trip__more-action" disabled={busyAction === 'archive'} onClick={() => { close(); run('archive', () => archiveTrip(trip.id)); }}>
+                      <i className="bi bi-archive acc-trip__more-action-icon" aria-hidden="true" />
+                      {t('account.trips.archiveTrip')}
+                    </button>
                   )}
                   {trip.capabilities.can_restore && (
-                    <button type="button" className="acc-link" disabled={busyAction === 'restore'} onClick={() => { close(); run('restore', () => restoreTrip(trip.id)); }}>{t('account.trips.restoreTrip')}</button>
+                    <button type="button" className="acc-trip__more-action" disabled={busyAction === 'restore'} onClick={() => { close(); run('restore', () => restoreTrip(trip.id)); }}>
+                      <i className="bi bi-arrow-counterclockwise acc-trip__more-action-icon" aria-hidden="true" />
+                      {t('account.trips.restoreTrip')}
+                    </button>
                   )}
                   {trip.capabilities.can_leave && (
-                    <button type="button" className="acc-link acc-link--danger" onClick={() => { close(); setConfirmingLeave(true); }}>{t('account.trips.leaveTrip')}</button>
+                    <button type="button" className="acc-trip__more-action acc-trip__more-action--danger" onClick={() => { close(); setConfirmingLeave(true); }}>
+                      <i className="bi bi-box-arrow-right acc-trip__more-action-icon" aria-hidden="true" />
+                      {t('account.trips.leaveTrip')}
+                    </button>
                   )}
                 </>
               )}
