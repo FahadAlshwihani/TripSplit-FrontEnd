@@ -62,10 +62,10 @@ test('anonymous email-bound invitation requests and auto-starts the invitation-s
   expect(await screen.findByText('auth.otp.title')).toBeInTheDocument();
 });
 
-test('verifying the OTP signs the user in and accepts once onboarding is already complete', async () => {
+test('verifying the OTP signs the user in, then requires an explicit JOIN TRIP click to accept', async () => {
   getJoinCapability
     .mockResolvedValueOnce({ mode: 'invitation', trip: { title: 'Georgia' }, action: 'needs_email_verification', masked_email: 'i***e@example.com', matches_current_session: null })
-    .mockResolvedValueOnce({ mode: 'invitation', trip: { title: 'Georgia' }, action: 'needs_email_verification', masked_email: 'i***e@example.com', matches_current_session: true });
+    .mockResolvedValueOnce({ mode: 'invitation', trip: { title: 'Georgia', currency: 'SAR', join_policy: 'open', member_count: 3 }, action: 'needs_email_verification', masked_email: 'i***e@example.com', matches_current_session: true });
   requestInvitationOtp.mockResolvedValue({ otp_id: 42 });
   verifyInvitationOtp.mockResolvedValue({ user: { email: 'invitee@example.com', onboarding_complete: true }, is_new_user: false, onboarding_required: false });
   acceptInvitation.mockResolvedValue({ trip: { id: 'trip-1' } });
@@ -77,17 +77,26 @@ test('verifying the OTP signs the user in and accepts once onboarding is already
   fireEvent.click(screen.getByText('auth.otp.verify'));
 
   await waitFor(() => expect(verifyInvitationOtp).toHaveBeenCalledWith('secrettoken1234567890', { otp_id: 42, code: '123456' }));
+  expect(await screen.findByText('invitation.youreInvited')).toBeInTheDocument();
+  expect(acceptInvitation).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByText('joinTrip.joinTripButton'));
   await waitFor(() => expect(acceptInvitation).toHaveBeenCalledWith('secrettoken1234567890', {}));
   expect(await screen.findByText('trip opened')).toBeInTheDocument();
 });
 
-test('an already-authenticated matching session accepts immediately with no OTP shown', async () => {
+test('an already-authenticated matching session shows a YOU\'RE INVITED confirmation, no OTP, and requires an explicit JOIN TRIP click', async () => {
   mockUser = { email: 'invitee@example.com' };
-  getJoinCapability.mockResolvedValue({ mode: 'invitation', trip: { title: 'Georgia' }, action: 'needs_email_verification', masked_email: 'i***e@example.com', matches_current_session: true });
+  getJoinCapability.mockResolvedValue({ mode: 'invitation', trip: { title: 'Georgia', currency: 'SAR', join_policy: 'open', member_count: 3 }, action: 'needs_email_verification', masked_email: 'i***e@example.com', matches_current_session: true });
   acceptInvitation.mockResolvedValue({ trip: { id: 'trip-1' } });
   await renderPage();
-  await waitFor(() => expect(acceptInvitation).toHaveBeenCalledWith('secrettoken1234567890', {}));
+  expect(await screen.findByText('invitation.youreInvited')).toBeInTheDocument();
+  expect(screen.getByText('Georgia')).toBeInTheDocument();
   expect(requestInvitationOtp).not.toHaveBeenCalled();
+  expect(acceptInvitation).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByText('joinTrip.joinTripButton'));
+  await waitFor(() => expect(acceptInvitation).toHaveBeenCalledWith('secrettoken1234567890', {}));
   expect(await screen.findByText('trip opened')).toBeInTheDocument();
 });
 
