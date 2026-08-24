@@ -102,6 +102,44 @@ test('leaving a trip (behind the compact more-actions disclosure) opens a confir
   expect(leaveTrip).toHaveBeenCalledWith('trip-b');
 });
 
+test('the leave confirmation dialog renders through a portal to document.body, not nested inside the pressable trip card', async () => {
+  getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [activeMemberTrip] });
+  await renderTrips();
+  fireEvent.click(await screen.findByLabelText('account.trips.moreActions'));
+  fireEvent.click(screen.getByText('account.trips.leaveTrip'));
+  const dialog = screen.getByRole('alertdialog');
+  // .acc-trip gets `transform` on hover (the global press system); a
+  // transformed ancestor becomes the containing block for a fixed-position
+  // descendant, which trapped this dialog inside the card's own small box
+  // before it was portaled. Asserting it's not a descendant of .acc-trip
+  // at all is the real regression guard, not just "it's visible".
+  expect(dialog.closest('.acc-trip')).toBeNull();
+  expect(dialog.closest('.acc-card')).toBeNull();
+  expect(dialog.closest('body')).toBe(document.body);
+});
+
+test('the leave confirmation dialog is present at rest -- opening/closing it never depends on hovering the card', async () => {
+  getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [activeMemberTrip] });
+  await renderTrips();
+  expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  fireEvent.click(await screen.findByLabelText('account.trips.moreActions'));
+  fireEvent.click(screen.getByText('account.trips.leaveTrip'));
+  expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+  fireEvent.click(screen.getByText('common.cancel'));
+  expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+});
+
+test('Escape cancels the leave confirmation dialog without calling the leave endpoint', async () => {
+  getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [activeMemberTrip] });
+  await renderTrips();
+  fireEvent.click(await screen.findByLabelText('account.trips.moreActions'));
+  fireEvent.click(screen.getByText('account.trips.leaveTrip'));
+  expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  expect(leaveTrip).not.toHaveBeenCalled();
+});
+
 test('a member trip still exposes both Open Trip and (behind more-actions) Leave Trip', async () => {
   getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [activeMemberTrip] });
   await renderTrips();

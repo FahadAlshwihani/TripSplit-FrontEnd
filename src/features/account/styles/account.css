@@ -218,6 +218,12 @@
 .acc-btn:active:not(:disabled) { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
 .acc-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
+/* A loading button is still an active, in-progress button, not an
+   unavailable one -- same contract as .auth-btn--loading/.ct-btn--loading.
+   Keeps fill/border/shadow/text exactly as normal; only cursor and
+   duplicate-submit prevention come from `disabled`. */
+.acc-btn--loading.acc-btn:disabled { opacity: 1; cursor: progress; transform: none; }
+
 .acc-btn--primary { background: var(--nc-indigo-700); border-color: var(--nc-indigo-700); color: var(--nc-white); box-shadow: 2px 2px 0 0 var(--nc-indigo-700); }
 .acc-btn--primary:hover:not(:disabled) { background: var(--nc-indigo-800); box-shadow: 1px 1px 0 0 var(--nc-indigo-700); }
 .acc-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
@@ -392,7 +398,7 @@
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-hard-sm);
-  z-index: 60;
+  z-index: var(--z-popover);
 }
 
 /* Real menu-action controls (icon + label, full-row hit target) instead
@@ -440,6 +446,14 @@
 
 /* Dialog */
 
+/* Rendered through a portal to <body> (see ModalPortal) -- this dialog
+   must never be a descendant of a pressable/transformed element (.acc-trip,
+   .acc-card): a transformed ancestor becomes the containing block for any
+   `position: fixed` child, which trapped this overlay inside the trip
+   row's own small box instead of covering the viewport whenever that row
+   was hovered. z-index comes from the shared layer scale so it's
+   guaranteed to sit above dropdowns/popovers (--z-dropdown/--z-popover)
+   regardless of DOM order. */
 .acc-dialog-overlay {
   position: fixed;
   inset: 0;
@@ -448,14 +462,14 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-4);
-  z-index: 100;
+  z-index: var(--z-modal);
 }
 
 .acc-dialog {
   background: var(--color-surface);
   border: var(--border-width-lg) solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: 4px 4px 0 0 var(--color-border);
+  box-shadow: var(--shadow-hard-md);
   padding: var(--space-6);
   max-width: 420px;
   width: 100%;

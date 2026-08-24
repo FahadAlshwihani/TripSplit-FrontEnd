@@ -27,7 +27,7 @@
 .public-nav {
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: var(--z-sticky);
   background: var(--color-bg);
   border-block-end: var(--border-width) solid var(--color-border);
 }
@@ -112,6 +112,13 @@
   overflow: hidden;
 }
 
+/* Segmented option and icon toggle both join the global physical-press
+   system (transform/shadow only) while keeping their own compact
+   bordered-segment shape, colors, and sizing untouched -- pressing must
+   never turn these into generic CTAs. Hover only tints the *unselected*
+   background (:not(.is-active)); the selected option gets its own
+   slightly-darker-than-selected hover instead, so hovering an active
+   segment can never read as "deselected". */
 .utility-switch__option {
   background: var(--color-surface);
   color: var(--color-text-muted);
@@ -122,7 +129,7 @@
   font: var(--text-label);
   letter-spacing: var(--tracking-label);
   cursor: pointer;
-  transition: background-color .15s ease, color .15s ease;
+  transition: background-color .15s ease, color .15s ease, transform var(--press-duration) ease;
 }
 
 .utility-switch__option + .utility-switch__option {
@@ -130,11 +137,15 @@
 }
 
 .utility-switch__option:hover:not(.is-active) { background: var(--color-surface-alt); }
+.utility-switch__option:hover { transform: var(--press-sm-hover); }
+.utility-switch__option:active { transform: var(--press-sm-active); }
 
 .utility-switch__option.is-active {
   background: var(--color-primary);
   color: var(--color-primary-contrast);
 }
+
+.utility-switch__option.is-active:hover { background: var(--nc-indigo-800); }
 
 .utility-toggle {
   display: inline-flex;
@@ -148,10 +159,17 @@
   background: var(--color-surface);
   color: var(--color-text);
   cursor: pointer;
-  transition: background-color .15s ease;
+  transition: background-color .15s ease, transform var(--press-duration) ease;
 }
 
-.utility-toggle:hover { background: var(--color-surface-alt); }
+.utility-toggle:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); }
+.utility-toggle:active { transform: var(--press-sm-active); }
+
+@media (prefers-reduced-motion: reduce) {
+  .utility-switch__option, .utility-toggle { transition: background-color .15s ease, color .15s ease; }
+  .utility-switch__option:hover, .utility-switch__option:active,
+  .utility-toggle:hover, .utility-toggle:active { transform: none; }
+}
 
 @media (max-width: 430px) {
   .utility-switch__option { min-width: 28px; min-height: 28px; padding: 0 var(--space-1); }
@@ -178,9 +196,16 @@
   min-height: 40px;
   cursor: pointer;
   color: var(--color-text);
+  transition: background-color .15s ease, transform var(--press-duration) ease;
 }
 
-.account-menu__trigger:hover { background: var(--color-surface-alt); }
+.account-menu__trigger:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); }
+.account-menu__trigger:active { transform: var(--press-sm-active); }
+
+@media (prefers-reduced-motion: reduce) {
+  .account-menu__trigger { transition: background-color .15s ease; }
+  .account-menu__trigger:hover, .account-menu__trigger:active { transform: none; }
+}
 
 .account-menu__name {
   color: var(--color-text);
@@ -209,7 +234,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  z-index: 40;
+  z-index: var(--z-dropdown);
 }
 
 .account-menu__header { display: flex; flex-direction: column; gap: 2px; padding: var(--space-2) var(--space-2) var(--space-3); }
@@ -278,10 +303,24 @@
   padding: var(--space-1) var(--space-2);
   font: var(--text-label);
   cursor: pointer;
+  transition: background-color .15s ease, color .15s ease, transform var(--press-duration) ease;
 }
 
 .account-menu__toggle-option + .account-menu__toggle-option { border-inline-start: var(--border-width) solid var(--color-border); }
 .account-menu__toggle-option.is-active { background: var(--nc-indigo-700); color: var(--nc-white); }
+
+/* Same guarded pattern as .utility-switch__option -- hovering the
+   selected segment darkens it further instead of ever reading as
+   unselected, and every segment still gets a restrained press. */
+.account-menu__toggle-option:hover:not(.is-active) { background: var(--color-surface-alt); }
+.account-menu__toggle-option.is-active:hover { background: var(--nc-indigo-800); }
+.account-menu__toggle-option:hover { transform: var(--press-sm-hover); }
+.account-menu__toggle-option:active { transform: var(--press-sm-active); }
+
+@media (prefers-reduced-motion: reduce) {
+  .account-menu__toggle-option { transition: background-color .15s ease, color .15s ease; }
+  .account-menu__toggle-option:hover, .account-menu__toggle-option:active { transform: none; }
+}
 
 /* ---------------------------------------------------------------------- */
 /* Buttons — shared primitive for every public page */

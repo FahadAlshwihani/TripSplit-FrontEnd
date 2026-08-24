@@ -124,6 +124,19 @@
   --press-md-hover: translate(2px, 2px);
   --press-md-active: translate(4px, 4px);
 
+  /* Canonical layer scale for anything in the pressable/elevated system
+     that stacks above normal page flow -- sticky nav, dropdowns/popovers,
+     and modals. Portal-rendered overlays (account menu, trip more-actions,
+     the account dialog) consume these instead of ad-hoc numbers, so their
+     relative order is guaranteed regardless of where in the DOM tree they
+     render from. Does not attempt to renumber the whole app's pre-existing
+     unrelated z-index usage (toasts, legacy dashboard chrome, charts). */
+  --z-sticky: 30;
+  --z-dropdown: 40;
+  --z-popover: 60;
+  --z-modal-backdrop: 1000;
+  --z-modal: 1001;
+
   /* Spacing scale (4px base) */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
