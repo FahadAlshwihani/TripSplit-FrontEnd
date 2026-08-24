@@ -5,12 +5,25 @@
 .currency-picker__input {
   width: 100%;
   min-height: 48px;
-  padding-inline: var(--space-3);
+  padding-inline: var(--space-3) var(--space-8);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
   font: var(--text-body);
+}
+
+/* Purely decorative -- signals "this opens a dropdown" the way the
+   Stitch reference's collapsed currency field shows a trailing chevron,
+   matching Bootstrap Icons' visual language already used everywhere else
+   in this field system. No picker behavior depends on it. */
+.currency-picker__chevron {
+  position: absolute;
+  inset-inline-end: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
 }
 
 .currency-picker__input::placeholder {

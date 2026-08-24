@@ -115,6 +115,7 @@ const CurrencyPicker = ({ id, value, onChange, label, required }) => {
         onKeyDown={handleKeyDown}
         required={required}
       />
+      <i className="bi bi-chevron-down currency-picker__chevron" aria-hidden="true" />
       {open && (
         <ul className="currency-picker__listbox" role="listbox" id={listboxId} aria-label={label}>
           {!currencies && !error && <li className="currency-picker__empty">{t('common.loading')}</li>}
