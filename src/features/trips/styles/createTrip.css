@@ -137,6 +137,7 @@
 }
 
 .ct-segmented__option {
+  position: relative;
   flex: 1 1 0;
   display: flex;
   align-items: center;
@@ -150,6 +151,19 @@
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
+/* Unselected icon/text get their own explicit color instead of relying
+   purely on inheritance from .ct-segmented__option -- this is a fully
+   opaque, full-contrast token (never a faded/opacity value), and setting
+   it directly on each descendant means no unrelated global rule
+   targeting a bare `i`/`span` element could ever win by being more
+   specific than plain inheritance would allow. Never disabled: these are
+   always-selectable radio options, and must never look otherwise. */
+.ct-segmented__option:not(.is-active) i,
+.ct-segmented__option:not(.is-active) span {
+  color: var(--color-text);
+  opacity: 1;
+}
+
 .ct-segmented__option:last-child { border-inline-end: none; }
 
 .ct-segmented__option:hover:not(.is-active) { background: var(--color-surface-container); }
@@ -159,6 +173,12 @@
   color: var(--nc-white);
 }
 
+.ct-segmented__option.is-active i,
+.ct-segmented__option.is-active span {
+  color: var(--nc-white);
+  opacity: 1;
+}
+
 .ct-segmented__input {
   position: absolute;
   width: 1px;
@@ -166,6 +186,17 @@
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* The radio itself is visually hidden (see above), so its native focus
+   ring would otherwise be invisible entirely -- :focus-within on the
+   label fires exactly when its one focusable descendant (the radio) has
+   keyboard focus, giving a focus indicator that's independent of
+   selected/unselected color, as required. */
+.ct-segmented__option:focus-within {
+  outline: var(--border-width-lg) solid var(--nc-indigo-700);
+  outline-offset: 2px;
+  z-index: 1;
 }
 
 .ct-error {
