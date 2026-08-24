@@ -46,7 +46,7 @@ const DashboardPage = () => {
               <span>{user.email}</span>
             </div>
             <div className="dashboard-identity__actions">
-              <Link className="pc-btn-join" to="/account/profile">{t('trip.settings')}</Link>
+              <Link className="pc-btn-join" to="/account">{t('account.pageTitle')}</Link>
               <button type="button" className="pc-btn-join" onClick={logout}>{t('common.logOut')}</button>
             </div>
           </div>

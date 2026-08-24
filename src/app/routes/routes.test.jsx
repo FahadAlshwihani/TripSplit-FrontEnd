@@ -148,9 +148,22 @@ test('legacy "/profile" still redirects into the account route', () => {
     <MemoryRouter initialEntries={['/profile']}>
       <Routes>
         {legacyRoute}
-        <Route path="/account/profile" element={<p>account profile</p>} />
+        <Route path="/account" element={<p>account hub</p>} />
       </Routes>
     </MemoryRouter>
   );
-  expect(screen.getByText('account profile')).toBeInTheDocument();
+  expect(screen.getByText('account hub')).toBeInTheDocument();
+});
+
+test('legacy "/account/profile" still redirects into the account hub', () => {
+  const legacyRoute = accountRoutes.find((route) => route.key === 'account-profile-redirect');
+  render(
+    <MemoryRouter initialEntries={['/account/profile']}>
+      <Routes>
+        {legacyRoute}
+        <Route path="/account" element={<p>account hub</p>} />
+      </Routes>
+    </MemoryRouter>
+  );
+  expect(screen.getByText('account hub')).toBeInTheDocument();
 });

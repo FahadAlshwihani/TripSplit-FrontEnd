@@ -22,7 +22,7 @@ const renderPage = async (entry = '/trips/join') => {
         <Route path="/join-request/:id" element={<p>join request page</p>} />
         <Route path="/invite/:token" element={<p>invitation page</p>} />
         <Route path="/dashboard" element={<p>dashboard page</p>} />
-        <Route path="/account/profile" element={<p>account profile page</p>} />
+        <Route path="/account" element={<p>account profile page</p>} />
         <Route path="/" element={<p>home page</p>} />
       </Routes>
     </MemoryRouter>

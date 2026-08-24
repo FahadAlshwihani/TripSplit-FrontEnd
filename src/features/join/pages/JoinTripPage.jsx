@@ -119,14 +119,14 @@ const JoinTripPage = () => {
   };
 
   const cancel = () => navigate(user ? '/dashboard' : '/');
-  // A registered user edits their real account profile (existing
-  // /account/profile route); a guest edits the local device profile
-  // inline, right here, without ever being sent through the login
+  // A registered user edits their real account profile (the Global
+  // Account Hub's inline Edit Profile); a guest edits the local device
+  // profile inline, right here, without ever being sent through the login
   // gateway. Both cases return to this exact Join Trip attempt afterwards
   // -- the registered case via safe internal `next` continuation, the
   // guest case because it never actually leaves the page.
   const changeIdentity = () => {
-    if (user) navigate('/account/profile', { state: { next: nextFromLocation(location) } });
+    if (user) navigate('/account', { state: { next: nextFromLocation(location) } });
     else setEditingGuestIdentity(true);
   };
   const saveGuestIdentity = (profile) => {
