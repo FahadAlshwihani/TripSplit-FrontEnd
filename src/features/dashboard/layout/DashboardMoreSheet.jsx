@@ -35,11 +35,22 @@ const DashboardMoreSheet = ({ tripId, favorites, permissions, onClose }) => {
   // DashboardShell's `{moreOpen && <DashboardMoreSheet .../>}`), so a
   // plain `useEffect(..., [location.pathname])` would also fire once on
   // that very first mount and close the sheet immediately after opening
-  // it -- the ref skips exactly that first run.
-  const mounted = useRef(false);
+  // it. A "have I run before" ref guard looks like the fix, but it
+  // isn't StrictMode-safe: React 18 intentionally mounts every component
+  // twice in development (setup, cleanup, setup again) to surface
+  // exactly this class of bug, and a plain ref survives that cleanup --
+  // so the guard flips true on the first synthetic pass and the second
+  // pass reads it as "already mounted" and closes the sheet right after
+  // it opens (the reported open/close flicker). Comparing against the
+  // pathname captured at open time is idempotent instead of stateful:
+  // re-running the same comparison twice with the same inputs is a
+  // no-op either way, and it only fires onClose once the pathname has
+  // actually changed. useRef's initializer only applies on the very
+  // first render, so this stays correct even under StrictMode's double
+  // render.
+  const openedPathname = useRef(location.pathname);
   useEffect(() => {
-    if (!mounted.current) { mounted.current = true; return; }
-    onClose();
+    if (location.pathname !== openedPathname.current) onClose();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
