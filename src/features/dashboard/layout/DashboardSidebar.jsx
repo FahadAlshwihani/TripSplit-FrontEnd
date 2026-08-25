@@ -1,14 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { DASHBOARD_NAV_ITEMS, DASHBOARD_FOOTER_ITEMS, visibleNavItems } from './dashboardNav';
+import { DASHBOARD_NAV_ITEMS, DASHBOARD_FOOTER_ITEMS, TRIP_IDENTITY_ICON, tripState, visibleNavItems } from './dashboardNav';
 import { formatDateRange } from '../../../shared/utils/format';
-
-const tripState = (trip) => {
-  if (trip.archived_at) return { key: 'archived', label: 'dashboard.trip.state.archived' };
-  if (trip.lifecycle_status === 'closed') return { key: 'closed', label: 'dashboard.trip.state.closed' };
-  return { key: 'active', label: 'dashboard.trip.state.active' };
-};
 
 const DashboardSidebar = ({ trip, tripId, permissions }) => {
   const { t } = useTranslation();
@@ -18,7 +12,7 @@ const DashboardSidebar = ({ trip, tripId, permissions }) => {
   return (
     <nav className="dash-sidebar" aria-label={t('dashboard.nav.groupLabel')}>
       <div className="dash-sidebar__trip">
-        <div className="dash-sidebar__icon" aria-hidden="true"><i className="bi bi-compass" /></div>
+        <div className="dash-sidebar__icon" aria-hidden="true"><i className={`bi ${TRIP_IDENTITY_ICON}`} /></div>
         <div className="dash-sidebar__trip-text">
           <h2 className="dash-sidebar__trip-name text-headline-sm">{trip.title}</h2>
           {dateRange && <p className="dash-sidebar__trip-dates text-label">{dateRange}</p>}

@@ -22,10 +22,34 @@ export const DASHBOARD_FOOTER_ITEMS = [
   { key: 'support', path: 'support', icon: 'bi-question-circle', labelKey: 'dashboard.nav.support' },
 ];
 
-// The four highest-frequency destinations get their own bottom-nav slot;
-// everything else (including the two footer items above) lives behind
-// "More" -- keeps the bottom nav to 5 slots instead of cramming in every
-// destination (explicitly called out as a mobile anti-pattern to avoid).
-export const MOBILE_PRIMARY_KEYS = ['overview', 'expenses', 'fund', 'members'];
+// Exactly three favorites get their own bottom-nav slot, plus "More" --
+// four slots total, not every destination crammed in (an explicit
+// mobile anti-pattern). A plain array (not three hardcoded JSX blocks)
+// so a future Settings screen can let a member pick their own 3 without
+// touching MobileBottomNav/DashboardMoreSheet -- both already derive
+// their contents from whatever list they're given.
+export const DEFAULT_MOBILE_FAVORITES = ['overview', 'expenses', 'fund'];
+
+// Resolves the favorites to actually render: a member's saved choice if
+// one exists (not implemented yet -- no Settings UI for it in this
+// pass), otherwise the default three. Centralizing the fallback here
+// means the future customization feature only has to supply
+// `customFavorites` and never has to know this default.
+export const resolveMobileFavorites = (customFavorites) => (
+  Array.isArray(customFavorites) && customFavorites.length ? customFavorites : DEFAULT_MOBILE_FAVORITES
+);
 
 export const visibleNavItems = (items, permissions) => items.filter((item) => !item.requires || permissions?.[item.requires]);
+
+// The travel/airplane identity icon shared by the desktop sidebar and
+// mobile header -- one place so both surfaces can never quietly drift
+// to different icons for the same trip.
+export const TRIP_IDENTITY_ICON = 'bi-airplane';
+
+// Shared trip lifecycle -> badge mapping (desktop sidebar + mobile
+// header both show the same badge for the same trip).
+export const tripState = (trip) => {
+  if (trip.archived_at) return { key: 'archived', label: 'dashboard.trip.state.archived' };
+  if (trip.lifecycle_status === 'closed') return { key: 'closed', label: 'dashboard.trip.state.closed' };
+  return { key: 'active', label: 'dashboard.trip.state.active' };
+};
