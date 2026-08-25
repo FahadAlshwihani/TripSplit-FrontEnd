@@ -265,5 +265,19 @@
   "theme.switchToDark": "التبديل إلى الوضع الداكن",
   "language.groupLabel": "اللغة",
   "language.switchToEnglish": "التبديل إلى الإنجليزية",
-  "language.switchToArabic": "التبديل إلى العربية"
+  "language.switchToArabic": "التبديل إلى العربية",
+  "common.home": "الرئيسية",
+  "trip.errors.accessDenied": "ليس لديك صلاحية الوصول إلى هذه الرحلة.", "trip.errors.notFound": "لم يتم العثور على الرحلة.", "trip.errors.banned": "لا يمكنك الوصول إلى هذه الرحلة.", "trip.errors.guestAccessExpired": "انتهت صلاحية وصولك كضيف. يرجى الانضمام مجددًا.",
+  "dashboard.nav.groupLabel": "التنقل بين أقسام الرحلة", "dashboard.nav.overview": "نظرة عامة", "dashboard.nav.expenses": "المصروفات", "dashboard.nav.balances": "الأرصدة", "dashboard.nav.fund": "صندوق الرحلة", "dashboard.nav.members": "الأعضاء", "dashboard.nav.activity": "النشاط", "dashboard.nav.governance": "إدارة الرحلة", "dashboard.nav.settlements": "التسويات", "dashboard.nav.settings": "الإعدادات", "dashboard.nav.support": "المساعدة",
+  "dashboard.newExpense": "مصروف جديد", "dashboard.quickExpense": "إضافة سريعة", "dashboard.addMember": "إضافة عضو", "dashboard.searchPlaceholder": "ابحث في المصروفات...", "dashboard.more": "المزيد", "dashboard.switchTrip": "تبديل الرحلة",
+  "dashboard.trip.state.active": "نشطة", "dashboard.trip.state.closed": "مغلقة", "dashboard.trip.state.archived": "مؤرشفة",
+  "dashboard.overview.title": "نظرة عامة", "dashboard.overview.subtitle": "ملخص سريع لوضع الرحلة المالي، والمصروفات، ورصيدك الحالي في {{tripName}}.",
+  "dashboard.overview.totalBudget": "الميزانية الإجمالية", "dashboard.overview.totalSpent": "إجمالي المصروف", "dashboard.overview.remaining": "المتبقي", "dashboard.overview.myBalance": "رصيدي", "dashboard.overview.noBudgetSet": "لم تُحدد ميزانية",
+  "dashboard.overview.categoryLedger": "سجل الفئات", "dashboard.overview.viewDetails": "عرض التفاصيل", "dashboard.overview.noCategorizedExpenses": "لا توجد مصروفات مصنفة حتى الآن.",
+  "dashboard.overview.spendingSplit": "تقسيم الإنفاق", "dashboard.overview.shared": "مشترك", "dashboard.overview.personal": "شخصي", "dashboard.overview.total": "الإجمالي",
+  "dashboard.overview.recentActivity": "النشاط الأخير", "dashboard.overview.viewAll": "عرض الكل", "dashboard.overview.noActivity": "لا يوجد نشاط حديث بعد.",
+  "dashboard.overview.columnDescription": "الوصف", "dashboard.overview.columnDate": "التاريخ", "dashboard.overview.columnAmount": "المبلغ",
+  "dashboard.overview.paidBy": "دفعها {{name}} • {{scope}}", "dashboard.overview.sharedExpense": "مشترك", "dashboard.overview.personalExpense": "شخصي", "dashboard.overview.settlementLabel": "تسوية", "dashboard.overview.settlementContext": "{{from}} → {{to}}",
+  "dashboard.overview.errorLoad": "تعذر تحميل ملخص الرحلة. حاول مرة أخرى.",
+  "dashboard.support.body": "بحاجة إلى مساعدة بخصوص هذه الرحلة؟ تواصل معنا وسنرد عليك في أقرب وقت."
 }

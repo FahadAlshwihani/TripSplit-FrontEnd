@@ -264,5 +264,19 @@
   "theme.switchToDark": "Switch to dark theme",
   "language.groupLabel": "Language",
   "language.switchToEnglish": "Switch to English",
-  "language.switchToArabic": "Switch to Arabic"
+  "language.switchToArabic": "Switch to Arabic",
+  "common.home": "Home",
+  "trip.errors.accessDenied": "You do not have access to this trip.", "trip.errors.notFound": "Trip not found.", "trip.errors.banned": "You cannot access this trip.", "trip.errors.guestAccessExpired": "Your guest access has expired. Please join again.",
+  "dashboard.nav.groupLabel": "Trip navigation", "dashboard.nav.overview": "Overview", "dashboard.nav.expenses": "Expenses", "dashboard.nav.balances": "Balances", "dashboard.nav.fund": "Fund", "dashboard.nav.members": "Members", "dashboard.nav.activity": "Activity", "dashboard.nav.governance": "Governance", "dashboard.nav.settlements": "Settlements", "dashboard.nav.settings": "Settings", "dashboard.nav.support": "Support",
+  "dashboard.newExpense": "New Expense", "dashboard.quickExpense": "Quick Expense", "dashboard.addMember": "Add Member", "dashboard.searchPlaceholder": "Search expenses...", "dashboard.more": "More", "dashboard.switchTrip": "Switch trip",
+  "dashboard.trip.state.active": "Active", "dashboard.trip.state.closed": "Closed", "dashboard.trip.state.archived": "Archived",
+  "dashboard.overview.title": "Overview", "dashboard.overview.subtitle": "A high-level view of your shared ledger and financial standing for the {{tripName}}.",
+  "dashboard.overview.totalBudget": "Total Budget", "dashboard.overview.totalSpent": "Total Spent", "dashboard.overview.remaining": "Remaining", "dashboard.overview.myBalance": "My Balance", "dashboard.overview.noBudgetSet": "No budget set",
+  "dashboard.overview.categoryLedger": "Category Ledger", "dashboard.overview.viewDetails": "View Details", "dashboard.overview.noCategorizedExpenses": "No categorized expenses yet.",
+  "dashboard.overview.spendingSplit": "Spending Split", "dashboard.overview.shared": "Shared", "dashboard.overview.personal": "Personal", "dashboard.overview.total": "Total",
+  "dashboard.overview.recentActivity": "Recent Activity", "dashboard.overview.viewAll": "View All", "dashboard.overview.noActivity": "No recent activity yet.",
+  "dashboard.overview.columnDescription": "Description", "dashboard.overview.columnDate": "Date", "dashboard.overview.columnAmount": "Amount",
+  "dashboard.overview.paidBy": "Paid by {{name}} • {{scope}}", "dashboard.overview.sharedExpense": "Shared", "dashboard.overview.personalExpense": "Personal", "dashboard.overview.settlementLabel": "Settlement", "dashboard.overview.settlementContext": "{{from}} → {{to}}",
+  "dashboard.overview.errorLoad": "We couldn't load the trip overview. Please try again.",
+  "dashboard.support.body": "Need help with this trip? Reach out and we'll get back to you."
 }
