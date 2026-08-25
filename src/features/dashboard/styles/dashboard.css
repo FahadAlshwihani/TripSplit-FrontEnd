@@ -83,12 +83,27 @@
 .dash-btn:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
 .dash-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
+/* .dash-btn's own base already IS this secondary contract (light
+   surface, dark text) -- this modifier exists so every secondary
+   dashboard action states its intent explicitly in markup, and so the
+   icon glyph inside always gets an unambiguous, non-inherited color
+   rather than depending on currentColor propagating correctly through
+   every browser/font-loading timing. */
+.dash-btn--secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+.dash-btn--secondary i { color: var(--color-text); }
+.dash-btn--secondary:hover { background: var(--color-surface-alt); color: var(--color-text); }
+
 .dash-btn--primary {
   background: var(--nc-indigo-700);
   border-color: var(--nc-indigo-700);
   color: var(--nc-white);
   box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
 }
+.dash-btn--primary i { color: var(--nc-white); }
 .dash-btn--primary:hover { background: var(--nc-indigo-800); box-shadow: 1px 1px 0 0 var(--nc-indigo-700); }
 .dash-btn--primary:active { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
 
@@ -173,28 +188,40 @@
 .dash-sidebar__nav { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; }
 .dash-sidebar__footer { display: flex; flex-direction: column; gap: 2px; padding-block-start: var(--space-3); border-block-start: var(--border-width) solid var(--color-border); }
 
-/* Flat rows at rest (this is a nav list, not an elevated button) -- hover
-   is a restrained background tint + press, the same row-hover language
-   already used for .account-menu__item / .acc-trip__more-action, not
-   Stitch's own translate-x-1 motion (a fourth, unrelated interaction
-   variant this app doesn't otherwise use). */
+/* Inactive rows are flat/neutral at rest -- not "elevated" objects
+   until touched -- and gain the bordered hard-shadow language ONLY on
+   hover/press, using the exact same tokens every other pressable
+   control in the app reads (never a bespoke dashboard-only shadow
+   system): hover jumps straight to the already-partially-pressed
+   "-hover" shadow tier (so the row visually *arrives* already
+   settling inward, not resting freshly elevated), active collapses it
+   the rest of the way, matching the global rest→hover→active contract.
+   The border is reserved (transparent) at rest so gaining a real one on
+   hover/active never shifts the row's box. Diagonal translate() is
+   direction-neutral -- identical in LTR and RTL, unlike a translateX
+   "slide toward reading direction" would be. */
 .dash-sidebar__link {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  /* Reserved even when inactive so gaining it on .is-active never shifts
-     the row's box/layout. */
   border: var(--border-width) solid transparent;
-  color: var(--color-text-muted);
+  color: var(--color-text);
   font: var(--text-label);
   letter-spacing: var(--tracking-label);
   text-decoration: none;
-  transition: background-color 0.15s ease, color 0.15s ease, transform var(--press-duration) ease;
+  box-shadow: 0 0 0 0 var(--color-border);
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
 
-.dash-sidebar__link:hover { background: var(--color-surface-alt); color: var(--color-text); transform: var(--press-sm-hover); }
+.dash-sidebar__link:hover {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-hard-sm-hover);
+  transform: var(--press-sm-hover);
+}
+.dash-sidebar__link:active { box-shadow: 0 0 0 0 var(--color-border); transform: var(--press-sm-active); }
 .dash-sidebar__link-icon { font-size: 1.05rem; flex: 0 0 auto; }
 
 .dash-sidebar__link.is-active {
@@ -204,11 +231,14 @@
   border-color: var(--color-border);
   box-shadow: var(--shadow-hard-sm);
 }
-.dash-sidebar__link.is-active:hover { background: var(--nc-indigo-800); transform: none; }
+/* Hovering the already-active item darkens further -- it must never
+   read as deselected. */
+.dash-sidebar__link.is-active:hover { background: var(--nc-indigo-800); box-shadow: var(--shadow-hard-sm); transform: none; }
+.dash-sidebar__link.is-active:active { box-shadow: 0 0 0 0 var(--color-border); transform: var(--press-sm-active); }
 
 @media (prefers-reduced-motion: reduce) {
-  .dash-sidebar__link { transition: background-color 0.15s ease, color 0.15s ease; }
-  .dash-sidebar__link:hover { transform: none; }
+  .dash-sidebar__link { transition: background-color 0.15s ease, border-color 0.15s ease; }
+  .dash-sidebar__link:hover, .dash-sidebar__link:active { transform: none; }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -294,7 +324,10 @@
   z-index: var(--z-sticky);
 }
 
-.dash-mobile-header__identity { min-width: 0; flex: 1 1 auto; }
+/* Trip identity leads the mobile header -- no TripSplit wordmark here
+   (the desktop top bar already carries it); the current trip is the
+   context that actually matters once a member is inside one. */
+.dash-mobile-header__identity { display: flex; align-items: center; gap: var(--space-2); min-width: 0; flex: 1 1 auto; }
 
 .dash-mobile-header__trip {
   display: inline-flex;
@@ -303,18 +336,56 @@
   min-width: 0;
   color: var(--color-text);
   text-decoration: none;
+  transition: transform var(--press-duration) ease;
 }
 
-.dash-mobile-header__trip-icon { color: var(--nc-indigo-700); flex: 0 0 auto; }
-.dash-mobile-header__trip-name { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+a.dash-mobile-header__trip:active { transform: var(--press-sm-active); }
+
+@media (prefers-reduced-motion: reduce) {
+  a.dash-mobile-header__trip:active { transform: none; }
+}
+
+.dash-mobile-header__trip-icon { color: var(--nc-indigo-700); font-size: 1.15rem; flex: 0 0 auto; }
+
+.dash-mobile-header__trip-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+
+.dash-mobile-header__trip-name {
+  font: var(--text-headline-sm);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dash-mobile-header__trip-dates {
+  font: var(--text-label);
+  font-size: 11px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .dash-mobile-header__switch-icon { color: var(--color-text-muted); font-size: 0.85rem; flex: 0 0 auto; }
 
-.dash-mobile-header__actions { display: flex; align-items: center; gap: var(--space-2); flex: 0 0 auto; }
-.dash-mobile-header__new-expense { padding-inline: var(--space-3); }
+/* Compact -- fits inline instead of costing the header a whole extra
+   row (see "do not create a giant mobile app bar"). Hidden below 360px,
+   where there simply isn't room for it alongside the trip name/dates
+   and the action buttons without truncating something more important. */
+.dash-mobile-header__badge { flex: 0 0 auto; margin-block-start: 0; }
 
-@media (max-width: 429px) {
-  .dash-mobile-header__new-expense .dash-btn__label { display: none; }
+@media (max-width: 359px) {
+  .dash-mobile-header__badge { display: none; }
 }
+
+.dash-mobile-header__actions { display: flex; align-items: center; gap: var(--space-2); flex: 0 0 auto; }
+
+/* Compact square icon buttons -- explicitly allowed to be icon-only at
+   mobile widths, as long as there are at least two obvious ones and
+   each carries a real aria-label/title (see the JSX). */
+.dash-mobile-header__action { inline-size: 40px; block-size: 40px; padding: 0; }
 
 /* ---------------------------------------------------------------------- */
 /* Mobile bottom navigation -- fixed, safe-area-aware, hidden ≥768px. */
@@ -344,23 +415,40 @@
 
 .dash-bottom-nav__item {
   flex: 1 1 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: 44px;
+  min-height: 48px;
+  padding-inline: 2px;
   background: none;
   border: none;
   color: var(--color-text-muted);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   cursor: pointer;
   transition: color 0.15s ease, transform var(--press-duration) ease;
 }
 
 .dash-bottom-nav__item:active { transform: var(--press-sm-active); }
 .dash-bottom-nav__item.is-active { color: var(--nc-indigo-700); }
-.dash-bottom-nav__label { font: var(--text-label); font-size: 10px; letter-spacing: normal; text-transform: none; }
+
+/* Exactly 4 slots (3 favorites + More, see dashboardNav.js) instead of
+   the previous 5 -- each item gets meaningfully more width, and the
+   label itself is now hard-constrained to a single line that ellipses
+   rather than wrapping/overflowing into an unreadable fragment. */
+.dash-bottom-nav__label {
+  font: var(--text-label);
+  font-size: 11px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: inherit;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .dash-bottom-nav__item { transition: color 0.15s ease; }
@@ -405,6 +493,8 @@
   align-self: center;
 }
 
+.dash-more-sheet__heading { margin: 0; padding-inline: var(--space-1); color: var(--color-text); }
+
 .dash-more-sheet__items { display: flex; flex-direction: column; gap: 2px; }
 
 .dash-more-sheet__item {
@@ -418,12 +508,19 @@
   font: var(--text-label);
   letter-spacing: var(--tracking-label);
   text-decoration: none;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease;
 }
 
-.dash-more-sheet__item:hover, .dash-more-sheet__item:active { background: var(--color-surface-alt); }
+.dash-more-sheet__item:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); }
+.dash-more-sheet__item:active { background: var(--color-surface-alt); transform: var(--press-sm-active); }
+.dash-more-sheet__item:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: -2px; }
 .dash-more-sheet__item-icon { font-size: 1.1rem; color: var(--color-text-muted); flex: 0 0 auto; }
 .dash-more-sheet__close { width: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-more-sheet__item { transition: background-color 0.15s ease; }
+  .dash-more-sheet__item:hover, .dash-more-sheet__item:active { transform: none; }
+}
 
 @media (min-width: 768px) {
   .dash-more-overlay, .dash-more-sheet { display: none; }
