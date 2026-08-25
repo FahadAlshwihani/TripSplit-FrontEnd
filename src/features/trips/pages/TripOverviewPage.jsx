@@ -25,8 +25,21 @@ export default function TripOverviewPage() {
   return (
     <div className="ov-page">
       <div className="ov-page__header">
-        <h1 className="ov-page__title text-display">{t('dashboard.overview.title')}</h1>
-        <p className="ov-page__subtitle text-copy-lg">{t('dashboard.overview.subtitle', { tripName: trip.title })}</p>
+        <div className="ov-page__header-text">
+          <h1 className="ov-page__title text-display">{t('dashboard.overview.title')}</h1>
+          <p className="ov-page__subtitle text-copy-lg">{t('dashboard.overview.subtitle', { tripName: trip.title })}</p>
+        </div>
+        <div className="ov-page__utilities">
+          {/* Real, non-destructive filter capability doesn't exist yet for
+              Overview -- rendered disabled rather than wired to a fake
+              action, per "don't ship a control that pretends to work". */}
+          <button type="button" className="ov-utility-btn" disabled aria-label={t('dashboard.overview.filter')} title={t('dashboard.overview.filterUnavailable')}>
+            <i className="bi bi-funnel" aria-hidden="true" />
+          </button>
+          <button type="button" className="ov-utility-btn" onClick={resource.retry} aria-label={t('dashboard.overview.refresh')}>
+            <i className="bi bi-arrow-clockwise" aria-hidden="true" />
+          </button>
+        </div>
       </div>
 
       <OverviewSummaryCards summary={summary} currency={trip.currency} />

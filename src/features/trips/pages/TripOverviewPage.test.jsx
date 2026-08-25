@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import TripOverviewPage from './TripOverviewPage';
 import { getTripOverview } from '../api/tripsApi';
@@ -29,28 +29,38 @@ const renderPage = () => render(
   </MemoryRouter>,
 );
 
+// Money renders as <bdi dir="ltr">1,200.00<span> SAR</span></bdi> -- a
+// plain getByText(exact string) can't match text split across a child
+// span, so match on the <bdi>'s combined, whitespace-normalized text.
+const moneyMatcher = (text) => (_content, node) => (
+  node?.tagName?.toLowerCase() === 'bdi' && node.textContent.replace(/\s+/g, ' ').trim() === text
+);
+const findMoney = (text) => screen.findByText(moneyMatcher(text));
+const getMoney = (text) => screen.getByText(moneyMatcher(text));
+const queryMoney = (text) => screen.queryByText(moneyMatcher(text));
+
 beforeEach(() => jest.clearAllMocks());
 
 test('renders the four summary figures from the authoritative overview payload', async () => {
   getTripOverview.mockResolvedValue(baseOverview);
   renderPage();
-  expect(await screen.findByText('12,000.00 SAR')).toBeInTheDocument();
-  expect(screen.getByText('7,720.00 SAR')).toBeInTheDocument();
-  expect(screen.getByText('4,280.00 SAR')).toBeInTheDocument();
-  expect(screen.getByText('620.00 SAR')).toBeInTheDocument();
+  expect(await findMoney('12,000.00 SAR')).toBeInTheDocument();
+  expect(getMoney('7,720.00 SAR')).toBeInTheDocument();
+  expect(getMoney('4,280.00 SAR')).toBeInTheDocument();
+  expect(getMoney('620.00 SAR')).toBeInTheDocument();
 });
 
 test('a positive balance is marked positive, distinct from a negative one', async () => {
   getTripOverview.mockResolvedValue(baseOverview);
   renderPage();
-  await screen.findByText('620.00 SAR');
+  await findMoney('620.00 SAR');
   expect(document.querySelector('.ov-card--balance')).toHaveClass('is-positive');
 });
 
 test('a negative balance is marked negative', async () => {
   getTripOverview.mockResolvedValue({ ...baseOverview, summary: { ...baseOverview.summary, my_balance: '-142.50' } });
   renderPage();
-  await screen.findByText('-142.50 SAR');
+  await findMoney('-142.50 SAR');
   expect(document.querySelector('.ov-card--balance')).toHaveClass('is-negative');
 });
 
@@ -85,11 +95,31 @@ test('renders the recent activity row with actor, title, and amount', async () =
   renderPage();
   expect(await screen.findByText('Ski Pass Rental')).toBeInTheDocument();
   expect(screen.getByText(/"name":"Sarah"/)).toBeInTheDocument();
-  expect(screen.getByText('1,200.00 SAR')).toBeInTheDocument();
+  expect(getMoney('1,200.00 SAR')).toBeInTheDocument();
 });
 
 test('uses the trip currency from the overview payload itself, not a guessed default', async () => {
   getTripOverview.mockResolvedValue({ ...baseOverview, trip: { ...baseOverview.trip, currency: 'USD' } });
   renderPage();
-  expect(await screen.findByText('12,000.00 USD')).toBeInTheDocument();
+  expect(await findMoney('12,000.00 USD')).toBeInTheDocument();
+});
+
+test('the refresh control re-fetches the overview; the disabled filter control never fakes a working filter', async () => {
+  getTripOverview.mockResolvedValue(baseOverview);
+  renderPage();
+  await findMoney('12,000.00 SAR');
+  const filterBtn = screen.getByRole('button', { name: 'dashboard.overview.filter' });
+  expect(filterBtn).toBeDisabled();
+  const refreshBtn = screen.getByRole('button', { name: 'dashboard.overview.refresh' });
+  expect(refreshBtn).not.toBeDisabled();
+  await act(async () => { fireEvent.click(refreshBtn); });
+  expect(getTripOverview).toHaveBeenCalledTimes(2);
+});
+
+test('every money amount is isolated for correct bidi rendering regardless of page direction', async () => {
+  getTripOverview.mockResolvedValue(baseOverview);
+  renderPage();
+  const node = await findMoney('12,000.00 SAR');
+  expect(node).toHaveAttribute('dir', 'ltr');
+  expect(queryMoney('7,720.00 SAR')).toHaveAttribute('dir', 'ltr');
 });

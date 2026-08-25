@@ -23,8 +23,15 @@ const MobileDashboardHeader = ({ trip, tripId }) => {
     <header className="dash-mobile-header">
       <div className="dash-mobile-header__identity">
         {isRegistered ? (
-          <Link to="/account" className="dash-mobile-header__trip" aria-label={t('dashboard.switchTrip')}>
+          // No aria-label override here -- that would replace the link's
+          // accessible name with just "Switch trip" and discard the trip
+          // title a screen reader user actually needs to hear. The
+          // visually-hidden prefix adds the switch-trip context in front
+          // of the (still spoken) visible trip name instead of instead
+          // of it.
+          <Link to="/account" className="dash-mobile-header__trip">
             <i className="bi bi-compass dash-mobile-header__trip-icon" aria-hidden="true" />
+            <span className="dash-visually-hidden">{t('dashboard.switchTrip')}: </span>
             <span className="dash-mobile-header__trip-name text-headline-sm">{trip.title}</span>
             <i className="bi bi-chevron-expand dash-mobile-header__switch-icon" aria-hidden="true" />
           </Link>
@@ -39,10 +46,11 @@ const MobileDashboardHeader = ({ trip, tripId }) => {
         <button
           type="button"
           className="dash-btn dash-btn--primary dash-mobile-header__new-expense"
+          aria-label={t('dashboard.newExpense')}
           onClick={() => navigate(`/trips/${tripId}/expenses`)}
         >
           <i className="bi bi-plus-lg" aria-hidden="true" />
-          <span className="dash-btn__label">{t('dashboard.newExpense')}</span>
+          <span className="dash-btn__label" aria-hidden="true">{t('dashboard.newExpense')}</span>
         </button>
         <AccountMenu />
       </div>
