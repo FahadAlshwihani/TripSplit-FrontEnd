@@ -25,3 +25,15 @@ if (typeof globalThis.structuredClone !== 'function') {
   const v8 = require('v8');
   globalThis.structuredClone = (value) => v8.deserialize(v8.serialize(value));
 }
+
+// Same class of gap as structuredClone above: `crypto` (with
+// .randomUUID) is a real global in every browser and in Node itself,
+// but Jest's jsdom test-environment sandbox doesn't expose it as a bare
+// global -- `crypto` is a ReferenceError there even though
+// `require('node:crypto').webcrypto` provides the exact same object
+// Node's own global crypto already points to.
+if (typeof globalThis.crypto?.randomUUID !== 'function') {
+  // eslint-disable-next-line global-require
+  const { webcrypto } = require('node:crypto');
+  globalThis.crypto = webcrypto;
+}
