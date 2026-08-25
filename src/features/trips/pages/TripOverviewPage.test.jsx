@@ -116,6 +116,25 @@ test('the refresh control re-fetches the overview; the disabled filter control n
   expect(getTripOverview).toHaveBeenCalledTimes(2);
 });
 
+test('a trip with no spending yet shows the neutral Spending Split empty state, never a misleading 100% badge', async () => {
+  // Budget/Remaining both land on "6,000.00 SAR", and Total Spent/My
+  // Balance both land on "0.00 SAR" -- a real, legitimate collision for
+  // an untouched trip (this is exactly the screenshot scenario), so
+  // assert counts rather than a single ambiguous getByText match.
+  getTripOverview.mockResolvedValue({
+    ...baseOverview,
+    summary: { budget: '6000.00', budget_set: true, total_spent: '0.00', remaining: '6000.00', my_balance: '0.00' },
+    spending_split: { shared: '0.00', personal: '0.00', shared_percent: 0, personal_percent: 0 },
+    category_ledger: [],
+    recent_activity: [],
+  });
+  renderPage();
+  expect(await screen.findByText('dashboard.overview.noSpendingYet')).toBeInTheDocument();
+  expect(screen.queryByText('100%')).not.toBeInTheDocument();
+  expect(screen.getAllByText(moneyMatcher('6,000.00 SAR'))).toHaveLength(2);
+  expect(screen.getAllByText(moneyMatcher('0.00 SAR'))).toHaveLength(2);
+});
+
 test('every money amount is isolated for correct bidi rendering regardless of page direction', async () => {
   getTripOverview.mockResolvedValue(baseOverview);
   renderPage();
