@@ -16,6 +16,7 @@ const Categories = lazy(() => import('../../features/categories/pages/Categories
 const Settlements = lazy(() => import('../../features/settlements/pages/SettlementsPage'));
 const Activity = lazy(() => import('../../features/activity/pages/ActivityPage'));
 const Settings = lazy(() => import('../../features/trips/pages/TripSettingsPage'));
+const Support = lazy(() => import('../../features/trips/pages/TripSupportPage'));
 
 const LegacyTrip = () => {
   const { code } = useParams();
@@ -37,6 +38,7 @@ const tripRoutes = [
     <Route path="settlements" element={<Settlements />} />
     <Route path="activity" element={<Activity />} />
     <Route path="settings" element={<Settings />} />
+    <Route path="support" element={<Support />} />
   </Route>,
 ];
 
