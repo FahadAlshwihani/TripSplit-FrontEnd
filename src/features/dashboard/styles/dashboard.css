@@ -184,6 +184,9 @@
   gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
+  /* Reserved even when inactive so gaining it on .is-active never shifts
+     the row's box/layout. */
+  border: var(--border-width) solid transparent;
   color: var(--color-text-muted);
   font: var(--text-label);
   letter-spacing: var(--tracking-label);
@@ -198,6 +201,8 @@
   background: var(--nc-indigo-700);
   color: var(--nc-white);
   font-weight: 700;
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-hard-sm);
 }
 .dash-sidebar__link.is-active:hover { background: var(--nc-indigo-800); transform: none; }
 
@@ -226,7 +231,12 @@
   }
 }
 
-.dash-topbar__brand { text-transform: uppercase; letter-spacing: -0.02em; }
+.dash-topbar__brand {
+  color: var(--color-text);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
 .dash-topbar__actions { display: flex; align-items: center; gap: var(--space-3); }
 
 .dash-topbar__search { position: relative; display: none; }

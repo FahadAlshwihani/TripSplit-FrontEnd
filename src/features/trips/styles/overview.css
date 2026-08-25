@@ -1,48 +1,59 @@
 /*
-  Trip Overview -- mobile-first: source order already matches the required
-  mobile reading order (header -> summary cards -> category ledger ->
-  spending split -> recent activity) except within the four summary cards
-  themselves, where My Balance/Remaining must lead on mobile even though
-  desktop visually groups Budget/Spent as the two large cards -- handled
-  with `order`, not DOM reordering, so keyboard/reader order stays sane.
+  Trip Overview -- compact editorial ledger density (per the approved
+  Stitch screenshot), not a spacious generic SaaS dashboard. Mobile-
+  first: source order already matches the required mobile reading order
+  (header -> summary cards -> category ledger -> spending split ->
+  recent activity) except within the four summary cards themselves,
+  where My Balance/Remaining must lead on mobile even though desktop
+  visually groups Budget/Spent as the two large cards -- handled with
+  `order`, not DOM reordering, so keyboard/reader order stays sane.
 */
 
-.ov-page { display: flex; flex-direction: column; gap: var(--space-6); }
+.ov-page { display: flex; flex-direction: column; gap: var(--space-5); }
 
 .ov-page__header {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding-block-end: var(--space-4);
+  gap: var(--space-3);
+  padding-block-end: var(--space-3);
   border-block-end: var(--border-width) solid var(--color-border);
 }
 
-.ov-page__title { margin: 0; }
+.ov-page__header-text { display: flex; flex-direction: column; gap: var(--space-1); }
+.ov-page__title { margin: 0; color: var(--color-text); }
 .ov-page__subtitle { color: var(--color-text-muted); margin: 0; max-width: 48rem; }
 
+@media (min-width: 640px) {
+  .ov-page__header { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+}
+
 /* ---------------------------------------------------------------------- */
-/* Summary cards */
+/* Summary cards -- compact, informational, never pressable (no card here
+   is clickable, so none gets the physical hover/press language). */
 
 .ov-cards {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .ov-card {
+  display: flex;
+  flex-direction: column;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   box-shadow: var(--shadow-hard-sm);
-  padding: var(--space-4);
+  padding: var(--space-3);
 }
 
-.ov-card--budget { order: 3; }
-.ov-card--spent { order: 4; background: var(--color-danger-soft); }
-.ov-card--remaining { order: 2; display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); }
-.ov-card--balance { order: 1; display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); background: var(--color-success-soft); }
+.ov-card--budget { order: 3; min-height: 108px; }
+.ov-card--spent { order: 4; min-height: 108px; background: var(--color-danger-soft); }
+.ov-card--remaining { order: 2; flex-direction: row; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-3); }
+.ov-card--balance { order: 1; flex-direction: row; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-3); background: var(--color-success-soft); }
 
-.ov-card__head { display: flex; align-items: flex-start; justify-content: space-between; margin-block-end: var(--space-4); }
+.ov-card__head { display: flex; align-items: flex-start; justify-content: space-between; }
+
 .ov-card__label {
   display: inline-block;
   padding: 2px var(--space-2);
@@ -54,10 +65,31 @@
   letter-spacing: var(--tracking-label);
   font-size: 10px;
 }
-.ov-card__icon { color: var(--color-text-faint); font-size: 1.1rem; }
-.ov-card__value { margin: 0; color: var(--color-text); letter-spacing: -0.02em; }
-.ov-card__muted { font: var(--text-body); color: var(--color-text-muted); letter-spacing: normal; }
-.ov-card__value-sm { font: var(--text-headline-lg); color: var(--color-text); }
+
+/* Remaining's label is plain caps text, no chip -- matches the approved
+   reference exactly (only Budget/Spent/My Balance get the bordered
+   chip treatment). */
+.ov-card__label--plain { border: none; padding: 0; background: none; }
+
+.ov-card__icon { color: var(--color-text-muted); font-size: 1rem; }
+
+.ov-card__value {
+  display: block;
+  margin-block-start: auto;
+  padding-block-start: var(--space-3);
+  font: var(--text-display);
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-card__value-currency { font: var(--text-headline-sm); color: var(--color-text-muted); margin-inline-start: var(--space-1); }
+
+.ov-card__muted { display: block; margin-block-start: auto; padding-block-start: var(--space-3); font: var(--text-body); color: var(--color-text-muted); }
+.ov-card--remaining .ov-card__muted, .ov-card--balance .ov-card__muted { margin-block-start: 0; padding-block-start: 0; }
+
+.ov-card__value-sm { font: var(--text-headline-lg); color: var(--color-text); font-variant-numeric: tabular-nums; }
+.ov-card__value-sm-currency { font: var(--text-body-sm); color: inherit; opacity: 0.8; }
 
 .ov-card--balance.is-positive .ov-card__value-sm { color: var(--color-success); }
 .ov-card--balance.is-negative .ov-card__value-sm { color: var(--color-danger); }
@@ -66,6 +98,7 @@
   .ov-cards {
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: auto auto;
+    gap: var(--space-3);
   }
   .ov-card--budget { grid-column: 1; grid-row: 1 / span 2; order: 1; }
   .ov-card--spent { grid-column: 2; grid-row: 1 / span 2; order: 2; }
@@ -76,7 +109,7 @@
 /* ---------------------------------------------------------------------- */
 /* Shared panel chrome (Category Ledger / Spending Split / Recent Activity) */
 
-.ov-page__mid { display: flex; flex-direction: column; gap: var(--space-4); }
+.ov-page__mid { display: flex; flex-direction: column; gap: var(--space-3); }
 
 @media (min-width: 900px) {
   .ov-page__mid { flex-direction: row; align-items: stretch; }
@@ -99,13 +132,14 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-3);
   border-block-end: var(--border-width) solid var(--color-border);
   background: var(--color-surface-alt);
+  min-height: 44px;
 }
 
-.ov-panel__title { margin: 0; display: flex; align-items: center; gap: var(--space-2); }
-.ov-panel__body { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
+.ov-panel__title { margin: 0; display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); }
+.ov-panel__body { padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-3); }
 
 .ov-link {
   background: none;
@@ -119,69 +153,113 @@
 }
 .ov-link:hover { text-decoration: none; }
 
-.ov-empty { color: var(--color-text-muted); margin: 0; padding: var(--space-4); }
+/* Compact -- never a giant empty rectangle just because there's no data. */
+.ov-empty { color: var(--color-text-muted); margin: 0; padding: var(--space-4) var(--space-3); text-align: center; }
 
-/* Category rows */
+/* Header utility controls (filter / refresh) -- same compact square
+   Stitch controls as the rest of the app's icon-only buttons, real
+   physical press since they're genuinely clickable. */
+.ov-page__utilities { display: flex; gap: var(--space-2); }
+.ov-utility-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 40px;
+  block-size: 40px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-hard-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+.ov-utility-btn:hover:not(:disabled) { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.ov-utility-btn:active:not(:disabled) { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
+.ov-utility-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.ov-category { display: flex; flex-direction: column; gap: var(--space-2); }
+@media (prefers-reduced-motion: reduce) {
+  .ov-utility-btn { transition: background-color 0.15s ease; }
+  .ov-utility-btn:hover, .ov-utility-btn:active { transform: none; }
+}
+
+/* Category rows -- compact, thin progress bar. */
+
+.ov-category { display: flex; flex-direction: column; gap: var(--space-1); }
 .ov-category__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .ov-category__label { display: flex; align-items: center; gap: var(--space-2); font: var(--text-label); letter-spacing: var(--tracking-label); color: var(--color-text); }
 .ov-category__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inline-size: 32px;
-  block-size: 32px;
+  inline-size: 28px;
+  block-size: 28px;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface-alt);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
-.ov-category__amount { font: var(--text-label); font-weight: 700; color: var(--color-text); }
-.ov-category__track { width: 100%; height: 10px; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-pill); background: var(--color-surface-container); overflow: hidden; }
+.ov-category__amount { color: var(--color-text); font-weight: 700; }
+.ov-category__track { width: 100%; height: 6px; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-pill); background: var(--color-surface-container); overflow: hidden; }
 .ov-category__fill { height: 100%; background: var(--nc-indigo-700); }
 
-/* Spending split donut */
+/* ---------------------------------------------------------------------- */
+/* Spending Split -- a compact squared Neo-classic graphic (per the
+   approved Stitch screenshot), not a circular donut chart. The exact
+   proportional angular fill a donut affords doesn't translate cleanly
+   onto a square, so the split itself is communicated by the two legend
+   rows below (already carrying the real server-computed percentages);
+   the square graphic is the same "TOTAL 100%" badge motif Stitch uses,
+   not a second encoding of the ratio. */
 
-.ov-split__body { padding: var(--space-4); display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
-.ov-split__donut {
-  inline-size: 140px;
-  block-size: 140px;
-  border-radius: 50%;
+.ov-split__body { padding: var(--space-3); display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
+
+.ov-split__frame {
+  inline-size: 120px;
+  block-size: 120px;
   border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--nc-indigo-700);
   box-shadow: var(--shadow-hard-sm);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.ov-split__donut-hole {
-  inline-size: 96px;
-  block-size: 96px;
-  border-radius: 50%;
-  border: var(--border-width-lg) solid var(--color-border);
+
+.ov-split__frame-inner {
+  inline-size: 68px;
+  block-size: 68px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+  transform: rotate(-6deg);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
-.ov-split__donut-label { font: var(--text-label); font-size: 9px; color: var(--color-text-muted); }
-.ov-split__donut-value { font: var(--text-headline-sm); color: var(--color-text); }
+
+.ov-split__frame-label { font: var(--text-label); font-size: 8px; color: var(--color-text-muted); transform: rotate(6deg); }
+.ov-split__frame-value { font: var(--text-headline-sm); color: var(--color-text); transform: rotate(6deg); font-variant-numeric: tabular-nums; }
 
 .ov-split__legend { width: 100%; display: flex; flex-direction: column; gap: var(--space-2); }
 .ov-split__legend-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); }
 .ov-split__swatch { inline-size: 12px; block-size: 12px; border-radius: var(--radius-pill); border: var(--border-width) solid var(--color-border); }
 .ov-split__swatch--shared { background: var(--nc-indigo-700); }
 .ov-split__swatch--personal { background: var(--color-surface-container); }
-.ov-split__legend-label { flex: 1 1 auto; font: var(--text-body-sm); }
-.ov-split__legend-value { font: var(--text-label); font-weight: 700; }
+.ov-split__legend-label { flex: 1 1 auto; font: var(--text-body-sm); color: var(--color-text); }
+.ov-split__legend-value { font: var(--text-label); font-weight: 700; color: var(--color-text); font-variant-numeric: tabular-nums; }
 
-/* Recent activity ledger */
+/* ---------------------------------------------------------------------- */
+/* Recent activity ledger -- purely informational rows (no detail route
+   exists yet to click into), so no hover/press affordance is applied --
+   a false "this is clickable" signal is worse than no affordance. */
 
 .ov-activity-list { display: flex; flex-direction: column; }
 .ov-activity-list__head {
   display: none;
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-1) var(--space-3);
   border-block-end: var(--border-width) solid var(--color-border);
   background: var(--color-surface-container);
   color: var(--color-text-muted);
@@ -199,24 +277,22 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2) var(--space-4);
-  padding: var(--space-3) var(--space-4);
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-2) var(--space-3);
   border-block-end: var(--border-width) solid var(--color-border-subtle);
-  transition: background-color 0.15s ease;
 }
 .ov-activity-row:last-child { border-block-end: none; }
-.ov-activity-row:hover { background: var(--color-surface-alt); }
 
 @media (min-width: 640px) {
   .ov-activity-row { display: grid; grid-template-columns: 2fr 1fr 1fr; align-items: center; }
 }
 
-.ov-activity-row__main { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.ov-activity-row__main { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
 .ov-activity-row__text { display: flex; flex-direction: column; min-width: 0; }
 .ov-activity-row__title { font: var(--text-label); letter-spacing: var(--tracking-label); color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ov-activity-row__context { color: var(--color-text-muted); }
-.ov-activity-row__date { color: var(--color-text-muted); font: var(--text-label); letter-spacing: var(--tracking-label); }
-.ov-activity-row__amount { font: var(--text-label); font-weight: 700; color: var(--color-text); }
+.ov-activity-row__date { color: var(--color-text-muted); font: var(--text-label); letter-spacing: var(--tracking-label); font-variant-numeric: tabular-nums; }
+.ov-activity-row__amount { color: var(--color-text); font-weight: 700; }
 
 @media (min-width: 640px) {
   .ov-activity-row__date, .ov-activity-row__amount { text-align: end; }
