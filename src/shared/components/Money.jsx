@@ -9,15 +9,27 @@ import React from 'react';
   The currency code renders in its own smaller/muted span, matching the
   approved Stitch treatment (bold number, small supporting currency
   suffix) instead of one uniformly-sized string.
+
+  Locale is pinned to 'en-US', not left as the browser's own configured
+  locale: money needs a language-independent numeric identity (Western
+  digits, comma grouping) so amounts stay instantly comparable and
+  correctly aligned in ledger tables no matter what locale a member's
+  device is set to -- an Arabic-locale browser can otherwise format
+  Intl.NumberFormat(undefined, ...) output with Arabic-Indic digits.
+
+  `variant` selects which of the two canonical numeric fonts (see
+  typography.css) applies: "display" (default) for large/high-emphasis
+  figures like the summary cards, "tabular" for small ledger/table rows.
 */
-const Money = ({ value, currency, className = '', currencyClassName = 'money__currency' }) => {
+const Money = ({ value, currency, variant = 'display', className = '', currencyClassName = 'money__currency' }) => {
   if (value === null || value === undefined) return null;
   const number = Number(value);
   const formatted = Number.isFinite(number)
-    ? new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number)
+    ? new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number)
     : value;
+  const wrapperClassName = ['money', `money--${variant}`, className].filter(Boolean).join(' ');
   return (
-    <bdi dir="ltr" className={className}>
+    <bdi dir="ltr" className={wrapperClassName}>
       {formatted}
       {currency && <span className={currencyClassName}> {currency}</span>}
     </bdi>

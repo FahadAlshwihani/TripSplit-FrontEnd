@@ -19,6 +19,13 @@
   --font-label: 'JetBrains Mono', 'Noto Sans Arabic', 'Courier New', monospace;
   --font-financial: 'JetBrains Mono', 'Noto Sans Arabic', 'Courier New', monospace;
 
+  /* Large/high-emphasis financial figures (Total Budget, Total Spent,
+     the Spending Split badge, ...) need a numeric identity that never
+     changes with the interface language -- unlike --font-display, this
+     is intentionally NOT redefined under [dir="rtl"] below, so digits
+     never fall back to Noto Kufi Arabic's differently-shaped glyphs. */
+  --font-money-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
   --text-display: 700 32px/38px var(--font-display);
   --text-headline: 600 24px/32px var(--font-display);
   --text-headline-lg: 600 32px/40px var(--font-display);
@@ -114,4 +121,36 @@
   font: var(--text-financial-lg);
   font-variant-numeric: tabular-nums;
   margin: 0;
+}
+
+/*
+  Canonical numeric-identity contract for money/percentage figures --
+  the two variants the Money component (and any bare numeric label that
+  isn't currency, like Spending Split's percentages) should ever need:
+  "display" for large/high-emphasis figures, "tabular" for small ledger
+  rows. Selectors are self-doubled (0,2,0) so they reliably beat a
+  same-specificity sizing class like .ov-card__value regardless of which
+  stylesheet happens to load first -- CSS resolves this property by
+  property, so the host class still controls size/weight/color, only
+  font-family and digit alignment are pinned here.
+*/
+.money--display.money--display {
+  font-family: var(--font-money-display);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.money--tabular.money--tabular {
+  font-family: var(--font-financial);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Sane default for Money's currency suffix wherever a caller doesn't
+   pass its own currencyClassName -- smaller and muted so it never
+   competes with the number itself. */
+.money__currency {
+  font-size: 0.7em;
+  font-weight: 400;
+  color: var(--color-text-muted);
 }

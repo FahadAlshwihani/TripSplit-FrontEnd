@@ -24,7 +24,7 @@ const CategoryLedger = ({ categories, currency, tripId }) => {
                 <span className="ov-category__icon"><i className={`bi ${categoryIconClass(row.icon_key)}`} aria-hidden="true" /></span>
                 <span>{row.name}</span>
               </div>
-              <Money value={row.spent} currency={currency} className="ov-category__amount text-financial" />
+              <Money value={row.spent} currency={currency} variant="tabular" className="ov-category__amount text-financial" />
             </div>
             <div className="ov-category__track">
               <div className="ov-category__fill" style={{ width: `${row.percent_of_total}%` }} />

@@ -51,7 +51,7 @@ const RecentActivity = ({ events, currency, tripId }) => {
               </div>
               <span className="ov-activity-row__date">{formatDate(event.created_at)}</span>
               {event.summary.amount && (
-                <Money value={event.summary.amount} currency={event.summary.currency || currency} className="ov-activity-row__amount text-financial" />
+                <Money value={event.summary.amount} currency={event.summary.currency || currency} variant="tabular" className="ov-activity-row__amount text-financial" />
               )}
             </div>
           ))}
