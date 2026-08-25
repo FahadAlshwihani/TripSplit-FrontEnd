@@ -284,5 +284,15 @@
   "dashboard.support.body": "بحاجة إلى مساعدة بخصوص هذه الرحلة؟ تواصل معنا وسنرد عليك في أقرب وقت.",
   "dashboard.overview.filter": "تصفية", "dashboard.overview.filterUnavailable": "التصفية غير متاحة بعد", "dashboard.overview.refresh": "تحديث",
   "categories.accommodation": "السكن", "categories.food": "الطعام", "categories.transport": "النقل", "categories.activities": "الأنشطة", "categories.shopping": "التسوق",
-  "categories.flights": "الطيران", "categories.carRental": "استئجار سيارة", "categories.fuel": "الوقود", "categories.groceries": "البقالة", "categories.tickets": "التذاكر", "categories.other": "أخرى"
+  "categories.flights": "الطيران", "categories.carRental": "استئجار سيارة", "categories.fuel": "الوقود", "categories.groceries": "البقالة", "categories.tickets": "التذاكر", "categories.other": "أخرى",
+  "expenses.ledger.title": "سجل المصاريف", "expenses.ledger.subtitle": "تابع مصاريف الرحلة، مين دفع، وكيف توزعت كل دفعة بينكم.",
+  "expenses.ledger.totalSpent": "إجمالي المصروف", "expenses.ledger.fromTripFund": "من صندوق الرحلة", "expenses.ledger.paidPersonally": "مدفوع شخصيًا", "expenses.ledger.myOutOfPocket": "دفعتها من جيبي",
+  "expenses.ledger.searchPlaceholder": "ابحث في المصاريف...", "expenses.ledger.filterAll": "الكل", "expenses.ledger.filterShared": "مشترك", "expenses.ledger.filterPersonal": "شخصي",
+  "expenses.ledger.filter": "تصفية", "expenses.ledger.filterCategory": "الفئة", "expenses.ledger.filterPaymentSource": "مصدر الدفع", "expenses.ledger.filterDateFrom": "من", "expenses.ledger.filterDateTo": "إلى",
+  "expenses.ledger.clearFilters": "مسح الفلاتر", "expenses.ledger.applyFilters": "تطبيق", "expenses.ledger.newExpense": "مصروف جديد", "expenses.ledger.tripFund": "صندوق الرحلة",
+  "expenses.ledger.paidBy": "دفعها {{name}}", "expenses.ledger.paidByMembers_one": "دفعها {{count}} عضو", "expenses.ledger.paidByMembers_other": "دفعها {{count}} أعضاء", "expenses.ledger.formerMember": "عضو سابق",
+  "expenses.ledger.members_one": "{{count}} عضو", "expenses.ledger.members_other": "{{count}} أعضاء",
+  "expenses.ledger.columnDescription": "المصروف والتاريخ", "expenses.ledger.columnCategory": "الفئة", "expenses.ledger.columnPayment": "الدفع", "expenses.ledger.columnSplit": "تفاصيل التقسيم", "expenses.ledger.columnAmount": "المبلغ",
+  "expenses.ledger.emptyTitle": "ما فيه مصاريف للحين.", "expenses.ledger.emptyBody": "أضف أول مصروف وابدأ تتبع صرف الرحلة.", "expenses.ledger.emptyFiltered": "ما لقينا مصاريف تطابق البحث أو الفلاتر.",
+  "expenses.ledger.addedBy": "أضافها", "expenses.ledger.errorLoad": "تعذر تحميل المصاريف. حاول مرة أخرى.", "expenses.ledger.loadMore": "عرض مصاريف أكثر"
 }

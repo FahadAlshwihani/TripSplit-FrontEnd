@@ -1,0 +1,49 @@
+/*
+  Generic All/Shared/Personal-style segmented control -- reuses the
+  same hard-shadow physical press system as every other elevated
+  control (--shadow-hard-sm/-hover/-active tokens), not a bespoke
+  toggle-specific shadow language.
+*/
+
+.seg-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-container);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.seg-control__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: var(--space-1) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+
+.seg-control__item:hover:not(.is-active) { background: var(--color-surface-alt); color: var(--color-text); }
+.seg-control__item:active { transform: var(--press-sm-active); }
+.seg-control__item:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: 1px; }
+
+.seg-control__item.is-active {
+  background: var(--nc-indigo-700);
+  color: var(--nc-white);
+  box-shadow: var(--shadow-hard-sm);
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seg-control__item { transition: background-color 0.15s ease, color 0.15s ease; }
+  .seg-control__item:active { transform: none; }
+}

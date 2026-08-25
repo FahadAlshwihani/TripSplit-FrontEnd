@@ -283,5 +283,15 @@
   "dashboard.support.body": "Need help with this trip? Reach out and we'll get back to you.",
   "dashboard.overview.filter": "Filter", "dashboard.overview.filterUnavailable": "Filtering isn't available yet", "dashboard.overview.refresh": "Refresh",
   "categories.accommodation": "Accommodation", "categories.food": "Food", "categories.transport": "Transport", "categories.activities": "Activities", "categories.shopping": "Shopping",
-  "categories.flights": "Flights", "categories.carRental": "Car Rental", "categories.fuel": "Fuel", "categories.groceries": "Groceries", "categories.tickets": "Tickets", "categories.other": "Other"
+  "categories.flights": "Flights", "categories.carRental": "Car Rental", "categories.fuel": "Fuel", "categories.groceries": "Groceries", "categories.tickets": "Tickets", "categories.other": "Other",
+  "expenses.ledger.title": "Expenses Ledger", "expenses.ledger.subtitle": "Track what was spent, who paid, and how every expense was split.",
+  "expenses.ledger.totalSpent": "Total Spent", "expenses.ledger.fromTripFund": "From Trip Fund", "expenses.ledger.paidPersonally": "Paid Personally", "expenses.ledger.myOutOfPocket": "My Out-of-Pocket",
+  "expenses.ledger.searchPlaceholder": "Search expenses...", "expenses.ledger.filterAll": "All", "expenses.ledger.filterShared": "Shared", "expenses.ledger.filterPersonal": "Personal",
+  "expenses.ledger.filter": "Filter", "expenses.ledger.filterCategory": "Category", "expenses.ledger.filterPaymentSource": "Payment source", "expenses.ledger.filterDateFrom": "From", "expenses.ledger.filterDateTo": "To",
+  "expenses.ledger.clearFilters": "Clear filters", "expenses.ledger.applyFilters": "Apply", "expenses.ledger.newExpense": "New Expense", "expenses.ledger.tripFund": "Trip Fund",
+  "expenses.ledger.paidBy": "Paid by {{name}}", "expenses.ledger.paidByMembers_one": "Paid by {{count}} member", "expenses.ledger.paidByMembers_other": "Paid by {{count}} members", "expenses.ledger.formerMember": "Former member",
+  "expenses.ledger.members_one": "{{count}} member", "expenses.ledger.members_other": "{{count}} members",
+  "expenses.ledger.columnDescription": "Expense & Date", "expenses.ledger.columnCategory": "Category", "expenses.ledger.columnPayment": "Payment", "expenses.ledger.columnSplit": "Split Details", "expenses.ledger.columnAmount": "Amount",
+  "expenses.ledger.emptyTitle": "No expenses yet.", "expenses.ledger.emptyBody": "Add the first expense to start tracking the trip.", "expenses.ledger.emptyFiltered": "No expenses match these filters.",
+  "expenses.ledger.addedBy": "Added by", "expenses.ledger.errorLoad": "We couldn't load your expenses. Please try again.", "expenses.ledger.loadMore": "Load More Expenses"
 }
