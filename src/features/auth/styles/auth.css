@@ -510,9 +510,12 @@
    PublicLayout carries for every page that mounts through it — this
    screen is deliberately standalone (no page chrome), so it needs its
    own copy. */
+/* `a` deliberately excluded -- see PublicLayout.css's identical guard
+   for why (a bare element-selector `inherit` at (0,1,1) would beat any
+   single-class primary-button color rule like .auth-btn--primary at
+   (0,1,0) for any button rendered as an anchor). */
 .otp-page p,
 .otp-page span,
-.otp-page a,
 .otp-page li { color: inherit; }
 
 .otp-page a:focus-visible,

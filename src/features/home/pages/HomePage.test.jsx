@@ -56,6 +56,17 @@ test('anonymous Create Trip CTA routes through the Auth Gateway first', () => {
   expect(screen.getByText('auth-page')).toBeInTheDocument();
 });
 
+test('the Create Trip hero CTA is the canonical filled-primary variant (indigo fill, on-primary text)', () => {
+  render(
+    <MemoryRouter initialEntries={['/']}>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+  expect(screen.getByRole('link', { name: 'home.hero.createTrip' })).toHaveClass('btn', 'btn--primary');
+});
+
 test('anonymous Join Trip CTA routes through the Auth Gateway first', () => {
   render(
     <MemoryRouter initialEntries={['/']}>

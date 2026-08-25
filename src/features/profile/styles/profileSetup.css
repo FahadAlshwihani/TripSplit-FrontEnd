@@ -26,9 +26,11 @@
 .profile-setup-page a,
 .profile-setup-page button { font-family: inherit; }
 
+/* `a` deliberately excluded -- see PublicLayout.css's identical guard
+   for why (a bare element-selector `inherit` would beat a single-class
+   primary-button color rule for any button rendered as an anchor). */
 .profile-setup-page p,
 .profile-setup-page span,
-.profile-setup-page a,
 .profile-setup-page li { color: inherit; }
 
 .profile-setup-page button:focus-visible {

@@ -22,16 +22,27 @@
 
 /* App.css ships a legacy `p, span, a, li { color: white; }` reset (an
    un-classed element selector) left over from the old dark dashboard
-   shell -- it wins over plain inheritance on any bare <p>/<span>/<a>/<li>
-   in this layout that doesn't carry its own color-bearing class,
-   regardless of stylesheet load order. Reasserted once here, for every
-   page that mounts through PublicLayout, instead of every individual
-   page having to remember its own copy of this guard (which is exactly
-   how one such node -- the Saved Guest screen's display name -- went
-   unnoticed and rendered white-on-cream). */
+   shell -- it wins over plain inheritance on any bare <p>/<span>/<li> in
+   this layout that doesn't carry its own color-bearing class, regardless
+   of stylesheet load order. Reasserted once here, for every page that
+   mounts through PublicLayout, instead of every individual page having
+   to remember its own copy of this guard (which is exactly how one such
+   node -- the Saved Guest screen's display name, a bare <p> -- went
+   unnoticed and rendered white-on-cream).
+
+   `a` is deliberately EXCLUDED here. Every primary-button component in
+   the app (.btn--primary, .acc-btn--primary, .pricing-receipt__cta...)
+   is a single class selector -- specificity (0,1,0) -- and several of
+   them render as <Link>/<a> (Home's "Create Trip", Account's "Create
+   Trip" quick action). `.public-layout a` has specificity (0,1,1),
+   which would beat every one of those and force their own explicit
+   on-primary text color back to an inherited dark color -- exactly the
+   "indigo button, dark label" regression this caused before. Anchors
+   that actually need this guard (plain text links with no button class)
+   already carry their own explicit color one level down (e.g.
+   .auth-footer__link, .public-nav__link) as they always have. */
 .public-layout p,
 .public-layout span,
-.public-layout a,
 .public-layout li {
   color: inherit;
 }
