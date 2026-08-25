@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import AccountMenu from '../../../components/Layout/AccountMenu';
-import { TRIP_IDENTITY_ICON, tripState } from './dashboardNav';
+import { TRIP_IDENTITY_ICON } from './dashboardNav';
 import { formatDateRange } from '../../../shared/utils/format';
 
 /*
@@ -21,7 +21,6 @@ const MobileDashboardHeader = ({ trip, tripId, permissions }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const isRegistered = trip.current_member?.identity_type === 'registered';
-  const state = tripState(trip);
   const dateRange = formatDateRange(trip.start_date, trip.end_date);
 
   const TripIcon = <i className={`bi ${TRIP_IDENTITY_ICON} dash-mobile-header__trip-icon`} aria-hidden="true" />;
@@ -53,10 +52,6 @@ const MobileDashboardHeader = ({ trip, tripId, permissions }) => {
             {TripText}
           </span>
         )}
-        <span className={`dash-badge dash-badge--${state.key} dash-mobile-header__badge`}>
-          <span className="dash-badge__dot" aria-hidden="true" />
-          {t(state.label)}
-        </span>
       </div>
       <div className="dash-mobile-header__actions">
         {permissions?.canManageMembers && (
