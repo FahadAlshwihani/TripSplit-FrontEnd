@@ -12,6 +12,7 @@ const Harness = ({ permissions = { canManageMembers: true } }) => {
     <>
       <MobileBottomNav tripId="t1" onOpenMore={() => setOpen(true)} />
       {open && <DashboardMoreSheet tripId="t1" permissions={permissions} onClose={() => setOpen(false)} />}
+      <p>overview page</p>
     </>
   );
 };
@@ -85,4 +86,34 @@ test('the sheet renders through a portal to document.body, not nested under the 
   fireEvent.click(screen.getByRole('button', { name: 'dashboard.more' }));
   const sheet = screen.getByRole('dialog');
   expect(sheet.closest('.dash-bottom-nav')).toBeNull();
+});
+
+test('selecting a destination in the sheet closes it and navigates there', () => {
+  renderHarness({ canManageMembers: false });
+  fireEvent.click(screen.getByRole('button', { name: 'dashboard.more' }));
+  fireEvent.click(screen.getByText('dashboard.nav.balances'));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
+
+// Regression test for a real bug: React 18 StrictMode intentionally
+// mounts every component twice in development (setup, cleanup, setup
+// again) to surface exactly this class of bug. The sheet is only ever
+// mounted while open, so a naive "have I run before" ref guard used to
+// read its own leftover state on the second synthetic pass and call
+// onClose() immediately -- the sheet would flash open and instantly
+// close on the very click that opened it. This must stay open under
+// StrictMode specifically, not just under the plain (non-StrictMode)
+// render the other tests in this file use.
+test('opening the sheet does not immediately close it under StrictMode\'s double-effect mount', () => {
+  render(
+    <React.StrictMode>
+      <MemoryRouter initialEntries={['/trips/t1/overview']}>
+        <Routes>
+          <Route path="/trips/:tripId/*" element={<Harness />} />
+        </Routes>
+      </MemoryRouter>
+    </React.StrictMode>,
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'dashboard.more' }));
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
 });

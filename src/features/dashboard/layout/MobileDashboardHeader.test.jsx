@@ -39,9 +39,10 @@ test('shows the trip date range, readable alongside the title', () => {
   expect(screen.getByText('Aug 25, 2026 – Aug 30, 2026')).toBeInTheDocument();
 });
 
-test('shows the active-state badge', () => {
+test('does not render a status badge -- travel icon, trip title, and dates are enough', () => {
   renderHeader();
-  expect(screen.getByText('dashboard.trip.state.active')).toBeInTheDocument();
+  expect(screen.queryByText('dashboard.trip.state.active')).not.toBeInTheDocument();
+  expect(document.querySelector('.dash-mobile-header__badge')).not.toBeInTheDocument();
 });
 
 test('exposes two obvious quick actions -- New Expense and Add Member -- each with a real accessible name', () => {
