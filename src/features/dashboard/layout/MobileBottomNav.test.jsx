@@ -62,6 +62,13 @@ test('clicking outside the sheet closes it', () => {
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
 
+test('opening the sheet moves keyboard focus into it (the first destination link)', () => {
+  renderHarness();
+  fireEvent.click(screen.getByRole('button', { name: 'dashboard.more' }));
+  const firstSheetLink = screen.getByRole('dialog').querySelector('a');
+  expect(firstSheetLink).toHaveFocus();
+});
+
 test('the sheet renders through a portal to document.body, not nested under the bottom nav', () => {
   renderHarness();
   fireEvent.click(screen.getByRole('button', { name: 'dashboard.more' }));

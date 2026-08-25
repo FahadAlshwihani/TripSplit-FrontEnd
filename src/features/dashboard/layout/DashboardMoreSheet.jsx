@@ -15,6 +15,13 @@ const DashboardMoreSheet = ({ tripId, permissions, onClose }) => {
   const { t } = useTranslation();
   const location = useLocation();
   const sheetRef = useRef(null);
+  const firstItemRef = useRef(null);
+
+  // Moves focus into the sheet on open (first destination link) --
+  // focus never silently stays on a now-hidden-behind-the-overlay
+  // trigger. DashboardShell restores focus to the "More" button itself
+  // once this unmounts (see its onCloseMore).
+  useEffect(() => { firstItemRef.current?.focus(); }, []);
 
   useEffect(() => {
     const handleKeyDown = (event) => { if (event.key === 'Escape') onClose(); };
@@ -51,8 +58,8 @@ const DashboardMoreSheet = ({ tripId, permissions, onClose }) => {
         >
           <div className="dash-more-sheet__handle" aria-hidden="true" />
           <div className="dash-more-sheet__items">
-            {secondaryItems.map((item) => (
-              <NavLink key={item.key} to={`/trips/${tripId}/${item.path}`} className="dash-more-sheet__item">
+            {secondaryItems.map((item, index) => (
+              <NavLink key={item.key} ref={index === 0 ? firstItemRef : undefined} to={`/trips/${tripId}/${item.path}`} className="dash-more-sheet__item">
                 <i className={`bi ${item.icon} dash-more-sheet__item-icon`} aria-hidden="true" />
                 {t(item.labelKey)}
               </NavLink>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardTopBar from './DashboardTopBar';
 import MobileDashboardHeader from './MobileDashboardHeader';
@@ -18,6 +18,15 @@ import '../styles/dashboard.css';
 */
 const DashboardShell = ({ trip, tripId, currentMember, permissions, children }) => {
   const [moreOpen, setMoreOpen] = useState(false);
+  const moreTriggerRef = useRef(null);
+
+  // Focus returns to the "More" button that opened the sheet once it
+  // closes (by any means -- Escape, outside click, or following an
+  // item), instead of silently falling back to <body>.
+  const closeMore = () => {
+    setMoreOpen(false);
+    moreTriggerRef.current?.focus();
+  };
 
   return (
     <div className="dash-shell">
@@ -27,13 +36,13 @@ const DashboardShell = ({ trip, tripId, currentMember, permissions, children }) 
         <MobileDashboardHeader trip={trip} tripId={tripId} />
         <main className="dash-content">{children}</main>
       </div>
-      <MobileBottomNav tripId={tripId} onOpenMore={() => setMoreOpen(true)} />
+      <MobileBottomNav ref={moreTriggerRef} tripId={tripId} onOpenMore={() => setMoreOpen(true)} />
       {moreOpen && (
         <DashboardMoreSheet
           tripId={tripId}
           currentMember={currentMember}
           permissions={permissions}
-          onClose={() => setMoreOpen(false)}
+          onClose={closeMore}
         />
       )}
     </div>
