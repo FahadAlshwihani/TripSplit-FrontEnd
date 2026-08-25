@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatMoney } from '../../../../shared/utils/format';
+import Money from '../../../../shared/components/Money';
 
 const OverviewSummaryCards = ({ summary, currency }) => {
   const { t } = useTranslation();
@@ -13,9 +13,11 @@ const OverviewSummaryCards = ({ summary, currency }) => {
           <span className="ov-card__label">{t('dashboard.overview.totalBudget')}</span>
           <i className="bi bi-bank ov-card__icon" aria-hidden="true" />
         </div>
-        <p className="ov-card__value text-display">
-          {summary.budget_set ? formatMoney(summary.budget, currency) : <span className="ov-card__muted">{t('dashboard.overview.noBudgetSet')}</span>}
-        </p>
+        {summary.budget_set ? (
+          <Money value={summary.budget} currency={currency} className="ov-card__value" currencyClassName="ov-card__value-currency" />
+        ) : (
+          <span className="ov-card__muted">{t('dashboard.overview.noBudgetSet')}</span>
+        )}
       </article>
 
       <article className="ov-card ov-card--spent">
@@ -23,19 +25,21 @@ const OverviewSummaryCards = ({ summary, currency }) => {
           <span className="ov-card__label">{t('dashboard.overview.totalSpent')}</span>
           <i className="bi bi-graph-up-arrow ov-card__icon" aria-hidden="true" />
         </div>
-        <p className="ov-card__value text-display">{formatMoney(summary.total_spent, currency)}</p>
+        <Money value={summary.total_spent} currency={currency} className="ov-card__value" currencyClassName="ov-card__value-currency" />
       </article>
 
       <article className="ov-card ov-card--remaining">
-        <span className="ov-card__label">{t('dashboard.overview.remaining')}</span>
-        <span className="ov-card__value-sm">
-          {summary.budget_set ? formatMoney(summary.remaining, currency) : <span className="ov-card__muted">{t('dashboard.overview.noBudgetSet')}</span>}
-        </span>
+        <span className="ov-card__label ov-card__label--plain">{t('dashboard.overview.remaining')}</span>
+        {summary.budget_set ? (
+          <Money value={summary.remaining} currency={currency} className="ov-card__value-sm" currencyClassName="ov-card__value-sm-currency" />
+        ) : (
+          <span className="ov-card__muted">{t('dashboard.overview.noBudgetSet')}</span>
+        )}
       </article>
 
       <article className={`ov-card ov-card--balance${balancePositive ? ' is-positive' : ' is-negative'}`}>
         <span className="ov-card__label">{t('dashboard.overview.myBalance')}</span>
-        <span className="ov-card__value-sm">{formatMoney(summary.my_balance, currency)}</span>
+        <Money value={summary.my_balance} currency={currency} className="ov-card__value-sm" currencyClassName="ov-card__value-sm-currency" />
       </article>
     </div>
   );

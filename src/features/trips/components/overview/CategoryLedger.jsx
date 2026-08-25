@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { formatMoney } from '../../../../shared/utils/format';
+import Money from '../../../../shared/components/Money';
 import { categoryIconClass } from '../../utils/categoryIcons';
 
 const CategoryLedger = ({ categories, currency, tripId }) => {
@@ -24,7 +24,7 @@ const CategoryLedger = ({ categories, currency, tripId }) => {
                 <span className="ov-category__icon"><i className={`bi ${categoryIconClass(row.icon_key)}`} aria-hidden="true" /></span>
                 <span>{row.name}</span>
               </div>
-              <span className="ov-category__amount">{formatMoney(row.spent, currency)}</span>
+              <Money value={row.spent} currency={currency} className="ov-category__amount text-financial" />
             </div>
             <div className="ov-category__track">
               <div className="ov-category__fill" style={{ width: `${row.percent_of_total}%` }} />

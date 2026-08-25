@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Avatar from '../../../profile/components/Avatar';
 import { avatarKeyFromAvatar } from '../../../profile/utils/avatarKey';
-import { formatMoney, formatDate } from '../../../../shared/utils/format';
+import { formatDate } from '../../../../shared/utils/format';
+import Money from '../../../../shared/components/Money';
 
 const rowDescription = (event, t) => {
   if (event.event_type === 'expense_created') return event.summary.title;
@@ -49,7 +50,9 @@ const RecentActivity = ({ events, currency, tripId }) => {
                 </div>
               </div>
               <span className="ov-activity-row__date">{formatDate(event.created_at)}</span>
-              <span className="ov-activity-row__amount">{event.summary.amount ? formatMoney(event.summary.amount, event.summary.currency || currency) : null}</span>
+              {event.summary.amount && (
+                <Money value={event.summary.amount} currency={event.summary.currency || currency} className="ov-activity-row__amount text-financial" />
+              )}
             </div>
           ))}
         </div>
