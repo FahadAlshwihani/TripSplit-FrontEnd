@@ -52,6 +52,12 @@ test('shows the trip name, date range, and an active-state badge', () => {
   expect(screen.getByText('dashboard.trip.state.active')).toBeInTheDocument();
 });
 
+test('uses the travel/airplane trip identity icon, matching the mobile header', () => {
+  renderSidebar({ canManageMembers: true });
+  expect(document.querySelector('.dash-sidebar__icon .bi-airplane')).toBeInTheDocument();
+  expect(document.querySelector('.dash-sidebar__icon .bi-compass')).not.toBeInTheDocument();
+});
+
 test('an archived trip shows the archived badge instead of active', () => {
   render(
     <MemoryRouter initialEntries={['/trips/t1/overview']}>
