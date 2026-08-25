@@ -17,3 +17,4 @@ export const restoreTrip = (id) => responseData(apiClient.post(`/trips/${id}/res
 export const closeTrip = (id) => responseData(apiClient.post(`/trips/${id}/close/`, {}, tripRequest(id)));
 export const reopenTrip = (id) => responseData(apiClient.post(`/trips/${id}/reopen/`, {}, tripRequest(id)));
 export const getTripSummary = (id, config) => responseData(apiClient.get(`/trips/${id}/summary/`, tripRequest(id, config)));
+export const getTripOverview = (id, config) => responseData(apiClient.get(`/trips/${id}/overview/`, tripRequest(id, config)));
