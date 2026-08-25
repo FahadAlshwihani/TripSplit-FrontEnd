@@ -53,6 +53,29 @@ test('each legend row carries a concise description (tooltip) distinguishing sha
   expect(rows[1]).toHaveAttribute('title', 'dashboard.overview.personalDescription');
 });
 
+test('each legend row is keyboard-reachable and exposes its description to assistive tech, not just to a mouse hover', () => {
+  render(<SpendingSplit split={{ shared: '5018.00', personal: '2702.00', shared_percent: 65, personal_percent: 35 }} />);
+  const rows = document.querySelectorAll('.ov-split__legend-row');
+  expect(rows[0]).toHaveAttribute('tabIndex', '0');
+  const describedById = rows[0].getAttribute('aria-describedby');
+  expect(describedById).toBeTruthy();
+  expect(document.getElementById(describedById)).toHaveTextContent('dashboard.overview.sharedDescription');
+});
+
+test('the visualization is purely informational -- no interactive semantics, and hidden from assistive tech since the legend already carries the same information as text', () => {
+  render(<SpendingSplit split={{ shared: '5018.00', personal: '2702.00', shared_percent: 65, personal_percent: 35 }} />);
+  const frame = document.querySelector('.ov-split__frame');
+  expect(frame).toHaveAttribute('aria-hidden', 'true');
+  expect(frame).not.toHaveAttribute('tabIndex');
+  expect(frame.querySelector('button, a[href]')).not.toBeInTheDocument();
+});
+
+test('the zero-spending empty frame is NOT hidden from assistive tech -- "No spending yet" is unique information', () => {
+  render(<SpendingSplit split={{ shared: '0.00', personal: '0.00', shared_percent: 0, personal_percent: 0 }} />);
+  const frame = document.querySelector('.ov-split__frame');
+  expect(frame).not.toHaveAttribute('aria-hidden');
+});
+
 test('the new Spending Split copy keys have real, non-empty Arabic translations distinct from English', () => {
   const keys = [
     'dashboard.overview.spendingSplitHelp',
