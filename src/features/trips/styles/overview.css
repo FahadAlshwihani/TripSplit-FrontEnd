@@ -295,33 +295,56 @@
   font-size: 10px;
 }
 
+/* App.css ships a legacy `span, a, li, p { color: white; }` reset that
+   directly matches these bare header <span>s (a rule targeting the
+   element itself always wins over the non-matching parent's color) --
+   the real cause of "DESCRIPTION/DATE/AMOUNT" reading as near-white in
+   light theme. Same fix as .ov-category__name / .dash-btn__label. */
+.ov-activity-list__head-cell { color: inherit; }
+
+/* Date/Amount stay centered in BOTH languages -- not `text-align: end`
+   (which flips with `dir` and would read as centered-in-neither), a
+   deliberate physical center regardless of direction. */
+.ov-activity-list__head-cell--center { text-align: center; }
+
 @media (min-width: 640px) {
   .ov-activity-list__head { display: grid; grid-template-columns: 2fr 1fr 1fr; }
-  .ov-activity-list__head span:last-child, .ov-activity-list__head span:nth-child(2) { text-align: end; }
 }
 
 .ov-activity-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-1) var(--space-3);
   padding: var(--space-2) var(--space-3);
   border-block-end: var(--border-width) solid var(--color-border-subtle);
 }
 .ov-activity-row:last-child { border-block-end: none; }
 
+/* Mobile: main (avatar+title+context) and meta (date+amount) each claim
+   a full row -- title/description first, then a centered date/amount
+   row underneath -- rather than being squeezed onto one crowded line. */
+.ov-activity-row__main { flex: 1 1 100%; display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.ov-activity-row__meta { flex: 1 1 100%; display: flex; gap: var(--space-3); }
+
 @media (min-width: 640px) {
   .ov-activity-row { display: grid; grid-template-columns: 2fr 1fr 1fr; align-items: center; }
+  .ov-activity-row__main { flex: initial; }
+  /* Unwraps the meta container so date/amount become direct grid items
+     (falling into the grid's own Date/Amount columns) instead of a
+     nested flex row -- one markup structure serves both breakpoints. */
+  .ov-activity-row__meta { display: contents; }
 }
 
-.ov-activity-row__main { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
 .ov-activity-row__text { display: flex; flex-direction: column; min-width: 0; }
 .ov-activity-row__title { font: var(--text-label); letter-spacing: var(--tracking-label); color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ov-activity-row__context { color: var(--color-text-muted); }
-.ov-activity-row__date { color: var(--color-text-muted); font: var(--text-label); letter-spacing: var(--tracking-label); font-variant-numeric: tabular-nums; }
-.ov-activity-row__amount { color: var(--color-text); font-weight: 700; }
 
-@media (min-width: 640px) {
-  .ov-activity-row__date, .ov-activity-row__amount { text-align: end; }
-}
+/* Date/Amount are always centered -- not `text-align: end` (direction-
+   dependent: right in LTR, left in RTL, neither of which is "centered").
+   flex: 1 1 0 gives them equal width on the mobile meta row; at >=640px
+   .ov-activity-row__meta's `display: contents` hands sizing to the grid
+   column instead, and text-align: center still centers each cell's text
+   within it. */
+.ov-activity-row__date { flex: 1 1 0; text-align: center; color: var(--color-text-muted); font: var(--text-label); letter-spacing: var(--tracking-label); font-variant-numeric: tabular-nums; }
+.ov-activity-row__amount { flex: 1 1 0; text-align: center; color: var(--color-text); font-weight: 700; }

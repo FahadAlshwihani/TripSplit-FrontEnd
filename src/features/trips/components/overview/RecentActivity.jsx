@@ -36,9 +36,9 @@ const RecentActivity = ({ events, currency, tripId }) => {
       {events.length ? (
         <div className="ov-activity-list">
           <div className="ov-activity-list__head" aria-hidden="true">
-            <span>{t('dashboard.overview.columnDescription')}</span>
-            <span>{t('dashboard.overview.columnDate')}</span>
-            <span>{t('dashboard.overview.columnAmount')}</span>
+            <span className="ov-activity-list__head-cell">{t('dashboard.overview.columnDescription')}</span>
+            <span className="ov-activity-list__head-cell ov-activity-list__head-cell--center">{t('dashboard.overview.columnDate')}</span>
+            <span className="ov-activity-list__head-cell ov-activity-list__head-cell--center">{t('dashboard.overview.columnAmount')}</span>
           </div>
           {events.map((event) => (
             <div className="ov-activity-row" key={event.id}>
@@ -49,10 +49,18 @@ const RecentActivity = ({ events, currency, tripId }) => {
                   <span className="ov-activity-row__context text-copy-sm">{rowContext(event, t)}</span>
                 </div>
               </div>
-              <span className="ov-activity-row__date">{formatDate(event.created_at)}</span>
-              {event.summary.amount && (
-                <Money value={event.summary.amount} currency={event.summary.currency || currency} variant="tabular" className="ov-activity-row__amount text-financial" />
-              )}
+              {/* One markup structure for both breakpoints: this wrapper
+                  becomes `display: contents` at >=640px (see overview.css),
+                  so date/amount fall straight into the grid's own Date/
+                  Amount columns instead of needing separate mobile/desktop
+                  markup -- it only does real layout work (a centered
+                  2-column row) below that breakpoint. */}
+              <div className="ov-activity-row__meta">
+                <span className="ov-activity-row__date">{formatDate(event.created_at)}</span>
+                {event.summary.amount && (
+                  <Money value={event.summary.amount} currency={event.summary.currency || currency} variant="tabular" className="ov-activity-row__amount text-financial" />
+                )}
+              </div>
             </div>
           ))}
         </div>
