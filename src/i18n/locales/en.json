@@ -281,5 +281,7 @@
   "dashboard.overview.paidBy": "Paid by {{name}} • {{scope}}", "dashboard.overview.sharedExpense": "Shared", "dashboard.overview.personalExpense": "Personal", "dashboard.overview.settlementLabel": "Settlement", "dashboard.overview.settlementContext": "{{from}} → {{to}}",
   "dashboard.overview.errorLoad": "We couldn't load the trip overview. Please try again.",
   "dashboard.support.body": "Need help with this trip? Reach out and we'll get back to you.",
-  "dashboard.overview.filter": "Filter", "dashboard.overview.filterUnavailable": "Filtering isn't available yet", "dashboard.overview.refresh": "Refresh"
+  "dashboard.overview.filter": "Filter", "dashboard.overview.filterUnavailable": "Filtering isn't available yet", "dashboard.overview.refresh": "Refresh",
+  "categories.accommodation": "Accommodation", "categories.food": "Food", "categories.transport": "Transport", "categories.activities": "Activities", "categories.shopping": "Shopping",
+  "categories.flights": "Flights", "categories.carRental": "Car Rental", "categories.fuel": "Fuel", "categories.groceries": "Groceries", "categories.tickets": "Tickets", "categories.other": "Other"
 }

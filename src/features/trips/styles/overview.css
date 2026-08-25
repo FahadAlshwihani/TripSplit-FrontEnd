@@ -188,6 +188,18 @@
 .ov-category { display: flex; flex-direction: column; gap: var(--space-1); }
 .ov-category__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .ov-category__label { display: flex; align-items: center; gap: var(--space-2); font: var(--text-label); letter-spacing: var(--tracking-label); color: var(--color-text); }
+/* App.css ships a legacy `span, a, li, p { color: white; }` reset that
+   directly matches this bare <span> (a rule targeting the element
+   itself always wins over a non-matching ancestor's color) -- an
+   explicit class + color: inherit is the same fix already applied to
+   .dash-btn__label for the same reason. This was the real cause behind
+   category names reading as too-light/invisible in light theme. */
+.ov-category__name { color: inherit; }
+/* Background comes from an inline style (see CategoryLedger.jsx --
+   categoryTileColor(row.code)), a per-category color the CSS itself
+   can't know ahead of time. Icon color is pinned to --color-text (reads
+   as black in light theme, per the approved spec) rather than left to
+   inherit, so it never depends on what happens to sit behind it. */
 .ov-category__icon {
   display: inline-flex;
   align-items: center;
@@ -196,7 +208,7 @@
   block-size: 28px;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-surface-alt);
+  color: var(--color-text);
   font-size: 0.85rem;
 }
 .ov-category__amount { color: var(--color-text); font-weight: 700; }

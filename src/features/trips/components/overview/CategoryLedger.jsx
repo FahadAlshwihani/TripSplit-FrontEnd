@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Money from '../../../../shared/components/Money';
-import { categoryIconClass } from '../../utils/categoryIcons';
+import { categoryColor, categoryIconClass, categoryLabel, categoryTileColor } from '../../../../shared/utils/categoryPresentation';
 
 const CategoryLedger = ({ categories, currency, tripId }) => {
   const { t } = useTranslation();
@@ -21,13 +21,15 @@ const CategoryLedger = ({ categories, currency, tripId }) => {
           <div className="ov-category" key={row.code}>
             <div className="ov-category__row">
               <div className="ov-category__label">
-                <span className="ov-category__icon"><i className={`bi ${categoryIconClass(row.icon_key)}`} aria-hidden="true" /></span>
-                <span>{row.name}</span>
+                <span className="ov-category__icon" style={{ background: categoryTileColor(row.code) }}>
+                  <i className={`bi ${categoryIconClass(row.icon_key)}`} aria-hidden="true" />
+                </span>
+                <span className="ov-category__name">{categoryLabel(t, row.code, row.name)}</span>
               </div>
               <Money value={row.spent} currency={currency} variant="tabular" className="ov-category__amount text-financial" />
             </div>
             <div className="ov-category__track">
-              <div className="ov-category__fill" style={{ width: `${row.percent_of_total}%` }} />
+              <div className="ov-category__fill" style={{ width: `${row.percent_of_total}%`, background: categoryColor(row.code) }} />
             </div>
           </div>
         )) : <p className="ov-empty text-copy-sm">{t('dashboard.overview.noCategorizedExpenses')}</p>}

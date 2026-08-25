@@ -282,5 +282,7 @@
   "dashboard.overview.paidBy": "دفعها {{name}} • {{scope}}", "dashboard.overview.sharedExpense": "مشترك", "dashboard.overview.personalExpense": "شخصي", "dashboard.overview.settlementLabel": "تسوية", "dashboard.overview.settlementContext": "{{from}} → {{to}}",
   "dashboard.overview.errorLoad": "تعذر تحميل ملخص الرحلة. حاول مرة أخرى.",
   "dashboard.support.body": "بحاجة إلى مساعدة بخصوص هذه الرحلة؟ تواصل معنا وسنرد عليك في أقرب وقت.",
-  "dashboard.overview.filter": "تصفية", "dashboard.overview.filterUnavailable": "التصفية غير متاحة بعد", "dashboard.overview.refresh": "تحديث"
+  "dashboard.overview.filter": "تصفية", "dashboard.overview.filterUnavailable": "التصفية غير متاحة بعد", "dashboard.overview.refresh": "تحديث",
+  "categories.accommodation": "السكن", "categories.food": "الطعام", "categories.transport": "النقل", "categories.activities": "الأنشطة", "categories.shopping": "التسوق",
+  "categories.flights": "الطيران", "categories.carRental": "استئجار سيارة", "categories.fuel": "الوقود", "categories.groceries": "البقالة", "categories.tickets": "التذاكر", "categories.other": "أخرى"
 }
