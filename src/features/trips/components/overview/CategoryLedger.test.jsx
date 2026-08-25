@@ -66,3 +66,25 @@ test('an empty category ledger shows the empty-state message, not a broken/blank
   renderLedger([]);
   expect(screen.getByText('dashboard.overview.noCategorizedExpenses')).toBeInTheDocument();
 });
+
+test('a zero-spend budgeted category shows "spent / allocated" and a 0% fill, never a fake 100%', () => {
+  renderLedger([{ code: 'accommodation', name: 'Accommodation', icon_key: 'bed', spent: '0.00', percent_of_total: 0, allocated_budget: '1000.00', remaining: '1000.00', over_budget: false, utilization_percentage: 0 }]);
+  expect(document.querySelector('.ov-category__amount')).toHaveTextContent('0.00');
+  expect(document.querySelector('.ov-category__of')).toHaveTextContent('1,000.00');
+  expect(document.querySelector('.ov-category__fill')).toHaveStyle({ width: '0%' });
+  expect(document.querySelector('.ov-category--over')).not.toBeInTheDocument();
+});
+
+test('an over-budget category shows the over-budget badge and a red, capped-at-100% fill', () => {
+  renderLedger([{ code: 'food', name: 'Food', icon_key: 'utensils', spent: '150.00', percent_of_total: 40, allocated_budget: '100.00', remaining: '-50.00', over_budget: true, utilization_percentage: 150 }]);
+  expect(screen.getByText('dashboard.overview.overBudget')).toBeInTheDocument();
+  const fill = document.querySelector('.ov-category__fill');
+  expect(fill).toHaveClass('ov-category__fill--over');
+  expect(fill).toHaveStyle({ width: '100%', background: 'var(--color-danger)' });
+});
+
+test('a category with no budget allocation falls back to its share of total spending, unchanged', () => {
+  renderLedger([{ code: 'food', name: 'Food', icon_key: 'utensils', spent: '100.00', percent_of_total: 40, allocated_budget: null, remaining: null, over_budget: false, utilization_percentage: null }]);
+  expect(document.querySelector('.ov-category__of')).not.toBeInTheDocument();
+  expect(document.querySelector('.ov-category__fill')).toHaveStyle({ width: '40%' });
+});

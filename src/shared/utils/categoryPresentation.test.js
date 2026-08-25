@@ -9,11 +9,28 @@ test('a known system category resolves a real CSS var(), not an inline hex value
 
 test('every known system category has a distinct strong color from its neighbors', () => {
   const codes = ['accommodation', 'food', 'transport', 'activities', 'shopping', 'flights', 'car_rental', 'fuel', 'groceries', 'tickets'];
-  const colors = codes.map(categoryColor);
+  // Not `codes.map(categoryColor)` -- Array.map passes (value, index,
+  // array) to its callback, and categoryColor's 2nd param is now a real
+  // explicit-color-key override, so the bare function reference would
+  // silently receive each element's array index as that override.
+  const colors = codes.map((code) => categoryColor(code));
   // accommodation/groceries intentionally share green (matches the
   // approved direction), so dedupe before asserting distinctness.
   const unique = new Set(colors);
   expect(unique.size).toBeGreaterThanOrEqual(codes.length - 1);
+});
+
+test('an explicit color key (a category\'s own chosen color) takes priority over the code-based default', () => {
+  expect(categoryColor('food', 'purple')).toBe('var(--cat-purple)');
+  expect(categoryTileColor('food', 'purple')).toBe('var(--cat-purple-soft)');
+});
+
+test('a blank explicit color (the 11 seeded defaults\' real value) falls back to the code-based default, not a crash', () => {
+  expect(categoryColor('food', '')).toBe('var(--cat-orange)');
+});
+
+test('a custom category with an explicit color key never falls back to the neutral "Other" treatment', () => {
+  expect(categoryColor('kayak_gear', 'teal')).toBe('var(--cat-teal)');
 });
 
 test('an unrecognized or custom per-trip category falls back to the same neutral tile as Other, never a crash', () => {
