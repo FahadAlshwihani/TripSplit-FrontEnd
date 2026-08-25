@@ -24,21 +24,32 @@ const renderHarness = (permissions) => render(
   </MemoryRouter>,
 );
 
-test('the bottom nav exposes exactly the four highest-frequency destinations plus More', () => {
+test('the bottom nav exposes exactly the three default favorites plus More -- not every destination', () => {
   renderHarness();
   const labels = screen.getAllByRole('link').map((link) => link.textContent).concat(screen.getByRole('button', { name: 'dashboard.more' }).textContent);
-  expect(labels).toEqual(['dashboard.nav.overview', 'dashboard.nav.expenses', 'dashboard.nav.fund', 'dashboard.nav.members', 'dashboard.more']);
+  expect(labels).toEqual(['dashboard.nav.overview', 'dashboard.nav.expenses', 'dashboard.nav.fund', 'dashboard.more']);
 });
 
-test('More opens a sheet exposing Balances, Activity, Settlements, Settings, and Support', () => {
+test('More opens a sheet exposing everything not already a favorite: Balances, Members, Activity, Settlements, Settings, and Support', () => {
   renderHarness({ canManageMembers: false });
   fireEvent.click(screen.getByRole('button', { name: 'dashboard.more' }));
   const sheet = screen.getByRole('dialog');
   expect(sheet).toHaveTextContent('dashboard.nav.balances');
+  expect(sheet).toHaveTextContent('dashboard.nav.members');
   expect(sheet).toHaveTextContent('dashboard.nav.activity');
   expect(sheet).toHaveTextContent('dashboard.nav.settlements');
   expect(sheet).toHaveTextContent('dashboard.nav.settings');
   expect(sheet).toHaveTextContent('dashboard.nav.support');
+  // The three favorites never appear twice.
+  expect(sheet).not.toHaveTextContent('dashboard.nav.overview');
+  expect(sheet).not.toHaveTextContent('dashboard.nav.expenses');
+  expect(sheet).not.toHaveTextContent('dashboard.nav.fund');
+});
+
+test('the sheet has a visible, accessible heading', () => {
+  renderHarness();
+  fireEvent.click(screen.getByRole('button', { name: 'dashboard.more' }));
+  expect(screen.getByRole('heading', { name: 'dashboard.more' })).toBeInTheDocument();
 });
 
 test('Governance only appears in the More sheet for a member with canManageMembers', () => {

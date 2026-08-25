@@ -2,16 +2,16 @@ import React, { useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ModalPortal from '../../../shared/components/ModalPortal';
-import { DASHBOARD_NAV_ITEMS, DASHBOARD_FOOTER_ITEMS, MOBILE_PRIMARY_KEYS, visibleNavItems } from './dashboardNav';
+import { DASHBOARD_NAV_ITEMS, DASHBOARD_FOOTER_ITEMS, resolveMobileFavorites, visibleNavItems } from './dashboardNav';
 
 /*
-  Everything NOT already one tap away on the bottom nav (Overview/
-  Expenses/Fund/Members). Portaled to document.body (same architecture
-  as TripMoreActionsMenu/ModalPortal elsewhere) so it's never clipped by
-  or trapped inside a transformed ancestor, and uses the shared modal
-  z-index token rather than an ad-hoc number.
+  Everything NOT already one tap away as a bottom-nav favorite.
+  Portaled to document.body (same architecture as TripMoreActionsMenu/
+  ModalPortal elsewhere) so it's never clipped by or trapped inside a
+  transformed ancestor, and uses the shared modal z-index token rather
+  than an ad-hoc number.
 */
-const DashboardMoreSheet = ({ tripId, permissions, onClose }) => {
+const DashboardMoreSheet = ({ tripId, favorites, permissions, onClose }) => {
   const { t } = useTranslation();
   const location = useLocation();
   const sheetRef = useRef(null);
@@ -43,7 +43,8 @@ const DashboardMoreSheet = ({ tripId, permissions, onClose }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  const secondaryItems = visibleNavItems(DASHBOARD_NAV_ITEMS, permissions).filter((item) => !MOBILE_PRIMARY_KEYS.includes(item.key));
+  const favoriteKeys = resolveMobileFavorites(favorites);
+  const secondaryItems = visibleNavItems(DASHBOARD_NAV_ITEMS, permissions).filter((item) => !favoriteKeys.includes(item.key));
 
   return (
     <ModalPortal>
@@ -53,10 +54,11 @@ const DashboardMoreSheet = ({ tripId, permissions, onClose }) => {
           className="dash-more-sheet"
           role="dialog"
           aria-modal="true"
-          aria-label={t('dashboard.more')}
+          aria-labelledby="dash-more-sheet-heading"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="dash-more-sheet__handle" aria-hidden="true" />
+          <h2 id="dash-more-sheet-heading" className="dash-more-sheet__heading text-headline-sm">{t('dashboard.more')}</h2>
           <div className="dash-more-sheet__items">
             {secondaryItems.map((item, index) => (
               <NavLink key={item.key} ref={index === 0 ? firstItemRef : undefined} to={`/trips/${tripId}/${item.path}`} className="dash-more-sheet__item">

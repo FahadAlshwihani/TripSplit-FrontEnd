@@ -33,7 +33,7 @@ const DashboardShell = ({ trip, tripId, currentMember, permissions, children }) 
       <DashboardSidebar trip={trip} tripId={tripId} permissions={permissions} />
       <div className="dash-shell__canvas">
         <DashboardTopBar tripId={tripId} permissions={permissions} />
-        <MobileDashboardHeader trip={trip} tripId={tripId} />
+        <MobileDashboardHeader trip={trip} tripId={tripId} permissions={permissions} />
         <main className="dash-content">{children}</main>
       </div>
       <MobileBottomNav ref={moreTriggerRef} tripId={tripId} onOpenMore={() => setMoreOpen(true)} />
