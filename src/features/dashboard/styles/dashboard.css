@@ -14,6 +14,15 @@
   color: var(--color-text);
 }
 
+/* App.css ships a legacy `a:hover { text-decoration: underline; }` reset
+   (specificity 0,1,1) that otherwise wins over every dashboard nav
+   link's own base `text-decoration: none` (0,1,0) the instant it's
+   hovered -- the underline reported on nav items. Scoping the override
+   to the shell root (0,2,1) beats it outright without touching public
+   pages or per-link CSS; the "More" sheet gets its own copy below since
+   it's portaled outside this subtree. */
+.dash-shell a:hover { text-decoration: none; }
+
 .dash-shell__canvas {
   flex: 1 1 auto;
   min-width: 0;
@@ -114,8 +123,15 @@
 
 /* Button label collapses to icon-only at the topbar's own narrower
    widths (see .dash-topbar__actions breakpoints) -- never removed from
-   the DOM, so screen readers/keyboard users always get the full label. */
-.dash-btn__label { white-space: nowrap; }
+   the DOM, so screen readers/keyboard users always get the full label.
+   `color: inherit` is load-bearing, not decorative: App.css ships a
+   legacy `span { color: white; }` reset that matches this label
+   directly (it's a <span>), and a rule targeting the element itself
+   always wins over the parent .dash-btn--secondary's own color -- that
+   was the real cause of "white text on a light button." Inheriting
+   resolves it for every current and future .dash-btn variant at once
+   instead of duplicating a color per variant on the label too. */
+.dash-btn__label { white-space: nowrap; color: inherit; }
 
 /* ---------------------------------------------------------------------- */
 /* Trip status badge -- same state semantics as Account's trip badges,
@@ -261,12 +277,37 @@
   }
 }
 
-.dash-topbar__brand {
-  color: var(--color-text);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: -0.02em;
+/* Compact context title -- trip name / current page, replacing the
+   wordmark. Deliberately not text-headline/-lg (that's marketing-page
+   branding scale): a restrained size and weight keeps this reading as
+   a breadcrumb, not a second hero. Trip name and page label share one
+   weight so neither reads as more "important" than the other; only the
+   separator is muted. */
+.dash-topbar__context {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  flex: 1 1 auto;
 }
+
+.dash-topbar__context-trip,
+.dash-topbar__context-page {
+  font: 700 15px/1.3 var(--font-display);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dash-topbar__context-trip { max-width: 220px; }
+
+.dash-topbar__context-sep {
+  color: var(--color-text-muted);
+  font: 400 15px/1.3 var(--font-display);
+  flex: 0 0 auto;
+}
+
 .dash-topbar__actions { display: flex; align-items: center; gap: var(--space-3); }
 
 .dash-topbar__search { position: relative; display: none; }
@@ -369,16 +410,6 @@ a.dash-mobile-header__trip:active { transform: var(--press-sm-active); }
 }
 
 .dash-mobile-header__switch-icon { color: var(--color-text-muted); font-size: 0.85rem; flex: 0 0 auto; }
-
-/* Compact -- fits inline instead of costing the header a whole extra
-   row (see "do not create a giant mobile app bar"). Hidden below 360px,
-   where there simply isn't room for it alongside the trip name/dates
-   and the action buttons without truncating something more important. */
-.dash-mobile-header__badge { flex: 0 0 auto; margin-block-start: 0; }
-
-@media (max-width: 359px) {
-  .dash-mobile-header__badge { display: none; }
-}
 
 .dash-mobile-header__actions { display: flex; align-items: center; gap: var(--space-2); flex: 0 0 auto; }
 
@@ -511,7 +542,11 @@ a.dash-mobile-header__trip:active { transform: var(--press-sm-active); }
   transition: background-color 0.15s ease, transform var(--press-duration) ease;
 }
 
-.dash-more-sheet__item:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); }
+/* Same legacy `a:hover { text-decoration: underline; }` App.css reset
+   this fixes as `.dash-shell a:hover` does above -- the sheet is
+   portaled to document.body, outside the .dash-shell subtree, so it
+   needs its own scoped override. */
+.dash-more-sheet__item:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); text-decoration: none; }
 .dash-more-sheet__item:active { background: var(--color-surface-alt); transform: var(--press-sm-active); }
 .dash-more-sheet__item:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: -2px; }
 .dash-more-sheet__item-icon { font-size: 1.1rem; color: var(--color-text-muted); flex: 0 0 auto; }

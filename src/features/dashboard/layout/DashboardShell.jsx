@@ -32,7 +32,7 @@ const DashboardShell = ({ trip, tripId, currentMember, permissions, children }) 
     <div className="dash-shell">
       <DashboardSidebar trip={trip} tripId={tripId} permissions={permissions} />
       <div className="dash-shell__canvas">
-        <DashboardTopBar tripId={tripId} permissions={permissions} />
+        <DashboardTopBar trip={trip} tripId={tripId} permissions={permissions} />
         <MobileDashboardHeader trip={trip} tripId={tripId} permissions={permissions} />
         <main className="dash-content">{children}</main>
       </div>
