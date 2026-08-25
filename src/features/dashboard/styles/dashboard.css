@@ -1,0 +1,420 @@
+/*
+  Canonical trip-dashboard shell. Desktop = sidebar + top bar; mobile =
+  compact header + bottom nav + "More" sheet. Both variants stay mounted
+  in the DOM and toggle via this file's one breakpoint (768px, matching
+  the project's already-most-common breakpoint and the Stitch reference's
+  own md: cutoff) -- never per-page duplicated markup.
+*/
+
+.dash-shell {
+  display: flex;
+  min-height: 100dvh;
+  width: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.dash-shell__canvas {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-content {
+  flex: 1 1 auto;
+  padding: var(--space-6) var(--page-margin-mobile);
+  max-width: 1280px;
+  width: 100%;
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .dash-content { padding: var(--space-8) var(--page-margin-desktop); }
+}
+
+.dash-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.dash-fatal-error {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--page-margin-mobile);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Shared compact button family -- same physical-press tokens as every
+   other elevated control in the app, at the dashboard's own denser
+   geometry (this is a workspace, not a transactional marketing page). */
+
+.dash-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-hard-sm);
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+
+.dash-btn:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.dash-btn:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
+.dash-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.dash-btn--primary {
+  background: var(--nc-indigo-700);
+  border-color: var(--nc-indigo-700);
+  color: var(--nc-white);
+  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+}
+.dash-btn--primary:hover { background: var(--nc-indigo-800); box-shadow: 1px 1px 0 0 var(--nc-indigo-700); }
+.dash-btn--primary:active { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-btn { transition: background-color 0.15s ease; }
+  .dash-btn:hover, .dash-btn:active { transform: none; }
+}
+
+/* Button label collapses to icon-only at the topbar's own narrower
+   widths (see .dash-topbar__actions breakpoints) -- never removed from
+   the DOM, so screen readers/keyboard users always get the full label. */
+.dash-btn__label { white-space: nowrap; }
+
+/* ---------------------------------------------------------------------- */
+/* Trip status badge -- same state semantics as Account's trip badges,
+   reusable success/warning/neutral tokens, dark-theme-safe by construction. */
+
+.dash-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-block-start: var(--space-2);
+  padding: 2px var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font: var(--text-label);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.dash-badge__dot { inline-size: 6px; block-size: 6px; border-radius: var(--radius-pill); }
+
+.dash-badge--active { background: var(--color-success-soft); color: var(--color-text); }
+.dash-badge--active .dash-badge__dot { background: var(--color-success); }
+.dash-badge--closed { background: var(--color-surface-container); color: var(--color-text-muted); }
+.dash-badge--closed .dash-badge__dot { background: var(--color-text-muted); }
+.dash-badge--archived { background: var(--color-warning-soft); color: var(--color-text); }
+.dash-badge--archived .dash-badge__dot { background: var(--color-warning); }
+
+/* ---------------------------------------------------------------------- */
+/* Desktop sidebar -- hidden below the dashboard breakpoint. */
+
+.dash-sidebar { display: none; }
+
+@media (min-width: 768px) {
+  .dash-sidebar {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    width: 256px;
+    height: 100dvh;
+    position: sticky;
+    inset-block-start: 0;
+    border-inline-end: var(--border-width) solid var(--color-border);
+    padding: var(--space-4);
+    background: var(--color-surface);
+    overflow-y: auto;
+  }
+}
+
+.dash-sidebar__trip { display: flex; flex-direction: column; gap: var(--space-2); margin-block-end: var(--space-6); }
+
+.dash-sidebar__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--nc-indigo-700);
+  box-shadow: var(--shadow-hard-sm);
+  font-size: 1.25rem;
+}
+
+.dash-sidebar__trip-name { color: var(--nc-indigo-700); margin: 0; line-height: 1.2; }
+.dash-sidebar__trip-dates { color: var(--color-text-muted); margin-block-start: 2px; text-transform: none; letter-spacing: normal; }
+
+.dash-sidebar__cta { width: 100%; margin-block-end: var(--space-6); text-transform: uppercase; }
+
+.dash-sidebar__nav { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; }
+.dash-sidebar__footer { display: flex; flex-direction: column; gap: 2px; padding-block-start: var(--space-3); border-block-start: var(--border-width) solid var(--color-border); }
+
+/* Flat rows at rest (this is a nav list, not an elevated button) -- hover
+   is a restrained background tint + press, the same row-hover language
+   already used for .account-menu__item / .acc-trip__more-action, not
+   Stitch's own translate-x-1 motion (a fourth, unrelated interaction
+   variant this app doesn't otherwise use). */
+.dash-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease, transform var(--press-duration) ease;
+}
+
+.dash-sidebar__link:hover { background: var(--color-surface-alt); color: var(--color-text); transform: var(--press-sm-hover); }
+.dash-sidebar__link-icon { font-size: 1.05rem; flex: 0 0 auto; }
+
+.dash-sidebar__link.is-active {
+  background: var(--nc-indigo-700);
+  color: var(--nc-white);
+  font-weight: 700;
+}
+.dash-sidebar__link.is-active:hover { background: var(--nc-indigo-800); transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-sidebar__link { transition: background-color 0.15s ease, color 0.15s ease; }
+  .dash-sidebar__link:hover { transform: none; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Desktop top bar -- hidden below the dashboard breakpoint. */
+
+.dash-topbar { display: none; }
+
+@media (min-width: 768px) {
+  .dash-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--page-margin-desktop);
+    border-block-end: var(--border-width) solid var(--color-border);
+    background: var(--color-bg);
+    position: sticky;
+    inset-block-start: 0;
+    z-index: var(--z-sticky);
+  }
+}
+
+.dash-topbar__brand { text-transform: uppercase; letter-spacing: -0.02em; }
+.dash-topbar__actions { display: flex; align-items: center; gap: var(--space-3); }
+
+.dash-topbar__search { position: relative; display: none; }
+
+@media (min-width: 1024px) {
+  .dash-topbar__search { display: block; }
+}
+
+.dash-topbar__search-icon {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.dash-topbar__search-input {
+  width: 220px;
+  min-height: 40px;
+  padding-inline-start: var(--space-8);
+  padding-inline-end: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.dash-topbar__search-input:focus-visible { outline: none; border-color: var(--nc-indigo-700); }
+
+@media (max-width: 1279px) {
+  .dash-btn__label { display: none; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Mobile header + primary action -- hidden at/above the dashboard
+   breakpoint. */
+
+.dash-mobile-header { display: flex; }
+
+@media (min-width: 768px) {
+  .dash-mobile-header { display: none; }
+}
+
+.dash-mobile-header {
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--page-margin-mobile);
+  border-block-end: var(--border-width) solid var(--color-border);
+  background: var(--color-bg);
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--z-sticky);
+}
+
+.dash-mobile-header__identity { min-width: 0; flex: 1 1 auto; }
+
+.dash-mobile-header__trip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.dash-mobile-header__trip-icon { color: var(--nc-indigo-700); flex: 0 0 auto; }
+.dash-mobile-header__trip-name { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-mobile-header__switch-icon { color: var(--color-text-muted); font-size: 0.85rem; flex: 0 0 auto; }
+
+.dash-mobile-header__actions { display: flex; align-items: center; gap: var(--space-2); flex: 0 0 auto; }
+.dash-mobile-header__new-expense { padding-inline: var(--space-3); }
+
+@media (max-width: 429px) {
+  .dash-mobile-header__new-expense .dash-btn__label { display: none; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Mobile bottom navigation -- fixed, safe-area-aware, hidden ≥768px. */
+
+.dash-bottom-nav { display: none; }
+
+@media (min-width: 768px) {
+  .dash-bottom-nav { display: none !important; }
+}
+
+@media (max-width: 767px) {
+  .dash-bottom-nav {
+    display: flex;
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: var(--z-sticky);
+    border-block-start: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+    padding-block: var(--space-1);
+    padding-block-end: calc(var(--space-1) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Content must clear the fixed bottom nav instead of hiding behind it. */
+  .dash-content { padding-block-end: calc(var(--space-8) + 64px); }
+}
+
+.dash-bottom-nav__item {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 44px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: color 0.15s ease, transform var(--press-duration) ease;
+}
+
+.dash-bottom-nav__item:active { transform: var(--press-sm-active); }
+.dash-bottom-nav__item.is-active { color: var(--nc-indigo-700); }
+.dash-bottom-nav__label { font: var(--text-label); font-size: 10px; letter-spacing: normal; text-transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-bottom-nav__item { transition: color 0.15s ease; }
+  .dash-bottom-nav__item:active { transform: none; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Mobile "More" sheet -- portaled to <body>, canonical modal z-index. */
+
+.dash-more-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 28, 25, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: var(--z-modal);
+}
+
+.dash-more-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--color-surface);
+  border: var(--border-width-lg) solid var(--color-border);
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+  border-start-start-radius: var(--radius-md);
+  border-start-end-radius: var(--radius-md);
+  box-shadow: var(--shadow-hard-md);
+  padding: var(--space-4);
+  padding-block-end: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dash-more-sheet__handle {
+  inline-size: 36px;
+  block-size: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-subtle);
+  align-self: center;
+}
+
+.dash-more-sheet__items { display: flex; flex-direction: column; gap: 2px; }
+
+.dash-more-sheet__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 48px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.dash-more-sheet__item:hover, .dash-more-sheet__item:active { background: var(--color-surface-alt); }
+.dash-more-sheet__item-icon { font-size: 1.1rem; color: var(--color-text-muted); flex: 0 0 auto; }
+.dash-more-sheet__close { width: 100%; }
+
+@media (min-width: 768px) {
+  .dash-more-overlay, .dash-more-sheet { display: none; }
+}
