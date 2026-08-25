@@ -214,9 +214,11 @@
 
 .ov-split__body { padding: var(--space-3); display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
 
+.ov-split__help { color: var(--color-text-muted); margin: 0; text-align: center; }
+
 .ov-split__frame {
-  inline-size: 120px;
-  block-size: 120px;
+  inline-size: 104px;
+  block-size: 104px;
   border: var(--border-width-lg) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--nc-indigo-700);
@@ -226,9 +228,23 @@
   justify-content: center;
 }
 
+/* Neutral/unfilled state when nothing has been spent yet -- no indigo
+   fill, no "100%" claim (see SpendingSplit.jsx's `hasSpending` guard). */
+.ov-split__frame--empty {
+  background: var(--color-surface-alt);
+  flex-direction: column;
+  gap: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: 1.5rem;
+  padding: var(--space-2);
+  text-align: center;
+}
+
+.ov-split__frame-empty-label { font: var(--text-label); font-size: 9px; letter-spacing: var(--tracking-label); }
+
 .ov-split__frame-inner {
-  inline-size: 68px;
-  block-size: 68px;
+  inline-size: 60px;
+  block-size: 60px;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -241,7 +257,7 @@
 }
 
 .ov-split__frame-label { font: var(--text-label); font-size: 8px; color: var(--color-text-muted); transform: rotate(6deg); }
-.ov-split__frame-value { font: var(--text-headline-sm); color: var(--color-text); transform: rotate(6deg); font-variant-numeric: tabular-nums; }
+.ov-split__frame-value { font: var(--text-headline-sm); color: var(--color-text); transform: rotate(6deg); }
 
 .ov-split__legend { width: 100%; display: flex; flex-direction: column; gap: var(--space-2); }
 .ov-split__legend-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); }
@@ -249,7 +265,7 @@
 .ov-split__swatch--shared { background: var(--nc-indigo-700); }
 .ov-split__swatch--personal { background: var(--color-surface-container); }
 .ov-split__legend-label { flex: 1 1 auto; font: var(--text-body-sm); color: var(--color-text); }
-.ov-split__legend-value { font: var(--text-label); font-weight: 700; color: var(--color-text); font-variant-numeric: tabular-nums; }
+.ov-split__legend-value { font: var(--text-label); font-weight: 700; color: var(--color-text); }
 
 /* ---------------------------------------------------------------------- */
 /* Recent activity ledger -- purely informational rows (no detail route

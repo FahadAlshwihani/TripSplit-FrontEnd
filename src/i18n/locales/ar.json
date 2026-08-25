@@ -275,6 +275,8 @@
   "dashboard.overview.totalBudget": "الميزانية الإجمالية", "dashboard.overview.totalSpent": "إجمالي المصروف", "dashboard.overview.remaining": "المتبقي", "dashboard.overview.myBalance": "رصيدي", "dashboard.overview.noBudgetSet": "لم تُحدد ميزانية",
   "dashboard.overview.categoryLedger": "سجل الفئات", "dashboard.overview.viewDetails": "عرض التفاصيل", "dashboard.overview.noCategorizedExpenses": "لا توجد مصروفات مصنفة حتى الآن.",
   "dashboard.overview.spendingSplit": "تقسيم الإنفاق", "dashboard.overview.shared": "مشترك", "dashboard.overview.personal": "شخصي", "dashboard.overview.total": "الإجمالي",
+  "dashboard.overview.spendingSplitHelp": "يوضح كيف تتوزع مصروفات الرحلة بين المصروفات المشتركة والمصروفات الشخصية.", "dashboard.overview.noSpendingYet": "لا توجد مصروفات بعد",
+  "dashboard.overview.sharedDescription": "مصروف موزّع بين أعضاء الرحلة.", "dashboard.overview.personalDescription": "مصروف يخص عضوًا واحدًا فقط.",
   "dashboard.overview.recentActivity": "النشاط الأخير", "dashboard.overview.viewAll": "عرض الكل", "dashboard.overview.noActivity": "لا يوجد نشاط حديث بعد.",
   "dashboard.overview.columnDescription": "الوصف", "dashboard.overview.columnDate": "التاريخ", "dashboard.overview.columnAmount": "المبلغ",
   "dashboard.overview.paidBy": "دفعها {{name}} • {{scope}}", "dashboard.overview.sharedExpense": "مشترك", "dashboard.overview.personalExpense": "شخصي", "dashboard.overview.settlementLabel": "تسوية", "dashboard.overview.settlementContext": "{{from}} → {{to}}",
