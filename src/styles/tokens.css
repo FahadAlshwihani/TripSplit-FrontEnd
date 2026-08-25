@@ -79,6 +79,31 @@
   --color-danger: var(--nc-red-600);
   --color-danger-soft: var(--nc-red-100);
 
+  /* Category presentation — fixed brand colors for the trip category
+     catalog (see shared/utils/categoryPresentation.js), deliberately
+     separate from the semantic theme palette above: a category's color
+     is part of its stable visual identity and must stay recognizable
+     regardless of theme, the same way --color-success/-warning/-danger
+     stay the same hue in both themes. Soft/pastel tiles (not the fully
+     saturated hue) are the tile background so the dark icon drawn on
+     top stays legible -- the same soft-background-plus-dark-foreground
+     pattern the Total Spent/My Balance cards already use. Reuses
+     --color-success-soft/-primary-soft/-warning-soft for the three
+     categories that already match an existing semantic hue (green/
+     indigo/amber) instead of duplicating those tints under a new name. */
+  --cat-orange: #C9691E;
+  --cat-orange-soft: #F6E2CC;
+  --cat-teal: #1C8A82;
+  --cat-teal-soft: #DCEFEE;
+  --cat-pink: #B23D6B;
+  --cat-pink-soft: #F5DCE6;
+  --cat-sky: #2A6FB5;
+  --cat-sky-soft: #DCE9F6;
+  --cat-purple: #6B4FB0;
+  --cat-purple-soft: #E4DEF6;
+  --cat-slate: var(--nc-slate-600);
+  --cat-slate-soft: #E1E5E9;
+
   /* Radii — minimal, editorial. Intentionally sharp: 2 / 4 / 8px per the
      Stitch spec (default / large / extra-large), not arbitrary SaaS radii. */
   --radius-sm: 2px;
@@ -200,6 +225,18 @@
   --color-success-soft: rgba(28, 138, 75, 0.18);
   --color-warning-soft: rgba(181, 121, 10, 0.18);
   --color-danger-soft: rgba(179, 55, 42, 0.18);
+
+  /* Same translucent-tint recipe as the semantic -soft tokens above,
+     derived from each --cat-* hue's own RGB. --cat-orange/-teal/-pink/
+     -sky/-purple/-slate themselves are NOT redeclared here -- a fixed
+     brand hue is deliberately identical in both themes; only the pastel
+     tile background needs a dark-mode-appropriate translucent version. */
+  --cat-orange-soft: rgba(201, 105, 30, 0.18);
+  --cat-teal-soft: rgba(28, 138, 130, 0.18);
+  --cat-pink-soft: rgba(178, 61, 107, 0.18);
+  --cat-sky-soft: rgba(42, 111, 181, 0.18);
+  --cat-purple-soft: rgba(107, 79, 176, 0.18);
+  --cat-slate-soft: rgba(91, 107, 124, 0.18);
 
   --shadow-editorial: 0 1px 0 rgba(0, 0, 0, 0.4);
   --shadow-editorial-md: 0 6px 16px rgba(0, 0, 0, 0.35);
