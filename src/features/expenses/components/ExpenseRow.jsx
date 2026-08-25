@@ -12,8 +12,8 @@ const ExpenseRow = ({ expense, category, membersById, currency, onOpen }) => {
   const payment = paymentSummary(expense, membersById);
   const split = splitSummary(expense);
   const isForeign = expense.original_currency && expense.original_currency !== currency;
-  const chipColor = categoryColor(expense.category);
-  const chipTile = categoryTileColor(expense.category);
+  const chipColor = categoryColor(expense.category, category?.color);
+  const chipTile = categoryTileColor(expense.category, category?.color);
 
   return (
     <div className="exp-ledger__row" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(); } }}>

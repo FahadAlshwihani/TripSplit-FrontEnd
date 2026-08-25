@@ -6,7 +6,7 @@ import ErrorState from '../../../shared/components/ErrorState';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
 import useExpenseFilters from '../hooks/useExpenseFilters';
 import { addExpense, deleteExpense, getExpenses, getExpensesSummary, getPage, updateExpense } from '../api/expensesApi';
-import { getCategories } from '../../categories/api/categoriesApi';
+import { archiveCategory, createCategory, getCategories, getCategoryBudgets, resetCategoryBudget, setCategoryBudget, updateCategory } from '../../categories/api/categoriesApi';
 import { getMembers } from '../../members/api/membersApi';
 import { getFund } from '../../funds/api/fundsApi';
 import { membersById as buildMembersById } from '../utils/expensePresentation';
@@ -15,6 +15,7 @@ import ExpenseFilterBar from '../components/ExpenseFilterBar';
 import ExpenseLedgerList from '../components/ExpenseLedgerList';
 import NewExpenseDialog from '../components/NewExpenseDialog';
 import ExpenseDetailsDialog from '../components/ExpenseDetailsDialog';
+import CategoryManagerDialog from '../components/CategoryManagerDialog';
 import '../styles/expenses.css';
 
 const fulfilledValue = (result, fallback) => (result.status === 'fulfilled' ? result.value : fallback);
@@ -25,6 +26,7 @@ export default function ExpensesPage() {
   const { filters, setFilters, clearFilters, hasActiveFilters } = useExpenseFilters();
   const [dialog, setDialog] = useState(null); // { mode: 'create' | 'edit', expense? } | null
   const [detailsExpense, setDetailsExpense] = useState(null);
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   const [actionError, setActionError] = useState(null);
 
   const summaryResource = useRouteResource((signal) => getExpensesSummary(tripId, { signal }), [tripId]);
@@ -32,13 +34,15 @@ export default function ExpensesPage() {
   const helpersResource = useRouteResource(async (signal) => {
     const results = await Promise.allSettled([
       getCategories(tripId, { signal }),
+      getCategoryBudgets(tripId, { signal }),
       getMembers(tripId, { signal }),
       getFund(tripId, { signal }),
     ]);
     return {
       categories: fulfilledValue(results[0], { results: [] }).results,
-      members: fulfilledValue(results[1], { results: [] }).results,
-      fund: fulfilledValue(results[2], null),
+      budgets: fulfilledValue(results[1], { results: [] }).results,
+      members: fulfilledValue(results[2], { results: [] }).results,
+      fund: fulfilledValue(results[3], null),
       helperError: results.some((result) => result.status === 'rejected'),
     };
   }, [tripId]);
@@ -76,12 +80,32 @@ export default function ExpensesPage() {
     setDetailsExpense(null);
   });
 
+  // Category mutations only ever affect helpersResource's own data
+  // (categories/budgets) -- never the summary cards (payment_source-
+  // based, unaffected by category budgeting) or the expense list itself
+  // (a renamed/recolored category resolves live via categoriesByCode on
+  // the next render, no expense row data actually changed).
+  const runCategoryAction = async (action) => {
+    try {
+      await action();
+      setActionError(null);
+      await helpersResource.retry();
+    } catch (error) {
+      setActionError(error);
+    }
+  };
+  const createCategoryAction = (payload) => runCategoryAction(() => createCategory(tripId, payload));
+  const updateCategoryAction = (categoryId, payload) => runCategoryAction(() => updateCategory(tripId, categoryId, payload));
+  const archiveCategoryAction = (categoryId) => runCategoryAction(() => archiveCategory(tripId, categoryId));
+  const setCategoryBudgetAction = (payload) => runCategoryAction(() => setCategoryBudget(tripId, payload));
+  const resetCategoryBudgetAction = (categoryId) => runCategoryAction(() => resetCategoryBudget(tripId, categoryId));
+
   if (summaryResource.loading || helpersResource.loading) return <NeoLoading />;
   if (summaryResource.error || helpersResource.error) {
     return <ErrorState title={t('expenses.ledger.errorLoad')} onRetry={() => { summaryResource.retry(); helpersResource.retry(); }} />;
   }
 
-  const { categories, members, fund, helperError } = helpersResource.data;
+  const { categories, budgets, members, fund, helperError } = helpersResource.data;
   const categoriesByCode = Object.fromEntries(categories.map((category) => [category.code, category]));
   const membersLookup = buildMembersById(members);
   const rows = listResource.data?.results || [];
@@ -109,6 +133,7 @@ export default function ExpensesPage() {
         categories={categories}
         canCreateExpense={permissions.canCreateExpense}
         onNewExpense={() => setDialog({ mode: 'create' })}
+        onManageCategories={() => setCategoryManagerOpen(true)}
       />
 
       {listResource.error ? (
@@ -161,6 +186,21 @@ export default function ExpensesPage() {
           onDuplicate={() => { setDialog({ mode: 'create', expense: { ...detailsExpense, duplicate: true } }); setDetailsExpense(null); }}
           onDelete={() => remove(detailsExpense)}
           onClose={() => setDetailsExpense(null)}
+        />
+      )}
+
+      {categoryManagerOpen && (
+        <CategoryManagerDialog
+          categories={categories}
+          budgets={budgets}
+          currency={trip.currency}
+          canManage={permissions.canManageMembers}
+          onCreate={createCategoryAction}
+          onUpdate={updateCategoryAction}
+          onArchive={archiveCategoryAction}
+          onSetBudget={setCategoryBudgetAction}
+          onResetBudget={resetCategoryBudgetAction}
+          onClose={() => setCategoryManagerOpen(false)}
         />
       )}
     </div>

@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import ExpensesPage from './ExpensesPage';
 import { addExpense, deleteExpense, getExpenses, getExpensesSummary, updateExpense } from '../api/expensesApi';
-import { getCategories } from '../../categories/api/categoriesApi';
+import { createCategory, getCategories, getCategoryBudgets } from '../../categories/api/categoriesApi';
 import { getMembers } from '../../members/api/membersApi';
 import { getFund } from '../../funds/api/fundsApi';
 
@@ -16,7 +16,15 @@ jest.mock('../api/expensesApi', () => ({
   updateExpense: jest.fn(),
   deleteExpense: jest.fn(),
 }));
-jest.mock('../../categories/api/categoriesApi', () => ({ getCategories: jest.fn() }));
+jest.mock('../../categories/api/categoriesApi', () => ({
+  getCategories: jest.fn(),
+  getCategoryBudgets: jest.fn(),
+  createCategory: jest.fn(),
+  updateCategory: jest.fn(),
+  archiveCategory: jest.fn(),
+  setCategoryBudget: jest.fn(),
+  resetCategoryBudget: jest.fn(),
+}));
 jest.mock('../../members/api/membersApi', () => ({ getMembers: jest.fn() }));
 jest.mock('../../funds/api/fundsApi', () => ({ getFund: jest.fn() }));
 
@@ -49,6 +57,7 @@ const baseList = { results: [hotelExpense, taxiExpense, coffeeExpense], next: nu
 
 const permissions = {
   canCreateExpense: true,
+  canManageMembers: true,
   canEditExpense: (expense) => expense.created_by === 'm1',
 };
 
@@ -73,6 +82,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   getExpensesSummary.mockResolvedValue(summary);
   getCategories.mockResolvedValue({ results: categories });
+  getCategoryBudgets.mockResolvedValue({ results: [] });
   getMembers.mockResolvedValue({ results: members });
   getFund.mockResolvedValue({ status: 'active' });
   getExpenses.mockResolvedValue(baseList);
@@ -182,6 +192,30 @@ test('submitting the New Expense quick form calls addExpense and refreshes the l
   await waitFor(() => expect(addExpense).toHaveBeenCalled());
   await waitFor(() => expect(getExpenses).toHaveBeenCalled());
   await waitFor(() => expect(getExpensesSummary).toHaveBeenCalled());
+});
+
+test('the Categories button opens the category manager with the trip\'s real categories', async () => {
+  renderPage();
+  await screen.findByText('Hotel Rooms — Tbilisi');
+  fireEvent.click(screen.getByRole('button', { name: 'categoriesManager.title' }));
+  const dialog = await screen.findByRole('dialog');
+  expect(dialog).toHaveTextContent('categories.accommodation');
+  expect(dialog).toHaveTextContent('categories.transport');
+});
+
+test('creating a category in the manager calls createCategory and refreshes the category list', async () => {
+  createCategory.mockResolvedValue({});
+  getCategoryBudgets.mockResolvedValue({ results: [] });
+  renderPage();
+  await screen.findByText('Hotel Rooms — Tbilisi');
+  fireEvent.click(screen.getByRole('button', { name: 'categoriesManager.title' }));
+  const dialog = await screen.findByRole('dialog');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'categoriesManager.addNew' }));
+  fireEvent.change(within(dialog).getByLabelText('categoriesManager.namePlaceholder'), { target: { value: 'Ski Gear' } });
+  getCategories.mockClear();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'categoriesManager.create' }));
+  await waitFor(() => expect(createCategory).toHaveBeenCalledWith('t1', expect.objectContaining({ name: 'Ski Gear' })));
+  await waitFor(() => expect(getCategories).toHaveBeenCalled());
 });
 
 test('clicking a row opens the details dialog with the full record', async () => {

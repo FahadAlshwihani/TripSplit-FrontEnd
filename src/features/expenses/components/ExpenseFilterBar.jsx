@@ -12,7 +12,7 @@ const SEARCH_DEBOUNCE_MS = 350;
   "the final high-priority control at the inline end of the utility bar"
   per the brief.
 */
-const ExpenseFilterBar = ({ filters, setFilters, hasActiveFilters, categories, canCreateExpense, onNewExpense }) => {
+const ExpenseFilterBar = ({ filters, setFilters, hasActiveFilters, categories, canCreateExpense, onNewExpense, onManageCategories }) => {
   const { t } = useTranslation();
   const [searchDraft, setSearchDraft] = useState(filters.search || '');
   const [filterOpen, setFilterOpen] = useState(false);
@@ -67,6 +67,14 @@ const ExpenseFilterBar = ({ filters, setFilters, hasActiveFilters, categories, c
           onClick={() => setFilterOpen((open) => !open)}
         >
           <i className="bi bi-funnel" aria-hidden="true" />
+        </button>
+        {/* Secondary, deliberately never competing visually with the
+            primary New Expense action -- view-only for a non-admin
+            member (the dialog itself gates create/edit/archive on
+            canManageMembers), so it's never hidden entirely. */}
+        <button type="button" className="dash-btn dash-btn--secondary" aria-label={t('categoriesManager.title')} onClick={onManageCategories}>
+          <i className="bi bi-tags" aria-hidden="true" />
+          <span className="dash-btn__label" aria-hidden="true">{t('categoriesManager.title')}</span>
         </button>
         {canCreateExpense && (
           <button type="button" className="dash-btn dash-btn--primary" aria-label={t('expenses.ledger.newExpense')} onClick={onNewExpense}>
