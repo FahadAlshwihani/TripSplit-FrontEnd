@@ -28,10 +28,14 @@ const SpendingSplit = ({ split }) => {
         <p className="ov-split__help text-copy-sm">{t('dashboard.overview.spendingSplitHelp')}</p>
 
         {hasSpending ? (
-          <div className="ov-split__frame">
+          // Purely informational, not a control -- no tabIndex/role/hover-
+          // press affordance. Fully redundant with the legend's own text
+          // below, so it's hidden from assistive tech rather than
+          // announcing "TOTAL 100%" a second time right after it.
+          <div className="ov-split__frame" aria-hidden="true">
             <div className="ov-split__frame-inner">
               <span className="ov-split__frame-label">{t('dashboard.overview.total')}</span>
-              <bdi dir="ltr" className="ov-split__frame-value money--display">100%</bdi>
+              <bdi dir="ltr" className="ov-split__frame-value">100%</bdi>
             </div>
           </div>
         ) : (
@@ -42,15 +46,22 @@ const SpendingSplit = ({ split }) => {
         )}
 
         <div className="ov-split__legend">
-          <div className="ov-split__legend-row" title={t('dashboard.overview.sharedDescription')}>
+          {/* tabIndex + aria-describedby (not a visible info icon, which
+              Stitch's row doesn't have) keeps the row's own footprint
+              identical to the approved reference while still giving
+              keyboard/screen-reader users the same explanation a mouse
+              user gets from the native `title` tooltip on hover. */}
+          <div className="ov-split__legend-row" tabIndex={0} title={t('dashboard.overview.sharedDescription')} aria-describedby="ov-split-shared-desc">
             <span className="ov-split__swatch ov-split__swatch--shared" aria-hidden="true" />
             <span className="ov-split__legend-label">{t('dashboard.overview.shared')}</span>
             <bdi dir="ltr" className="ov-split__legend-value money--display">{split.shared_percent}%</bdi>
+            <span id="ov-split-shared-desc" className="ov-visually-hidden">{t('dashboard.overview.sharedDescription')}</span>
           </div>
-          <div className="ov-split__legend-row" title={t('dashboard.overview.personalDescription')}>
+          <div className="ov-split__legend-row" tabIndex={0} title={t('dashboard.overview.personalDescription')} aria-describedby="ov-split-personal-desc">
             <span className="ov-split__swatch ov-split__swatch--personal" aria-hidden="true" />
             <span className="ov-split__legend-label">{t('dashboard.overview.personal')}</span>
             <bdi dir="ltr" className="ov-split__legend-value money--display">{split.personal_percent}%</bdi>
+            <span id="ov-split-personal-desc" className="ov-visually-hidden">{t('dashboard.overview.personalDescription')}</span>
           </div>
         </div>
       </div>

@@ -222,15 +222,19 @@
    onto a square, so the split itself is communicated by the two legend
    rows below (already carrying the real server-computed percentages);
    the square graphic is the same "TOTAL 100%" badge motif Stitch uses,
-   not a second encoding of the ratio. */
+   not a second encoding of the ratio. Sized to Stitch's own compact
+   footprint (~84px, not a hero chart) -- the previous 104px/60px pass
+   read as visually dominant next to Category Ledger's plain rows. */
 
 .ov-split__body { padding: var(--space-3); display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
 
-.ov-split__help { color: var(--color-text-muted); margin: 0; text-align: center; }
+/* Small, muted, and short by design -- explanatory context, not a
+   second title competing with the visualization for attention. */
+.ov-split__help { color: var(--color-text-muted); margin: 0; text-align: center; max-width: 32ch; }
 
 .ov-split__frame {
-  inline-size: 104px;
-  block-size: 104px;
+  inline-size: 84px;
+  block-size: 84px;
   border: var(--border-width-lg) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--nc-indigo-700);
@@ -238,6 +242,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Informational, not a control -- never a pointer cursor, never the
+     press/hover language reserved for actual clickable controls. */
+  cursor: default;
 }
 
 /* Neutral/unfilled state when nothing has been spent yet -- no indigo
@@ -247,37 +254,71 @@
   flex-direction: column;
   gap: var(--space-1);
   color: var(--color-text-muted);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   padding: var(--space-2);
   text-align: center;
 }
 
-.ov-split__frame-empty-label { font: var(--text-label); font-size: 9px; letter-spacing: var(--tracking-label); }
+.ov-split__frame-empty-label { font: var(--text-label); font-size: 8px; letter-spacing: var(--tracking-label); }
 
 .ov-split__frame-inner {
-  inline-size: 60px;
-  block-size: 60px;
+  inline-size: 48px;
+  block-size: 48px;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   box-shadow: var(--shadow-hard-sm);
-  transform: rotate(-6deg);
+  /* Subtle, not exaggerated -- an intentional slight tilt, not a
+     dramatic diagonal. */
+  transform: rotate(-4deg);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.ov-split__frame-label { font: var(--text-label); font-size: 8px; color: var(--color-text-muted); transform: rotate(6deg); }
-.ov-split__frame-value { font: var(--text-headline-sm); color: var(--color-text); transform: rotate(6deg); }
+.ov-split__frame-label { font: var(--text-label); font-size: 6px; color: var(--color-text-muted); transform: rotate(4deg); }
+/* Explicit font declaration rather than the shared text-headline-sm
+   token (a known-undefined class elsewhere in this codebase -- not
+   fixed here since that's a sitewide typography gap outside this
+   panel's scope) -- pinned to the same locale-independent numeric
+   font already established for money/percentages. */
+.ov-split__frame-value { font: 700 13px/1.1 var(--font-money-display); color: var(--color-text); transform: rotate(4deg); font-variant-numeric: tabular-nums; }
 
 .ov-split__legend { width: 100%; display: flex; flex-direction: column; gap: var(--space-2); }
-.ov-split__legend-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); }
-.ov-split__swatch { inline-size: 12px; block-size: 12px; border-radius: var(--radius-pill); border: var(--border-width) solid var(--color-border); }
+.ov-split__legend-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+}
+/* Focusable (tabIndex, see SpendingSplit.jsx) for the tooltip's
+   description text, not a button -- a visible focus ring instead of
+   any press/hover language reserved for actual controls. */
+.ov-split__legend-row:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: 1px; }
+.ov-split__swatch { inline-size: 12px; block-size: 12px; border-radius: var(--radius-pill); border: var(--border-width) solid var(--color-border); flex: 0 0 auto; }
 .ov-split__swatch--shared { background: var(--nc-indigo-700); }
 .ov-split__swatch--personal { background: var(--color-surface-container); }
 .ov-split__legend-label { flex: 1 1 auto; font: var(--text-body-sm); color: var(--color-text); }
 .ov-split__legend-value { font: var(--text-label); font-weight: 700; color: var(--color-text); }
+
+/* Visually hidden but available to assistive tech -- the same recipe as
+   dashboard.css's .dash-visually-hidden, kept local so this feature's
+   CSS doesn't reach into the dashboard shell's stylesheet for one class. */
+.ov-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* ---------------------------------------------------------------------- */
 /* Recent activity ledger -- purely informational rows (no detail route
