@@ -157,6 +157,46 @@
   .dash-btn__spinner { animation-duration: 1.2s; }
 }
 
+/* ---------------------------------------------------------------------- */
+/* Confirm dialog -- small centered modal, reused for any destructive
+   confirmation instead of window.confirm(). Shared/ component, so it
+   lives here (globally loaded) rather than in any one feature's own
+   stylesheet -- any dashboard page can open it. */
+
+.confirm-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 28, 25, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  /* Must clear --z-modal explicitly (not rely on DOM/mount order as an
+     implicit tiebreaker) since this can be opened from inside another
+     modal/drawer (e.g. the expense details drawer) that itself sits at
+     --z-modal. */
+  z-index: var(--z-modal-nested);
+}
+.confirm-dialog {
+  width: 100%;
+  max-width: 420px;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+}
+.confirm-dialog__title { margin: 0; color: var(--color-text); }
+.confirm-dialog__body { margin: 0; color: var(--color-text-muted); }
+.confirm-dialog__actions { display: flex; gap: var(--space-2); justify-content: flex-end; }
+.confirm-dialog__actions .dash-btn { flex: 1 1 0; }
+@media (min-width: 480px) {
+  .confirm-dialog__actions .dash-btn { flex: 0 0 auto; min-width: 120px; }
+}
+
 /* Button label collapses to icon-only at the topbar's own narrower
    widths (see .dash-topbar__actions breakpoints) -- never removed from
    the DOM, so screen readers/keyboard users always get the full label.

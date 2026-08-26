@@ -161,6 +161,11 @@
   --z-popover: 60;
   --z-modal-backdrop: 1000;
   --z-modal: 1001;
+  /* One tier above --z-modal, for a dialog opened from inside another
+     modal/drawer (e.g. a destructive confirmation triggered from the
+     expense details drawer) that must stay clickable above it rather
+     than depending on DOM/mount order as an implicit tiebreaker. */
+  --z-modal-nested: 1002;
 
   /* Spacing scale (4px base) */
   --space-1: 0.25rem;

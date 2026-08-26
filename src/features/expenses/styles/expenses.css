@@ -649,7 +649,8 @@
   position: fixed;
   inset: 0;
   background: rgba(27, 28, 25, 0.25);
-  z-index: var(--z-modal);
+  z-index: var(--z-modal-backdrop);
+  pointer-events: auto;
 }
 
 .exp-drawer {
@@ -662,6 +663,14 @@
   background: var(--color-surface);
   border-inline-start: var(--border-width-lg) solid var(--color-border);
   box-shadow: var(--shadow-hard-md);
+  /* Without an explicit z-index, position:fixed still establishes a
+     stacking context, but an "auto" z-index paints BELOW any sibling
+     with an explicit positive z-index (like .exp-drawer-overlay's
+     var(--z-modal)) regardless of DOM order -- CSS groups by z-index
+     tier before DOM order. The drawer must sit at or above the
+     overlay's own layer for it to ever be interactive. */
+  z-index: var(--z-modal);
+  pointer-events: auto;
 }
 @media (max-width: 480px) {
   .exp-drawer { width: 100vw; border-inline-start: none; }
@@ -703,36 +712,7 @@
 .exp-drawer__footer-row { display: flex; gap: var(--space-2); }
 .exp-drawer__footer-row .dash-btn { flex: 1 1 0; }
 
-/* ---------------------------------------------------------------------- */
-/* Confirm dialog -- small centered modal, reused for any destructive
-   confirmation (currently: delete expense) instead of window.confirm(). */
-
-.confirm-dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(27, 28, 25, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-4);
-  z-index: var(--z-modal);
-}
-.confirm-dialog {
-  width: 100%;
-  max-width: 420px;
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  border: var(--border-width-lg) solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-hard-md);
-}
-.confirm-dialog__title { margin: 0; color: var(--color-text); }
-.confirm-dialog__body { margin: 0; color: var(--color-text-muted); }
-.confirm-dialog__actions { display: flex; gap: var(--space-2); justify-content: flex-end; }
-.confirm-dialog__actions .dash-btn { flex: 1 1 0; }
-@media (min-width: 480px) {
-  .confirm-dialog__actions .dash-btn { flex: 0 0 auto; min-width: 120px; }
-}
+/* Confirm dialog CSS moved to dashboard.css (globally loaded by
+   DashboardShell) -- ConfirmDialog is a shared/ component usable from
+   any dashboard page, not an Expenses-only one, so its own styling
+   can't live in a stylesheet that only loads on /expenses. */
