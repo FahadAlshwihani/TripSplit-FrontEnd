@@ -1,65 +1,148 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import Balances from '../../balances/components/Balances';
-import SettlementsPanel from '../components/SettlementsPanel';
-import Loading from '../../../components/Loading';
+import NeoLoading from '../../../shared/components/NeoLoading';
 import ErrorState from '../../../shared/components/ErrorState';
+import SegmentedControl from '../../../shared/components/SegmentedControl';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
-import { getBalances } from '../../balances/api/balancesApi';
 import { getMembers } from '../../members/api/membersApi';
-import {
-  addSettlement, deleteSettlement, getSettlementPage, getSettlements,
-  reviewSettlement, updateSettlement,
-} from '../api/settlementsApi';
+import { getSettlements, recordAdminSettlement, reviewSettlement } from '../api/settlementsApi';
+import SettlementActionDialog from '../components/SettlementActionDialog';
+import SettlementLedgerRow from '../components/SettlementLedgerRow';
+import SettlementTimelineDrawer from '../components/SettlementTimelineDrawer';
+import '../styles/settlements.css';
+
+/*
+  The canonical full settlement ledger/history -- who owed whom, how
+  much, who reported/recorded/reviewed it, when. This is deliberately
+  NOT the action-focused current-debt view (that's BalancesPage); this
+  page never duplicates that UI, it's the historical record you click
+  into for the full timeline. See docs/api/settlements.md.
+
+  Status filtering is client-side over the loaded page (server-side
+  filtering isn't offered by GET /settlements/ today) -- a trip with an
+  unusually large settlement history may need "load more" before an
+  older filtered row appears; documented as a known limitation.
+*/
+const FILTERS = [
+  { value: 'all', key: 'all' },
+  { value: 'pending', key: 'pending' },
+  { value: 'confirmed', key: 'confirmed' },
+  { value: 'rejected', key: 'needsAttention' },
+  { value: 'cancelled', key: 'cancelled' },
+];
 
 export default function SettlementsPage() {
   const { trip, tripId, currentMember, permissions } = useOutletContext();
   const { t } = useTranslation();
+  const [filter, setFilter] = useState('all');
   const [actionError, setActionError] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const [timelineTarget, setTimelineTarget] = useState(null);
+  const [adminDialogOpen, setAdminDialogOpen] = useState(false);
+
   const resource = useRouteResource(async (signal) => {
     const config = { signal };
-    const [balances, settlements, members] = await Promise.all([
-      getBalances(tripId, config),
-      getSettlements(tripId, config),
+    const [settlementPage, members] = await Promise.all([
+      getSettlements(tripId, { ...config, params: { page_size: 100 } }),
       getMembers(tripId, config),
     ]);
-    return { balances, settlements, members: members.results };
+    return { settlements: settlementPage.results, members: members.results };
   }, [tripId]);
 
-  const run = async (action) => {
-    try { await action(); await resource.retry(); } catch (error) { setActionError(error); }
-  };
-  if (resource.loading) return <Loading />;
+  if (resource.loading) return <NeoLoading />;
   if (resource.error) return <ErrorState message={resource.error.message} onRetry={resource.retry} />;
 
-  const loadMore = () => resource.loadMore(
-    (signal) => getSettlementPage(resource.data.settlements.next, tripId, { signal }),
-    (current, page) => ({
-      ...current,
-      settlements: { ...page, results: [...current.settlements.results, ...page.results] },
-    }),
-  );
+  const { settlements, members } = resource.data;
+  const currency = trip.currency;
+  const readOnly = !permissions.canRecordSettlement;
+  const canRecordAdmin = !readOnly && ['owner', 'admin'].includes(currentMember?.role);
+  const isManager = ['owner', 'admin'].includes(currentMember?.role);
+
+  const rows = filter === 'all' ? settlements : settlements.filter((row) => row.status === filter);
+
+  const runReview = async (settlement, decision) => {
+    setBusyId(settlement.id);
+    try {
+      await reviewSettlement(tripId, settlement.id, decision);
+      setActionError(null);
+      await resource.retry();
+    } catch (error) {
+      setActionError(error);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleAdminSave = async (payload) => {
+    await recordAdminSettlement(tripId, payload);
+    setAdminDialogOpen(false);
+    setActionError(null);
+    await resource.retry();
+  };
 
   return (
-    <>
+    <div className="settle-page">
+      <div className="settle-page__header">
+        <h1 className="settle-page__title text-display">{t('settlements.title')}</h1>
+        <p className="settle-page__subtitle text-copy-lg">{t('settlements.history')}</p>
+      </div>
+
       {actionError && <ErrorState message={actionError.message} />}
-      <Balances data={resource.data.balances} />
-      <SettlementsPanel
-        members={resource.data.members}
-        currency={trip.currency}
-        settlements={resource.data.settlements.results}
-        suggestion={resource.data.balances.suggested_settlements?.[0]}
-        currentMember={currentMember}
-        pendingCount={trip.pending_settlement_confirmations}
-        disabled={!permissions.canRecordSettlement}
-        onSave={(payload, id) => run(() => id
-          ? updateSettlement(tripId, id, payload)
-          : addSettlement(tripId, payload))}
-        onDelete={(settlement) => run(() => deleteSettlement(tripId, settlement.id))}
-        onReview={(settlement, decision) => run(() => reviewSettlement(tripId, settlement.id, decision))}
-      />
-      {resource.data.settlements.next && <button onClick={loadMore}>{t('common.loadMore')}</button>}
-    </>
+
+      <div className="settle-page__toolbar">
+        <SegmentedControl
+          ariaLabel={t('settlements.title')}
+          options={FILTERS.map((option) => ({ value: option.value, label: t(`settlements.filter.${option.key}`) }))}
+          value={filter}
+          onChange={setFilter}
+        />
+        {canRecordAdmin && (
+          <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setAdminDialogOpen(true)}>
+            <i className="bi bi-person-check" aria-hidden="true" /> {t('settlements.recordExternal')}
+          </button>
+        )}
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="bal-empty">
+          <i className="bi bi-receipt bal-empty__icon" aria-hidden="true" />
+          <p className="bal-empty__body">{t('settlements.empty')}</p>
+        </div>
+      ) : (
+        <div className="settle-ledger">
+          {rows.map((settlement) => (
+            <SettlementLedgerRow
+              key={settlement.id}
+              settlement={settlement}
+              currency={currency}
+              busy={busyId === settlement.id}
+              canReview={!readOnly && settlement.status === 'pending' && (settlement.to_member_id === currentMember?.id || isManager)}
+              canCancel={!readOnly && settlement.status === 'pending' && (settlement.created_by === currentMember?.id || isManager)}
+              onOpen={setTimelineTarget}
+              onConfirm={(row) => runReview(row, 'confirm')}
+              onNotReceived={(row) => runReview(row, 'not-received')}
+              onCheckLater={(row) => runReview(row, 'check-later')}
+              onCancel={(row) => runReview(row, 'cancel')}
+            />
+          ))}
+        </div>
+      )}
+
+      {timelineTarget && (
+        <SettlementTimelineDrawer tripId={tripId} settlement={timelineTarget} currency={currency} onClose={() => setTimelineTarget(null)} />
+      )}
+
+      {adminDialogOpen && (
+        <SettlementActionDialog
+          mode="admin"
+          members={members}
+          currentMember={currentMember}
+          currency={currency}
+          onSave={handleAdminSave}
+          onClose={() => setAdminDialogOpen(false)}
+        />
+      )}
+    </div>
   );
 }
