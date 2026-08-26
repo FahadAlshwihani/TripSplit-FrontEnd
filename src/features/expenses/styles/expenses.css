@@ -7,6 +7,27 @@
   reinvention of any of those.
 */
 
+/* App.css ships a legacy `p, span, a, li { color: white; }` reset with
+   no scoping of its own. A directly-matching rule always beats an
+   ancestor's inherited color no matter how much higher that ancestor's
+   own specificity is (inheritance has no cascade priority at all) --
+   so every bare <span>/<p> the composer and drawer render (FX rate
+   labels, fund-preview rows, split-row names, meta items, ...) loses
+   its real color to that legacy white unless something wins it back.
+   Rather than hunting down and re-classing every individual text node
+   (fragile against the next one someone adds), this reclaims the whole
+   modal/drawer subtree at once and hands color back to each element's
+   actual styled ancestor via `inherit`. The tag list is wrapped in
+   :where() so the whole selector carries only ONE class's worth of
+   specificity (0,1,0) -- exactly enough to beat the legacy bare-type
+   rule (0,0,1), but never enough to outrank any of this file's own
+   more specific color overrides (e.g. .exp-composer__budget-hint--over),
+   which all appear later in this file and so still win their own ties. */
+.exp-composer-modal :where(span, p, a, li),
+.exp-drawer :where(span, p, a, li) {
+  color: inherit;
+}
+
 .exp-page { display: flex; flex-direction: column; gap: var(--space-5); }
 
 .exp-page__header {
@@ -416,7 +437,7 @@
    before being placed under shared/. */
 
 .field-group { display: flex; flex-direction: column; gap: var(--space-1); }
-.field-label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
+.field-label { display: inline-flex; align-items: center; gap: var(--space-1); font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
 
 .field-control {
   display: block;
@@ -512,7 +533,8 @@
 .exp-composer__section:last-child { margin-block-end: 0; }
 
 .exp-composer__section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding-block-end: var(--space-3); border-block-end: var(--border-width) solid var(--color-border); }
-.exp-composer__section-title { margin: 0; color: var(--color-text); }
+.exp-composer__section-title { margin: 0; display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); }
+.exp-composer__section-icon { color: var(--color-text); }
 
 .exp-composer__grid { display: grid; grid-template-columns: 1fr; gap: var(--space-3); }
 @media (min-width: 560px) {
@@ -540,15 +562,24 @@
 .exp-composer__budget-hint--over { color: var(--color-danger); border-color: var(--color-danger); }
 
 /* Multi-currency FX card -- rendered only when the original currency
-   differs from the trip's own; a manual rate field (no live FX-rate
-   service exists anywhere in this backend) plus a small Original/Trip
-   Value summary. */
+   differs from the trip's own. The rate is fetched automatically from
+   the backend's FX preview endpoint (apps.core.exchange_rates); manual
+   entry is only reached via the explicit "enter manually" fallback. */
 .exp-composer__fx-card { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); box-shadow: var(--shadow-hard-sm); }
 .exp-composer__fx-rate-row { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); font: var(--text-body-sm); }
 .exp-composer__fx-rate-row .field-control { width: 140px; }
 .exp-composer__fx-note { margin: 0; color: var(--color-text-muted); }
+.exp-composer__fx-status { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
+.exp-composer__fx-status--error { flex-direction: column; align-items: flex-start; color: var(--color-danger); }
+.exp-composer__fx-status--error p { margin: 0; }
+.exp-composer__fx-spinner { display: inline-block; inline-size: 14px; block-size: 14px; flex: 0 0 auto; border: 2px solid currentColor; border-inline-end-color: transparent; border-radius: 50%; animation: dash-btn-spin 0.6s linear infinite; }
+.exp-composer__fx-badge { font: var(--text-label); font-size: 9px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); border: var(--border-width) solid var(--color-border-subtle); border-radius: var(--radius-sm); padding: 1px var(--space-1); }
+.exp-composer__fx-manual-link { align-self: flex-start; }
 .exp-composer__fx-summary { display: flex; flex-direction: column; gap: var(--space-1); padding-block-start: var(--space-2); border-block-start: var(--border-width) solid var(--color-border-subtle); }
 .exp-composer__fx-summary-row { display: flex; justify-content: space-between; align-items: center; font: var(--text-financial); color: var(--color-text); }
+@media (prefers-reduced-motion: reduce) {
+  .exp-composer__fx-spinner { animation-duration: 1.2s; }
+}
 
 .exp-composer__fund-preview { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); box-shadow: var(--shadow-hard-sm); }
 .exp-composer__fund-preview-row { display: flex; justify-content: space-between; align-items: center; font: var(--text-financial); color: var(--color-text); }
@@ -629,6 +660,7 @@
   border: var(--border-width-lg) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
+  color: var(--color-text);
   box-shadow: var(--shadow-hard-md);
   overflow: hidden;
 }
@@ -661,6 +693,7 @@
   display: flex;
   flex-direction: column;
   background: var(--color-surface);
+  color: var(--color-text);
   border-inline-start: var(--border-width-lg) solid var(--color-border);
   box-shadow: var(--shadow-hard-md);
   /* Without an explicit z-index, position:fixed still establishes a

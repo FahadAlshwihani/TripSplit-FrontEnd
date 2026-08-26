@@ -11,7 +11,13 @@
   background: var(--color-surface);
   color: var(--color-text);
   font: var(--text-body);
+  /* Same canonical pressable-field language as .field-control -- rest/
+     hover/focus all reuse the shared elevation/press tokens rather than
+     a bespoke shadow system for this one control. */
+  box-shadow: var(--shadow-hard-sm);
+  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease, border-color var(--press-duration) ease;
 }
+.currency-picker__input:hover:not(:disabled) { box-shadow: var(--shadow-hard-sm-hover); transform: var(--press-sm-hover); }
 
 /* Purely decorative -- signals "this opens a dropdown" the way the
    Stitch reference's collapsed currency field shows a trailing chevron,
@@ -34,6 +40,13 @@
   outline: none;
   border-color: var(--nc-indigo-700);
   border-width: var(--border-width-lg);
+  box-shadow: var(--shadow-hard-sm-active);
+  transform: var(--press-sm-active);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .currency-picker__input { transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+  .currency-picker__input:hover, .currency-picker__input:focus-visible { transform: none; }
 }
 
 .currency-picker__listbox {

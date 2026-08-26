@@ -6,8 +6,8 @@
 */
 
 .seg-control {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
+  align-items: stretch;
   gap: 2px;
   padding: 2px;
   border: var(--border-width) solid var(--color-border);
@@ -17,6 +17,12 @@
 }
 
 .seg-control__item {
+  /* Equal-width, full-height cells -- without this, each item shrink-
+     wraps to its own label text (inline-flex sizing to content), so a
+     short label ("Members") and a long one ("Trip Fund") end up
+     different widths and the active fill reads as a small floating
+     pill inside its track instead of tiling the segment it owns. */
+  flex: 1 1 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;

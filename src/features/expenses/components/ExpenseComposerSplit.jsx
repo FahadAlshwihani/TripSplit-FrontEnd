@@ -25,7 +25,7 @@ const ExpenseComposerSplit = ({ form, setField, setSplitValue, members, baseAmou
 
   return (
     <section className="exp-composer__section">
-      <h3 className="exp-composer__section-title">{t('expenseComposer.sections.split')}</h3>
+      <h3 className="exp-composer__section-title"><i className="bi bi-pie-chart exp-composer__section-icon" aria-hidden="true" />{t('expenseComposer.sections.split')}</h3>
       <SegmentedControl
         ariaLabel={t('expenseComposer.sections.split')}
         value={form.split_type}

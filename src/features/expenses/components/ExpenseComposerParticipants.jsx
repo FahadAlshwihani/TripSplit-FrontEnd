@@ -17,7 +17,7 @@ const ExpenseComposerParticipants = ({ form, setScope, toggleParticipant, select
 
   return (
     <section className="exp-composer__section">
-      <h3 className="exp-composer__section-title">{t('expenseComposer.sections.participants')}</h3>
+      <h3 className="exp-composer__section-title"><i className="bi bi-people exp-composer__section-icon" aria-hidden="true" />{t('expenseComposer.sections.participants')}</h3>
       <SegmentedControl
         ariaLabel={t('expenseComposer.sections.participants')}
         value={form.scope}
