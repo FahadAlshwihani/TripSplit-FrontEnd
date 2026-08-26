@@ -8,46 +8,69 @@
 .seg-control {
   display: flex;
   align-items: stretch;
-  gap: 2px;
-  padding: 2px;
+  /* No track padding and no inter-item gap: the previous 2px
+     padding/gap put a visible gutter of the TRACK's own background
+     around every item -- including the active one -- so its blue fill
+     could never reach the outer edge no matter how wide the item
+     itself was made. The track now owns only the outer border/shadow/
+     corner-radius; items butt directly against each other and against
+     the track's own edge. `overflow: hidden` clips the first/last
+     item's own square corners to the track's rounded ones, since
+     items themselves are given NO border-radius of their own below --
+     otherwise a "selected" item in the middle of the track would still
+     show its own independent rounded corners like a floating pill. */
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface-container);
   box-shadow: var(--shadow-hard-sm);
+  overflow: hidden;
 }
 
 .seg-control__item {
-  /* Equal-width, full-height cells -- without this, each item shrink-
-     wraps to its own label text (inline-flex sizing to content), so a
-     short label ("Members") and a long one ("Trip Fund") end up
-     different widths and the active fill reads as a small floating
-     pill inside its track instead of tiling the segment it owns. */
+  /* Equal-width, full-height, edge-to-edge cells: flex-basis 0 with
+     grow so every item takes an identical share of the track no matter
+     how long its own label is, align-self: stretch so it always fills
+     the track's full height (the track is a `stretch`-by-default flex
+     container, this is just explicit), and zero border/radius/margin
+     of its own -- any visual separation between segments comes only
+     from the divider border below, never from spacing that would
+     leave the track's own background visible around an active fill. */
   flex: 1 1 0;
+  align-self: stretch;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 32px;
+  min-height: 36px;
+  margin: 0;
   padding: var(--space-1) var(--space-3);
   border: none;
-  border-radius: var(--radius-sm);
+  /* Logical -- flips correctly under RTL, unlike a hardcoded left/
+     right border would. */
+  border-inline-start: var(--border-width) solid var(--color-border);
+  border-radius: 0;
   background: none;
   color: var(--color-text-muted);
   font: var(--text-label);
   letter-spacing: var(--tracking-label);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+  transition: background-color 0.15s ease, color 0.15s ease, transform var(--press-duration) ease;
 }
+.seg-control__item:first-child { border-inline-start: none; }
 
 .seg-control__item:hover:not(.is-active) { background: var(--color-surface-alt); color: var(--color-text); }
-.seg-control__item:active { transform: var(--press-sm-active); }
-.seg-control__item:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: 1px; }
+.seg-control__item:active:not(.is-active) { transform: var(--press-sm-active); }
+.seg-control__item:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: -2px; }
 
 .seg-control__item.is-active {
+  /* Flush/pressed-into-the-track, not a second floating raised button:
+     the track already carries the only hard shadow, so the active
+     segment gets none of its own -- just the solid fill. */
   background: var(--nc-indigo-700);
+  border-inline-start-color: var(--nc-indigo-700);
   color: var(--nc-white);
-  box-shadow: var(--shadow-hard-sm);
   font-weight: 700;
 }
+.seg-control__item.is-active + .seg-control__item { border-inline-start-color: var(--nc-indigo-700); }
 
 @media (prefers-reduced-motion: reduce) {
   .seg-control__item { transition: background-color 0.15s ease, color 0.15s ease; }
