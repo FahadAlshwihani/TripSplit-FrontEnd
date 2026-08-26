@@ -116,9 +116,45 @@
 .dash-btn--primary:hover { background: var(--nc-indigo-800); box-shadow: 1px 1px 0 0 var(--nc-indigo-700); }
 .dash-btn--primary:active { box-shadow: 0 0 0 0 var(--nc-indigo-700); }
 
+/* Destructive action (delete confirmations) -- same physical language,
+   danger-soft fill so it never relies on accidental white-on-light
+   inheritance the way a raw red button risks. */
+.dash-btn--danger {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  box-shadow: 2px 2px 0 0 var(--color-danger);
+}
+.dash-btn--danger i { color: var(--color-danger); }
+.dash-btn--danger:hover { background: var(--color-danger-soft); box-shadow: 1px 1px 0 0 var(--color-danger); }
+.dash-btn--danger:active { box-shadow: 0 0 0 0 var(--color-danger); }
+
+/* Loading state -- keeps full dimensions/fill/border/shadow (the
+   button must stay readable and recognizable while a request is in
+   flight, never collapse into the generic dimmed :disabled look) and
+   swaps in a small inline spinner ahead of the label instead of
+   replacing it, so the button never changes size/reflows. */
+.dash-btn--loading,
+.dash-btn--loading:disabled {
+  opacity: 1;
+  cursor: wait;
+}
+.dash-btn__spinner {
+  display: inline-block;
+  inline-size: 14px;
+  block-size: 14px;
+  flex: 0 0 auto;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: dash-btn-spin 0.6s linear infinite;
+}
+@keyframes dash-btn-spin { to { transform: rotate(360deg); } }
+
 @media (prefers-reduced-motion: reduce) {
   .dash-btn { transition: background-color 0.15s ease; }
   .dash-btn:hover, .dash-btn:active { transform: none; }
+  .dash-btn__spinner { animation-duration: 1.2s; }
 }
 
 /* Button label collapses to icon-only at the topbar's own narrower
