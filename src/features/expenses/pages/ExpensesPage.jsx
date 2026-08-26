@@ -14,8 +14,9 @@ import ExpenseSummaryCards from '../components/ExpenseSummaryCards';
 import ExpenseFilterBar from '../components/ExpenseFilterBar';
 import ExpenseLedgerList from '../components/ExpenseLedgerList';
 import NewExpenseDialog from '../components/NewExpenseDialog';
-import ExpenseDetailsDialog from '../components/ExpenseDetailsDialog';
+import ExpenseDetailsDrawer from '../components/ExpenseDetailsDrawer';
 import CategoryManagerDialog from '../components/CategoryManagerDialog';
+import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 import '../styles/expenses.css';
 
 const fulfilledValue = (result, fallback) => (result.status === 'fulfilled' ? result.value : fallback);
@@ -26,6 +27,7 @@ export default function ExpensesPage() {
   const { filters, setFilters, clearFilters, hasActiveFilters } = useExpenseFilters();
   const [dialog, setDialog] = useState(null); // { mode: 'create' | 'edit', expense? } | null
   const [detailsExpense, setDetailsExpense] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   const [actionError, setActionError] = useState(null);
 
@@ -66,17 +68,27 @@ export default function ExpensesPage() {
     }
   };
 
-  const save = (payload) => run(async () => {
-    if (dialog?.expense && !dialog.expense.duplicate) await updateExpense(tripId, dialog.expense.id, payload);
-    else await addExpense(tripId, { ...payload, idempotency_key: crypto.randomUUID() });
-    setDialog(null);
-    setDetailsExpense(null);
-  });
+  // Rethrows on failure (unlike `run`/category actions below) so the
+  // composer dialog itself can catch it and render the error inline
+  // next to its own submit button -- the dialog must stay open and
+  // usable on a server rejection, not silently close.
+  const save = async (payload) => {
+    try {
+      if (dialog?.expense && !dialog.expense.duplicate) await updateExpense(tripId, dialog.expense.id, payload);
+      else await addExpense(tripId, { ...payload, idempotency_key: crypto.randomUUID() });
+      setActionError(null);
+      await Promise.all([listResource.retry(), summaryResource.retry()]);
+      setDialog(null);
+      setDetailsExpense(null);
+    } catch (error) {
+      setActionError(error);
+      throw error;
+    }
+  };
 
-  const remove = (expense) => run(async () => {
-    // eslint-disable-next-line no-alert
-    if (!window.confirm(t('expense.confirmDelete'))) return;
-    await deleteExpense(tripId, expense.id);
+  const confirmDelete = () => run(async () => {
+    await deleteExpense(tripId, deleteTarget.id);
+    setDeleteTarget(null);
     setDetailsExpense(null);
   });
 
@@ -165,9 +177,10 @@ export default function ExpensesPage() {
         <NewExpenseDialog
           members={members}
           categories={categories}
+          budgets={budgets}
           currentMember={currentMember}
           tripCurrency={trip.currency}
-          hasFund={fund?.status === 'active'}
+          fund={fund}
           expense={dialog.expense}
           onSubmit={save}
           onClose={() => setDialog(null)}
@@ -175,17 +188,28 @@ export default function ExpensesPage() {
       )}
 
       {detailsExpense && (
-        <ExpenseDetailsDialog
+        <ExpenseDetailsDrawer
           expense={detailsExpense}
           category={categoriesByCode[detailsExpense.category]}
+          budget={budgets.find((row) => row.category === detailsExpense.category)}
           membersById={membersLookup}
           currency={trip.currency}
           canEdit={permissions.canEditExpense(detailsExpense)}
           canCreateExpense={permissions.canCreateExpense}
           onEdit={() => { setDialog({ mode: 'edit', expense: detailsExpense }); setDetailsExpense(null); }}
           onDuplicate={() => { setDialog({ mode: 'create', expense: { ...detailsExpense, duplicate: true } }); setDetailsExpense(null); }}
-          onDelete={() => remove(detailsExpense)}
+          onDelete={() => setDeleteTarget(detailsExpense)}
           onClose={() => setDetailsExpense(null)}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title={t('expenses.ledger.deleteTitle')}
+          body={t('expenses.ledger.deleteBody', { title: deleteTarget.title })}
+          confirmLabel={t('expenses.ledger.deleteConfirm')}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
         />
       )}
 
