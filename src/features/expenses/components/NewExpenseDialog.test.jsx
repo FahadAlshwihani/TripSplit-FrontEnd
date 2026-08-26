@@ -7,6 +7,9 @@ jest.mock('../../../shared/components/useCurrencyCatalog', () => ({
   __esModule: true,
   default: () => ({ currencies: [{ code: 'SAR', name: 'Saudi Riyal', symbol: 'SR', countries: [{ name: 'Saudi Arabia', flag: '🇸🇦' }] }, { code: 'GEL', name: 'Georgian Lari', symbol: '₾', countries: [{ name: 'Georgia', flag: '🇬🇪' }] }], error: null }),
 }));
+jest.mock('../../currencies/api/currenciesApi', () => ({ getExchangeRate: jest.fn() }));
+
+const { getExchangeRate } = require('../../currencies/api/currenciesApi');
 
 const fahad = { id: 'm1', display_name: 'Fahad', avatar: { type: 'initials', color: 'indigo' } };
 const saud = { id: 'm2', display_name: 'Saud', avatar: { type: 'initials', color: 'slate' } };
@@ -17,6 +20,8 @@ const categories = [
 ];
 const budgets = [{ category: 'accommodation', budget: '1000.00', spent: '900.00', remaining: '100.00', usage_percentage: '90.00' }];
 const activeFund = { status: 'active', accounting: { balance: '500.00' } };
+
+beforeEach(() => { getExchangeRate.mockReset().mockResolvedValue({ base: 'GEL', quote: 'SAR', date: '2026-08-26', rate: '0.55000000', source: 'frankfurter', historical: false }); });
 
 const moneyMatcher = (text) => (_content, node) => (
   node?.tagName?.toLowerCase() === 'bdi' && node.textContent.replace(/\s+/g, ' ').trim() === text
@@ -65,8 +70,9 @@ test('the composer renders with every section\'s real, unmocked component tree a
   consoleError.mockRestore();
 });
 
-test('renders all four canonical sections plus notes', () => {
+test('renders all four canonical sections plus notes once a member-paid expense reveals the split section', () => {
   setup();
+  fireEvent.click(screen.getByRole('radio', { name: 'expenseComposer.memberPaid' }));
   expect(screen.getByText('expenseComposer.sections.details')).toBeInTheDocument();
   expect(screen.getByText('expenseComposer.sections.payment')).toBeInTheDocument();
   expect(screen.getByText('expenseComposer.sections.participants')).toBeInTheDocument();
@@ -93,12 +99,14 @@ test('choosing Trip Fund shows an available/this-expense/after preview and warns
 
 test('a lone payer never needs a separate amount input, and the payment total is already satisfied', () => {
   setup();
+  fireEvent.click(screen.getByRole('radio', { name: 'expenseComposer.memberPaid' }));
   expect(screen.getByText('expenseComposer.paymentsComplete')).toBeInTheDocument();
   expect(screen.queryByLabelText(/paidAmount/)).not.toBeInTheDocument();
 });
 
 test('adding a second payer requires explicit per-payer amounts that must sum to the total', () => {
   setup();
+  fireEvent.click(screen.getByRole('radio', { name: 'expenseComposer.memberPaid' }));
   fireEvent.change(screen.getByLabelText('expense.amount'), { target: { value: '100' } });
   // "Saud" appears both in the payment member list and the participants
   // list below it -- the payment section's row is the first occurrence.
@@ -117,6 +125,7 @@ test('the category budget hint shows spent/allocated for a budgeted category', a
 
 test('switching split method to Percentage renders per-participant percentage inputs and a running total', () => {
   setup();
+  fireEvent.click(screen.getByRole('radio', { name: 'expenseComposer.memberPaid' }));
   fireEvent.click(screen.getByRole('radio', { name: 'split.percentage' }));
   const inputs = screen.getAllByRole('spinbutton').filter((input) => input.closest('.exp-composer__split-row-percent'));
   fireEvent.change(inputs[0], { target: { value: '60' } });
@@ -171,4 +180,83 @@ test('Escape closes the dialog', () => {
   setup({ onClose });
   fireEvent.keyDown(document, { key: 'Escape' });
   expect(onClose).toHaveBeenCalled();
+});
+
+test('defaults to Trip Fund when the trip has an active Fund, and hides the split section', () => {
+  setup();
+  expect(screen.getByRole('radio', { name: 'expenses.ledger.tripFund' })).toHaveAttribute('aria-checked', 'true');
+  expect(screen.queryByText('expenseComposer.sections.split')).not.toBeInTheDocument();
+});
+
+test('defaults to Member(s) when the trip has no active Fund', () => {
+  setup({ fund: null });
+  expect(screen.getByRole('radio', { name: 'expenseComposer.memberPaid' })).toHaveAttribute('aria-checked', 'true');
+  expect(screen.getByText('expenseComposer.sections.split')).toBeInTheDocument();
+});
+
+test('a Percentage split configured under Member(s) does not leak into the payload after switching to Trip Fund', async () => {
+  const onSubmit = jest.fn().mockResolvedValue({});
+  setup({ onSubmit });
+  fireEvent.change(screen.getByLabelText('expense.description'), { target: { value: 'Snacks' } });
+  fireEvent.change(screen.getByLabelText('expense.amount'), { target: { value: '100' } });
+  fireEvent.click(screen.getByRole('radio', { name: 'expenseComposer.memberPaid' }));
+  fireEvent.click(screen.getByRole('radio', { name: 'split.percentage' }));
+  const inputs = screen.getAllByRole('spinbutton').filter((input) => input.closest('.exp-composer__split-row-percent'));
+  fireEvent.change(inputs[0], { target: { value: '60' } });
+  fireEvent.change(inputs[1], { target: { value: '40' } });
+  // Switch back to Trip Fund -- the split section (and its stale
+  // Percentage state) is now hidden entirely, but form.split_type/
+  // splitValues still exist in React state. The submitted payload must
+  // not carry that stale percentage split just because the state object
+  // still technically holds it.
+  fireEvent.click(screen.getByRole('radio', { name: 'expenses.ledger.tripFund' }));
+  fireEvent.click(screen.getByRole('button', { name: 'expense.add' }));
+  await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+  const payload = onSubmit.mock.calls[0][0];
+  expect(payload.split_type).toBe('equal');
+  expect(payload.shares).toBeUndefined();
+  expect(payload.participant_ids).toEqual(['m1', 'm2']);
+});
+
+test('a foreign currency automatically fetches and previews a rate, with no manual input shown by default', async () => {
+  setup();
+  fireEvent.change(screen.getByLabelText('currency.original'), { target: { value: 'Geo' } });
+  fireEvent.mouseDown(await screen.findByText(/Georgian Lari/));
+  expect(screen.getByText('expenseComposer.fxLoading')).toBeInTheDocument();
+  expect(screen.queryByLabelText('currency.rate')).not.toBeInTheDocument();
+  await waitFor(() => expect(screen.getByText(/0\.5500/)).toBeInTheDocument());
+  expect(getExchangeRate).toHaveBeenCalledWith('GEL', 'SAR', expect.any(String));
+});
+
+test('a failed automatic fetch shows the natural fallback message and an explicit "use manual rate" action, never manual entry by default', async () => {
+  getExchangeRate.mockRejectedValue({ response: { data: { message: 'nope' } } });
+  setup();
+  fireEvent.change(screen.getByLabelText('currency.original'), { target: { value: 'Geo' } });
+  fireEvent.mouseDown(await screen.findByText(/Georgian Lari/));
+  await waitFor(() => expect(screen.getByText('nope')).toBeInTheDocument());
+  expect(screen.queryByLabelText('currency.rate')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'expenseComposer.useManualRate' }));
+  expect(screen.getByLabelText('currency.rate')).toBeInTheDocument();
+});
+
+test('every visible section heading renders its icon, matching the Create Trip visual language', () => {
+  setup();
+  fireEvent.click(screen.getByRole('radio', { name: 'expenseComposer.memberPaid' }));
+  expect(document.querySelector('.exp-composer__section-title .bi-receipt')).toBeInTheDocument();
+  expect(document.querySelector('.exp-composer__section-title .bi-wallet2')).toBeInTheDocument();
+  expect(document.querySelector('.exp-composer__section-title .bi-people')).toBeInTheDocument();
+  expect(document.querySelector('.exp-composer__section-title .bi-pie-chart')).toBeInTheDocument();
+  expect(document.querySelector('.field-label .bi-sticky')).toBeInTheDocument();
+});
+
+test('editing an existing foreign-currency expense never re-fetches the historical rate just because the modal opened', () => {
+  const expense = {
+    id: 'e1', title: 'Souvenirs', amount: '187.50', original_amount: '50.00', original_currency: 'GEL', exchange_rate: '3.75000000',
+    payment_source: 'personal', category: 'accommodation', scope: 'shared', split_type: 'equal', expense_date: '2026-08-01', notes: '',
+    payments: [{ member_id: 'm1', amount: '187.50' }],
+    shares: [{ member_id: 'm1', amount: '187.50', percentage: null, weight: null }],
+  };
+  setup({ expense });
+  expect(getExchangeRate).not.toHaveBeenCalled();
+  expect(screen.getByText(/3\.7500/)).toBeInTheDocument();
 });
