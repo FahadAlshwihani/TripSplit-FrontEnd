@@ -1,0 +1,142 @@
+/*
+  Settlement workflow -- the rebuilt I Paid / Record Received / Admin
+  External dialog, the compact pending-settlement card, the per-settlement
+  history drawer, and the Settlements ledger page. Class prefix `settle-`,
+  same Neo-classic token system as balances.css/expenses.css; the two new
+  modals/drawer here also reuse expenses.css's `.exp-modal__close`,
+  `.field-*`, `.exp-composer__grid/footer*` and balances.css's
+  `.bal-dialog*`/`.exp-drawer*` classes rather than duplicating them.
+*/
+
+/* Same legacy-white-text guard as balances.css/expenses.css. */
+.settle-page :where(span, p, a, li),
+.bal-dialog :where(span, p, a, li),
+.exp-drawer :where(span, p, a, li) {
+  color: inherit;
+}
+
+/* ---------------------------------------------------------------------- */
+/* SettlementActionDialog */
+
+.settle-dialog__subcopy { margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
+
+.settle-dialog__counterpart {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+}
+.settle-dialog__counterpart-text { display: flex; flex-direction: column; gap: 2px; }
+.settle-dialog__counterpart-name { font: var(--text-body); font-weight: 700; color: var(--color-text); }
+.settle-dialog__counterpart-debt { display: flex; align-items: center; gap: var(--space-1); font: var(--text-body-sm); color: var(--color-text-muted); }
+
+.settle-dialog__summary { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3); border: var(--border-width) solid var(--color-border-subtle); border-radius: var(--radius-sm); background: var(--color-surface-alt); }
+.settle-dialog__summary-row { display: flex; justify-content: space-between; align-items: center; font: var(--text-financial); color: var(--color-text); }
+.settle-dialog__summary-row--total { border-block-start: var(--border-width) solid var(--color-border); padding-block-start: var(--space-2); font-weight: 700; }
+
+.settle-dialog__note { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); font: var(--text-body-sm); }
+.settle-dialog__note--info { color: var(--color-text-muted); background: var(--color-surface-alt); border: var(--border-width) solid var(--color-border-subtle); }
+.settle-dialog__note--warn { color: var(--color-success); background: var(--color-success-soft); border: var(--border-width) solid var(--color-success); }
+
+.settle-dialog__ack { display: flex; align-items: flex-start; gap: var(--space-2); cursor: pointer; font: var(--text-body-sm); color: var(--color-text); }
+.settle-dialog__ack input { margin-block-start: 3px; inline-size: 18px; block-size: 18px; accent-color: var(--nc-indigo-700); flex: 0 0 auto; }
+
+/* ---------------------------------------------------------------------- */
+/* PendingSettlementCard */
+
+.settle-pending-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--border-width-lg) solid var(--nc-indigo-700);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  margin-block-start: var(--space-2);
+  width: 100%;
+}
+.settle-pending-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.settle-pending-card__badge { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--nc-indigo-700); text-transform: uppercase; }
+.settle-pending-card__amount { font: var(--text-financial); color: var(--color-text); }
+.settle-pending-card__body { margin: 0; color: var(--color-text); font: var(--text-body-sm); }
+.settle-pending-card__date { color: var(--color-text-muted); }
+.settle-pending-card__note { margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); font-style: italic; }
+.settle-pending-card__question { margin: 0; font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
+.settle-pending-card__buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.settle-pending-card__buttons .dash-btn { flex: 1 1 auto; min-height: 40px; padding-inline: var(--space-3); }
+
+@media (max-width: 480px) {
+  .settle-pending-card__buttons { flex-direction: column; }
+  .settle-pending-card__buttons .dash-btn { width: 100%; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* SettlementTimelineDrawer */
+
+.settle-timeline__summary { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); color: var(--color-text); font: var(--text-body); }
+
+.settle-timeline__list { display: flex; flex-direction: column; gap: 0; margin: var(--space-4) 0 0; padding: 0; list-style: none; }
+.settle-timeline__item { display: flex; gap: var(--space-3); padding-block-end: var(--space-4); position: relative; }
+.settle-timeline__item:last-child { padding-block-end: 0; }
+.settle-timeline__item::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 5px;
+  inset-block-start: 14px;
+  inset-block-end: 0;
+  width: var(--border-width);
+  background: var(--color-border);
+}
+.settle-timeline__item:last-child::before { display: none; }
+.settle-timeline__dot { flex: 0 0 auto; inline-size: 11px; block-size: 11px; border-radius: 50%; background: var(--nc-indigo-700); margin-block-start: 4px; }
+.settle-timeline__content { display: flex; flex-direction: column; gap: 2px; }
+.settle-timeline__text { margin: 0; color: var(--color-text); font: var(--text-body-sm); }
+.settle-timeline__date { color: var(--color-text-muted); font: var(--text-label); font-size: 10px; }
+
+/* ---------------------------------------------------------------------- */
+/* Settlements ledger page */
+
+.settle-page { display: flex; flex-direction: column; gap: var(--space-5); }
+.settle-page__header { display: flex; flex-direction: column; gap: var(--space-1); padding-block-end: var(--space-3); border-block-end: var(--border-width) solid var(--color-border); }
+.settle-page__title { margin: 0; color: var(--color-text); }
+.settle-page__subtitle { color: var(--color-text-muted); margin: 0; }
+.settle-page__toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+
+.settle-ledger { display: flex; flex-direction: column; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); box-shadow: var(--shadow-hard-sm); overflow: hidden; }
+
+.settle-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-block-end: var(--border-width) solid var(--color-border-subtle);
+  width: 100%;
+  background: none;
+  text-align: start;
+  cursor: pointer;
+}
+.settle-row:last-child { border-block-end: none; }
+.settle-row:hover { background: var(--color-surface-alt); }
+.settle-row:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: -2px; }
+
+.settle-row__who { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); font: var(--text-body-sm); min-width: 0; flex: 1 1 auto; }
+.settle-row__meta { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.settle-row__date { color: var(--color-text-muted); font: var(--text-label); font-size: 10px; }
+.settle-row__end { display: flex; align-items: center; gap: var(--space-3); flex: 0 0 auto; }
+.settle-row__amount { font: var(--text-financial); color: var(--color-text); }
+
+.settle-status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px var(--space-2); border-radius: var(--radius-sm); font: var(--text-label); font-size: 9px; letter-spacing: var(--tracking-label); text-transform: uppercase; border: var(--border-width) solid; }
+.settle-status-badge--pending { color: var(--nc-indigo-700); border-color: var(--nc-indigo-700); background: var(--color-primary-soft); }
+.settle-status-badge--confirmed { color: var(--color-success); border-color: var(--color-success); background: var(--color-success-soft); }
+.settle-status-badge--rejected { color: var(--color-danger); border-color: var(--color-danger); background: var(--color-danger-soft); }
+.settle-status-badge--cancelled { color: var(--color-text-muted); border-color: var(--color-border); background: var(--color-surface-alt); }
+
+@media (max-width: 480px) {
+  .settle-row { flex-direction: column; align-items: stretch; }
+  .settle-row__end { justify-content: space-between; }
+}
