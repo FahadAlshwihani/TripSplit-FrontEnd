@@ -45,6 +45,39 @@ test('custom refund builds an allocation preview before confirmation', async () 
   expect(await screen.findByText('Fahad: 60.00 SAR')).toBeInTheDocument();
 });
 
+test('a manager sees a Remind action on a member who still owes the round, and it calls onRemind with the round and member', async () => {
+  const onRemind = jest.fn().mockResolvedValue({ member_id: 'b', amount: '250.00', notified: true });
+  const fund = {
+    name: 'Trip Fund', holder: members[0], status: 'active',
+    accounting: { collected: '750.00', spent: '500.00', refunded: '0.00', balance: '250.00', surplus: '250.00', deficit: '0.00' },
+    rounds: [{ id: 'r1', sequence_number: 1, title: 'Initial', status: 'open', statistics: { collected: '750.00', target: '1000.00', percentage_collected: '75.00', members: [{ member_id: 'b', display_name: 'Saud', avatar_key: 'avatar_02', expected: '1000.00', paid: '750.00', remaining: '250.00' }] } }],
+  };
+  render(<FundPanel fund={fund} members={members} currentMember={members[0]} currency="SAR" onRemind={onRemind} />);
+  fireEvent.click(screen.getByRole('button', { name: 'fund.remind' }));
+  await waitFor(() => expect(onRemind).toHaveBeenCalledWith(fund.rounds[0], 'b'));
+  expect(await screen.findByText('fund.reminderSent')).toBeInTheDocument();
+});
+
+test('a member who owes nothing more in the round gets no Remind action', () => {
+  const fund = {
+    name: 'Trip Fund', holder: members[0], status: 'active',
+    accounting: { collected: '1000.00', spent: '500.00', refunded: '0.00', balance: '500.00', surplus: '500.00', deficit: '0.00' },
+    rounds: [{ id: 'r1', sequence_number: 1, title: 'Initial', status: 'open', statistics: { collected: '1000.00', target: '1000.00', percentage_collected: '100.00', members: [{ member_id: 'b', display_name: 'Saud', avatar_key: 'avatar_02', expected: '1000.00', paid: '1000.00', remaining: '0.00', overpaid: '0.00' }] } }],
+  };
+  render(<FundPanel fund={fund} members={members} currentMember={members[0]} currency="SAR" onRemind={jest.fn()} />);
+  expect(screen.queryByRole('button', { name: 'fund.remind' })).not.toBeInTheDocument();
+});
+
+test('a non-manager (disabled) never sees the Remind action, even on a member who owes the round', () => {
+  const fund = {
+    name: 'Trip Fund', holder: members[0], status: 'active',
+    accounting: { collected: '750.00', spent: '500.00', refunded: '0.00', balance: '250.00', surplus: '250.00', deficit: '0.00' },
+    rounds: [{ id: 'r1', sequence_number: 1, title: 'Initial', status: 'open', statistics: { collected: '750.00', target: '1000.00', percentage_collected: '75.00', members: [{ member_id: 'b', display_name: 'Saud', avatar_key: 'avatar_02', expected: '1000.00', paid: '750.00', remaining: '250.00' }] } }],
+  };
+  render(<FundPanel fund={fund} members={members} currentMember={members[1]} currency="SAR" disabled onRemind={jest.fn()} />);
+  expect(screen.queryByRole('button', { name: 'fund.remind' })).not.toBeInTheDocument();
+});
+
 test('contribution correction requires a reason and submits the replacement amount', () => {
   const onCorrectContribution = jest.fn();
   const fund = { name: 'Trip Fund', holder: members[0], status: 'active', refunds: [], accounting: { collected: '1000.00', spent: '1000.00', refunded: '0.00', balance: '0.00', surplus: '0.00', deficit: '0.00' }, rounds: [], contributions: [{ id: 'c1', round_id: 'r1', round_title: 'Initial', member_id: 'b', display_name: 'Saud', amount: '1000.00', contribution_date: '2026-08-20', voided: false }] };
