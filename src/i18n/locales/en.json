@@ -314,5 +314,7 @@
   "expenseComposer.shareCount_one": "{{count}} share", "expenseComposer.shareCount_other": "{{count}} shares",
   "expenseComposer.errors.titleRequired": "Add a description for this expense.", "expenseComposer.errors.categoryRequired": "Choose a category.", "expenseComposer.errors.amountRequired": "Enter an amount greater than zero.",
   "expenseComposer.errors.participantsRequired": "Select at least one participant.", "expenseComposer.errors.payerRequired": "Add at least one payer.",
-  "expenseComposer.errors.paymentsMustTotal": "Payments must add up to the full expense amount.", "expenseComposer.errors.percentageMustTotal100": "Percentages must add up to 100%.", "expenseComposer.errors.exactMustTotal": "The amounts must add up to the full expense amount."
+  "expenseComposer.errors.paymentsMustTotal": "Payments must add up to the full expense amount.", "expenseComposer.errors.percentageMustTotal100": "Percentages must add up to 100%.", "expenseComposer.errors.exactMustTotal": "The amounts must add up to the full expense amount.",
+  "expenseComposer.errors.fxLoading": "Still fetching the exchange rate — hang on a second.", "expenseComposer.errors.fxUnresolved": "We couldn't fetch the exchange rate. Enter it manually to continue.", "expenseComposer.errors.exchangeRateRequired": "Enter an exchange rate greater than zero.",
+  "expenseComposer.fxLoading": "Fetching exchange rate…", "expenseComposer.fxFetchFailed": "We couldn't fetch the exchange rate automatically. You can enter it manually.", "expenseComposer.useManualRate": "Use manual rate", "expenseComposer.fxHistoricalBadge": "Rate for this date"
 }

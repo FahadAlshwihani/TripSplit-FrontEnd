@@ -7,22 +7,25 @@ import { categoryLabel } from '../../../shared/utils/categoryPresentation';
 
 /*
   Section 1 -- Description / Category / Date / Currency / Amount, plus
-  the multi-currency FX summary (only rendered when the original
-  currency differs from the trip's own -- same-currency expenses never
-  show a conversion block at all, per the brief). The exchange rate
-  itself stays a manual field: there is no live FX-rate service anywhere
-  in this backend (confirmed by audit), so this mirrors the old
-  ExpenseForm's own manual-rate behavior exactly rather than inventing
-  a browser-side authoritative rate lookup.
+  the multi-currency FX card (only rendered when the original currency
+  differs from the trip's own -- same-currency expenses never show a
+  conversion block at all). The rate itself is fetched automatically
+  from the backend's FX preview endpoint (apps.core.exchange_rates,
+  Frankfurter -- free, keyless, historical-date-aware) as the normal
+  path; manual entry is only ever reached through the explicit "enter
+  manually" fallback (auto-fetch failure, or the user's own choice),
+  never shown by default. The backend independently re-resolves and
+  persists the authoritative rate at submit time -- this preview never
+  becomes the source of truth on its own.
 */
-const ExpenseComposerDetails = ({ form, setField, errors, categories, budgets, tripCurrency, isForeign, baseAmount }) => {
+const ExpenseComposerDetails = ({ form, fx, useManualRate, setManualRate, setField, errors, categories, budgets, tripCurrency, isForeign, baseAmount }) => {
   const { t } = useTranslation();
   const budget = budgets.find((row) => row.category === form.category);
   const selectedCategory = categories.find((category) => category.code === form.category);
 
   return (
     <section className="exp-composer__section">
-      <h3 className="exp-composer__section-title">{t('expenseComposer.sections.details')}</h3>
+      <h3 className="exp-composer__section-title"><i className="bi bi-receipt exp-composer__section-icon" aria-hidden="true" />{t('expenseComposer.sections.details')}</h3>
 
       <div className="field-group">
         <label className="field-label" htmlFor="exp-title">{t('expense.description')}</label>
@@ -91,24 +94,51 @@ const ExpenseComposerDetails = ({ form, setField, errors, categories, budgets, t
 
       {isForeign && (
         <div className="exp-composer__fx-card">
-          <div className="field-group">
-            <label className="field-label" htmlFor="exp-rate">{t('currency.rate')}</label>
-            <div className="exp-composer__fx-rate-row">
-              <span>1 {form.original_currency} =</span>
-              <input
-                id="exp-rate"
-                type="number"
-                inputMode="decimal"
-                min="0.00000001"
-                step="0.00000001"
-                className="field-control"
-                value={form.exchange_rate}
-                onChange={(event) => setField({ exchange_rate: event.target.value })}
-              />
-              <span>{tripCurrency}</span>
+          {fx.mode === 'auto' && fx.status === 'loading' && (
+            <p className="exp-composer__fx-status">
+              <span className="exp-composer__fx-spinner" aria-hidden="true" />
+              {t('expenseComposer.fxLoading')}
+            </p>
+          )}
+
+          {fx.mode === 'auto' && fx.status === 'error' && (
+            <div className="exp-composer__fx-status exp-composer__fx-status--error">
+              <p role="alert">{fx.errorMessage || t('expenseComposer.fxFetchFailed')}</p>
+              <button type="button" className="dash-btn dash-btn--secondary" onClick={useManualRate}>{t('expenseComposer.useManualRate')}</button>
             </div>
-            <p className="exp-composer__fx-note text-copy-sm">{t('currency.locked')}</p>
-          </div>
+          )}
+
+          {fx.mode === 'auto' && fx.status === 'ready' && (
+            <>
+              <div className="exp-composer__fx-rate-row">
+                <bdi dir="ltr">1 {form.original_currency} = {Number(fx.rate || form.exchange_rate).toFixed(4)} {tripCurrency}</bdi>
+                {fx.historical && <span className="exp-composer__fx-badge">{t('expenseComposer.fxHistoricalBadge')}</span>}
+              </div>
+              <button type="button" className="exp-text-link exp-composer__fx-manual-link" onClick={useManualRate}>{t('expenseComposer.useManualRate')}</button>
+            </>
+          )}
+
+          {fx.mode === 'manual' && (
+            <div className="field-group">
+              <label className="field-label" htmlFor="exp-rate">{t('currency.rate')}</label>
+              <div className="exp-composer__fx-rate-row">
+                <span>1 {form.original_currency} =</span>
+                <input
+                  id="exp-rate"
+                  type="number"
+                  inputMode="decimal"
+                  min="0.00000001"
+                  step="0.00000001"
+                  className={`field-control${errors.exchangeRate ? ' field-control--error' : ''}`}
+                  value={form.exchange_rate}
+                  onChange={(event) => setManualRate(event.target.value)}
+                />
+                <span>{tripCurrency}</span>
+              </div>
+              {errors.exchangeRate && <p className="field-error" role="alert">{t(errors.exchangeRate)}</p>}
+            </div>
+          )}
+
           <div className="exp-composer__fx-summary">
             <div className="exp-composer__fx-summary-row">
               <span>{t('currency.original')}</span>
