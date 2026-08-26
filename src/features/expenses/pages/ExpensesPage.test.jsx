@@ -7,7 +7,7 @@ import { createCategory, getCategories, getCategoryBudgets } from '../../categor
 import { getMembers } from '../../members/api/membersApi';
 import { getFund } from '../../funds/api/fundsApi';
 
-jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key) }) }));
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key), i18n: { language: 'en', changeLanguage: jest.fn() } }) }));
 jest.mock('../api/expensesApi', () => ({
   getExpenses: jest.fn(),
   getExpensesSummary: jest.fn(),
@@ -27,6 +27,10 @@ jest.mock('../../categories/api/categoriesApi', () => ({
 }));
 jest.mock('../../members/api/membersApi', () => ({ getMembers: jest.fn() }));
 jest.mock('../../funds/api/fundsApi', () => ({ getFund: jest.fn() }));
+jest.mock('../../../shared/components/useCurrencyCatalog', () => ({
+  __esModule: true,
+  default: () => ({ currencies: [{ code: 'SAR', name: 'Saudi Riyal', symbol: 'SR', countries: [{ name: 'Saudi Arabia', flag: '🇸🇦' }] }, { code: 'GEL', name: 'Georgian Lari', symbol: '₾', countries: [{ name: 'Georgia', flag: '🇬🇪' }] }], error: null }),
+}));
 
 const summary = { currency: 'SAR', total_spent: '5940.00', from_trip_fund: '3200.00', paid_personally: '2740.00', my_out_of_pocket: '850.00' };
 const categories = [
@@ -156,12 +160,14 @@ test('a list load failure shows a retry action without destroying the summary ca
   expect(await screen.findByText('expenses.ledger.errorLoad')).toBeInTheDocument();
 });
 
-test('New Expense opens the canonical create flow (QuickExpense first)', async () => {
+test('New Expense opens the canonical composer with its core fields', async () => {
   renderPage();
   await screen.findByText('Hotel Rooms — Tbilisi');
   fireEvent.click(screen.getByRole('button', { name: 'expenses.ledger.newExpense' }));
   expect(await screen.findByRole('dialog')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'quick.save' })).toBeInTheDocument();
+  expect(screen.getByLabelText('expense.description')).toBeInTheDocument();
+  expect(screen.getByLabelText('expense.amount')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'expense.add' })).toBeInTheDocument();
 });
 
 test('New Expense is hidden entirely for a member without canCreateExpense (e.g. a read-only archived trip)', async () => {
@@ -178,7 +184,7 @@ test('New Expense is hidden entirely for a member without canCreateExpense (e.g.
   expect(screen.queryByRole('button', { name: 'expenses.ledger.newExpense' })).not.toBeInTheDocument();
 });
 
-test('submitting the New Expense quick form calls addExpense and refreshes the list and summary', async () => {
+test('submitting the New Expense composer calls addExpense (with a fresh idempotency key) and refreshes the list and summary', async () => {
   addExpense.mockResolvedValue({});
   renderPage();
   await screen.findByText('Hotel Rooms — Tbilisi');
@@ -188,8 +194,8 @@ test('submitting the New Expense quick form calls addExpense and refreshes the l
   fireEvent.change(screen.getByLabelText('expense.description'), { target: { value: 'Snacks' } });
   getExpenses.mockClear();
   getExpensesSummary.mockClear();
-  fireEvent.submit(document.querySelector('form.quick-expense'));
-  await waitFor(() => expect(addExpense).toHaveBeenCalled());
+  fireEvent.click(screen.getByRole('button', { name: 'expense.add' }));
+  await waitFor(() => expect(addExpense).toHaveBeenCalledWith('t1', expect.objectContaining({ title: 'Snacks', amount: '25', idempotency_key: expect.any(String) })));
   await waitFor(() => expect(getExpenses).toHaveBeenCalled());
   await waitFor(() => expect(getExpensesSummary).toHaveBeenCalled());
 });
@@ -230,41 +236,43 @@ test('Edit/Delete are offered on a row the current member is allowed to edit', a
   renderPage();
   // Coffee was created by m1 (the current member) -- edit/delete allowed.
   fireEvent.click(await screen.findByText('Coffee'));
-  const dialog = await screen.findByRole('dialog');
-  expect(within(dialog).getByRole('button', { name: 'common.edit' })).toBeInTheDocument();
-  expect(within(dialog).getByRole('button', { name: 'common.delete' })).toBeInTheDocument();
+  const drawer = await screen.findByRole('dialog');
+  expect(within(drawer).getByRole('button', { name: 'expense.edit' })).toBeInTheDocument();
+  expect(within(drawer).getByRole('button', { name: 'common.delete' })).toBeInTheDocument();
 });
 
 test('Edit/Delete are hidden on a row the current member is not allowed to edit', async () => {
   renderPage();
   // Airport Taxi was created by m2 (Saud), not the current member (Fahad).
   fireEvent.click(await screen.findByText('Airport Taxi'));
-  const dialog = await screen.findByRole('dialog');
-  expect(within(dialog).queryByRole('button', { name: 'common.edit' })).not.toBeInTheDocument();
-  expect(within(dialog).queryByRole('button', { name: 'common.delete' })).not.toBeInTheDocument();
+  const drawer = await screen.findByRole('dialog');
+  expect(within(drawer).queryByRole('button', { name: 'expense.edit' })).not.toBeInTheDocument();
+  expect(within(drawer).queryByRole('button', { name: 'common.delete' })).not.toBeInTheDocument();
 });
 
-test('Delete asks for confirmation before calling deleteExpense', async () => {
-  const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+test('Delete opens the canonical confirm dialog (not window.confirm) before calling deleteExpense', async () => {
+  const confirmSpy = jest.spyOn(window, 'confirm');
   deleteExpense.mockResolvedValue({});
   renderPage();
   fireEvent.click(await screen.findByText('Coffee'));
-  const dialog = await screen.findByRole('dialog');
-  fireEvent.click(within(dialog).getByRole('button', { name: 'common.delete' }));
-  expect(confirmSpy).toHaveBeenCalled();
+  const drawer = await screen.findByRole('dialog');
+  fireEvent.click(within(drawer).getByRole('button', { name: 'common.delete' }));
+  const confirm = await screen.findByRole('alertdialog');
+  expect(confirmSpy).not.toHaveBeenCalled();
+  fireEvent.click(within(confirm).getByRole('button', { name: 'expenses.ledger.deleteConfirm' }));
   await waitFor(() => expect(deleteExpense).toHaveBeenCalledWith('t1', 'e3'));
   confirmSpy.mockRestore();
 });
 
-test('Delete does not call the API if the confirmation is declined', async () => {
-  const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(false);
+test('Delete does not call the API if the confirmation is cancelled', async () => {
   renderPage();
   fireEvent.click(await screen.findByText('Coffee'));
-  const dialog = await screen.findByRole('dialog');
-  fireEvent.click(within(dialog).getByRole('button', { name: 'common.delete' }));
-  expect(confirmSpy).toHaveBeenCalled();
+  const drawer = await screen.findByRole('dialog');
+  fireEvent.click(within(drawer).getByRole('button', { name: 'common.delete' }));
+  const confirm = await screen.findByRole('alertdialog');
+  fireEvent.click(within(confirm).getByRole('button', { name: 'common.cancel' }));
+  await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
   expect(deleteExpense).not.toHaveBeenCalled();
-  confirmSpy.mockRestore();
 });
 
 test('Escape closes an open dialog', async () => {
