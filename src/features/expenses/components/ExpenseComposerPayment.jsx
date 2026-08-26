@@ -20,13 +20,13 @@ import Money from '../../../shared/components/Money';
   accounting()'s own `deficit` field), so exceeding the available
   balance is surfaced as a warning, never a submission block.
 */
-const ExpenseComposerPayment = ({ form, setField, togglePayer, setPayerAmount, members, currentMember, hasFund, fund, tripCurrency, baseAmount, remainingPaymentCents, errors }) => {
+const ExpenseComposerPayment = ({ form, setPaymentSource, togglePayer, setPayerAmount, members, currentMember, hasFund, fund, tripCurrency, baseAmount, remainingPaymentCents, errors }) => {
   const { t } = useTranslation();
 
   if (form.scope === 'personal') {
     return (
       <section className="exp-composer__section">
-        <h3 className="exp-composer__section-title">{t('expenseComposer.sections.payment')}</h3>
+        <h3 className="exp-composer__section-title"><i className="bi bi-wallet2 exp-composer__section-icon" aria-hidden="true" />{t('expenseComposer.sections.payment')}</h3>
         <div className="exp-composer__personal-owner">
           {currentMember && <Avatar avatarKey={avatarKeyFromAvatar(currentMember.avatar)} displayName={currentMember.display_name} size="sm" />}
           <span>{t('expenseComposer.paidPersonallyByYou', { name: currentMember?.display_name || '' })}</span>
@@ -41,11 +41,11 @@ const ExpenseComposerPayment = ({ form, setField, togglePayer, setPayerAmount, m
 
   return (
     <section className="exp-composer__section">
-      <h3 className="exp-composer__section-title">{t('expenseComposer.sections.payment')}</h3>
+      <h3 className="exp-composer__section-title"><i className="bi bi-wallet2 exp-composer__section-icon" aria-hidden="true" />{t('expenseComposer.sections.payment')}</h3>
       <SegmentedControl
         ariaLabel={t('expenseComposer.sections.payment')}
         value={form.payment_source}
-        onChange={(value) => setField({ payment_source: value })}
+        onChange={setPaymentSource}
         options={[
           { value: 'trip_fund', label: t('expenses.ledger.tripFund'), disabled: !hasFund },
           { value: 'personal', label: t('expenseComposer.memberPaid') },

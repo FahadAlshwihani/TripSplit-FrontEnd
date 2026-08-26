@@ -30,8 +30,8 @@ const NewExpenseDialog = ({ members, categories, budgets, currentMember, tripCur
   const isEdit = Boolean(expense) && !expense.duplicate;
   const hasFund = fund?.status === 'active';
 
-  const composer = useExpenseComposer({ members, categories, currentMember, tripCurrency, expense });
-  const { form, setField, setScope, togglePayer, setPayerAmount, toggleParticipant, selectAllParticipants, clearParticipants, setSplitValue, buildPayload, isForeign, baseAmount, remainingPaymentCents, splitAssigned, errors, isValid } = composer;
+  const composer = useExpenseComposer({ members, categories, currentMember, tripCurrency, expense, hasFund });
+  const { form, fx, useManualRate, setManualRate, setField, setScope, setPaymentSource, togglePayer, setPayerAmount, toggleParticipant, selectAllParticipants, clearParticipants, setSplitValue, buildPayload, isForeign, splitVisible, baseAmount, remainingPaymentCents, splitAssigned, errors, isValid } = composer;
 
   useEffect(() => {
     returnFocusRef.current = document.activeElement;
@@ -86,15 +86,15 @@ const NewExpenseDialog = ({ members, categories, budgets, currentMember, tripCur
           </div>
 
           <div className="exp-composer-modal__body">
-            <ExpenseComposerDetails form={form} setField={setField} errors={errors} categories={categories} budgets={budgets} tripCurrency={tripCurrency} isForeign={isForeign} baseAmount={baseAmount} />
-            <ExpenseComposerPayment form={form} setField={setField} togglePayer={togglePayer} setPayerAmount={setPayerAmount} members={members} currentMember={currentMember} hasFund={hasFund} fund={fund} tripCurrency={tripCurrency} baseAmount={baseAmount} remainingPaymentCents={remainingPaymentCents} errors={errors} />
+            <ExpenseComposerDetails form={form} fx={fx} useManualRate={useManualRate} setManualRate={setManualRate} setField={setField} errors={errors} categories={categories} budgets={budgets} tripCurrency={tripCurrency} isForeign={isForeign} baseAmount={baseAmount} />
+            <ExpenseComposerPayment form={form} setPaymentSource={setPaymentSource} togglePayer={togglePayer} setPayerAmount={setPayerAmount} members={members} currentMember={currentMember} hasFund={hasFund} fund={fund} tripCurrency={tripCurrency} baseAmount={baseAmount} remainingPaymentCents={remainingPaymentCents} errors={errors} />
             <ExpenseComposerParticipants form={form} setScope={setScope} toggleParticipant={toggleParticipant} selectAllParticipants={selectAllParticipants} clearParticipants={clearParticipants} members={members} currentMember={currentMember} errors={errors} />
-            {form.scope === 'shared' && (
+            {splitVisible && (
               <ExpenseComposerSplit form={form} setField={setField} setSplitValue={setSplitValue} members={members} baseAmount={baseAmount} splitAssigned={splitAssigned} errors={errors} />
             )}
 
             <div className="field-group">
-              <label className="field-label" htmlFor="exp-notes">{t('expense.notes')}</label>
+              <label className="field-label" htmlFor="exp-notes"><i className="bi bi-sticky exp-composer__section-icon" aria-hidden="true" />{t('expense.notes')}</label>
               <textarea id="exp-notes" className="field-control" rows={2} value={form.notes} onChange={(event) => setField({ notes: event.target.value })} />
             </div>
 
