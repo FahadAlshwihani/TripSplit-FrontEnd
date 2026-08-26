@@ -1,0 +1,224 @@
+/*
+  Balances -- who personally owes whom after personal expenses and
+  settlements. A separate ledger from the Trip Fund (see
+  docs/architecture/financial-ledger.md); this stylesheet only styles
+  that personal-debt view. Class prefix `bal-`, same Neo-classic hard-
+  border/elevation token system as Overview (`ov-`) and Expenses (`exp-`)
+  -- no page-specific reinvention of tokens, press states, or z-index.
+*/
+
+/* Same legacy-white-text guard used by expenses.css: App.css's bare
+   `p, span, a, li { color: white }` reset beats any ancestor's inherited
+   color (inheritance carries no cascade specificity), so every bare
+   <span>/<p> this page or its dialogs render would otherwise lose its
+   real color. Reclaims the subtree at (0,1,0) specificity -- enough to
+   beat the legacy bare-type rule (0,0,1), never enough to outrank this
+   file's own more specific rules below. */
+.bal-page :where(span, p, a, li),
+.bal-dialog :where(span, p, a, li) {
+  color: inherit;
+}
+
+.bal-page { display: flex; flex-direction: column; gap: var(--space-5); }
+
+.bal-page__header { display: flex; flex-direction: column; gap: var(--space-1); padding-block-end: var(--space-3); border-block-end: var(--border-width) solid var(--color-border); }
+.bal-page__title { margin: 0; color: var(--color-text); }
+.bal-page__subtitle { color: var(--color-text-muted); margin: 0; max-width: 48rem; }
+.bal-page__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+.bal-fund-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font: var(--text-body-sm);
+}
+.bal-fund-hint i { flex: 0 0 auto; margin-block-start: 2px; }
+
+.bal-readonly-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-container);
+  color: var(--color-text);
+  font: var(--text-body-sm);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Net balance summary card */
+
+.bal-net-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+}
+.bal-net-card--positive { background: var(--color-success-soft); }
+.bal-net-card--negative { background: var(--color-danger-soft); }
+
+.bal-net-card__label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); }
+.bal-net-card__value { font: var(--text-display); font-size: 32px; color: var(--color-text); }
+.bal-net-card--positive .bal-net-card__value { color: var(--color-success); }
+.bal-net-card--negative .bal-net-card__value { color: var(--color-danger); }
+.bal-net-card__value-currency { font: var(--text-body); color: var(--color-text-muted); margin-inline-start: var(--space-1); }
+
+.bal-net-card__hint { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
+.bal-net-card--positive .bal-net-card__hint i { color: var(--color-success); }
+.bal-net-card--negative .bal-net-card__hint i { color: var(--color-danger); }
+
+/* ---------------------------------------------------------------------- */
+/* People who owe me / People I owe sections */
+
+.bal-section { display: flex; flex-direction: column; gap: var(--space-3); }
+.bal-section__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.bal-section__title { margin: 0; display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); }
+.bal-section__icon { color: var(--color-text-muted); }
+.bal-section__total { font: var(--text-financial); color: var(--color-text); }
+
+.bal-list {
+  display: flex;
+  flex-direction: column;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+  overflow: hidden;
+}
+
+.bal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-block-end: var(--border-width) solid var(--color-border-subtle);
+}
+.bal-row:last-child { border-block-end: none; }
+
+.bal-row__who { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.bal-row__identity { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bal-row__name { font: var(--text-body); font-weight: 700; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bal-row__relationship { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); }
+
+.bal-row__end { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); flex: 0 0 auto; }
+.bal-row__amount { font: var(--text-financial); color: var(--color-text); }
+.bal-row__action { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); }
+.bal-row__settle-btn { min-height: 36px; padding-inline: var(--space-3); }
+
+.bal-row__feedback { margin: 0; font: var(--text-label); font-size: 10px; color: var(--color-text-muted); max-width: 20ch; text-align: end; }
+
+/* Reminder button -- icon + visible label, never a bare bell. Same
+   hard-shadow press language as .exp-utility-btn, sized for a
+   comfortable 44px touch target on mobile. */
+.bal-remind-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-hard-sm);
+  cursor: pointer;
+  font: var(--text-label);
+  font-size: 11px;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+.bal-remind-btn:hover:not(:disabled) { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.bal-remind-btn:active:not(:disabled) { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
+.bal-remind-btn:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+.bal-remind-btn.is-loading { cursor: progress; }
+
+.bal-remind-btn__spinner { display: inline-block; inline-size: 13px; block-size: 13px; flex: 0 0 auto; border: 2px solid currentColor; border-inline-end-color: transparent; border-radius: 50%; animation: dash-btn-spin 0.6s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bal-remind-btn { transition: background-color 0.15s ease; }
+  .bal-remind-btn:hover, .bal-remind-btn:active { transform: none; }
+  .bal-remind-btn__spinner { animation-duration: 1.2s; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Zero / empty states */
+
+.bal-empty { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); padding: var(--space-8) var(--space-4); text-align: center; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); }
+.bal-empty__icon { font-size: 2rem; color: var(--color-success); }
+.bal-empty__title { color: var(--color-text); margin: 0; }
+.bal-empty__body { color: var(--color-text-muted); margin: 0; max-width: 36ch; }
+
+/* ---------------------------------------------------------------------- */
+/* Remind-All result summary -- announced via aria-live, matches the
+   inline-status convention used everywhere else in this app (no global
+   toast system exists). */
+
+.bal-remind-result {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font: var(--text-body-sm);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Record Settlement dialog -- centered, portaled, canonical modal
+   overlay/z-index, same recipe as .exp-modal-overlay/.exp-modal. */
+
+.bal-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 28, 25, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: var(--z-modal);
+}
+
+.bal-dialog {
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100dvh - var(--space-8));
+  display: flex;
+  flex-direction: column;
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-hard-md);
+  overflow: hidden;
+}
+@media (max-width: 640px) {
+  .bal-dialog-overlay { padding: 0; }
+  .bal-dialog { max-width: none; width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border-width: 0; }
+}
+
+.bal-dialog__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-block-end: var(--border-width) solid var(--color-border); background: var(--color-surface-container); flex: 0 0 auto; }
+.bal-dialog__title { margin: 0; color: var(--color-text); }
+.bal-dialog__body { flex: 1 1 auto; overflow-y: auto; padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* ---------------------------------------------------------------------- */
+/* Mobile-first layout adjustments -- 320-430px is the primary target,
+   not an afterthought breakpoint. */
+
+@media (max-width: 480px) {
+  .bal-page__actions { flex-direction: column; align-items: stretch; }
+  .bal-page__actions .dash-btn { width: 100%; }
+  .bal-row { flex-wrap: wrap; }
+  .bal-row__end { align-items: flex-end; }
+}
