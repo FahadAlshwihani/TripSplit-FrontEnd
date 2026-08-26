@@ -18,6 +18,14 @@ import { categoryLabel } from '../../../shared/utils/categoryPresentation';
   persists the authoritative rate at submit time -- this preview never
   becomes the source of truth on its own.
 */
+const FX_ERROR_MESSAGE_KEYS = {
+  unavailable: 'expenseComposer.fxFetchFailed',
+  auth: 'expenseComposer.fxErrorAuth',
+  rateLimited: 'expenseComposer.fxErrorRateLimited',
+  server: 'expenseComposer.fxErrorServer',
+  validation: 'expenseComposer.fxErrorValidation',
+};
+
 const ExpenseComposerDetails = ({ form, fx, useManualRate, setManualRate, setField, errors, categories, budgets, tripCurrency, isForeign, baseAmount }) => {
   const { t } = useTranslation();
   const budget = budgets.find((row) => row.category === form.category);
@@ -103,7 +111,15 @@ const ExpenseComposerDetails = ({ form, fx, useManualRate, setManualRate, setFie
 
           {fx.mode === 'auto' && fx.status === 'error' && (
             <div className="exp-composer__fx-status exp-composer__fx-status--error">
-              <p role="alert">{fx.errorMessage || t('expenseComposer.fxFetchFailed')}</p>
+              {/* fx.errorMessage is the real backend message (see the
+                  fetch effect's catch handler) -- shown whenever we have
+                  one, regardless of kind, since it's always more accurate
+                  than a generic fallback. The per-kind key only fills in
+                  when no message came through at all (e.g. a pure network
+                  failure with no response body). Every kind still offers
+                  manual entry: whatever broke automatic resolution, the
+                  user still needs a way to finish recording the expense. */}
+              <p role="alert">{fx.errorMessage || t(FX_ERROR_MESSAGE_KEYS[fx.errorKind] || FX_ERROR_MESSAGE_KEYS.unavailable)}</p>
               <button type="button" className="dash-btn dash-btn--secondary" onClick={useManualRate}>{t('expenseComposer.useManualRate')}</button>
             </div>
           )}

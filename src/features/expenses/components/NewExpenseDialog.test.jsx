@@ -228,8 +228,22 @@ test('a foreign currency automatically fetches and previews a rate, with no manu
   expect(getExchangeRate).toHaveBeenCalledWith('GEL', 'SAR', expect.any(String));
 });
 
-test('a failed automatic fetch shows the natural fallback message and an explicit "use manual rate" action, never manual entry by default', async () => {
-  getExchangeRate.mockRejectedValue({ response: { data: { message: 'nope' } } });
+/*
+  Regression tests for a real bug: getExchangeRate's failure is caught
+  as the app's already-normalized ApiError (see src/api/errors.js) --
+  it has no `.response` property (that's raw-axios-error shape), so
+  reading error.response?.data?.message always silently resolved to
+  undefined. Every failure -- a genuine provider outage, an auth
+  problem, a rate limit, a server error -- collapsed into the exact
+  same generic "couldn't fetch automatically" fallback text, hiding a
+  real backend bug (the endpoint was wrongly gated behind
+  IsAuthenticated, 403-ing every unauthenticated/guest request) behind
+  a message that looked like routine FX downtime. These prove the real
+  backend message now surfaces, and that different failure kinds are
+  told apart rather than all reading as "FX unavailable".
+*/
+test('a failed automatic fetch surfaces the REAL backend message, not a swallowed generic one', async () => {
+  getExchangeRate.mockRejectedValue({ message: 'nope', status: 404, code: 'exchange_rate_unavailable' });
   setup();
   fireEvent.change(screen.getByLabelText('currency.original'), { target: { value: 'Geo' } });
   fireEvent.mouseDown(await screen.findByText(/Georgian Lari/));
@@ -237,6 +251,31 @@ test('a failed automatic fetch shows the natural fallback message and an explici
   expect(screen.queryByLabelText('currency.rate')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'expenseComposer.useManualRate' }));
   expect(screen.getByLabelText('currency.rate')).toBeInTheDocument();
+});
+
+test('an auth failure (e.g. the endpoint wrongly requiring a session) is never shown as generic "FX unavailable"', async () => {
+  getExchangeRate.mockRejectedValue({ message: '', status: 403, code: 'not_authenticated' });
+  setup();
+  fireEvent.change(screen.getByLabelText('currency.original'), { target: { value: 'Geo' } });
+  fireEvent.mouseDown(await screen.findByText(/Georgian Lari/));
+  await waitFor(() => expect(screen.getByText('expenseComposer.fxErrorAuth')).toBeInTheDocument());
+  expect(screen.queryByText('expenseComposer.fxFetchFailed')).not.toBeInTheDocument();
+});
+
+test('a rate-limit failure gets its own distinct message, not the generic provider-unavailable one', async () => {
+  getExchangeRate.mockRejectedValue({ message: '', status: 429, code: 'exchange_rate_rate_limited' });
+  setup();
+  fireEvent.change(screen.getByLabelText('currency.original'), { target: { value: 'Geo' } });
+  fireEvent.mouseDown(await screen.findByText(/Georgian Lari/));
+  await waitFor(() => expect(screen.getByText('expenseComposer.fxErrorRateLimited')).toBeInTheDocument());
+});
+
+test('a server-side failure gets its own distinct message, not the generic provider-unavailable one', async () => {
+  getExchangeRate.mockRejectedValue({ message: '', status: 500, code: 'server_error' });
+  setup();
+  fireEvent.change(screen.getByLabelText('currency.original'), { target: { value: 'Geo' } });
+  fireEvent.mouseDown(await screen.findByText(/Georgian Lari/));
+  await waitFor(() => expect(screen.getByText('expenseComposer.fxErrorServer')).toBeInTheDocument());
 });
 
 test('every visible section heading renders its icon, matching the Create Trip visual language', () => {

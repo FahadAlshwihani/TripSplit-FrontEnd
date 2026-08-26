@@ -317,5 +317,6 @@
   "expenseComposer.errors.participantsRequired": "اختر مشاركًا واحدًا على الأقل.", "expenseComposer.errors.payerRequired": "أضف دافعًا واحدًا على الأقل.",
   "expenseComposer.errors.paymentsMustTotal": "لازم مجموع المدفوعات يساوي مبلغ المصروف بالكامل.", "expenseComposer.errors.percentageMustTotal100": "لازم مجموع النسب يوصل لـ 100%.", "expenseComposer.errors.exactMustTotal": "لازم مجموع المبالغ يساوي مبلغ المصروف بالكامل.",
   "expenseComposer.errors.fxLoading": "لسه نجيب سعر الصرف، لحظة.", "expenseComposer.errors.fxUnresolved": "ما قدرنا نجيب سعر الصرف. أدخله يدويًا عشان تكمل.", "expenseComposer.errors.exchangeRateRequired": "أدخل سعر صرف أكبر من صفر.",
-  "expenseComposer.fxLoading": "جاري جلب سعر الصرف…", "expenseComposer.fxFetchFailed": "ما قدرنا نجيب سعر الصرف تلقائيًا. تقدر تدخله يدويًا.", "expenseComposer.useManualRate": "إدخال السعر يدويًا", "expenseComposer.fxHistoricalBadge": "سعر هذا التاريخ"
+  "expenseComposer.fxLoading": "جاري جلب سعر الصرف…", "expenseComposer.fxFetchFailed": "ما قدرنا نجيب سعر الصرف تلقائيًا. تقدر تدخله يدويًا.", "expenseComposer.useManualRate": "إدخال السعر يدويًا", "expenseComposer.fxHistoricalBadge": "سعر هذا التاريخ",
+  "expenseComposer.fxErrorAuth": "ما قدرنا نتحقق من جلستك عشان نجيب السعر. تقدر تدخله يدويًا.", "expenseComposer.fxErrorRateLimited": "طلبات كثيرة على سعر الصرف حاليًا، جرب بعد شوي أو أدخله يدويًا.", "expenseComposer.fxErrorServer": "صار خطأ من عندنا وإحنا نجيب السعر. تقدر تدخله يدويًا.", "expenseComposer.fxErrorValidation": "العملة أو التاريخ مو صالحين لجلب السعر. تقدر تدخله يدويًا."
 }

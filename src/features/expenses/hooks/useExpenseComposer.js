@@ -69,14 +69,14 @@ const initialPinned = (expense) => Boolean(expense) && !expense.duplicate;
 
 export default function useExpenseComposer({ members, categories, currentMember, tripCurrency, expense, hasFund }) {
   const [form, setForm] = useState(() => initialState(members, expense, currentMember, categories, tripCurrency, hasFund));
-  const [fx, setFx] = useState({ mode: 'auto', status: 'idle', rate: null, source: null, historical: false, errorMessage: null });
+  const [fx, setFx] = useState({ mode: 'auto', status: 'idle', rate: null, source: null, historical: false, errorKind: null, errorMessage: null });
   const pinnedRef = useRef(initialPinned(expense));
   const fetchTokenRef = useRef(0);
 
   useEffect(() => {
     setForm(initialState(members, expense, currentMember, categories, tripCurrency, hasFund));
     pinnedRef.current = initialPinned(expense);
-    setFx({ mode: 'auto', status: 'idle', rate: null, source: null, historical: false, errorMessage: null });
+    setFx({ mode: 'auto', status: 'idle', rate: null, source: null, historical: false, errorKind: null, errorMessage: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expense, members, currentMember, categories, tripCurrency, hasFund]);
 
@@ -105,7 +105,21 @@ export default function useExpenseComposer({ members, categories, currentMember,
         })
         .catch((error) => {
           if (fetchTokenRef.current !== token) return;
-          setFx((current) => ({ ...current, status: 'error', errorMessage: error.response?.data?.message || null }));
+          // `error` here is already the app's normalized ApiError (see
+          // src/api/errors.js's response interceptor), not a raw axios
+          // error -- it has no `.response` property, so reading
+          // error.response?.data?.message always silently resolved to
+          // undefined and every failure (auth, rate-limit, server error,
+          // genuine provider outage) collapsed into the same generic
+          // "couldn't fetch automatically" fallback. error.message is
+          // already the real backend message; error.status/code let the
+          // UI react differently depending on what actually went wrong.
+          const kind = error.status === 401 || error.status === 403 ? 'auth'
+            : error.status === 429 ? 'rateLimited'
+            : error.status === 400 ? 'validation'
+            : error.status >= 500 || error.status === 0 ? 'server'
+            : 'unavailable';
+          setFx((current) => ({ ...current, status: 'error', errorKind: kind, errorMessage: error.message || null }));
         });
     }, FX_DEBOUNCE_MS);
     return () => clearTimeout(handle);
