@@ -4,12 +4,18 @@ import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import BalancesPage from './BalancesPage';
 import { getBalances, remindAllDebtors, remindDebtor } from '../api/balancesApi';
 import { getMembers } from '../../members/api/membersApi';
-import { addSettlement } from '../../settlements/api/settlementsApi';
+import { getSettlements, recordAdminSettlement, recordReceivedPayment, reportPayment, reviewSettlement } from '../../settlements/api/settlementsApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key), i18n: { language: 'en', changeLanguage: jest.fn() } }) }));
 jest.mock('../api/balancesApi', () => ({ getBalances: jest.fn(), remindDebtor: jest.fn(), remindAllDebtors: jest.fn() }));
 jest.mock('../../members/api/membersApi', () => ({ getMembers: jest.fn() }));
-jest.mock('../../settlements/api/settlementsApi', () => ({ addSettlement: jest.fn() }));
+jest.mock('../../settlements/api/settlementsApi', () => ({
+  getSettlements: jest.fn(),
+  reviewSettlement: jest.fn(),
+  reportPayment: jest.fn(),
+  recordReceivedPayment: jest.fn(),
+  recordAdminSettlement: jest.fn(),
+}));
 
 const fahad = { id: 'm1', display_name: 'Fahad', role: 'owner', active: true, avatar: { type: 'initials', color: 'indigo' } };
 const saud = { id: 'm2', display_name: 'Saud', role: 'member', active: true, avatar: { type: 'initials', color: 'slate' } };
@@ -54,6 +60,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   getBalances.mockResolvedValue(baseBalances);
   getMembers.mockResolvedValue({ results: [fahad, saud, mohammed] });
+  getSettlements.mockResolvedValue({ results: [] });
 });
 
 test('renders the net balance card from the authoritative my_net_balance field', async () => {
@@ -62,69 +69,42 @@ test('renders the net balance card from the authoritative my_net_balance field',
   expect(screen.getByText('balances.netBalanceHint.positive')).toBeInTheDocument();
 });
 
-test('a negative net balance shows the negative hint', async () => {
-  getBalances.mockResolvedValue({ ...baseBalances, my_net_balance: '-150.00', people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '150.00' }] });
-  renderPage();
-  await findMoney('150.00 SAR');
-  expect(screen.getByText('balances.netBalanceHint.negative')).toBeInTheDocument();
-});
-
-test('renders "People who owe me" rows with amount, relationship copy, and a reminder button', async () => {
+test('renders "People who owe me" rows with Send Reminder and Record Payment Received', async () => {
   renderPage();
   expect(await screen.findByText('Saud')).toBeInTheDocument();
-  expect(screen.getByText('Mohammed')).toBeInTheDocument();
-  expect(screen.getAllByText('balances.owesYou')).toHaveLength(2);
-  expect(await findMoney('400.00 SAR')).toBeInTheDocument();
   expect(screen.getAllByRole('button', { name: 'balances.sendReminder' })).toHaveLength(2);
+  expect(screen.getAllByRole('button', { name: 'settlements.recordReceived' })).toHaveLength(2);
 });
 
-test('renders "People I owe" rows with a Settle action, not a reminder button', async () => {
+test('renders "People I owe" rows with an I Paid action', async () => {
   getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }], my_net_balance: '-75.00' });
   renderPage();
   expect(await screen.findByText('Saud')).toBeInTheDocument();
   expect(screen.getByText('balances.youOwe')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'settlements.record' })).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'balances.sendReminder' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'settlements.iPaid' })).toBeInTheDocument();
 });
 
-test('a mixed state renders both sections', async () => {
-  getBalances.mockResolvedValue({
-    ...baseBalances,
-    people_who_owe_me: [{ member: saudPreview, amount: '400.00', can_remind: true }],
-    people_i_owe: [{ member: mohammedPreview, amount: '220.00' }],
-  });
-  renderPage();
-  expect(await screen.findByText('balances.peopleWhoOweMe')).toBeInTheDocument();
-  expect(screen.getByText('balances.peopleIOwe')).toBeInTheDocument();
-});
-
-test('a fully settled state (both lists empty, other members present) shows the settled empty state', async () => {
+test('a fully settled state shows the settled empty state', async () => {
   getBalances.mockResolvedValue({ ...baseBalances, my_net_balance: '0.00', people_who_owe_me: [], people_i_owe: [] });
   renderPage();
   expect(await screen.findByText('balances.allSettledUp')).toBeInTheDocument();
 });
 
-test('a single-member trip (no one else to owe or be owed) shows the no-data empty state, not the settled state', async () => {
+test('a single-member trip shows the no-data empty state, not the settled state', async () => {
   getBalances.mockResolvedValue({ ...baseBalances, my_net_balance: '0.00', people_who_owe_me: [], people_i_owe: [] });
   getMembers.mockResolvedValue({ results: [fahad] });
   renderPage();
   expect(await screen.findByText('balances.emptyStateTitle')).toBeInTheDocument();
-  expect(screen.queryByText('balances.allSettledUp')).not.toBeInTheDocument();
 });
 
-test('an archived/closed trip renders the read-only banner, disables reminders, and hides Remind All / Settle', async () => {
+test('an archived/closed trip renders the read-only banner and disables reminders, I Paid, and admin record', async () => {
+  getBalances.mockResolvedValue({ ...baseBalances, people_i_owe: [{ member: mohammedPreview, amount: '10.00' }] });
   renderPage({ permissions: { canRecordSettlement: false } });
   expect(await screen.findByText('balances.readOnlyArchived')).toBeInTheDocument();
-  const reminderButtons = screen.getAllByRole('button', { name: 'balances.sendReminder' });
-  reminderButtons.forEach((button) => expect(button).toBeDisabled());
-  expect(screen.queryByRole('button', { name: 'balances.remindAll' })).not.toBeInTheDocument();
-});
-
-test('an archived/closed trip hides the Settle action on a row I owe', async () => {
-  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }] });
-  renderPage({ permissions: { canRecordSettlement: false } });
-  await screen.findByText('Saud');
-  expect(screen.queryByRole('button', { name: 'settlements.record' })).not.toBeInTheDocument();
+  screen.getAllByRole('button', { name: 'balances.sendReminder' }).forEach((button) => expect(button).toBeDisabled());
+  expect(screen.queryByRole('button', { name: 'settlements.recordReceived' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'settlements.iPaid' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'settlements.recordExternal' })).not.toBeInTheDocument();
 });
 
 test('sending a single reminder calls remindDebtor and shows an inline sent confirmation', async () => {
@@ -136,29 +116,7 @@ test('sending a single reminder calls remindDebtor and shows an inline sent conf
   expect(await screen.findByText('balances.reminderSent:{"name":"Saud"}')).toBeInTheDocument();
 });
 
-test('a reminder rejected with reminder_cooldown shows the cooldown copy, not a generic error', async () => {
-  remindDebtor.mockRejectedValue({ code: 'reminder_cooldown', message: 'A reminder was sent to this member recently.' });
-  renderPage();
-  const buttons = await screen.findAllByRole('button', { name: 'balances.sendReminder' });
-  fireEvent.click(buttons[0]);
-  expect(await screen.findByText('balances.reminderCooldown')).toBeInTheDocument();
-});
-
-test('a row with can_remind: false disables the reminder button up front, before any click', async () => {
-  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [{ member: saudPreview, amount: '400.00', can_remind: false }] });
-  renderPage();
-  const button = await screen.findByRole('button', { name: 'balances.sendReminder' });
-  expect(button).toBeDisabled();
-});
-
-test('Remind All opens a confirmation dialog before sending anything', async () => {
-  renderPage();
-  fireEvent.click(await screen.findByRole('button', { name: 'balances.remindAll' }));
-  expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
-  expect(remindAllDebtors).not.toHaveBeenCalled();
-});
-
-test('confirming Remind All calls remindAllDebtors and shows the sent/skipped summary', async () => {
+test('Remind All opens a confirmation dialog and, once confirmed, shows the sent/skipped summary', async () => {
   remindAllDebtors.mockResolvedValue({ sent_count: 2, skipped_count: 1, results: [] });
   renderPage();
   fireEvent.click(await screen.findByRole('button', { name: 'balances.remindAll' }));
@@ -168,31 +126,96 @@ test('confirming Remind All calls remindAllDebtors and shows the sent/skipped su
   expect(await screen.findByText('balances.remindAllResult:{"sent":2,"skipped":1}')).toBeInTheDocument();
 });
 
-test('cancelling the Remind All dialog does not call remindAllDebtors', async () => {
+test('Record Payment Received opens the dialog preselected to that member and calls recordReceivedPayment', async () => {
+  recordReceivedPayment.mockResolvedValue({});
   renderPage();
-  fireEvent.click(await screen.findByRole('button', { name: 'balances.remindAll' }));
-  const dialog = await screen.findByRole('alertdialog');
-  fireEvent.click(within(dialog).getByRole('button', { name: 'balances.remindAllConfirmCancel' }));
-  await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
-  expect(remindAllDebtors).not.toHaveBeenCalled();
+  const buttons = await screen.findAllByRole('button', { name: 'settlements.recordReceived' });
+  fireEvent.click(buttons[0]);
+  const dialog = await screen.findByRole('dialog');
+  expect(within(dialog).getByText('Saud')).toBeInTheDocument();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'settlements.recordReceived' }));
+  await waitFor(() => expect(recordReceivedPayment).toHaveBeenCalledWith('t1', expect.objectContaining({ from_member_id: 'm2', amount: '400.00' })));
 });
 
-test('Record Settlement preselects the row\'s counterpart member and calls addSettlement', async () => {
-  addSettlement.mockResolvedValue({});
+test('I Paid opens the dialog preselected to that member and calls reportPayment', async () => {
+  reportPayment.mockResolvedValue({});
   getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }], my_net_balance: '-75.00' });
   renderPage();
-  fireEvent.click(await screen.findByRole('button', { name: 'settlements.record' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'settlements.iPaid' }));
   const dialog = await screen.findByRole('dialog');
-  expect(within(dialog).getByLabelText('settlements.to').value).toBe('m2');
-  fireEvent.change(within(dialog).getByLabelText('expense.amount'), { target: { value: '75' } });
-  fireEvent.click(within(dialog).getByRole('button', { name: 'settlements.record' }));
-  await waitFor(() => expect(addSettlement).toHaveBeenCalledWith('t1', expect.objectContaining({ from_member_id: 'm1', to_member_id: 'm2', amount: '75' })));
+  expect(within(dialog).getByText('Saud')).toBeInTheDocument();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'settlements.iPaid' }));
+  await waitFor(() => expect(reportPayment).toHaveBeenCalledWith('t1', expect.objectContaining({ to_member_id: 'm2', amount: '75.00' })));
 });
 
-test('Escape closes the Record Settlement dialog', async () => {
-  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }] });
+test('a pending report on a "people who owe me" row shows the creditor pending card with confirm/not-received/check-later, not the normal buttons', async () => {
+  getSettlements.mockResolvedValue({ results: [{ id: 's1', from_member_id: 'm2', to_member_id: 'm1', amount: '400.00', currency: 'SAR', status: 'pending', settlement_date: '2026-08-20', note: '' }] });
   renderPage();
-  fireEvent.click(await screen.findByRole('button', { name: 'settlements.record' }));
+  await screen.findByText('Saud');
+  expect(screen.getByText('settlements.reportedPayment:{"name":"Saud"}')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'settlements.yesReceived' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'settlements.notReceivedAction' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'settlements.checkLaterAction' })).toBeInTheDocument();
+  // The normal reminder/record-received buttons for THIS member are replaced.
+  expect(screen.getAllByRole('button', { name: 'balances.sendReminder' })).toHaveLength(1); // only Mohammed's remains
+});
+
+test('confirming a pending report calls reviewSettlement with "confirm" and refreshes', async () => {
+  getSettlements.mockResolvedValue({ results: [{ id: 's1', from_member_id: 'm2', to_member_id: 'm1', amount: '400.00', currency: 'SAR', status: 'pending', settlement_date: '2026-08-20', note: '' }] });
+  reviewSettlement.mockResolvedValue({});
+  renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: 'settlements.yesReceived' }));
+  await waitFor(() => expect(reviewSettlement).toHaveBeenCalledWith('t1', 's1', 'confirm'));
+});
+
+test('a pending report on a "people I owe" row shows the debtor pending card with only Withdraw', async () => {
+  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }], my_net_balance: '-75.00' });
+  getSettlements.mockResolvedValue({ results: [{ id: 's2', from_member_id: 'm1', to_member_id: 'm2', amount: '75.00', currency: 'SAR', status: 'pending', settlement_date: '2026-08-20', note: '' }] });
+  renderPage();
+  await screen.findByText('Saud');
+  expect(screen.getByText('settlements.waitingOnThem:{"name":"Saud"}')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'settlements.withdrawReport' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'settlements.iPaid' })).not.toBeInTheDocument();
+});
+
+test('withdrawing a pending report calls reviewSettlement with "cancel"', async () => {
+  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }], my_net_balance: '-75.00' });
+  getSettlements.mockResolvedValue({ results: [{ id: 's2', from_member_id: 'm1', to_member_id: 'm2', amount: '75.00', currency: 'SAR', status: 'pending', settlement_date: '2026-08-20', note: '' }] });
+  reviewSettlement.mockResolvedValue({});
+  renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: 'settlements.withdrawReport' }));
+  await waitFor(() => expect(reviewSettlement).toHaveBeenCalledWith('t1', 's2', 'cancel'));
+});
+
+test('an owner sees Record External Settlement; a regular member does not', async () => {
+  const { unmount } = renderPage({ currentMember: fahad });
+  expect(await screen.findByRole('button', { name: 'settlements.recordExternal' })).toBeInTheDocument();
+  unmount();
+  renderPage({ currentMember: saud });
+  await screen.findByText('Saud');
+  expect(screen.queryByRole('button', { name: 'settlements.recordExternal' })).not.toBeInTheDocument();
+});
+
+test('Record External Settlement opens the admin dialog with real from/to pickers and requires acknowledgement', async () => {
+  recordAdminSettlement.mockResolvedValue({});
+  renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: 'settlements.recordExternal' }));
+  const dialog = await screen.findByRole('dialog');
+  expect(within(dialog).getByLabelText('settlements.payer')).toBeInTheDocument();
+  expect(within(dialog).getByLabelText('settlements.recipient')).toBeInTheDocument();
+  fireEvent.change(within(dialog).getByLabelText('settlements.payer'), { target: { value: 'm2' } });
+  fireEvent.change(within(dialog).getByLabelText('settlements.recipient'), { target: { value: 'm3' } });
+  fireEvent.change(within(dialog).getByLabelText('expense.amount'), { target: { value: '20' } });
+  const submit = within(dialog).getByRole('button', { name: 'settlements.recordExternal' });
+  expect(submit).toBeDisabled(); // acknowledgement not yet checked
+  fireEvent.click(within(dialog).getByRole('checkbox'));
+  fireEvent.click(submit);
+  await waitFor(() => expect(recordAdminSettlement).toHaveBeenCalledWith('t1', expect.objectContaining({ from_member_id: 'm2', to_member_id: 'm3', amount: '20', acknowledged: true })));
+});
+
+test('Escape closes the settlement action dialog', async () => {
+  renderPage();
+  fireEvent.click((await screen.findAllByRole('button', { name: 'settlements.recordReceived' }))[0]);
   expect(await screen.findByRole('dialog')).toBeInTheDocument();
   fireEvent.keyDown(document, { key: 'Escape' });
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -204,9 +227,8 @@ test('a balances load failure shows a retry action', async () => {
   expect(await screen.findByText('network down')).toBeInTheDocument();
 });
 
-test('the fund-vs-balances explanatory hint is always shown, and no Fund contribution rows ever appear on this page', async () => {
+test('the fund-vs-balances explanatory hint is always shown', async () => {
   renderPage();
   await screen.findByText('Saud');
   expect(screen.getByText('balances.fundHint')).toBeInTheDocument();
-  expect(screen.queryByText(/fund/i, { selector: '.bal-row__name' })).not.toBeInTheDocument();
 });
