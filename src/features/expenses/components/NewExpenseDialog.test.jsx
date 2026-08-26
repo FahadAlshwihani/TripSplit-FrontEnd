@@ -37,6 +37,34 @@ const setup = (props = {}) => render(
   />,
 );
 
+/*
+  Regression guard for a real incident: ExpenseComposerDetails crashed
+  in the browser with "Element type is invalid... expected a string
+  ... but got: undefined", which React only throws when a JSX tag
+  itself resolves to an undefined value at render time. Static analysis
+  (webpack build, ESLint) did not catch it -- it was a stale dev-server
+  module-graph artifact (mass file deletions earlier in this session
+  while an old `npm start` process kept running), and none of the
+  section components were ever mocked away in these tests, so this
+  suite already exercises the real import graph end to end. This test
+  makes that guarantee explicit: it renders the composer with no child
+  component mocked (only the network-bound useCurrencyCatalog hook is
+  stubbed) and fails loudly -- via a thrown render error, not a silent
+  console message -- if any child ever again resolves to undefined.
+*/
+test('the composer renders with every section\'s real, unmocked component tree and never logs a React element-type error', () => {
+  const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+  setup();
+  expect(screen.getByLabelText('expense.description')).toBeInTheDocument();
+  expect(screen.getByLabelText('expense.category')).toBeInTheDocument();
+  expect(screen.getByLabelText('expense.date')).toBeInTheDocument();
+  expect(screen.getByLabelText('currency.original')).toBeInTheDocument();
+  expect(screen.getByLabelText('expense.amount')).toBeInTheDocument();
+  const loggedErrors = consoleError.mock.calls.map((call) => call.join(' ')).join('\n');
+  expect(loggedErrors).not.toMatch(/Element type is invalid/);
+  consoleError.mockRestore();
+});
+
 test('renders all four canonical sections plus notes', () => {
   setup();
   expect(screen.getByText('expenseComposer.sections.details')).toBeInTheDocument();

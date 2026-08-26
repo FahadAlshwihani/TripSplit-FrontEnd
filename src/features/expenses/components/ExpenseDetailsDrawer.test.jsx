@@ -38,6 +38,38 @@ const setup = (overrides = {}, props = {}) => render(
   />,
 );
 
+/*
+  Regression guard for a real incident: the drawer and its backdrop
+  were both portaled to document.body, but .exp-drawer had no explicit
+  z-index while .exp-drawer-overlay did -- so the backdrop painted
+  ABOVE the fully-rendered drawer and blocked every click inside it.
+  jsdom doesn't compute real paint/stacking order (see the dedicated
+  layering.test.js for the CSS-level z-index assertions), but this
+  test guards the DOM half of that architecture: the backdrop and the
+  drawer must be siblings under the same portal root, with the drawer
+  physically reachable (not nested under/behind the backdrop), so a
+  future refactor can't reintroduce "drawer inside backdrop" nesting.
+*/
+test('the backdrop and the drawer are siblings in the portal root, not nested inside one another', () => {
+  setup();
+  const backdrop = document.querySelector('.exp-drawer-overlay');
+  const drawer = document.querySelector('.exp-drawer');
+  expect(backdrop).toBeInTheDocument();
+  expect(drawer).toBeInTheDocument();
+  expect(backdrop.parentElement).toBe(drawer.parentElement);
+  expect(backdrop.contains(drawer)).toBe(false);
+  expect(drawer.contains(backdrop)).toBe(false);
+});
+
+test('clicking the backdrop closes the drawer; clicking inside the drawer does not', () => {
+  const onClose = jest.fn();
+  setup({}, { onClose });
+  fireEvent.click(screen.getByText('Hotel Rooms'));
+  expect(onClose).not.toHaveBeenCalled();
+  fireEvent.click(document.querySelector('.exp-drawer-overlay'));
+  expect(onClose).toHaveBeenCalledTimes(1);
+});
+
 test('renders the title, category, date, and amount', () => {
   setup();
   expect(screen.getByText('Hotel Rooms')).toBeInTheDocument();
