@@ -1,21 +1,10 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
-import QuickExpense from '../../expenses/components/QuickExpense';
+import { render, screen } from '@testing-library/react';
 import CategoryManager from '../components/CategoryManager';
 import MemberDetail from '../../members/components/MemberDetail';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
-const members = [{ id: 'me', display_name: 'Me', avatar_key: 'avatar_01' }, { id: 'friend', display_name: 'Friend', avatar_key: 'avatar_02' }];
 const categories = [{ id: 'food-id', code: 'food', name: 'Food', icon_key: 'food', is_default: true }];
-
-test('quick expense submits canonical equal split defaults', () => {
-  const onSubmit = jest.fn();
-  render(<QuickExpense currentMember={members[0]} members={members} categories={categories} onSubmit={onSubmit} onMore={jest.fn()} />);
-  fireEvent.change(screen.getByLabelText('expense.amount'), { target: { value: '40.00' } });
-  fireEvent.change(screen.getByLabelText('expense.description'), { target: { value: 'Lunch' } });
-  fireEvent.click(screen.getByText('quick.save'));
-  expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ scope: 'shared', split_type: 'equal', payments: [{ member_id: 'me', amount: '40.00' }], participant_ids: ['me', 'friend'] }));
-});
 
 test('category manager renders over-budget usage and edit controls', () => {
   render(<CategoryManager categories={categories} budgets={[{ category: 'food', budget: '100.00', spent: '125.00', remaining: '-25.00', usage_percentage: '125.00' }]} budgetSummary={{ trip_budget: '500', allocated: '100', unallocated: '400' }} currency="SAR" canManage onCreate={jest.fn()} />);

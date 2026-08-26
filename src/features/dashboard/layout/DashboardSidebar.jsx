@@ -24,9 +24,8 @@ const DashboardSidebar = ({ trip, tripId, permissions }) => {
       </div>
 
       {/* Reuses the existing expense-creation flow rather than a second
-          engine: the Expenses page already surfaces its QuickExpense
-          form immediately at the top for anyone who can create expenses,
-          with no extra signal needed to reveal it. */}
+          engine: the Expenses page's own New Expense composer is one
+          click away for anyone who can create expenses. */}
       <NavLink to={`/trips/${tripId}/expenses`} className="dash-btn dash-btn--primary dash-sidebar__cta">
         <i className="bi bi-plus-lg" aria-hidden="true" />
         {t('dashboard.newExpense')}

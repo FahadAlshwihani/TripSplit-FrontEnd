@@ -404,3 +404,335 @@
 
 .exp-cat-create { padding: var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); }
 .exp-cat-add-btn { width: 100%; }
+
+/* ---------------------------------------------------------------------- */
+/* Canonical pressable form control -- the same hard-shadow rest/hover/
+   focus/active language every other interactive element in the app
+   uses (--shadow-hard-sm* / --press-sm* tokens), applied to inputs/
+   selects/textareas instead of just buttons/cards. Generic naming
+   (not `exp-` prefixed) since this is meant to be reusable by future
+   Dashboard forms, not an Expenses-only pattern -- it just lives here
+   for now, the same way SegmentedControl started scoped to one feature
+   before being placed under shared/. */
+
+.field-group { display: flex; flex-direction: column; gap: var(--space-1); }
+.field-label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
+
+.field-control {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--text-body);
+  box-shadow: var(--shadow-hard-sm);
+  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease, border-color var(--press-duration) ease;
+}
+
+.field-control:hover:not(:disabled) { box-shadow: var(--shadow-hard-sm-hover); transform: var(--press-sm-hover); }
+.field-control:focus, .field-control:focus-within {
+  outline: none;
+  box-shadow: var(--shadow-hard-sm-active);
+  transform: var(--press-sm-active);
+  border-color: var(--nc-indigo-700);
+}
+.field-control:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform: none; }
+.field-control--amount { text-align: end; font: var(--text-financial); font-variant-numeric: tabular-nums; }
+.field-control--error { border-color: var(--color-danger); }
+
+.field-error { display: flex; align-items: center; gap: var(--space-1); color: var(--color-danger); font: var(--text-label); font-size: 11px; margin: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .field-control { transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+  .field-control:hover, .field-control:focus, .field-control:focus-within { transform: none; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Category select -- a real listbox combobox (not a native <select>) so
+   each option can show its color swatch + icon + localized name, which
+   a native option element cannot render cross-browser. */
+
+.category-select { position: relative; }
+.category-select__trigger { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); cursor: pointer; text-align: start; }
+.category-select__chip { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; color: var(--color-text); }
+.category-select__placeholder { color: var(--color-text-muted); }
+.category-select__chevron { color: var(--color-text-muted); flex: 0 0 auto; }
+.category-select__swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 28px;
+  block-size: 28px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+}
+.category-select__listbox {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: calc(100% + var(--space-1));
+  z-index: var(--z-dropdown);
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+}
+.category-select__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+}
+.category-select__option:hover { background: var(--color-surface-alt); }
+.category-select__option.is-selected { background: var(--color-primary-soft); }
+
+/* ---------------------------------------------------------------------- */
+/* Expense composer (New/Edit Expense modal) */
+
+.exp-composer__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  margin-block-end: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.exp-composer__section:last-child { margin-block-end: 0; }
+
+.exp-composer__section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding-block-end: var(--space-3); border-block-end: var(--border-width) solid var(--color-border); }
+.exp-composer__section-title { margin: 0; color: var(--color-text); }
+
+.exp-composer__grid { display: grid; grid-template-columns: 1fr; gap: var(--space-3); }
+@media (min-width: 560px) {
+  .exp-composer__grid--2 { grid-template-columns: 1fr 1fr; }
+  .exp-composer__grid--4 { grid-template-columns: 2fr 1fr 1fr; }
+}
+
+.exp-composer__fx {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  box-shadow: var(--shadow-hard-sm);
+}
+.exp-composer__fx-item { display: flex; align-items: center; gap: var(--space-2); font: var(--text-financial); }
+.exp-composer__fx-label { color: var(--color-text-muted); font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); }
+.exp-composer__fx-item--highlight { color: var(--nc-indigo-700); font-weight: 700; }
+
+.exp-composer__budget-hint { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border: var(--border-width) solid var(--color-border-subtle); border-radius: var(--radius-sm); background: var(--color-surface-alt); font: var(--text-body-sm); color: var(--color-text-muted); }
+.exp-composer__budget-hint--over { color: var(--color-danger); border-color: var(--color-danger); }
+
+/* Multi-currency FX card -- rendered only when the original currency
+   differs from the trip's own; a manual rate field (no live FX-rate
+   service exists anywhere in this backend) plus a small Original/Trip
+   Value summary. */
+.exp-composer__fx-card { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); box-shadow: var(--shadow-hard-sm); }
+.exp-composer__fx-rate-row { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); font: var(--text-body-sm); }
+.exp-composer__fx-rate-row .field-control { width: 140px; }
+.exp-composer__fx-note { margin: 0; color: var(--color-text-muted); }
+.exp-composer__fx-summary { display: flex; flex-direction: column; gap: var(--space-1); padding-block-start: var(--space-2); border-block-start: var(--border-width) solid var(--color-border-subtle); }
+.exp-composer__fx-summary-row { display: flex; justify-content: space-between; align-items: center; font: var(--text-financial); color: var(--color-text); }
+
+.exp-composer__fund-preview { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); box-shadow: var(--shadow-hard-sm); }
+.exp-composer__fund-preview-row { display: flex; justify-content: space-between; align-items: center; font: var(--text-financial); color: var(--color-text); }
+.exp-composer__fund-preview-row--total { border-block-start: var(--border-width) solid var(--color-border); padding-block-start: var(--space-2); font-weight: 700; }
+.exp-composer__fund-warning { display: flex; align-items: center; gap: var(--space-2); color: var(--color-danger); font: var(--text-body-sm); margin: 0; }
+
+.exp-composer__select-all { display: flex; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); }
+.exp-composer__select-all-label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
+.exp-composer__check-label { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; font: var(--text-body-sm); color: var(--color-text); }
+.exp-composer__checkbox { inline-size: 18px; block-size: 18px; accent-color: var(--nc-indigo-700); }
+
+.exp-composer__member-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.exp-composer__member-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+.exp-composer__member-row:hover { background: var(--color-surface-alt); }
+.exp-composer__member-row.is-selected { box-shadow: var(--shadow-hard-sm); background: var(--color-primary-soft); }
+.exp-composer__member-name { flex: 1 1 auto; color: var(--color-text); font: var(--text-body); }
+.exp-composer__member-amount { width: 120px; }
+.exp-composer__member-amount--solo { display: inline-flex; justify-content: flex-end; color: var(--color-text-muted); font: var(--text-financial); }
+
+.exp-composer__personal-owner { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); }
+
+.exp-composer__split-summary { padding: var(--space-4); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); text-align: center; }
+.exp-composer__split-summary strong { font: var(--text-financial); font-weight: 700; color: var(--color-text); background: var(--color-primary-soft); border: var(--border-width) solid var(--color-border); padding: 2px var(--space-2); border-radius: var(--radius-sm); }
+
+.exp-composer__split-rows { display: flex; flex-direction: column; gap: var(--space-2); }
+.exp-composer__split-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); }
+.exp-composer__split-row-who { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); font: var(--text-body-sm); min-width: 0; flex: 1 1 auto; }
+.exp-composer__split-row-input { width: 110px; flex: 0 0 auto; }
+.exp-composer__split-row-percent { display: flex; align-items: center; gap: var(--space-1); color: var(--color-text-muted); flex: 0 0 auto; }
+.exp-composer__split-row-percent .exp-composer__split-row-input { width: 80px; }
+.exp-composer__split-row-calculated { flex: 0 0 auto; color: var(--color-text); font: var(--text-financial); min-width: 90px; text-align: end; }
+
+.exp-composer__totals-row { display: flex; justify-content: space-between; align-items: center; font: var(--text-label); color: var(--color-text-muted); }
+.exp-composer__totals-row--ok { color: var(--color-success); }
+.exp-composer__totals-row--bad { color: var(--color-danger); }
+
+.exp-composer__footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-4); border-block-start: var(--border-width) solid var(--color-border); background: var(--color-surface-container); flex-wrap: wrap; }
+.exp-composer__footer-total { display: flex; align-items: baseline; gap: var(--space-2); color: var(--color-text-muted); font: var(--text-body); }
+.exp-composer__footer-total-value { font: var(--text-financial-lg); color: var(--color-text); }
+.exp-composer__footer-actions { display: flex; gap: var(--space-2); flex: 1 1 auto; justify-content: flex-end; }
+
+@media (max-width: 480px) {
+  .exp-composer__footer { flex-direction: column; align-items: stretch; }
+  .exp-composer__footer-total { justify-content: center; }
+  .exp-composer__footer-actions { flex-direction: row; }
+  .exp-composer__footer-actions .dash-btn { flex: 1 1 0; }
+}
+
+/* Desktop: centered modal, ~760px, tall but never taller than the
+   viewport -- content scrolls, header/footer stay put. Mobile: near-
+   full-viewport, matching "mobile first, never a tiny centered dialog
+   on a phone". */
+.exp-composer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 28, 25, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: var(--z-modal);
+}
+.exp-composer-modal {
+  width: 100%;
+  max-width: 760px;
+  max-height: min(90dvh, 921px);
+  display: flex;
+  flex-direction: column;
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+  overflow: hidden;
+}
+@media (max-width: 640px) {
+  .exp-composer-overlay { padding: 0; }
+  .exp-composer-modal { max-width: none; width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border-width: 0; }
+}
+.exp-composer-modal__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding: var(--space-4); border-block-end: var(--border-width) solid var(--color-border); background: var(--color-surface-container); flex: 0 0 auto; }
+.exp-composer-modal__title { margin: 0; color: var(--color-text); }
+.exp-composer-modal__subtitle { margin: var(--space-1) 0 0; color: var(--color-text-muted); }
+.exp-composer-modal__body { flex: 1 1 auto; overflow-y: auto; padding: var(--space-4); background: var(--color-bg); }
+
+/* ---------------------------------------------------------------------- */
+/* Expense details drawer -- slides from the reading-direction end (not
+   a hardcoded side), full-height, matching the approved Stitch reference. */
+
+.exp-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 28, 25, 0.25);
+  z-index: var(--z-modal);
+}
+
+.exp-drawer {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: min(460px, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-inline-start: var(--border-width-lg) solid var(--color-border);
+  box-shadow: var(--shadow-hard-md);
+}
+@media (max-width: 480px) {
+  .exp-drawer { width: 100vw; border-inline-start: none; }
+}
+
+.exp-drawer__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-block-end: var(--border-width) solid var(--color-border); background: var(--color-surface-container); flex: 0 0 auto; }
+.exp-drawer__title { margin: 0; color: var(--color-text); }
+.exp-drawer__body { flex: 1 1 auto; overflow-y: auto; padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
+
+.exp-drawer__expense-title { margin: 0 0 var(--space-2); color: var(--color-text); }
+.exp-drawer__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font: var(--text-label); font-size: 11px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); }
+.exp-drawer__meta-item { display: inline-flex; align-items: center; gap: var(--space-1); }
+
+.exp-drawer__bento { display: grid; grid-template-columns: 1fr 1fr; gap: var(--border-width); background: var(--color-border); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; }
+.exp-drawer__bento-cell { background: var(--color-surface); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-1); }
+.exp-drawer__bento-label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); }
+.exp-drawer__bento-value { font: var(--text-financial); color: var(--color-text); text-align: end; }
+.exp-drawer__bento-value--highlight { color: var(--nc-indigo-700); font-weight: 700; }
+.exp-drawer__bento-rate { grid-column: 1 / -1; background: var(--color-surface-container); padding: var(--space-2) var(--space-3); display: flex; justify-content: space-between; }
+
+.exp-drawer__cards { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.exp-drawer__card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); }
+.exp-drawer__card-label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); }
+.exp-drawer__card-value { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); font: var(--text-body); }
+
+.exp-drawer__panel { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); overflow: hidden; }
+.exp-drawer__panel-head { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) var(--space-3); border-block-end: var(--border-width) solid var(--color-border); background: var(--color-surface-container); }
+.exp-drawer__panel-title { margin: 0; color: var(--color-text); }
+.exp-drawer__panel-meta { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); }
+.exp-drawer__panel-row { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-block-end: var(--border-width) solid var(--color-border-subtle); }
+.exp-drawer__panel-row:last-child { border-block-end: none; }
+.exp-drawer__panel-row-who { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); font: var(--text-body-sm); min-width: 0; }
+.exp-drawer__panel-row-value { color: var(--color-text); font: var(--text-financial); }
+.exp-drawer__panel-row-total { font-weight: 700; }
+
+.exp-drawer__audit { display: flex; flex-direction: column; gap: 2px; margin: 0; font: var(--text-body-sm); color: var(--color-text-muted); font-style: italic; }
+
+.exp-drawer__footer { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-block-start: var(--border-width) solid var(--color-border); background: var(--color-surface-container); flex: 0 0 auto; }
+.exp-drawer__footer-row { display: flex; gap: var(--space-2); }
+.exp-drawer__footer-row .dash-btn { flex: 1 1 0; }
+
+/* ---------------------------------------------------------------------- */
+/* Confirm dialog -- small centered modal, reused for any destructive
+   confirmation (currently: delete expense) instead of window.confirm(). */
+
+.confirm-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 28, 25, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: var(--z-modal);
+}
+.confirm-dialog {
+  width: 100%;
+  max-width: 420px;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+}
+.confirm-dialog__title { margin: 0; color: var(--color-text); }
+.confirm-dialog__body { margin: 0; color: var(--color-text-muted); }
+.confirm-dialog__actions { display: flex; gap: var(--space-2); justify-content: flex-end; }
+.confirm-dialog__actions .dash-btn { flex: 1 1 0; }
+@media (min-width: 480px) {
+  .confirm-dialog__actions .dash-btn { flex: 0 0 auto; min-width: 120px; }
+}
