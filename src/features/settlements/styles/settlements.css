@@ -20,28 +20,55 @@
 
 .settle-dialog__subcopy { margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
 
+/* Small uppercase micro-labels grouping the modal body into the
+   HEADER / counterparty / PAYMENT DETAILS / SUMMARY / callout sections
+   from the target structure -- same recipe as .field-label, reused
+   rather than a new label style. */
+.settle-dialog__section-label { display: block; margin: 0; font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; padding-block-start: var(--space-1); border-block-start: var(--border-width) solid var(--color-border-subtle); }
+
 .settle-dialog__counterpart {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  box-shadow: var(--shadow-hard-sm);
+}
+.settle-dialog__counterpart-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.settle-dialog__counterpart-name { font: var(--text-body); font-weight: 700; font-size: 18px; color: var(--color-text); }
+.settle-dialog__counterpart-status { margin: 0; font: var(--text-body-sm); color: var(--color-text-muted); }
+.settle-dialog__counterpart-debt-block { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex: 0 0 auto; }
+.settle-dialog__counterpart-debt-label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
+.settle-dialog__counterpart-debt { font: var(--text-financial); font-size: 20px; color: var(--color-text); }
+.settle-dialog__counterpart-debt .money__currency { color: var(--color-text-muted); }
+
+.settle-dialog__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface-alt);
+  box-shadow: var(--shadow-hard-sm);
 }
-.settle-dialog__counterpart-text { display: flex; flex-direction: column; gap: 2px; }
-.settle-dialog__counterpart-name { font: var(--text-body); font-weight: 700; color: var(--color-text); }
-.settle-dialog__counterpart-debt { display: flex; align-items: center; gap: var(--space-1); font: var(--text-body-sm); color: var(--color-text-muted); }
+.settle-dialog__summary-row { display: flex; justify-content: space-between; align-items: baseline; font: var(--text-financial); color: var(--color-text); }
+.settle-dialog__summary-row span:first-child { font: var(--text-body-sm); color: var(--color-text-muted); }
+.settle-dialog__summary-row--total { border-block-start: var(--border-width) solid var(--color-border); padding-block-start: var(--space-2); }
+.settle-dialog__summary-row--total span:first-child { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.settle-dialog__summary-row--total .money { font-size: 18px; font-weight: 700; }
+.settle-dialog__summary-row--zero .money { color: var(--color-success); }
 
-.settle-dialog__summary { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3); border: var(--border-width) solid var(--color-border-subtle); border-radius: var(--radius-sm); background: var(--color-surface-alt); }
-.settle-dialog__summary-row { display: flex; justify-content: space-between; align-items: center; font: var(--text-financial); color: var(--color-text); }
-.settle-dialog__summary-row--total { border-block-start: var(--border-width) solid var(--color-border); padding-block-start: var(--space-2); font-weight: 700; }
-
-.settle-dialog__note { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); font: var(--text-body-sm); }
+.settle-dialog__note { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; padding: var(--space-3); border-radius: var(--radius-sm); font: var(--text-body-sm); line-height: 1.5; }
+.settle-dialog__note i { flex: 0 0 auto; margin-block-start: 2px; }
 .settle-dialog__note--info { color: var(--color-text-muted); background: var(--color-surface-alt); border: var(--border-width) solid var(--color-border-subtle); }
 .settle-dialog__note--warn { color: var(--color-success); background: var(--color-success-soft); border: var(--border-width) solid var(--color-success); }
 
-.settle-dialog__ack { display: flex; align-items: flex-start; gap: var(--space-2); cursor: pointer; font: var(--text-body-sm); color: var(--color-text); }
+.settle-dialog__ack { display: flex; align-items: flex-start; gap: var(--space-2); cursor: pointer; padding: var(--space-3); border: var(--border-width) solid var(--color-border-subtle); border-radius: var(--radius-sm); background: var(--color-surface-alt); font: var(--text-body-sm); color: var(--color-text); }
 .settle-dialog__ack input { margin-block-start: 3px; inline-size: 18px; block-size: 18px; accent-color: var(--nc-indigo-700); flex: 0 0 auto; }
 
 /* ---------------------------------------------------------------------- */
@@ -59,14 +86,22 @@
   width: 100%;
 }
 .settle-pending-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.settle-pending-card__badge { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--nc-indigo-700); text-transform: uppercase; }
+.settle-pending-card__badge { display: inline-flex; align-items: center; gap: var(--space-1); font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--nc-indigo-700); text-transform: uppercase; }
 .settle-pending-card__amount { font: var(--text-financial); color: var(--color-text); }
 .settle-pending-card__body { margin: 0; color: var(--color-text); font: var(--text-body-sm); }
 .settle-pending-card__date { color: var(--color-text-muted); }
 .settle-pending-card__note { margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); font-style: italic; }
+.settle-pending-card__helper { margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
 .settle-pending-card__question { margin: 0; font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
 .settle-pending-card__buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .settle-pending-card__buttons .dash-btn { flex: 1 1 auto; min-height: 40px; padding-inline: var(--space-3); }
+.settle-pending-card__cooldown { margin: 0; color: var(--color-text-muted); font: var(--text-label); font-size: 10px; }
+
+/* Rejected state -- a light warning surface, deliberately not the
+   aggressive full-red danger treatment (this is "needs another look",
+   not a destructive/error condition). */
+.settle-pending-card--rejected { border-color: var(--color-warning); background: var(--color-warning-soft); }
+.settle-pending-card--rejected .settle-pending-card__badge { color: var(--color-warning); }
 
 @media (max-width: 480px) {
   .settle-pending-card__buttons { flex-direction: column; }

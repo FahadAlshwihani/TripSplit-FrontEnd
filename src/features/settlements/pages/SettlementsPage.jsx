@@ -119,11 +119,13 @@ export default function SettlementsPage() {
               busy={busyId === settlement.id}
               canReview={!readOnly && settlement.status === 'pending' && (settlement.to_member_id === currentMember?.id || isManager)}
               canCancel={!readOnly && settlement.status === 'pending' && (settlement.created_by === currentMember?.id || isManager)}
+              canRetry={!readOnly && settlement.status === 'rejected' && (settlement.created_by === currentMember?.id || isManager)}
               onOpen={setTimelineTarget}
               onConfirm={(row) => runReview(row, 'confirm')}
               onNotReceived={(row) => runReview(row, 'not-received')}
               onCheckLater={(row) => runReview(row, 'check-later')}
               onCancel={(row) => runReview(row, 'cancel')}
+              onRetry={(row) => runReview(row, 'retry')}
             />
           ))}
         </div>

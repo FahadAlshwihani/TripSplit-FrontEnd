@@ -12,7 +12,7 @@ import Money from '../../../shared/components/Money';
 */
 const STATUS_ICON = { pending: 'bi-hourglass-split', confirmed: 'bi-check-circle', rejected: 'bi-x-circle', cancelled: 'bi-slash-circle' };
 
-const SettlementLedgerRow = ({ settlement, currency, canReview, canCancel, onOpen, onConfirm, onNotReceived, onCheckLater, onCancel, busy }) => {
+const SettlementLedgerRow = ({ settlement, currency, canReview, canCancel, canRetry, onOpen, onConfirm, onNotReceived, onCheckLater, onCancel, onRetry, busy }) => {
   const { t } = useTranslation();
   return (
     <div className="settle-row" role="button" tabIndex={0} onClick={() => onOpen(settlement)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(settlement); } }}>
@@ -37,6 +37,11 @@ const SettlementLedgerRow = ({ settlement, currency, canReview, canCancel, onOpe
             {canCancel && !canReview && (
               <button type="button" className="bal-remind-btn" disabled={busy} aria-label={t('settlements.withdrawReport')} title={t('settlements.withdrawReport')} onClick={() => onCancel(settlement)}><i className="bi bi-x-lg" aria-hidden="true" /></button>
             )}
+          </div>
+        )}
+        {settlement.status === 'rejected' && canRetry && (
+          <div className="settle-pending-card__buttons">
+            <button type="button" className="bal-remind-btn" disabled={busy || settlement.retry_cooldown_active} aria-label={t('settlements.retryAction')} title={settlement.retry_cooldown_active ? t('settlements.retryCooldown') : t('settlements.retryAction')} onClick={() => onRetry(settlement)}><i className="bi bi-arrow-repeat" aria-hidden="true" /></button>
           </div>
         )}
       </div>
