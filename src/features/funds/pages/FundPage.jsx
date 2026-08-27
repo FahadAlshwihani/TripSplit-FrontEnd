@@ -18,6 +18,7 @@ import {
 import FundSetup from '../components/FundSetup';
 import FundSummary from '../components/FundSummary';
 import FundHolderCard from '../components/FundHolderCard';
+import ChangeHolderDialog from '../components/ChangeHolderDialog';
 import FundingRoundComposer from '../components/FundingRoundComposer';
 import FundingRoundLedgerCard from '../components/FundingRoundLedgerCard';
 import ContributionActionDialog from '../components/ContributionActionDialog';
@@ -26,6 +27,20 @@ import ReimbursementSection from '../components/ReimbursementSection';
 import FundRefundHistory from '../components/FundRefundHistory';
 import RefundDistributionModal from '../components/RefundDistributionModal';
 import RecentFundExpenses from '../components/RecentFundExpenses';
+// Fund dialogs reuse the exact same field/button/composer primitives
+// Expenses' and Balances/Settlements' own dialogs already use
+// (.field-control, .field-group, .exp-composer__*, .bal-remind-btn,
+// .bal-empty) -- those classes live in each feature's own stylesheet,
+// never a global one, so importing them here (same pattern
+// BalancesPage.jsx already uses for settlements.css) is what actually
+// makes them apply on this route. This was the root cause of every
+// "renders as raw/unstyled HTML" symptom: the classes were correct, but
+// nothing on the Fund route ever loaded the CSS that defines them. The
+// dialog SHELL itself (overlay/card/header/body/footer) is Fund's own
+// --fund.css defines .fund-dialog-overlay/.fund-dialog directly, not
+// borrowed -- see fund.css's header comment.
+import '../../expenses/styles/expenses.css';
+import '../../balances/styles/balances.css';
 import '../styles/fund.css';
 
 /*
@@ -35,6 +50,13 @@ import '../styles/fund.css';
   the Expenses Ledger (one canonical category system, not duplicated
   here); "Recent Fund Expenses" below reuses the SAME ExpenseDetailsDrawer
   that page uses, never a second expense-detail UI.
+
+  Dialog architecture: exactly ONE discriminated `fundDialog` state
+  drives every Fund modal (create-round / report-contribution /
+  record-contribution / change-holder / reimbursement / refund /
+  close-confirm / expense-details) -- never a pile of independent
+  booleans that can accidentally end up true at the same time. Only one
+  primary Fund dialog can ever be mounted at once, by construction.
 */
 export default function FundPage() {
   const { trip, tripId, currentMember, permissions } = useOutletContext();
@@ -54,14 +76,12 @@ export default function FundPage() {
   }, [tripId]);
 
   const [actionError, setActionError] = useState(null);
-  const [roundComposerOpen, setRoundComposerOpen] = useState(false);
-  const [roundComposerPrefill, setRoundComposerPrefill] = useState(null);
-  const [contributionDialog, setContributionDialog] = useState(null); // { mode: 'report'|'record', round } | null
-  const [reimbursementOpen, setReimbursementOpen] = useState(false);
-  const [refundOpen, setRefundOpen] = useState(false);
-  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
+  // null | { type: 'create-round', prefill? } | { type: 'report-contribution'|'record-contribution', round }
+  // | { type: 'change-holder' } | { type: 'reimbursement' } | { type: 'refund' } | { type: 'close-confirm' }
+  // | { type: 'expense-details', expense }
+  const [fundDialog, setFundDialog] = useState(null);
+  const closeDialog = () => setFundDialog(null);
   const [busyKey, setBusyKey] = useState(null); // contribution/round id currently mid-action
-  const [detailsExpense, setDetailsExpense] = useState(null);
 
   if (resource.loading) return <NeoLoading />;
   if (resource.error) return <ErrorState message={resource.error.message} onRetry={resource.retry} />;
@@ -94,24 +114,19 @@ export default function FundPage() {
   };
 
   const handleCreateFund = (holderId) => run(() => createFund(tripId, { holder_id: holderId }));
-  const handleChangeHolder = (holderId) => run(() => updateFund(tripId, { holder_id: holderId }));
 
-  const openTopUpComposer = () => {
-    setRoundComposerPrefill({ title: t('fund.topup'), target_amount: fund.accounting.deficit });
-    setRoundComposerOpen(true);
-  };
-  const handleCreateRound = async (payload) => {
-    await run(() => createFundingRound(tripId, payload));
-    setRoundComposerOpen(false);
-    setRoundComposerPrefill(null);
-  };
+  const handleChangeHolder = async (holderId) => { await run(() => updateFund(tripId, { holder_id: holderId })); closeDialog(); };
 
-  const handleContributionSave = async (round, payload, mode) => {
-    if (mode === 'report') await recordAndRetry(() => reportFundContribution(tripId, round.id, payload));
-    else await recordAndRetry(() => recordFundContribution(tripId, round.id, payload));
-    setContributionDialog(null);
+  const openTopUpComposer = () => setFundDialog({ type: 'create-round', prefill: { title: t('fund.topup'), target_amount: fund.accounting.deficit } });
+
+  const handleCreateRound = async (payload) => { await run(() => createFundingRound(tripId, payload)); closeDialog(); };
+
+  const handleContributionSave = async (payload) => {
+    const { type, round } = fundDialog;
+    if (type === 'report-contribution') await run(() => reportFundContribution(tripId, round.id, payload));
+    else await run(() => recordFundContribution(tripId, round.id, payload));
+    closeDialog();
   };
-  const recordAndRetry = (action) => run(action);
 
   const handleRemind = (round, memberId) => remindContribution(tripId, round.id, memberId);
 
@@ -128,11 +143,11 @@ export default function FundPage() {
   const handleCancelRound = (round) => runBusy(round.id, () => cancelFundingRound(tripId, round.id));
 
   const handlePreviewRefund = (payload) => previewFundRefund(tripId, payload);
-  const handleRecordRefund = async (payload) => { await run(() => recordFundRefunds(tripId, payload)); setRefundOpen(false); };
+  const handleRecordRefund = async (payload) => { await run(() => recordFundRefunds(tripId, payload)); closeDialog(); };
 
-  const handleRecordReimbursement = async (payload) => { await run(() => recordFundReimbursement(tripId, payload)); setReimbursementOpen(false); };
+  const handleRecordReimbursement = async (payload) => { await run(() => recordFundReimbursement(tripId, payload)); closeDialog(); };
 
-  const handleCloseFund = async () => { await run(() => closeFund(tripId)); setCloseConfirmOpen(false); };
+  const handleCloseFund = async () => { await run(() => closeFund(tripId)); closeDialog(); };
 
   const openRounds = fund ? fund.rounds.filter((round) => round.status === 'open') : [];
   const completedRounds = fund ? fund.rounds.filter((round) => round.status !== 'open') : [];
@@ -146,7 +161,7 @@ export default function FundPage() {
           <p className="fund-page__subtitle text-copy-lg">{t('fund.pageSubtitle')}</p>
         </div>
         {fund && canManage && fund.status === 'active' && (
-          <button type="button" className="dash-btn dash-btn--primary" onClick={() => setRoundComposerOpen(true)}>
+          <button type="button" className="dash-btn dash-btn--primary" onClick={() => setFundDialog({ type: 'create-round' })}>
             <i className="bi bi-plus-lg" aria-hidden="true" /> {t('fund.newRound')}
           </button>
         )}
@@ -172,7 +187,7 @@ export default function FundPage() {
 
           <FundSummary accounting={fund.accounting} currency={currency} />
 
-          <FundHolderCard holder={fund.holder} activeMembers={activeMembers} canManage={canManage} onChangeHolder={handleChangeHolder} />
+          <FundHolderCard holder={fund.holder} canManage={canManage} onChangeHolder={() => setFundDialog({ type: 'change-holder' })} />
 
           <section className="fund-section">
             <h2 className="fund-section__title text-headline-md">{t('fund.roundsLedgerTitle')}</h2>
@@ -193,14 +208,12 @@ export default function FundPage() {
                     currentMember={currentMember}
                     canManage={canManage}
                     busyKey={busyKey}
-                    onReport={() => setContributionDialog({ mode: 'report', round })}
-                    onRecord={() => setContributionDialog({ mode: 'record', round })}
+                    onReport={() => setFundDialog({ type: 'report-contribution', round })}
+                    onRecord={() => setFundDialog({ type: 'record-contribution', round })}
                     onRemind={(memberId) => handleRemind(round, memberId)}
                     onConfirm={(contribution) => handleConfirmContribution(round, contribution)}
                     onReject={(contribution, reason) => handleRejectContribution(round, contribution, reason)}
                     onRetry={(contribution) => handleRetryContribution(round, contribution)}
-                    onCorrect={(contribution, payload) => handleCorrectContribution(round, contribution, payload)}
-                    onVoid={(contribution, reason) => handleVoidContribution(round, contribution, reason)}
                     onComplete={() => handleCompleteRound(round)}
                     onCancel={() => handleCancelRound(round)}
                   />
@@ -235,7 +248,7 @@ export default function FundPage() {
               candidates={fund.reimbursement_candidates}
               currency={currency}
               canManage={canManage && fund.status === 'active'}
-              onOpen={() => setReimbursementOpen(true)}
+              onOpen={() => setFundDialog({ type: 'reimbursement' })}
             />
             <FundRefundHistory refunds={fund.refunds} currency={currency} />
           </div>
@@ -245,12 +258,12 @@ export default function FundPage() {
             categoriesByCode={categoriesByCode}
             currency={currency}
             tripId={tripId}
-            onOpen={(expense) => setDetailsExpense(expense)}
+            onOpen={(expense) => setFundDialog({ type: 'expense-details', expense })}
           />
 
           {Number(fund.accounting.surplus) > 0 && fund.status === 'active' && (
             <div className="fund-surplus-action">
-              <button type="button" className="dash-btn dash-btn--primary" onClick={() => setRefundOpen(true)}>
+              <button type="button" className="dash-btn dash-btn--primary" onClick={() => setFundDialog({ type: 'refund' })}>
                 <i className="bi bi-arrow-return-left" aria-hidden="true" /> {t('fund.refund')}
               </button>
             </div>
@@ -258,7 +271,7 @@ export default function FundPage() {
 
           {canManage && fund.status === 'active' && (
             <div className="fund-close-action">
-              <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setCloseConfirmOpen(true)} disabled={!fund.close_readiness.ready}>
+              <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setFundDialog({ type: 'close-confirm' })} disabled={!fund.close_readiness.ready}>
                 {t('fund.close')}
               </button>
               {!fund.close_readiness.ready && <p className="fund-close-action__hint text-copy-sm">{t('fund.closeNotReady')}</p>}
@@ -267,60 +280,64 @@ export default function FundPage() {
         </>
       )}
 
-      {roundComposerOpen && (
+      {fundDialog?.type === 'create-round' && (
         <FundingRoundComposer
           members={activeMembers}
           currency={currency}
-          prefill={roundComposerPrefill}
+          prefill={fundDialog.prefill}
           onSubmit={handleCreateRound}
-          onClose={() => { setRoundComposerOpen(false); setRoundComposerPrefill(null); }}
+          onClose={closeDialog}
         />
       )}
 
-      {contributionDialog && (
+      {(fundDialog?.type === 'report-contribution' || fundDialog?.type === 'record-contribution') && (
         <ContributionActionDialog
-          mode={contributionDialog.mode}
-          round={contributionDialog.round}
+          mode={fundDialog.type === 'report-contribution' ? 'report' : 'record'}
+          round={fundDialog.round}
           members={activeMembers}
           currentMember={currentMember}
           currency={currency}
-          onSave={(payload) => handleContributionSave(contributionDialog.round, payload, contributionDialog.mode)}
-          onClose={() => setContributionDialog(null)}
+          onSave={handleContributionSave}
+          onClose={closeDialog}
         />
       )}
 
-      {reimbursementOpen && (
+      {fundDialog?.type === 'change-holder' && (
+        <ChangeHolderDialog holder={fund.holder} activeMembers={activeMembers} onSave={handleChangeHolder} onClose={closeDialog} />
+      )}
+
+      {fundDialog?.type === 'reimbursement' && (
         <ReimbursementSection.Dialog
           candidates={fund.reimbursement_candidates}
           members={activeMembers}
           currency={currency}
           onSave={handleRecordReimbursement}
-          onClose={() => setReimbursementOpen(false)}
+          onClose={closeDialog}
         />
       )}
 
-      {refundOpen && (
+      {fundDialog?.type === 'refund' && (
         <RefundDistributionModal
           available={fund.accounting.surplus}
           currency={currency}
           onPreview={handlePreviewRefund}
           onConfirm={handleRecordRefund}
-          onClose={() => setRefundOpen(false)}
+          onClose={closeDialog}
         />
       )}
 
-      {closeConfirmOpen && (
+      {fundDialog?.type === 'close-confirm' && (
         <ConfirmDialog
           title={t('fund.closeConfirmTitle')}
           body={t('fund.closeConfirmBody')}
           confirmLabel={t('fund.close')}
           destructive={false}
           onConfirm={handleCloseFund}
-          onCancel={() => setCloseConfirmOpen(false)}
+          onCancel={closeDialog}
         />
       )}
 
-      {detailsExpense && (
+      {fundDialog?.type === 'expense-details' && (
         // View-only from the Fund page (canEdit/canCreateExpense=false
         // correctly HIDES the Edit/Duplicate/Delete buttons entirely --
         // see ExpenseDetailsDrawer.jsx -- never a dead/broken button):
@@ -328,9 +345,9 @@ export default function FundPage() {
         // full Expense Composer operation that belongs on the Expenses
         // Ledger, not partially reimplemented here.
         <ExpenseDetailsDrawer
-          expense={detailsExpense}
-          category={categoriesByCode[detailsExpense.category]}
-          budget={budgets.find((row) => row.category === detailsExpense.category)}
+          expense={fundDialog.expense}
+          category={categoriesByCode[fundDialog.expense.category]}
+          budget={budgets.find((row) => row.category === fundDialog.expense.category)}
           membersById={membersLookup}
           currency={currency}
           canEdit={false}
@@ -338,7 +355,7 @@ export default function FundPage() {
           onEdit={() => {}}
           onDuplicate={() => {}}
           onDelete={() => {}}
-          onClose={() => setDetailsExpense(null)}
+          onClose={closeDialog}
         />
       )}
     </div>
