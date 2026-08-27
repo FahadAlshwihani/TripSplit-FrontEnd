@@ -71,13 +71,13 @@ const ReimbursementDialog = ({ candidates, members, currency, onSave, onClose })
 
   return (
     <ModalPortal>
-      <div className="bal-dialog-overlay" role="presentation" onClick={onClose}>
-        <form className="bal-dialog" role="dialog" aria-modal="true" aria-labelledby="fund-reimburse-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
-          <div className="bal-dialog__head">
-            <h2 id="fund-reimburse-title" className="bal-dialog__title text-headline">{t('fund.reimburseAction')}</h2>
-            <button type="button" className="exp-modal__close" aria-label={t('common.close')} onClick={onClose}><i className="bi bi-x-lg" aria-hidden="true" /></button>
+      <div className="fund-dialog-overlay" role="presentation" onClick={onClose}>
+        <form className="fund-dialog" role="dialog" aria-modal="true" aria-labelledby="fund-reimburse-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
+          <div className="fund-dialog__head">
+            <h2 id="fund-reimburse-title" className="fund-dialog__title text-headline">{t('fund.reimburseAction')}</h2>
+            <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose}><i className="bi bi-x-lg" aria-hidden="true" /></button>
           </div>
-          <div className="bal-dialog__body">
+          <div className="fund-dialog__body">
             {candidates.length > 0 && (
               <div className="fund-reimburse-candidates">
                 <span className="field-label">{t('fund.suggestedCandidates')}</span>
@@ -108,8 +108,8 @@ const ReimbursementDialog = ({ candidates, members, currency, onSave, onClose })
             </div>
             {error && <p className="field-error" role="alert">{error.message || t('error.action')}</p>}
           </div>
-          <div className="exp-composer__footer">
-            <div className="exp-composer__footer-actions">
+          <div className="fund-dialog__footer">
+            <div className="fund-dialog__footer-actions">
               <button type="button" className="dash-btn dash-btn--secondary" onClick={onClose} disabled={submitting}>{t('common.cancel')}</button>
               <button type="submit" className={`dash-btn dash-btn--primary${submitting ? ' dash-btn--loading' : ''}`} disabled={!isValid || submitting}>
                 {submitting && <span className="dash-btn__spinner" aria-hidden="true" />}

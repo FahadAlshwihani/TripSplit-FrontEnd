@@ -1,15 +1,111 @@
 /*
   Trip Fund -- a real accounting subsystem (see docs/architecture/
   fund-accounting.md), not a cosmetic page. Same Neo-classic hard-border/
-  elevation token system as Balances (`bal-`) and Settlements (`settle-`)
-  -- reuses their shared primitives (.dash-btn, .field-control,
-  .field-group, .bal-dialog, .bal-empty, .bal-remind-btn, .exp-composer__*)
-  directly rather than reinventing them; this file only adds what's
-  genuinely Fund-specific. Class prefix `fund-`.
+  elevation token system as Balances (`bal-`) and Settlements (`settle-`).
+
+  Two different kinds of reuse happen here, deliberately not the same:
+  - Form/button PRIMITIVES (.dash-btn, .field-control, .field-group,
+    .exp-composer__grid, .bal-remind-btn, .bal-empty) are borrowed
+    directly from expenses.css/balances.css, which FundPage.jsx now
+    explicitly imports (the same pattern BalancesPage.jsx already uses to
+    pull in settlements.css) -- this was the actual root cause of every
+    "Fund dialog renders as raw/unstyled HTML" bug: the class names were
+    always correct, but nothing on the Fund route ever loaded the
+    stylesheet that defines them, so every .field-control/.bal-dialog
+    rule simply never matched anything.
+  - The dialog SHELL (overlay/card/header/body/footer) is Fund's OWN
+    `.fund-dialog-overlay`/`.fund-dialog` contract, defined here --
+    visually identical to .bal-dialog's recipe (same tokens, same mobile
+    full-screen breakpoint), but not borrowed, so Fund dialogs never
+    depend on another feature's CSS loading for their basic shell to
+    exist, and `.fund-dialog*` is a stable, testable contract of its own
+    (see FundPage.test.jsx's CSS-contract test).
+  Class prefix `fund-`.
 */
 
 /* Same legacy-white-text guard used by balances.css/expenses.css. */
-.fund-page :where(span, p, a, li) { color: inherit; }
+.fund-page :where(span, p, a, li),
+.fund-dialog :where(span, p, a, li) { color: inherit; }
+
+/* ---------------------------------------------------------------------- */
+/* Canonical Fund dialog shell -- every Fund modal (create round, report/
+   record contribution, change holder, reimbursement, refund) renders
+   through this same overlay/card/head/body/footer structure, portaled via
+   ModalPortal. Identical recipe to .bal-dialog-overlay/.bal-dialog
+   (position:fixed centered overlay above a translucent backdrop, a
+   bordered hard-shadow card below it, full-height sheet under 640px). */
+
+.fund-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 28, 25, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: var(--z-modal);
+}
+
+.fund-dialog {
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100dvh - var(--space-8));
+  display: flex;
+  flex-direction: column;
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-hard-md);
+  overflow: hidden;
+}
+@media (max-width: 640px) {
+  .fund-dialog-overlay { padding: 0; }
+  .fund-dialog { max-width: none; width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border-width: 0; }
+}
+
+.fund-dialog__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-block-end: var(--border-width) solid var(--color-border); background: var(--color-surface-container); flex: 0 0 auto; }
+.fund-dialog__title { margin: 0; color: var(--color-text); }
+.fund-dialog__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  box-shadow: var(--shadow-hard-sm);
+  flex: 0 0 auto;
+}
+.fund-dialog__close:hover { background: var(--color-surface-alt); }
+.fund-dialog__close:active { box-shadow: 0 0 0 0 var(--color-border); transform: var(--press-sm-active); }
+
+.fund-dialog__body { flex: 1 1 auto; overflow-y: auto; padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+
+.fund-dialog__footer { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); padding: var(--space-4); border-block-start: var(--border-width) solid var(--color-border); background: var(--color-surface-container); flex: 0 0 auto; flex-wrap: wrap; }
+.fund-dialog__footer-actions { display: flex; gap: var(--space-2); flex: 1 1 auto; justify-content: flex-end; }
+@media (max-width: 640px) {
+  .fund-dialog__footer-actions { flex-direction: row; }
+  .fund-dialog__footer-actions .dash-btn { flex: 1 1 0; }
+}
+
+.fund-dialog__subcopy { margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
+
+.fund-dialog__note { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; padding: var(--space-3); border-radius: var(--radius-sm); font: var(--text-body-sm); line-height: 1.5; }
+.fund-dialog__note i { flex: 0 0 auto; margin-block-start: 2px; }
+.fund-dialog__note--info { color: var(--color-text-muted); background: var(--color-surface-alt); border: var(--border-width) solid var(--color-border-subtle); }
+.fund-dialog__note--warn { color: var(--color-success); background: var(--color-success-soft); border: var(--border-width) solid var(--color-success); }
+
+.fund-dialog__ack { display: flex; align-items: flex-start; gap: var(--space-2); cursor: pointer; padding: var(--space-3); border: var(--border-width) solid var(--color-border-subtle); border-radius: var(--radius-sm); background: var(--color-surface-alt); font: var(--text-body-sm); color: var(--color-text); }
+.fund-dialog__ack input { margin-block-start: 3px; inline-size: 18px; block-size: 18px; accent-color: var(--nc-indigo-700); flex: 0 0 auto; }
+
+/* Expected / paid-so-far / remaining strip shown inside the I-Paid and
+   Record-Received dialogs -- reuses the same .fund-figure chip the round
+   member rows use (flexbox children, never one bidi-reorderable text run). */
+.fund-dialog__figures { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); padding: var(--space-3); border: var(--border-width) solid var(--color-border-subtle); border-radius: var(--radius-sm); background: var(--color-surface-alt); font: var(--text-body-sm); color: var(--color-text-muted); }
 
 .fund-page { display: flex; flex-direction: column; gap: var(--space-5); }
 
@@ -194,7 +290,9 @@
 }
 .fund-round-card__member:last-child { border-block-end: none; }
 .fund-round-card__member-who { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); flex: 1 1 12rem; min-width: 0; }
-.fund-round-card__member-figures { color: var(--color-text-muted); }
+.fund-round-card__member-figures { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); color: var(--color-text-muted); }
+.fund-figure { display: inline-flex; align-items: baseline; gap: 4px; }
+.fund-figure:not(:last-child)::after { content: "·"; margin-inline-start: var(--space-2); color: var(--color-text-faint); }
 .fund-round-card__remind { display: flex; align-items: center; gap: var(--space-2); }
 .fund-round-card__remind small { color: var(--color-text-muted); }
 
@@ -202,7 +300,8 @@
 .fund-round-card__pending--rejected { background: var(--color-danger-soft); }
 .fund-pending-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .fund-pending-row__who { color: var(--color-text); }
-.fund-pending-row__actions { display: flex; gap: var(--space-2); }
+.fund-pending-row__hint { flex-basis: 100%; margin: 0; color: var(--color-text-muted); }
+.fund-pending-row__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); flex-basis: 100%; justify-content: flex-end; }
 
 .fund-round-card__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-block-start: var(--border-width) solid var(--color-border-subtle); }
 
