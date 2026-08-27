@@ -19,6 +19,7 @@ import PendingSettlementCard from '../../settlements/components/PendingSettlemen
 const BalanceMemberRow = ({
   member, amount, currency, direction,
   pendingSettlement, pendingActionState, onConfirmPending, onNotReceivedPending, onCheckLaterPending, onCancelPending,
+  onRetryPending, onNewPaymentPending, onViewHistoryPending,
   reminderState, onRemind, canRemind,
   onIPaid, onRecordReceived,
   readOnly,
@@ -83,6 +84,9 @@ const BalanceMemberRow = ({
           onNotReceived={onNotReceivedPending}
           onCheckLater={onCheckLaterPending}
           onCancel={onCancelPending}
+          onRetry={onRetryPending}
+          onNewPayment={onNewPaymentPending}
+          onViewHistory={onViewHistoryPending}
           actionState={pendingActionState}
           readOnly={readOnly}
         />

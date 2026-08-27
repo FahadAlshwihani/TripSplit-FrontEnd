@@ -9,6 +9,7 @@ import { getBalances, remindAllDebtors, remindDebtor } from '../api/balancesApi'
 import { getMembers } from '../../members/api/membersApi';
 import { getSettlements, recordAdminSettlement, recordReceivedPayment, reportPayment, reviewSettlement } from '../../settlements/api/settlementsApi';
 import SettlementActionDialog from '../../settlements/components/SettlementActionDialog';
+import SettlementTimelineDrawer from '../../settlements/components/SettlementTimelineDrawer';
 import NetBalanceCard from '../components/NetBalanceCard';
 import BalanceMemberRow from '../components/BalanceMemberRow';
 import '../styles/balances.css';
@@ -58,6 +59,7 @@ export default function BalancesPage() {
   const [remindAllResult, setRemindAllResult] = useState(null);
   const [pendingStates, setPendingStates] = useState({}); // settlement_id -> { status, action }
   const [actionDialog, setActionDialog] = useState(null); // { mode, counterpart?, debt? } | null
+  const [timelineTarget, setTimelineTarget] = useState(null);
 
   if (resource.loading) return <NeoLoading />;
   if (resource.error) return <ErrorState message={resource.error.message} onRetry={resource.retry} />;
@@ -101,7 +103,17 @@ export default function BalancesPage() {
     }
   };
 
-  const pendingFor = (fromId, toId) => settlements.find((row) => row.status === 'pending' && row.from_member_id === fromId && row.to_member_id === toId);
+  // The latest attempt for a pair, pending OR rejected -- a rejected
+  // settlement must stay visible (not silently disappear back to the
+  // plain reminder/I-Paid buttons) until the debtor retries it or
+  // records a genuinely new payment. Once THAT newer attempt exists,
+  // it becomes "latest" and the old rejected row simply falls out of
+  // view here (still fully readable in the Settlements ledger/timeline).
+  const latestSettlementFor = (fromId, toId) => {
+    const candidates = settlements.filter((row) => (row.status === 'pending' || row.status === 'rejected') && row.from_member_id === fromId && row.to_member_id === toId);
+    if (!candidates.length) return null;
+    return candidates.reduce((latest, row) => (new Date(row.created_at) > new Date(latest.created_at) ? row : latest));
+  };
 
   const runPendingAction = async (settlement, action, decision) => {
     setPendingStates((current) => ({ ...current, [settlement.id]: { status: 'sending', action } }));
@@ -195,7 +207,7 @@ export default function BalancesPage() {
               </div>
               <div className="bal-list">
                 {peopleWhoOweMe.map((row) => {
-                  const pending = pendingFor(row.member.member_id, currentMember.id);
+                  const latest = latestSettlementFor(row.member.member_id, currentMember.id);
                   return (
                     <BalanceMemberRow
                       key={row.member.member_id}
@@ -207,11 +219,12 @@ export default function BalancesPage() {
                       canRemind={row.can_remind}
                       onRemind={handleRemind}
                       onRecordReceived={(member) => openRecordReceived(member, row.amount)}
-                      pendingSettlement={pending}
-                      pendingActionState={pending ? pendingStates[pending.id] : null}
-                      onConfirmPending={() => runPendingAction(pending, 'confirm', 'confirm')}
-                      onNotReceivedPending={() => runPendingAction(pending, 'not-received', 'not-received')}
-                      onCheckLaterPending={() => runPendingAction(pending, 'check-later', 'check-later')}
+                      pendingSettlement={latest}
+                      pendingActionState={latest ? pendingStates[latest.id] : null}
+                      onConfirmPending={() => runPendingAction(latest, 'confirm', 'confirm')}
+                      onNotReceivedPending={() => runPendingAction(latest, 'not-received', 'not-received')}
+                      onCheckLaterPending={() => runPendingAction(latest, 'check-later', 'check-later')}
+                      onViewHistoryPending={() => setTimelineTarget(latest)}
                       readOnly={readOnly}
                     />
                   );
@@ -227,7 +240,7 @@ export default function BalancesPage() {
               </div>
               <div className="bal-list">
                 {peopleIOwe.map((row) => {
-                  const pending = pendingFor(currentMember.id, row.member.member_id);
+                  const latest = latestSettlementFor(currentMember.id, row.member.member_id);
                   return (
                     <BalanceMemberRow
                       key={row.member.member_id}
@@ -236,9 +249,12 @@ export default function BalancesPage() {
                       currency={currency}
                       direction="i_owe"
                       onIPaid={(member) => openIPaid(member, row.amount)}
-                      pendingSettlement={pending}
-                      pendingActionState={pending ? pendingStates[pending.id] : null}
-                      onCancelPending={() => runPendingAction(pending, 'cancel', 'cancel')}
+                      pendingSettlement={latest}
+                      pendingActionState={latest ? pendingStates[latest.id] : null}
+                      onCancelPending={() => runPendingAction(latest, 'cancel', 'cancel')}
+                      onRetryPending={() => runPendingAction(latest, 'retry', 'retry')}
+                      onNewPaymentPending={() => openIPaid(row.member, row.amount)}
+                      onViewHistoryPending={() => setTimelineTarget(latest)}
                       readOnly={readOnly}
                     />
                   );
@@ -272,6 +288,10 @@ export default function BalancesPage() {
           onSave={handleDialogSave}
           onClose={() => setActionDialog(null)}
         />
+      )}
+
+      {timelineTarget && (
+        <SettlementTimelineDrawer tripId={tripId} settlement={timelineTarget} currency={currency} onClose={() => setTimelineTarget(null)} />
       )}
     </div>
   );

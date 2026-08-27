@@ -4,13 +4,14 @@ import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import BalancesPage from './BalancesPage';
 import { getBalances, remindAllDebtors, remindDebtor } from '../api/balancesApi';
 import { getMembers } from '../../members/api/membersApi';
-import { getSettlements, recordAdminSettlement, recordReceivedPayment, reportPayment, reviewSettlement } from '../../settlements/api/settlementsApi';
+import { getSettlements, getSettlementTimeline, recordAdminSettlement, recordReceivedPayment, reportPayment, reviewSettlement } from '../../settlements/api/settlementsApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key), i18n: { language: 'en', changeLanguage: jest.fn() } }) }));
 jest.mock('../api/balancesApi', () => ({ getBalances: jest.fn(), remindDebtor: jest.fn(), remindAllDebtors: jest.fn() }));
 jest.mock('../../members/api/membersApi', () => ({ getMembers: jest.fn() }));
 jest.mock('../../settlements/api/settlementsApi', () => ({
   getSettlements: jest.fn(),
+  getSettlementTimeline: jest.fn(),
   reviewSettlement: jest.fn(),
   reportPayment: jest.fn(),
   recordReceivedPayment: jest.fn(),
@@ -61,6 +62,7 @@ beforeEach(() => {
   getBalances.mockResolvedValue(baseBalances);
   getMembers.mockResolvedValue({ results: [fahad, saud, mohammed] });
   getSettlements.mockResolvedValue({ results: [] });
+  getSettlementTimeline.mockResolvedValue([]);
 });
 
 test('renders the net balance card from the authoritative my_net_balance field', async () => {
@@ -231,4 +233,86 @@ test('the fund-vs-balances explanatory hint is always shown', async () => {
   renderPage();
   await screen.findByText('Saud');
   expect(screen.getByText('balances.fundHint')).toBeInTheDocument();
+});
+
+// -- Rejection recovery ----------------------------------------------
+
+const rejectedDebtorSideRow = { id: 's3', from_member_id: 'm1', to_member_id: 'm2', amount: '75.00', currency: 'SAR', status: 'rejected', settlement_date: '2026-08-20', note: '', created_by: 'm1', created_at: '2026-08-20T10:00:00Z', retry_cooldown_active: false };
+const rejectedCreditorSideRow = { id: 's4', from_member_id: 'm2', to_member_id: 'm1', amount: '400.00', currency: 'SAR', status: 'rejected', settlement_date: '2026-08-20', note: '', created_by: 'm2', created_at: '2026-08-20T10:00:00Z', retry_cooldown_active: false };
+
+test('a rejected settlement shows the debtor a distinct rejected card, not the plain I Paid button', async () => {
+  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }], my_net_balance: '-75.00' });
+  getSettlements.mockResolvedValue({ results: [rejectedDebtorSideRow] });
+  renderPage();
+  await screen.findByText('Saud');
+  expect(screen.getByText('settlements.rejectedBadge')).toBeInTheDocument();
+  expect(screen.getByText('settlements.rejectedBody:{"name":"Saud","amount":"75.00","currency":"SAR"}')).toBeInTheDocument();
+  expect(screen.getByText('settlements.rejectedHelper')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'settlements.iPaid' })).not.toBeInTheDocument();
+});
+
+test('the rejected card offers Retry, New Payment, and History -- three distinct actions', async () => {
+  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }], my_net_balance: '-75.00' });
+  getSettlements.mockResolvedValue({ results: [rejectedDebtorSideRow] });
+  renderPage();
+  await screen.findByText('Saud');
+  expect(screen.getByRole('button', { name: 'settlements.retryAction' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'settlements.newPaymentAction' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'settlements.viewHistoryAction' })).toBeInTheDocument();
+});
+
+test('Retry calls reviewSettlement with "retry" (never a new-payment call) and refreshes', async () => {
+  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }], my_net_balance: '-75.00' });
+  getSettlements.mockResolvedValue({ results: [rejectedDebtorSideRow] });
+  reviewSettlement.mockResolvedValue({});
+  renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: 'settlements.retryAction' }));
+  await waitFor(() => expect(reviewSettlement).toHaveBeenCalledWith('t1', 's3', 'retry'));
+  expect(reportPayment).not.toHaveBeenCalled();
+});
+
+test('a cooldown-active rejected settlement disables Retry', async () => {
+  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }], my_net_balance: '-75.00' });
+  getSettlements.mockResolvedValue({ results: [{ ...rejectedDebtorSideRow, retry_cooldown_active: true }] });
+  renderPage();
+  expect(await screen.findByRole('button', { name: 'settlements.retryAction' })).toBeDisabled();
+});
+
+test('New Payment opens the I Paid composer (a distinct settlement from the rejected one)', async () => {
+  reportPayment.mockResolvedValue({});
+  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }], my_net_balance: '-75.00' });
+  getSettlements.mockResolvedValue({ results: [rejectedDebtorSideRow] });
+  renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: 'settlements.newPaymentAction' }));
+  const dialog = await screen.findByRole('dialog');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'settlements.iPaid' }));
+  await waitFor(() => expect(reportPayment).toHaveBeenCalledWith('t1', expect.objectContaining({ to_member_id: 'm2', amount: '75.00' })));
+});
+
+test('History opens the settlement timeline drawer and fetches it', async () => {
+  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }], my_net_balance: '-75.00' });
+  getSettlements.mockResolvedValue({ results: [rejectedDebtorSideRow] });
+  renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: 'settlements.viewHistoryAction' }));
+  expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  await waitFor(() => expect(getSettlementTimeline).toHaveBeenCalledWith('t1', 's3', expect.anything()));
+});
+
+test('the creditor side sees a compact rejected notice with only a History action, no retry/new-payment', async () => {
+  getSettlements.mockResolvedValue({ results: [rejectedCreditorSideRow] });
+  renderPage();
+  await screen.findByText('Saud');
+  expect(screen.getByText('settlements.creditorRejectedNotice')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'settlements.retryAction' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'settlements.newPaymentAction' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'settlements.viewHistoryAction' })).toBeInTheDocument();
+});
+
+test('a rejection does not erase the pending state of an unrelated member on the same page', async () => {
+  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [{ member: saudPreview, amount: '400.00', can_remind: true }, { member: mohammedPreview, amount: '220.00', can_remind: true }] });
+  getSettlements.mockResolvedValue({ results: [rejectedCreditorSideRow] }); // only Saud's pair is rejected
+  renderPage();
+  await screen.findByText('Mohammed');
+  // Mohammed still gets the plain reminder button -- untouched by Saud's rejection.
+  expect(screen.getAllByRole('button', { name: 'balances.sendReminder' })).toHaveLength(1);
 });
