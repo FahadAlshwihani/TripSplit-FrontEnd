@@ -9,4 +9,4 @@ export const onSessionExpired = (callback) => {
   return () => listeners.delete(callback);
 };
 
-export const emitSessionExpired = () => listeners.forEach((callback) => callback());
+export const emitSessionExpired = (code) => listeners.forEach((callback) => callback(code));

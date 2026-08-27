@@ -9,13 +9,18 @@ apiClient.interceptors.request.use((config) => {
   if (csrf) config.headers['X-CSRFToken'] = decodeURIComponent(csrf);
   return config;
 });
+// Every distinct code IdleSessionMiddleware can return (apps/accounts/
+// middleware.py) — session_expired (absolute cap), session_idle_timeout
+// (the user's configured inactivity policy), session_revoked ("log out
+// from all devices" used elsewhere). Handled identically here (force the
+// user out) but the specific code is forwarded to AuthContext so the Sign
+// In screen can show copy that matches what actually happened, instead of
+// one generic "please sign in again" for every case.
+const SESSION_EXPIRY_CODES = new Set(['session_expired', 'session_idle_timeout', 'session_revoked']);
+
 apiClient.interceptors.response.use((response) => response, (error) => {
   const normalized = normalizeApiError(error);
-  // The backend's idle/absolute session-expiry middleware returns this
-  // structured code on any request once a previously-authenticated session
-  // has timed out — surfaced globally here so no feature has to implement
-  // its own 401 handling (see AuthContext, which listens for this).
-  if (normalized.code === 'session_expired') emitSessionExpired();
+  if (SESSION_EXPIRY_CODES.has(normalized.code)) emitSessionExpired(normalized.code);
   return Promise.reject(normalized);
 });
 export const responseData = (request) => request.then((response) => response.data);
