@@ -341,7 +341,7 @@
   "settlements.balanceNoteReport": "المبلغ ما ينخصم من رصيدك إلا بعد ما {{name}} يأكد الاستلام.", "settlements.balanceNoteReceived": "بتسجيلك لهذه التسوية أنت تؤكد أن المبلغ وصلك فعلاً — رصيدك بيتحدث مباشرة.",
   "settlements.payer": "من دفع", "settlements.recipient": "من استلم",
   "settlements.viewHistory": "عرض السجل", "settlements.timelineTitle": "سجل التسوية", "settlements.timelineEmpty": "لا يوجد نشاط مسجل بعد.",
-  "settlements.filter.all": "الكل", "settlements.filter.pending": "بانتظار التأكيد", "settlements.filter.confirmed": "مؤكدة", "settlements.filter.needsAttention": "تحتاج متابعة", "settlements.filter.cancelled": "ملغاة",
+  "settlements.filter.all": "الكل", "settlements.filter.pending": "بانتظار التأكيد", "settlements.filter.confirmed": "تمت التسوية", "settlements.filter.needsAttention": "لم يصل المبلغ", "settlements.filter.cancelled": "ملغاة",
   "settlements.reportedBy": "سجّلها {{name}}", "settlements.recordedByAdmin": "سجّلها {{name}} (مشرف)",
   "settlements.errors.exceedsDebt": "هذا أكثر من المبلغ المستحق حاليًا.",
   "settlementTimeline.created.debtor_report": "{{name}} سجّل أنه دفع {{amount}} {{currency}}.",
@@ -361,5 +361,8 @@
   "settlements.creditorRejectedNotice": "أبلغت إن هذا المبلغ ما وصل.",
   "settlements.pendingWaitingOnCreditor": "بانتظار {{name}} يأكد الاستلام.",
   "settlements.counterpartStatusOwe": "حاليًا عليك دين لـ{{name}}", "settlements.counterpartStatusOwed": "حاليًا {{name}} عليه دين لك",
-  "settlements.paymentDetails": "تفاصيل الدفعة"
+  "settlements.paymentDetails": "تفاصيل الدفعة",
+  "settlements.successTitle": "تمت التسوية بنجاح", "settlements.successBodyConfirmed": "تم تسجيل استلامك {{amount}} {{currency}} من {{name}}، وتم تحديث الأرصدة.",
+  "settlements.viewSettlementHistory": "عرض سجل التسوية", "settlements.done": "تم",
+  "settlements.paymentDateLabel": "تاريخ الدفع", "settlements.confirmedAtLabel": "تم التأكيد", "settlements.viewDetailsAction": "عرض التفاصيل"
 }

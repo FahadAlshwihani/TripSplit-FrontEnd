@@ -340,7 +340,7 @@
   "settlements.balanceNoteReport": "This won't reduce your balance until {{name}} confirms receipt.", "settlements.balanceNoteReceived": "Recording this confirms you received the payment — the balance updates immediately.",
   "settlements.payer": "Who paid", "settlements.recipient": "Who received it",
   "settlements.viewHistory": "View history", "settlements.timelineTitle": "Settlement history", "settlements.timelineEmpty": "No activity recorded yet.",
-  "settlements.filter.all": "All", "settlements.filter.pending": "Pending", "settlements.filter.confirmed": "Confirmed", "settlements.filter.needsAttention": "Needs attention", "settlements.filter.cancelled": "Cancelled",
+  "settlements.filter.all": "All", "settlements.filter.pending": "Pending", "settlements.filter.confirmed": "Confirmed", "settlements.filter.needsAttention": "Not Received", "settlements.filter.cancelled": "Cancelled",
   "settlements.reportedBy": "Reported by {{name}}", "settlements.recordedByAdmin": "Recorded by {{name}} (Admin)",
   "settlements.errors.exceedsDebt": "That's more than what's currently owed.",
   "settlementTimeline.created.debtor_report": "{{name}} reported paying {{amount}} {{currency}}.",
@@ -360,5 +360,8 @@
   "settlements.creditorRejectedNotice": "You marked this payment as not received.",
   "settlements.pendingWaitingOnCreditor": "Waiting for {{name}} to confirm receipt.",
   "settlements.counterpartStatusOwe": "You currently owe {{name}}", "settlements.counterpartStatusOwed": "{{name}} currently owes you",
-  "settlements.paymentDetails": "Payment details"
+  "settlements.paymentDetails": "Payment details",
+  "settlements.successTitle": "Settlement completed", "settlements.successBodyConfirmed": "Your receipt of {{amount}} {{currency}} from {{name}} was recorded and balances were updated.",
+  "settlements.viewSettlementHistory": "View settlement history", "settlements.done": "Done",
+  "settlements.paymentDateLabel": "Payment date", "settlements.confirmedAtLabel": "Confirmed", "settlements.viewDetailsAction": "View details"
 }
