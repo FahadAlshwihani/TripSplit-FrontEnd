@@ -1,2 +1,0 @@
-import React from'react';import{useTranslation}from'react-i18next';
-export default function RefundHistory({rows,currency}){const{t}=useTranslation();return<section className="fund-section"><h3>{t('fund.refundHistory')}</h3>{rows.length?rows.map(row=><article className="fund-history-row" key={row.id}><strong>{row.display_name}</strong><span>{row.amount} {currency} · {row.refund_date} · {t(`fund.refundMethods.${row.method}`)}</span></article>):<p>{t('fund.noRefunds')}</p>}</section>}

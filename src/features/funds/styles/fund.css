@@ -1,0 +1,325 @@
+/*
+  Trip Fund -- a real accounting subsystem (see docs/architecture/
+  fund-accounting.md), not a cosmetic page. Same Neo-classic hard-border/
+  elevation token system as Balances (`bal-`) and Settlements (`settle-`)
+  -- reuses their shared primitives (.dash-btn, .field-control,
+  .field-group, .bal-dialog, .bal-empty, .bal-remind-btn, .exp-composer__*)
+  directly rather than reinventing them; this file only adds what's
+  genuinely Fund-specific. Class prefix `fund-`.
+*/
+
+/* Same legacy-white-text guard used by balances.css/expenses.css. */
+.fund-page :where(span, p, a, li) { color: inherit; }
+
+.fund-page { display: flex; flex-direction: column; gap: var(--space-5); }
+
+.fund-page__header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-3); padding-block-end: var(--space-3); border-block-end: var(--border-width) solid var(--color-border); }
+.fund-page__title { margin: 0; color: var(--color-text); }
+.fund-page__subtitle { color: var(--color-text-muted); margin: 0; max-width: 48rem; }
+
+.fund-page__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font: var(--text-body-sm);
+}
+.fund-page__hint i { flex: 0 0 auto; margin-block-start: 2px; }
+
+/* ---------------------------------------------------------------------- */
+/* Setup (empty state before a Fund exists) */
+
+.fund-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.fund-setup__icon { font-size: 2rem; color: var(--color-primary); }
+.fund-setup__title { margin: 0; color: var(--color-text); }
+.fund-setup__body { color: var(--color-text-muted); margin: 0; max-width: 32rem; }
+.fund-setup__holder { width: 100%; max-width: 20rem; text-align: start; }
+
+/* ---------------------------------------------------------------------- */
+/* Shortfall alert */
+
+.fund-shortfall {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width-lg) solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-soft);
+}
+.fund-shortfall__title { display: flex; align-items: center; gap: var(--space-2); color: var(--color-danger); }
+.fund-shortfall__body { margin: var(--space-1) 0 0; color: var(--color-text); }
+
+/* ---------------------------------------------------------------------- */
+/* Summary bento */
+
+.fund-summary { display: grid; grid-template-columns: 1fr; gap: var(--space-3); }
+@media (min-width: 720px) {
+  .fund-summary { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: stretch; }
+}
+
+.fund-summary__primary {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  box-shadow: var(--shadow-hard-md);
+  min-height: 10rem;
+}
+.fund-summary__primary--negative { background: var(--color-danger-soft); }
+.fund-summary__primary-label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
+.fund-summary__primary-value { font: var(--text-display); font-size: 32px; color: var(--color-text); }
+.fund-summary__primary--negative .fund-summary__primary-value { color: var(--color-danger); }
+.fund-summary__primary-value-currency { font: var(--text-body); color: var(--color-text-muted); margin-inline-start: var(--space-1); }
+.fund-summary__primary-hint { margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
+
+.fund-summary__tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.fund-summary__tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.fund-summary__tile-label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
+.fund-summary__tile-value { font: var(--text-financial); color: var(--color-text); align-self: flex-end; }
+
+/* ---------------------------------------------------------------------- */
+/* Fund holder */
+
+.fund-holder-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.fund-holder-card__identity { display: flex; align-items: center; gap: var(--space-3); }
+.fund-holder-card__text { display: flex; flex-direction: column; gap: 2px; }
+.fund-holder-card__label { font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
+.fund-holder-card__name { color: var(--color-text); }
+.fund-holder-dialog__explanation { color: var(--color-text-muted); margin: 0 0 var(--space-3); }
+
+/* ---------------------------------------------------------------------- */
+/* Section headers */
+
+.fund-section { display: flex; flex-direction: column; gap: var(--space-3); }
+.fund-section__title { margin: 0; color: var(--color-text); border-block-end: var(--border-width) solid var(--color-border-subtle); padding-block-end: var(--space-2); }
+.fund-section__head-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
+.fund-section__head-row .fund-section__title { border-block-end: none; padding-block-end: 0; flex: 1 1 auto; }
+.fund-section__link { font: var(--text-label); color: var(--color-primary); text-decoration: none; }
+.fund-section__link:hover { text-decoration: underline; }
+.fund-empty-note { color: var(--color-text-muted); margin: 0; }
+
+.fund-two-col { display: grid; grid-template-columns: 1fr; gap: var(--space-5); }
+@media (min-width: 860px) {
+  .fund-two-col { grid-template-columns: 1fr 1fr; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Funding round ledger */
+
+.fund-rounds { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.fund-round-card {
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+  overflow: hidden;
+}
+.fund-round-card--completed,
+.fund-round-card--cancelled { box-shadow: none; opacity: 0.85; }
+
+.fund-round-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-block-end: var(--border-width) solid var(--color-border-subtle);
+  background: var(--color-surface-alt);
+}
+.fund-round-card__badges { display: flex; align-items: center; gap: var(--space-2); margin-block-end: var(--space-1); }
+.fund-round-card__seq { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); padding: 2px var(--space-2); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-container); color: var(--color-text-muted); text-transform: uppercase; }
+.fund-round-card__status { display: inline-flex; align-items: center; gap: 4px; font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
+.fund-round-card__status--completed { color: var(--color-success); }
+.fund-round-card__status--cancelled { color: var(--color-text-faint); }
+.fund-round-card__title { margin: 0; color: var(--color-text); }
+.fund-round-card__reason { margin: var(--space-1) 0 0; color: var(--color-text-muted); }
+
+.fund-round-card__progress { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); min-width: 10rem; }
+.fund-round-card__progress-figures { color: var(--color-text); }
+.fund-round-card__progress-bar { width: 100%; height: 8px; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-container); overflow: hidden; }
+.fund-round-card__progress-fill { height: 100%; background: var(--color-primary); }
+.fund-round-card--completed .fund-round-card__progress-fill { background: var(--color-success); }
+.fund-round-card__chevron { color: var(--color-text-muted); }
+
+.fund-round-card__members { display: flex; flex-direction: column; }
+.fund-round-card__member {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-block-end: var(--border-width) solid var(--color-border-subtle);
+}
+.fund-round-card__member:last-child { border-block-end: none; }
+.fund-round-card__member-who { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); flex: 1 1 12rem; min-width: 0; }
+.fund-round-card__member-figures { color: var(--color-text-muted); }
+.fund-round-card__remind { display: flex; align-items: center; gap: var(--space-2); }
+.fund-round-card__remind small { color: var(--color-text-muted); }
+
+.fund-round-card__pending { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-block-start: var(--border-width) solid var(--color-border-subtle); background: var(--color-surface-alt); }
+.fund-round-card__pending--rejected { background: var(--color-danger-soft); }
+.fund-pending-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.fund-pending-row__who { color: var(--color-text); }
+.fund-pending-row__actions { display: flex; gap: var(--space-2); }
+
+.fund-round-card__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-block-start: var(--border-width) solid var(--color-border-subtle); }
+
+.fund-reject-inline { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-block-start: var(--border-width) solid var(--color-border-subtle); background: var(--color-surface-alt); }
+.fund-reject-inline__actions { display: flex; justify-content: flex-end; gap: var(--space-2); }
+
+/* ---------------------------------------------------------------------- */
+/* Contribution / refund history lists */
+
+.fund-history-list { display: flex; flex-direction: column; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; }
+.fund-history-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-3); border-block-end: var(--border-width) solid var(--color-border-subtle); background: var(--color-surface); }
+.fund-history-row:last-child { border-block-end: none; }
+.fund-history-row__main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 12rem; }
+.fund-history-row__title { color: var(--color-text); }
+.fund-history-row__meta { color: var(--color-text-muted); }
+.fund-history-row__amount { color: var(--color-text); }
+.fund-history-row__actions { display: flex; gap: var(--space-2); }
+
+/* ---------------------------------------------------------------------- */
+/* Reimbursement candidates */
+
+.fund-reimburse-candidates { display: flex; flex-direction: column; gap: var(--space-2); margin-block-end: var(--space-3); }
+.fund-reimburse-candidate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+.fund-reimburse-candidate:hover { box-shadow: var(--shadow-hard-sm-hover); transform: var(--press-sm-hover); }
+.fund-reimburse-candidate.is-selected { border-color: var(--color-primary); background: var(--color-primary-soft); }
+
+/* ---------------------------------------------------------------------- */
+/* Recent Fund expenses */
+
+.fund-recent-expenses { display: flex; flex-direction: column; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; }
+.fund-recent-expense {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+  border: none;
+  border-block-end: var(--border-width) solid var(--color-border-subtle);
+  background: var(--color-surface);
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.fund-recent-expense:last-child { border-block-end: none; }
+.fund-recent-expense:hover { background: var(--color-surface-alt); }
+.fund-recent-expense__icon { flex: 0 0 auto; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; border: var(--border-width) solid; border-radius: var(--radius-sm); }
+.fund-recent-expense__text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.fund-recent-expense__title { color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fund-recent-expense__meta { color: var(--color-text-muted); }
+.fund-recent-expense__amount { flex: 0 0 auto; color: var(--color-text); }
+
+/* ---------------------------------------------------------------------- */
+/* Surplus / close actions */
+
+.fund-surplus-action,
+.fund-close-action { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+.fund-close-action__hint { color: var(--color-text-muted); margin: 0; }
+
+/* ---------------------------------------------------------------------- */
+/* Funding round composer */
+
+.fund-round-composer__reason { resize: vertical; min-height: 4.5rem; }
+.fund-round-composer__split { display: grid; grid-template-columns: 1fr; gap: var(--space-4); margin-block: var(--space-3); }
+@media (min-width: 720px) {
+  .fund-round-composer__split { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+}
+.fund-round-composer__section-head { display: flex; justify-content: space-between; align-items: center; margin-block-end: var(--space-2); color: var(--color-text-muted); }
+.fund-round-composer__participant-list { display: flex; flex-direction: column; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; }
+.fund-round-composer__participant {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-block-end: var(--border-width) solid var(--color-border-subtle);
+  color: var(--color-text);
+}
+.fund-round-composer__participant:last-child { border-block-end: none; }
+.fund-round-composer__participant-value { grid-column: 1 / -1; width: 100%; }
+
+.fund-round-composer__method { display: flex; flex-direction: column; gap: var(--space-3); }
+.fund-round-composer__preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  text-align: center;
+}
+.fund-round-composer__preview-value { font: var(--text-display); font-size: 28px; color: var(--color-primary); }
+.fund-round-composer__preview--totals { align-items: flex-start; text-align: start; gap: var(--space-2); }
+
+/* ---------------------------------------------------------------------- */
+/* Refund distribution modal */
+
+.fund-refund-modal__header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-4); margin-block-end: var(--space-3); }
+.fund-refund-modal__available { display: block; font: var(--text-display); font-size: 28px; color: var(--color-text); }
+.fund-refund-modal__method { display: flex; flex-direction: column; gap: var(--space-2); min-width: 14rem; }
+
+.fund-refund-table { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; margin-block: var(--space-3); }
+.fund-refund-table__head,
+.fund-refund-table__row { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-3); }
+.fund-refund-table__head { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; background: var(--color-surface-alt); }
+.fund-refund-table__row { border-block-start: var(--border-width) solid var(--color-border-subtle); color: var(--color-text); }
+.fund-refund-table__row--total { font-weight: 700; border-block-start: var(--border-width-lg) solid var(--color-border); background: var(--color-surface-alt); }

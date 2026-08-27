@@ -1,2 +1,0 @@
-import React from'react';import{useTranslation}from'react-i18next';
-export default function RefundPreview({preview,currency,onConfirm}){const{t}=useTranslation();return<div className="refund-preview"><h4>{t('fund.refundPreview')}</h4>{preview.allocations.map(row=><p key={row.member_id}>{row.display_name}: {row.refund_amount||row.amount} {currency}</p>)}<p>{t('fund.remainingAfterRefund')}: {preview.remaining_balance} {currency}</p><button type="button" onClick={onConfirm}>{t('fund.confirmRefund')}</button></div>}
