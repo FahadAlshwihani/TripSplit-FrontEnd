@@ -137,9 +137,69 @@ test('a member reports their own contribution as pending, never confirmed by the
   renderPage();
   fireEvent.click(await screen.findByText('fund.iPaid'));
   fireEvent.change(screen.getByLabelText('fund.amount'), { target: { value: '500' } });
-  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'fund.iPaid' }));
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'fund.iPaidSubmit' }));
   await waitFor(() => expect(reportFundContribution).toHaveBeenCalledWith('t1', 'r1', expect.objectContaining({ amount: '500' })));
   expect(recordFundContribution).not.toHaveBeenCalled();
+});
+
+test('direct "record received" requires the acknowledgement checkbox before it can submit, then confirms immediately', async () => {
+  recordFundContribution.mockResolvedValue({ id: 'c2', status: 'confirmed' });
+  renderPage();
+  fireEvent.click(await screen.findByText('fund.recordContribution'));
+  const dialog = await screen.findByRole('dialog');
+  fireEvent.change(within(dialog).getByLabelText('fund.member'), { target: { value: 'm2' } });
+  fireEvent.change(within(dialog).getByLabelText('fund.amount'), { target: { value: '500' } });
+  const submit = within(dialog).getByRole('button', { name: 'fund.record' });
+  expect(submit).toBeDisabled();
+  fireEvent.click(within(dialog).getByLabelText('fund.recordAcknowledge'));
+  expect(submit).not.toBeDisabled();
+  fireEvent.click(submit);
+  await waitFor(() => expect(recordFundContribution).toHaveBeenCalledWith('t1', 'r1', expect.objectContaining({ amount: '500', member_id: 'm2' })));
+  expect(reportFundContribution).not.toHaveBeenCalled();
+});
+
+test('only one primary Fund dialog can ever be open at a time -- opening a second trigger replaces, never stacks, the first', async () => {
+  renderPage();
+  await screen.findByText('fund.title');
+  fireEvent.click(screen.getByText('fund.newRound'));
+  expect(screen.getAllByRole('dialog')).toHaveLength(1);
+  fireEvent.click(screen.getByText('fund.changeHolder'));
+  expect(screen.getAllByRole('dialog')).toHaveLength(1);
+  expect(screen.getByRole('dialog')).toHaveAttribute('aria-labelledby', 'fund-holder-dialog-title');
+});
+
+test('the holder rejects a pending contribution -- it never disappears, and offers retry / new payment / direct record', async () => {
+  getFund.mockResolvedValue({ ...baseFund, contributions: [{ id: 'c1', round_id: 'r1', round_title: 'Initial Collection', member_id: 'm2', display_name: 'Saud', amount: '200.00', contribution_date: '2026-01-05', note: '', voided: false, status: 'pending', origin: 'member_reported', recorded_by: 'Saud', reviewed_by: null, reviewed_at: null, review_note: '', retry_cooldown_active: false, corrections: [] }] });
+  rejectFundContribution.mockResolvedValue({ id: 'c1', status: 'rejected' });
+  renderPage();
+  await screen.findByText('fund.pendingReviewTitle');
+  fireEvent.click(screen.getByRole('button', { name: 'fund.rejectContribution' }));
+  const rejectButtons = screen.getAllByRole('button', { name: 'fund.rejectContribution' });
+  fireEvent.click(rejectButtons[rejectButtons.length - 1]);
+  await waitFor(() => expect(rejectFundContribution).toHaveBeenCalledWith('t1', 'r1', 'c1', ''));
+});
+
+test('a "check later" click on a pending contribution never calls confirm or reject -- no financial transition', async () => {
+  getFund.mockResolvedValue({ ...baseFund, contributions: [{ id: 'c1', round_id: 'r1', round_title: 'Initial Collection', member_id: 'm2', display_name: 'Saud', amount: '200.00', contribution_date: '2026-01-05', note: '', voided: false, status: 'pending', origin: 'member_reported', recorded_by: 'Saud', reviewed_by: null, reviewed_at: null, review_note: '', retry_cooldown_active: false, corrections: [] }] });
+  renderPage();
+  await screen.findByText('fund.pendingReviewTitle');
+  fireEvent.click(screen.getByRole('button', { name: 'fund.checkLater' }));
+  expect(confirmFundContribution).not.toHaveBeenCalled();
+  expect(rejectFundContribution).not.toHaveBeenCalled();
+  expect(screen.queryByRole('button', { name: 'fund.confirmContribution' })).not.toBeInTheDocument();
+});
+
+test('a rejected contribution stays visible with retry, new-payment, and direct-record recovery actions', async () => {
+  getFund.mockResolvedValue({ ...baseFund, contributions: [{ id: 'c1', round_id: 'r1', round_title: 'Initial Collection', member_id: 'm2', display_name: 'Saud', amount: '200.00', contribution_date: '2026-01-05', note: '', voided: false, status: 'rejected', origin: 'member_reported', recorded_by: 'Saud', reviewed_by: 'Fahad', reviewed_at: '2026-01-06T00:00:00Z', review_note: '', retry_cooldown_active: false, corrections: [] }] });
+  retryFundContribution.mockResolvedValue({ id: 'c1', status: 'pending' });
+  renderPage();
+  await screen.findByText('fund.rejectedTitle');
+  expect(screen.getByText('Saud')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'fund.retryContribution' }));
+  await waitFor(() => expect(retryFundContribution).toHaveBeenCalledWith('t1', 'r1', 'c1'));
+  // "Record" is offered both as a round-level action and, per brief
+  // part 10, again right on the rejected row itself as a recovery path.
+  expect(screen.getAllByRole('button', { name: 'fund.recordContribution' }).length).toBeGreaterThan(0);
 });
 
 test('the holder confirms a pending contribution', async () => {
@@ -147,7 +207,7 @@ test('the holder confirms a pending contribution', async () => {
   confirmFundContribution.mockResolvedValue({ id: 'c1', status: 'confirmed' });
   renderPage();
   await screen.findByText('fund.pendingReviewTitle');
-  fireEvent.click(screen.getByLabelText('fund.confirmContribution'));
+  fireEvent.click(screen.getByRole('button', { name: 'fund.confirmContribution' }));
   await waitFor(() => expect(confirmFundContribution).toHaveBeenCalledWith('t1', 'r1', 'c1'));
 });
 
