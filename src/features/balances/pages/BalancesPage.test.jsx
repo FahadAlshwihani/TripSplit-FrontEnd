@@ -316,3 +316,48 @@ test('a rejection does not erase the pending state of an unrelated member on the
   // Mohammed still gets the plain reminder button -- untouched by Saud's rejection.
   expect(screen.getAllByRole('button', { name: 'balances.sendReminder' })).toHaveLength(1);
 });
+
+// -- Confirmation success history (Part A) ----------------------------
+
+test('confirming a pending report shows a success banner naming the amount and counterparty, then lets it be dismissed', async () => {
+  getSettlements.mockResolvedValue({ results: [{ id: 's5', from_member_id: 'm2', to_member_id: 'm1', amount: '400.00', currency: 'SAR', status: 'pending', settlement_date: '2026-08-20', note: '', created_by: 'm2' }] });
+  reviewSettlement.mockResolvedValue({ id: 's5', from_member_id: 'm2', to_member_id: 'm1', from_name: 'Saud', to_name: 'Fahad', amount: '400.00', currency: 'SAR', status: 'confirmed', settlement_date: '2026-08-20' });
+  renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: 'settlements.yesReceived' }));
+  expect(await screen.findByText('settlements.successTitle')).toBeInTheDocument();
+  expect(screen.getByText('settlements.successBodyConfirmed:{"name":"Saud","amount":"400.00","currency":"SAR"}')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'settlements.done' }));
+  await waitFor(() => expect(screen.queryByText('settlements.successTitle')).not.toBeInTheDocument());
+});
+
+test('the success banner\'s "View settlement history" opens the timeline drawer', async () => {
+  getSettlements.mockResolvedValue({ results: [{ id: 's5', from_member_id: 'm2', to_member_id: 'm1', amount: '400.00', currency: 'SAR', status: 'pending', settlement_date: '2026-08-20', note: '', created_by: 'm2' }] });
+  reviewSettlement.mockResolvedValue({ id: 's5', from_member_id: 'm2', to_member_id: 'm1', from_name: 'Saud', to_name: 'Fahad', amount: '400.00', currency: 'SAR', status: 'confirmed', settlement_date: '2026-08-20' });
+  renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: 'settlements.yesReceived' }));
+  await screen.findByText('settlements.successTitle');
+  fireEvent.click(screen.getByRole('button', { name: 'settlements.viewSettlementHistory' }));
+  expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  await waitFor(() => expect(getSettlementTimeline).toHaveBeenCalledWith('t1', 's5', expect.anything()));
+});
+
+test('Record Payment Received (self-confirmed immediately) also shows the success banner', async () => {
+  recordReceivedPayment.mockResolvedValue({ id: 's6', from_member_id: 'm2', to_member_id: 'm1', from_name: 'Saud', to_name: 'Fahad', amount: '400.00', currency: 'SAR', status: 'confirmed', settlement_date: '2026-08-20' });
+  renderPage();
+  const buttons = await screen.findAllByRole('button', { name: 'settlements.recordReceived' });
+  fireEvent.click(buttons[0]);
+  const dialog = await screen.findByRole('dialog');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'settlements.recordReceived' }));
+  expect(await screen.findByText('settlements.successTitle')).toBeInTheDocument();
+});
+
+test('a debtor reporting a payment (still pending, not completed) never shows the success banner', async () => {
+  reportPayment.mockResolvedValue({ id: 's7', status: 'pending' });
+  getBalances.mockResolvedValue({ ...baseBalances, people_who_owe_me: [], people_i_owe: [{ member: saudPreview, amount: '75.00' }], my_net_balance: '-75.00' });
+  renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: 'settlements.iPaid' }));
+  const dialog = await screen.findByRole('dialog');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'settlements.iPaid' }));
+  await waitFor(() => expect(reportPayment).toHaveBeenCalled());
+  expect(screen.queryByText('settlements.successTitle')).not.toBeInTheDocument();
+});

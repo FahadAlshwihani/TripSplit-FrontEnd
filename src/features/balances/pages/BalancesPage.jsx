@@ -60,6 +60,7 @@ export default function BalancesPage() {
   const [pendingStates, setPendingStates] = useState({}); // settlement_id -> { status, action }
   const [actionDialog, setActionDialog] = useState(null); // { mode, counterpart?, debt? } | null
   const [timelineTarget, setTimelineTarget] = useState(null);
+  const [successResult, setSuccessResult] = useState(null); // the just-confirmed settlement | null
 
   if (resource.loading) return <NeoLoading />;
   if (resource.error) return <ErrorState message={resource.error.message} onRetry={resource.retry} />;
@@ -115,12 +116,22 @@ export default function BalancesPage() {
     return candidates.reduce((latest, row) => (new Date(row.created_at) > new Date(latest.created_at) ? row : latest));
   };
 
+  const showSuccess = (settlement) => {
+    setSuccessResult(settlement);
+    window.setTimeout(() => setSuccessResult((current) => (current?.id === settlement.id ? null : current)), 15000);
+  };
+
   const runPendingAction = async (settlement, action, decision) => {
     setPendingStates((current) => ({ ...current, [settlement.id]: { status: 'sending', action } }));
     try {
-      await reviewSettlement(tripId, settlement.id, decision);
+      const updated = await reviewSettlement(tripId, settlement.id, decision);
       setActionError(null);
       setPendingStates((current) => ({ ...current, [settlement.id]: null }));
+      // A confirmed settlement gets a clear, explained conclusion here --
+      // never just silently vanishing off the Balances list once the
+      // pairwise debt recalculates to zero. See docs/architecture/
+      // financial-ledger.md's "Two-sided settlement workflow" section.
+      if (decision === 'confirm') showSuccess(updated);
       await resource.retry();
     } catch (error) {
       setPendingStates((current) => ({ ...current, [settlement.id]: null }));
@@ -133,9 +144,14 @@ export default function BalancesPage() {
   const openAdminRecord = () => setActionDialog({ mode: 'admin' });
 
   const handleDialogSave = async (payload) => {
-    if (actionDialog.mode === 'report') await reportPayment(tripId, payload);
-    else if (actionDialog.mode === 'received') await recordReceivedPayment(tripId, payload);
-    else await recordAdminSettlement(tripId, payload);
+    if (actionDialog.mode === 'report') {
+      await reportPayment(tripId, payload); // pending -- reported, not completed; no success banner
+    } else if (actionDialog.mode === 'received') {
+      const created = await recordReceivedPayment(tripId, payload); // confirmed immediately -- recording it IS the confirmation
+      showSuccess(created);
+    } else {
+      await recordAdminSettlement(tripId, payload); // neither party is "you" here -- no first-person success copy fits
+    }
     setActionDialog(null);
     setActionError(null);
     await resource.retry();
@@ -161,6 +177,20 @@ export default function BalancesPage() {
       )}
 
       {actionError && <ErrorState message={actionError.message} />}
+
+      {successResult && (
+        <div className="settle-success-banner" role="status" aria-live="polite">
+          <i className="bi bi-check-circle-fill settle-success-banner__icon" aria-hidden="true" />
+          <div className="settle-success-banner__text">
+            <p className="settle-success-banner__title">{t('settlements.successTitle')}</p>
+            <p className="settle-success-banner__body">{t('settlements.successBodyConfirmed', { name: successResult.from_name, amount: successResult.amount, currency: successResult.currency })}</p>
+          </div>
+          <div className="settle-success-banner__actions">
+            <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setTimelineTarget(successResult)}>{t('settlements.viewSettlementHistory')}</button>
+            <button type="button" className="dash-btn dash-btn--primary" onClick={() => setSuccessResult(null)}>{t('settlements.done')}</button>
+          </div>
+        </div>
+      )}
 
       <NetBalanceCard balance={balances.my_net_balance} currency={currency} />
 
