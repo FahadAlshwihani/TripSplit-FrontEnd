@@ -1,8 +1,13 @@
 import { apiClient, responseData } from '../../../api/client';
-import { saveGuestToken, tripRequest } from '../../../api/credentials';
+import { guestDeviceRequest, saveGuestDeviceToken, saveGuestToken, tripRequest } from '../../../api/credentials';
 import { recordGuestTrip } from '../../../shared/guestTripsStore';
-export const createTrip = async (payload) => { const response = await responseData(apiClient.post('/trips/', payload)); if (response.guest_token) { saveGuestToken(response.trip.id, response.guest_token); recordGuestTrip({ tripId: response.trip.id, title: response.trip.title, relationship: 'owner' }); } return response; };
-export const joinTrip = async (payload) => { const response = await responseData(apiClient.post('/trips/join/', payload)); if (response.guest_token && response.trip) { saveGuestToken(response.trip.id, response.guest_token); recordGuestTrip({ tripId: response.trip.id, title: response.trip.title, relationship: 'member' }); } return response; };
+// Both send the durable device credential (if this browser already has
+// one) so the backend can recognize a returning guest and resume an
+// existing membership instead of creating a new one -- see
+// docs/architecture/guest-identity.md. guest_device_token in the response
+// is only ever present when a NEW device identity was minted this call.
+export const createTrip = async (payload) => { const response = await responseData(apiClient.post('/trips/', payload, guestDeviceRequest())); if (response.guest_token) { saveGuestToken(response.trip.id, response.guest_token); recordGuestTrip({ tripId: response.trip.id, title: response.trip.title, relationship: 'owner' }); } if (response.guest_device_token) saveGuestDeviceToken(response.guest_device_token); return response; };
+export const joinTrip = async (payload) => { const response = await responseData(apiClient.post('/trips/join/', payload, guestDeviceRequest())); if (response.guest_token && response.trip) { saveGuestToken(response.trip.id, response.guest_token); recordGuestTrip({ tripId: response.trip.id, title: response.trip.title, relationship: 'member' }); } if (response.guest_device_token) saveGuestDeviceToken(response.guest_device_token); return response; };
 export const getTrips = () => responseData(apiClient.get('/trips/'));
 // The Account hub's Your Trips list -- a superset of getTrips() that also
 // includes left/removed memberships, with role/capability data, filtered

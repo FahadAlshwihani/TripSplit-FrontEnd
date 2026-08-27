@@ -13,6 +13,8 @@ import ProfileSetupPage from '../../profile/pages/ProfileSetupPage';
 import Avatar from '../../profile/components/Avatar';
 import { avatarKeyFromUser } from '../../profile/utils/avatarKey';
 import { loadGuestProfile, saveGuestProfile } from '../../../shared/guestProfileStore';
+import { claimAllLocalGuestTrips } from '../../../shared/guestClaim';
+import GuestTripsList from '../components/GuestTripsList';
 import '../styles/auth.css';
 
 const RESEND_SECONDS = 60;
@@ -50,11 +52,18 @@ const AuthPage = () => {
     return () => clearInterval(timer);
   }, [resendSeconds]);
 
-  // SessionLifecycle (idle timeout) and GatedRoute (server session_expired)
-  // both land an anonymous visitor here with this router-state reason —
-  // shown once, on the Email step, then not re-shown on a later re-render.
+  // SessionLifecycle (client-side idle detection) and the axios
+  // interceptor (a server-confirmed session-expiry 401) both land an
+  // anonymous visitor here with this router-state reason — shown once, on
+  // the Email step, then not re-shown on a later re-render. The specific
+  // code (when the server was the one that caught it) picks matching copy
+  // instead of one generic "please sign in again" for every case — see
+  // apps/accounts/middleware.py's IdleSessionMiddleware.
   useEffect(() => {
-    if (location.state?.reason === 'idle') setErrorKey('auth.errors.sessionExpired');
+    const reason = location.state?.reason;
+    if (reason === 'session_idle_timeout') setErrorKey('auth.errors.sessionIdleTimeout');
+    else if (reason === 'session_revoked') setErrorKey('auth.errors.sessionRevoked');
+    else if (reason === 'idle' || reason === 'session_expired') setErrorKey('auth.errors.sessionExpired');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -93,6 +102,12 @@ const AuthPage = () => {
     try {
       const result = await verifyOtp({ otp_id: otpId, email, code });
       setUser(result.user);
+      // Awaited (not fire-and-forget) so the merge-success notice it may
+      // set is visible to whatever page we navigate to next -- but never
+      // surfaces its own failure or blocks login on a claim error; a
+      // device with no locally-known guest trips resolves this
+      // immediately with zero network calls. See shared/guestClaim.js.
+      await claimAllLocalGuestTrips();
       if (result.onboarding_required) setStep('profile');
       else navigate(next);
     } catch (err) {
@@ -190,6 +205,7 @@ const AuthPage = () => {
               <button type="button" className="auth-btn" onClick={() => setStep('guest-profile')}>
                 {t('guest.editProfile')}
               </button>
+              <GuestTripsList />
             </div>
           </div>
         </div>

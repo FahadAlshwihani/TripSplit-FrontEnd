@@ -148,6 +148,34 @@
 .auth-guest-returning__notice { color: var(--color-text-muted); margin: 0; }
 .auth-guest-returning .auth-btn { margin-block-start: var(--space-2); }
 
+/* "Your trips on this device" list on the returning-guest screen. Same
+   white-text-reset lesson as .auth-guest-returning__notice above -- every
+   text element here needs its own explicit color, App.css's legacy
+   element-selector reset otherwise wins. */
+.auth-guest-trips { width: 100%; margin-block-start: var(--space-3); text-align: start; }
+.auth-guest-trips__title { color: var(--color-text-muted); text-transform: uppercase; letter-spacing: var(--tracking-label); margin: 0 0 var(--space-2); }
+.auth-guest-trips__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.auth-guest-trips__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.auth-guest-trips__name { color: var(--color-text); overflow-wrap: anywhere; }
+.auth-guest-trips__notice { color: var(--color-text-muted); }
+.auth-guest-trips__action {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-primary);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 /* ---------------------------------------------------------------------- */
 /* Step content shared by email / otp / profile */
 
