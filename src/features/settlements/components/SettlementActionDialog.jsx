@@ -72,7 +72,7 @@ const SettlementActionDialog = ({ mode, members, currentMember, currency, counte
       <div className="bal-dialog-overlay" role="presentation" onClick={onClose}>
         <form ref={dialogRef} tabIndex={-1} className="bal-dialog" role="dialog" aria-modal="true" aria-labelledby="settle-action-title" onClick={(event) => event.stopPropagation()} onSubmit={handleSubmit}>
           <div className="bal-dialog__head">
-            <h2 id="settle-action-title" className="bal-dialog__title text-headline-sm">{title}</h2>
+            <h2 id="settle-action-title" className="bal-dialog__title text-headline">{title}</h2>
             <button type="button" className="exp-modal__close" aria-label={t('common.close')} onClick={onClose}>
               <i className="bi bi-x-lg" aria-hidden="true" />
             </button>
@@ -86,8 +86,14 @@ const SettlementActionDialog = ({ mode, members, currentMember, currency, counte
                 <Avatar avatarKey={avatarKeyFromAvatar(counterpart.avatar)} displayName={counterpart.display_name} size="md" />
                 <div className="settle-dialog__counterpart-text">
                   <span className="settle-dialog__counterpart-name">{counterpart.display_name}</span>
-                  {debt != null && <span className="settle-dialog__counterpart-debt">{t('settlements.debtBefore')}: <Money value={debt} currency={currency} variant="tabular" /></span>}
+                  <p className="settle-dialog__counterpart-status">{t(mode === 'report' ? 'settlements.counterpartStatusOwe' : 'settlements.counterpartStatusOwed', { name: counterpart.display_name })}</p>
                 </div>
+                {debt != null && (
+                  <div className="settle-dialog__counterpart-debt-block">
+                    <span className="settle-dialog__counterpart-debt-label">{t('settlements.debtBefore')}</span>
+                    <Money value={debt} currency={currency} className="settle-dialog__counterpart-debt" />
+                  </div>
+                )}
               </div>
             )}
 
@@ -111,6 +117,7 @@ const SettlementActionDialog = ({ mode, members, currentMember, currency, counte
             )}
             {sameMember && <p className="field-error" role="alert">{t('settlements.errors.sameMember')}</p>}
 
+            <span className="settle-dialog__section-label">{t('settlements.paymentDetails')}</span>
             <div className="exp-composer__grid exp-composer__grid--2">
               <div className="field-group">
                 <label className="field-label" htmlFor="settle-amount">{t('expense.amount')}</label>
@@ -127,7 +134,9 @@ const SettlementActionDialog = ({ mode, members, currentMember, currency, counte
               <div className="settle-dialog__summary">
                 <div className="settle-dialog__summary-row"><span>{t('settlements.debtBefore')}</span><Money value={debt} currency={currency} variant="tabular" /></div>
                 <div className="settle-dialog__summary-row"><span>{t('settlements.thisPayment')}</span><Money value={amount} currency={currency} variant="tabular" /></div>
-                <div className="settle-dialog__summary-row settle-dialog__summary-row--total"><span>{t('settlements.remainingAfter')}</span><Money value={remaining} currency={currency} variant="tabular" /></div>
+                <div className={`settle-dialog__summary-row settle-dialog__summary-row--total${Number(remaining) === 0 ? ' settle-dialog__summary-row--zero' : ''}`}>
+                  <span>{t('settlements.remainingAfter')}</span><Money value={remaining} currency={currency} variant="tabular" />
+                </div>
               </div>
             )}
 

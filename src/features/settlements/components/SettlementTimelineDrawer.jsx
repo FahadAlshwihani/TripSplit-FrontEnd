@@ -50,7 +50,7 @@ const SettlementTimelineDrawer = ({ tripId, settlement, currency, onClose }) => 
       <div className="exp-drawer-overlay" role="presentation" onClick={onClose} />
       <div ref={drawerRef} tabIndex={-1} className="exp-drawer" role="dialog" aria-modal="true" aria-labelledby="settle-timeline-title">
         <div className="exp-drawer__head">
-          <h2 id="settle-timeline-title" className="exp-drawer__title text-headline-sm">{t('settlements.timelineTitle')}</h2>
+          <h2 id="settle-timeline-title" className="exp-drawer__title text-headline">{t('settlements.timelineTitle')}</h2>
           <button type="button" className="exp-modal__close" aria-label={t('common.close')} onClick={onClose}>
             <i className="bi bi-x-lg" aria-hidden="true" />
           </button>
