@@ -58,6 +58,7 @@ export default function SettlementsPage() {
   const readOnly = !permissions.canRecordSettlement;
   const canRecordAdmin = !readOnly && ['owner', 'admin'].includes(currentMember?.role);
   const isManager = ['owner', 'admin'].includes(currentMember?.role);
+  const membersById = Object.fromEntries(members.map((member) => [member.id, member]));
 
   const rows = filter === 'all' ? settlements : settlements.filter((row) => row.status === filter);
 
@@ -116,6 +117,8 @@ export default function SettlementsPage() {
               key={settlement.id}
               settlement={settlement}
               currency={currency}
+              fromMember={membersById[settlement.from_member_id]}
+              toMember={membersById[settlement.to_member_id]}
               busy={busyId === settlement.id}
               canReview={!readOnly && settlement.status === 'pending' && (settlement.to_member_id === currentMember?.id || isManager)}
               canCancel={!readOnly && settlement.status === 'pending' && (settlement.created_by === currentMember?.id || isManager)}

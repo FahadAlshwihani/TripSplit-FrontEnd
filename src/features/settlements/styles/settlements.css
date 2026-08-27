@@ -109,6 +109,35 @@
 }
 
 /* ---------------------------------------------------------------------- */
+/* Confirmation success banner (Balances page) -- the clear conclusion a
+   confirmed settlement needs before its row recalculates away, per
+   docs/architecture/financial-ledger.md. Positive but not a glossy
+   solid-green SaaS toast -- same hard-border/shadow card language as
+   everything else, just tinted with the success tokens. */
+
+.settle-success-banner {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width-lg) solid var(--color-success);
+  border-radius: var(--radius-md);
+  background: var(--color-success-soft);
+  box-shadow: var(--shadow-hard-sm);
+}
+.settle-success-banner__icon { flex: 0 0 auto; font-size: 24px; color: var(--color-success); margin-block-start: 2px; }
+.settle-success-banner__text { flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.settle-success-banner__title { margin: 0; font: var(--text-body); font-weight: 700; color: var(--color-text); }
+.settle-success-banner__body { margin: 0; color: var(--color-text); font: var(--text-body-sm); }
+.settle-success-banner__actions { display: flex; align-items: center; gap: var(--space-2); flex: 0 0 auto; flex-wrap: wrap; }
+
+@media (max-width: 480px) {
+  .settle-success-banner__actions { width: 100%; }
+  .settle-success-banner__actions .dash-btn { flex: 1 1 0; }
+}
+
+/* ---------------------------------------------------------------------- */
 /* SettlementTimelineDrawer */
 
 .settle-timeline__summary { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); color: var(--color-text); font: var(--text-body); }
@@ -159,11 +188,16 @@
 .settle-row:hover { background: var(--color-surface-alt); }
 .settle-row:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: -2px; }
 
-.settle-row__who { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); font: var(--text-body-sm); min-width: 0; flex: 1 1 auto; }
+.settle-row__who { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); color: var(--color-text); font: var(--text-body-sm); min-width: 0; flex: 1 1 auto; }
+.settle-row__parties { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; font: var(--text-body); font-weight: 700; color: var(--color-text); }
+.settle-row__party { display: inline-flex; align-items: center; gap: var(--space-2); }
+.settle-row__arrow { color: var(--color-text-muted); font-size: 13px; }
 .settle-row__meta { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .settle-row__date { color: var(--color-text-muted); font: var(--text-label); font-size: 10px; }
-.settle-row__end { display: flex; align-items: center; gap: var(--space-3); flex: 0 0 auto; }
+.settle-row__date--confirmed { color: var(--color-success); }
+.settle-row__end { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); flex: 0 0 auto; }
 .settle-row__amount { font: var(--text-financial); color: var(--color-text); }
+.settle-row__view-link { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--nc-indigo-700); text-transform: uppercase; }
 
 .settle-status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px var(--space-2); border-radius: var(--radius-sm); font: var(--text-label); font-size: 9px; letter-spacing: var(--tracking-label); text-transform: uppercase; border: var(--border-width) solid; }
 .settle-status-badge--pending { color: var(--nc-indigo-700); border-color: var(--nc-indigo-700); background: var(--color-primary-soft); }
