@@ -349,5 +349,16 @@
   "settlementTimeline.created.legacy": "{{name}} recorded a settlement of {{amount}} {{currency}}.",
   "settlementTimeline.confirmed": "{{name}} confirmed receipt.", "settlementTimeline.rejected": "{{name}} said the payment hasn't arrived.",
   "settlementTimeline.check_later": "{{name}} will check again later.", "settlementTimeline.cancelled": "{{name}} withdrew this report.",
-  "settlementTimeline.updated": "{{name}} updated this settlement.", "settlementTimeline.deleted": "{{name}} deleted this settlement."
+  "settlementTimeline.updated": "{{name}} updated this settlement.", "settlementTimeline.deleted": "{{name}} deleted this settlement.",
+  "settlementTimeline.retry_requested": "{{name}} asked to check the payment again.",
+  "settlements.rejectedBadge": "Payment Not Received", "settlements.rejectedBody": "{{name}} says the {{amount}} {{currency}} transfer hasn't arrived yet.",
+  "settlements.rejectedHelper": "If you're sure you sent it, ask them to check again. If you sent a new transfer, record it as a new payment.",
+  "settlements.retryAction": "Ask to Check Again", "settlements.newPaymentAction": "New Payment", "settlements.viewHistoryAction": "History",
+  "settlements.retrySending": "Sending…", "settlements.retrySentFeedback": "We asked {{name}} to check the transfer again.",
+  "settlements.retryCooldown": "A check-again request was already sent recently — give it a little time.",
+  "settlements.creditorRetryNotice": "{{name}} asked you to check the {{amount}} {{currency}} payment again.",
+  "settlements.creditorRejectedNotice": "You marked this payment as not received.",
+  "settlements.pendingWaitingOnCreditor": "Waiting for {{name}} to confirm receipt.",
+  "settlements.counterpartStatusOwe": "You currently owe {{name}}", "settlements.counterpartStatusOwed": "{{name}} currently owes you",
+  "settlements.paymentDetails": "Payment details"
 }

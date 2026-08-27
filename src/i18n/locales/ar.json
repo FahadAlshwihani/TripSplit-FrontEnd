@@ -350,5 +350,16 @@
   "settlementTimeline.created.legacy": "{{name}} سجّل تسوية بقيمة {{amount}} {{currency}}.",
   "settlementTimeline.confirmed": "{{name}} أكد الاستلام.", "settlementTimeline.rejected": "{{name}} قال إن المبلغ ما وصله.",
   "settlementTimeline.check_later": "{{name}} بيشيّك مرة ثانية بعد شوي.", "settlementTimeline.cancelled": "{{name}} سحب هذا البلاغ.",
-  "settlementTimeline.updated": "{{name}} عدّل هذه التسوية.", "settlementTimeline.deleted": "{{name}} حذف هذه التسوية."
+  "settlementTimeline.updated": "{{name}} عدّل هذه التسوية.", "settlementTimeline.deleted": "{{name}} حذف هذه التسوية.",
+  "settlementTimeline.retry_requested": "{{name}} طلب التحقق من الدفعة مرة ثانية.",
+  "settlements.rejectedBadge": "المبلغ ما وصل", "settlements.rejectedBody": "{{name}} يقول إن تحويل {{amount}} {{currency}} ما وصله حتى الآن.",
+  "settlements.rejectedHelper": "إذا كنت متأكد من التحويل، خلّه يشيك مرة ثانية. وإذا حولت من جديد، سجّل دفعة جديدة.",
+  "settlements.retryAction": "خلّه يشيك مرة ثانية", "settlements.newPaymentAction": "دفعة جديدة", "settlements.viewHistoryAction": "سجل التسوية",
+  "settlements.retrySending": "جاري الإرسال…", "settlements.retrySentFeedback": "أرسلنا لـ{{name}} يشيك على التحويل مرة ثانية.",
+  "settlements.retryCooldown": "تم إرسال طلب تحقق مؤخرًا — عطه شوي وقت.",
+  "settlements.creditorRetryNotice": "{{name}} طلب منك التحقق من دفعة {{amount}} {{currency}} مرة ثانية.",
+  "settlements.creditorRejectedNotice": "أبلغت إن هذا المبلغ ما وصل.",
+  "settlements.pendingWaitingOnCreditor": "بانتظار {{name}} يأكد الاستلام.",
+  "settlements.counterpartStatusOwe": "حاليًا عليك دين لـ{{name}}", "settlements.counterpartStatusOwed": "حاليًا {{name}} عليه دين لك",
+  "settlements.paymentDetails": "تفاصيل الدفعة"
 }
