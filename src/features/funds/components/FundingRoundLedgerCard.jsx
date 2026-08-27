@@ -23,6 +23,11 @@ const FundingRoundLedgerCard = ({
   const [remindStates, setRemindStates] = useState({});
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  // "Check later" is explicitly a no-op: it never touches contribution
+  // status or the Fund balance, it only hides that row's action prompt
+  // locally until the page next refreshes (per brief part 9's [شيّك
+  // بعدين] -- "no financial transition").
+  const [checkedLater, setCheckedLater] = useState(() => new Set());
 
   const stats = round.statistics;
   const myRow = stats.members.find((row) => row.member_id === currentMember?.id);
@@ -60,7 +65,16 @@ const FundingRoundLedgerCard = ({
           {round.reason && <p className="fund-round-card__reason text-copy-sm">{round.reason}</p>}
         </div>
         <div className="fund-round-card__progress">
-          <span className="fund-round-card__progress-figures text-financial">
+          {/* Both segments are pure numbers (no Arabic text mixed in), so
+              the whole group can safely be one dir="ltr" run -- two
+              adjacent <bdi dir="ltr"> islands separated only by " / "
+              (a neutral character) are exactly the case the Unicode
+              bidi algorithm can visually SWAP inside an RTL paragraph
+              (this produced the reported "7,000.00 / 0.00" reversed-
+              order bug); forcing the whole sequence's own base direction
+              to ltr removes the ambiguity instead of relying on each
+              number's individual isolation. */}
+          <span className="fund-round-card__progress-figures text-financial" dir="ltr">
             <Money value={stats.collected} currency={currency} variant="tabular" /> / <Money value={stats.target} currency={currency} variant="tabular" />
           </span>
           <div className="fund-round-card__progress-bar"><div className="fund-round-card__progress-fill" style={{ width: `${Math.min(Number(stats.percentage_collected), 100)}%` }} /></div>
@@ -79,10 +93,20 @@ const FundingRoundLedgerCard = ({
                     <Avatar avatarKey={avatarKeyFromAvatar(row.avatar)} displayName={row.display_name} size="sm" />
                     {row.display_name}
                   </span>
+                  {/* Each "label: number" pair is its own flex item
+                      rather than one run of inline text with literal
+                      " · " separators -- multiple LTR-isolated <bdi>
+                      numbers mixed with RTL Arabic labels on one text
+                      line is exactly the shape of bidi bug that reversed
+                      the round header's collected/target order; flex
+                      child layout follows DOM order (deterministic per
+                      the container's own direction), never per-run
+                      Unicode bidi reordering. */}
                   <span className="fund-round-card__member-figures text-copy-sm">
-                    {t('fund.expected')} <Money value={row.expected} currency={currency} variant="tabular" /> · {t('fund.paid')} <Money value={row.paid} currency={currency} variant="tabular" />
-                    {Number(row.pending) > 0 && <> · {t('fund.pendingLabel')} <Money value={row.pending} currency={currency} variant="tabular" /></>}
-                    {Number(row.overpaid) > 0 && <> · {t('fund.overpaid')} <Money value={row.overpaid} currency={currency} variant="tabular" /></>}
+                    <span className="fund-figure">{t('fund.expected')} <Money value={row.expected} currency={currency} variant="tabular" /></span>
+                    <span className="fund-figure">{t('fund.paid')} <Money value={row.paid} currency={currency} variant="tabular" /></span>
+                    {Number(row.pending) > 0 && <span className="fund-figure">{t('fund.pendingLabel')} <Money value={row.pending} currency={currency} variant="tabular" /></span>}
+                    {Number(row.overpaid) > 0 && <span className="fund-figure">{t('fund.overpaid')} <Money value={row.overpaid} currency={currency} variant="tabular" /></span>}
                   </span>
                   {canManage && round.status === 'open' && Number(row.remaining) > 0 && (
                     <span className="fund-round-card__remind">
@@ -106,17 +130,30 @@ const FundingRoundLedgerCard = ({
           {pending.length > 0 && (
             <div className="fund-round-card__pending">
               <span className="text-label">{t('fund.pendingReviewTitle')}</span>
-              {pending.map((row) => (
-                <div className="fund-pending-row" key={row.id}>
-                  <span className="fund-pending-row__who">{row.display_name} — <Money value={row.amount} currency={currency} variant="tabular" /> · {formatDate(row.contribution_date)}</span>
-                  {canManage && (
-                    <span className="fund-pending-row__actions">
-                      <button type="button" className="bal-remind-btn" disabled={busyKey === row.id} aria-label={t('fund.confirmContribution')} title={t('fund.confirmContribution')} onClick={() => onConfirm(row)}><i className="bi bi-check-lg" aria-hidden="true" /></button>
-                      <button type="button" className="bal-remind-btn" disabled={busyKey === row.id} aria-label={t('fund.rejectContribution')} title={t('fund.rejectContribution')} onClick={() => setRejectTarget(row)}><i className="bi bi-x-lg" aria-hidden="true" /></button>
-                    </span>
-                  )}
-                </div>
-              ))}
+              {pending.map((row) => {
+                const dismissed = checkedLater.has(row.id);
+                return (
+                  <div className="fund-pending-row" key={row.id}>
+                    <span className="fund-pending-row__who">{row.display_name} — <Money value={row.amount} currency={currency} variant="tabular" /> · {formatDate(row.contribution_date)}</span>
+                    {canManage && !dismissed && (
+                      <p className="fund-pending-row__hint text-copy-sm">{t('fund.pendingConfirmationHint')}</p>
+                    )}
+                    {canManage && !dismissed && (
+                      <span className="fund-pending-row__actions">
+                        <button type="button" className="bal-remind-btn" disabled={busyKey === row.id} onClick={() => onConfirm(row)}>
+                          <i className="bi bi-check-lg" aria-hidden="true" /> <span className="bal-remind-btn__label">{t('fund.confirmContribution')}</span>
+                        </button>
+                        <button type="button" className="bal-remind-btn" disabled={busyKey === row.id} onClick={() => setRejectTarget(row)}>
+                          <i className="bi bi-x-lg" aria-hidden="true" /> <span className="bal-remind-btn__label">{t('fund.rejectContribution')}</span>
+                        </button>
+                        <button type="button" className="bal-remind-btn" onClick={() => setCheckedLater((current) => new Set(current).add(row.id))}>
+                          <i className="bi bi-clock" aria-hidden="true" /> <span className="bal-remind-btn__label">{t('fund.checkLater')}</span>
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -124,15 +161,31 @@ const FundingRoundLedgerCard = ({
             <div className="fund-round-card__pending fund-round-card__pending--rejected">
               <span className="text-label">{t('fund.rejectedTitle')}</span>
               {rejected.map((row) => {
-                const canRetryThis = row.member_id === currentMember?.id || canManage;
+                const isMine = row.member_id === currentMember?.id;
+                const canRetryThis = isMine || canManage;
                 return (
                   <div className="fund-pending-row" key={row.id}>
                     <span className="fund-pending-row__who">{row.display_name} — <Money value={row.amount} currency={currency} variant="tabular" />{row.review_note && <> · {row.review_note}</>}</span>
-                    {canRetryThis && onRetry && (
-                      <button type="button" className="bal-remind-btn" disabled={busyKey === row.id || row.retry_cooldown_active} aria-label={t('fund.retryContribution')} title={row.retry_cooldown_active ? t('fund.retryCooldown') : t('fund.retryContribution')} onClick={() => onRetry(row)}>
-                        <i className="bi bi-arrow-repeat" aria-hidden="true" />
-                      </button>
-                    )}
+                    <p className="fund-pending-row__hint text-copy-sm">
+                      {t('fund.rejectedExplanationPrefix')} <Money value={row.amount} currency={currency} variant="tabular" /> {t('fund.rejectedExplanationSuffix')}
+                    </p>
+                    <span className="fund-pending-row__actions">
+                      {canRetryThis && onRetry && (
+                        <button type="button" className="bal-remind-btn" disabled={busyKey === row.id || row.retry_cooldown_active} onClick={() => onRetry(row)}>
+                          <i className="bi bi-arrow-repeat" aria-hidden="true" /> <span className="bal-remind-btn__label">{row.retry_cooldown_active ? t('fund.retryCooldown') : t('fund.retryContribution')}</span>
+                        </button>
+                      )}
+                      {isMine && iCanReport && (
+                        <button type="button" className="bal-remind-btn" onClick={onReport}>
+                          <i className="bi bi-plus-lg" aria-hidden="true" /> <span className="bal-remind-btn__label">{t('fund.newPayment')}</span>
+                        </button>
+                      )}
+                      {canManage && onRecord && (
+                        <button type="button" className="bal-remind-btn" onClick={onRecord}>
+                          <i className="bi bi-journal-check" aria-hidden="true" /> <span className="bal-remind-btn__label">{t('fund.recordContribution')}</span>
+                        </button>
+                      )}
+                    </span>
                   </div>
                 );
               })}
