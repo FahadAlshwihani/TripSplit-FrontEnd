@@ -464,6 +464,29 @@
 .field-control--amount { text-align: end; font: var(--text-financial); font-variant-numeric: tabular-nums; }
 .field-control--error { border-color: var(--color-danger); }
 
+/* Single-line controls (input/select/the custom category-select trigger
+   button) must render at EXACTLY the same height regardless of native
+   type -- a browser gives <input type="date">, <input type="number">,
+   <select>, and a plain <button> different intrinsic content-box
+   heights even with identical padding/border/font, because each ships
+   its own native chrome (calendar icon, spin buttons, dropdown arrow)
+   with its own baseline metrics; `min-height` alone lets whichever one
+   asks for more room win, which is exactly the "Amount looks shorter
+   than Date" defect. Locking `height` and swapping the vertical padding
+   for an explicit line-height (the box height minus its two 1px
+   borders) is what actually pins every one of them to the same cell.
+   Selector specificity (element+class) beats the bare `.field-control`
+   rule above on purpose, so a <textarea class="field-control"> (Expense
+   Composer's notes field) is untouched and keeps its own multi-row
+   height -- this never applies to textareas. */
+input.field-control,
+select.field-control,
+button.field-control {
+  height: 44px;
+  padding-block: 0;
+  line-height: calc(44px - 2 * var(--border-width));
+}
+
 .field-error { display: flex; align-items: center; gap: var(--space-1); color: var(--color-danger); font: var(--text-label); font-size: 11px; margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {

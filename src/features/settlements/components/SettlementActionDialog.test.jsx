@@ -22,6 +22,25 @@ test('the counterparty debt renders through the canonical Money/bdi component, i
   moneyNodes.forEach((node) => expect(node).toHaveAttribute('dir', 'ltr'));
 });
 
+test('Amount and Date are both real <input> elements sharing the canonical field-control base class -- the shared height rule applies identically to both', () => {
+  render(<SettlementActionDialog mode="report" members={members} currentMember={fahad} currency="SAR" counterpart={saud} debt="148.00" onSave={jest.fn()} onClose={jest.fn()} />);
+  const amountInput = screen.getByLabelText('expense.amount');
+  const dateInput = screen.getByLabelText('expense.date');
+  expect(amountInput.tagName).toBe('INPUT');
+  expect(dateInput.tagName).toBe('INPUT');
+  expect(amountInput).toHaveClass('field-control');
+  expect(dateInput).toHaveClass('field-control');
+  expect(amountInput.type).toBe('number');
+  expect(dateInput.type).toBe('date');
+});
+
+test('the admin mode\'s member pickers are real <select> elements sharing the same field-control base class as Amount/Date', () => {
+  render(<SettlementActionDialog mode="admin" members={members} currentMember={fahad} currency="SAR" onSave={jest.fn()} onClose={jest.fn()} />);
+  const fromSelect = screen.getByLabelText('settlements.payer');
+  expect(fromSelect.tagName).toBe('SELECT');
+  expect(fromSelect).toHaveClass('field-control');
+});
+
 test('the amount field uses the canonical financial field-control class, not a raw unstyled input', () => {
   render(<SettlementActionDialog mode="report" members={members} currentMember={fahad} currency="SAR" counterpart={saud} debt="148.00" onSave={jest.fn()} onClose={jest.fn()} />);
   const amountInput = screen.getByLabelText('expense.amount');
