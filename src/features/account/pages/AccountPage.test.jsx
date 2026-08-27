@@ -19,14 +19,15 @@ jest.mock('../../../shared/components/useCurrencyCatalog', () => ({
 
 const baseUser = {
   display_name: 'Fahad', email: 'fahad@example.com', avatar_type: 'initials', avatar_color: 'indigo',
-  preferred_language: 'en', preferred_theme: 'light', preferred_currency: 'SAR',
+  preferred_language: 'en', preferred_theme: 'light', preferred_currency: 'SAR', idle_logout_minutes: null,
   notification_preferences: { trip_invitations: true, join_request_updates: true, funding_round_requests: true, contribution_updates: true, settlement_updates: true, trip_lifecycle_updates: true },
 };
 
 let mockUser = baseUser;
 const mockSaveProfile = jest.fn();
 const mockLogout = jest.fn();
-jest.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: mockUser, authLoading: false, saveProfile: mockSaveProfile, logout: mockLogout, refreshUser: jest.fn() }) }));
+const mockLogoutAllDevices = jest.fn();
+jest.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: mockUser, authLoading: false, saveProfile: mockSaveProfile, logout: mockLogout, logoutAllDevices: mockLogoutAllDevices, refreshUser: jest.fn() }) }));
 
 const renderPage = async (entry = { pathname: '/account' }) => {
   const utils = render(
@@ -46,6 +47,7 @@ beforeEach(() => {
   mockUser = baseUser;
   mockSaveProfile.mockReset();
   mockLogout.mockReset().mockResolvedValue();
+  mockLogoutAllDevices.mockReset().mockResolvedValue();
   getAccountTrips.mockReset().mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
 });
 

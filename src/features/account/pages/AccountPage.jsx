@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PublicLayout from '../../../components/Layout/PublicLayout';
@@ -6,9 +6,11 @@ import NeoLoading from '../../../shared/components/NeoLoading';
 import ProfileSetupPage from '../../profile/pages/ProfileSetupPage';
 import ClaimGuestTripsBanner from '../../auth/components/ClaimGuestTripsBanner';
 import { useAuth } from '../../../auth/AuthContext';
+import { consumeGuestMergeNotice } from '../../../shared/guestClaim';
 import AccountIdentity from '../components/AccountIdentity';
 import AccountPreferences from '../components/AccountPreferences';
 import AccountNotifications from '../components/AccountNotifications';
+import AccountSecurity from '../components/AccountSecurity';
 import AccountTrips from '../components/AccountTrips';
 import '../styles/account.css';
 
@@ -34,6 +36,12 @@ const AccountPage = () => {
   const [editingProfile, setEditingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileErrorKey, setProfileErrorKey] = useState(null);
+  // Consumed exactly once -- set by AuthPage right after a successful
+  // registered login automatically claimed one or more locally-known
+  // guest trips (Part N). A plain one-time notice, not a persistent
+  // banner: reloading/revisiting Account never shows it again.
+  const [showGuestMergeNotice, setShowGuestMergeNotice] = useState(false);
+  useEffect(() => { if (consumeGuestMergeNotice() > 0) setShowGuestMergeNotice(true); }, []);
 
   const saveEditedProfile = async (profile) => {
     setSavingProfile(true);
@@ -77,6 +85,10 @@ const AccountPage = () => {
           <p className="acc-header__subtitle text-copy-lg">{t('account.pageSubtitle')}</p>
         </header>
 
+        {showGuestMergeNotice && (
+          <div className="acc-guest-merge-notice text-copy" role="status">{t('guest.merge.notice')}</div>
+        )}
+
         {/*
           Desktop hierarchy: Identity+Quick Actions, then Preferences+
           Notifications, then Logout -- stacked in that order at the
@@ -102,6 +114,7 @@ const AccountPage = () => {
           <section className="acc-grid__preferences">
             <AccountPreferences />
             <AccountNotifications />
+            <AccountSecurity />
           </section>
           <section className="acc-grid__trips">
             <AccountTrips />

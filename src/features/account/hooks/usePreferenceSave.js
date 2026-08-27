@@ -43,5 +43,10 @@ export default function usePreferenceSave() {
 
   const changeCurrency = (code) => save('preferred_currency', code);
 
-  return { status, changeLanguage, changeTheme, changeCurrency };
+  // value is a number (5/10/.../60) or null ("Never") -- validated again
+  // server-side against the fixed allowlist regardless of what the UI
+  // sends (apps.accounts.serializers.UserSerializer.validate_idle_logout_minutes).
+  const changeIdleLogoutMinutes = (value) => save('idle_logout_minutes', value);
+
+  return { status, changeLanguage, changeTheme, changeCurrency, changeIdleLogoutMinutes };
 }
