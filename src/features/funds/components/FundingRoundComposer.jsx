@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ModalPortal from '../../../shared/components/ModalPortal';
 import SegmentedControl from '../../../shared/components/SegmentedControl';
 import Money from '../../../shared/components/Money';
+import useModalDialog from '../../../shared/hooks/useModalDialog';
 
 const METHODS = ['equal', 'custom', 'percentage', 'shares'];
 
@@ -25,6 +26,7 @@ const FundingRoundComposer = ({ members, currency, prefill, onSubmit, onClose })
   const [values, setValues] = useState({}); // member_id -> string, meaning depends on `method`
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const dialogRef = useModalDialog(onClose, { closeDisabled: submitting });
 
   const target = Number(targetAmount) || 0;
   const toggleParticipant = (memberId) => {
@@ -62,7 +64,7 @@ const FundingRoundComposer = ({ members, currency, prefill, onSubmit, onClose })
   return (
     <ModalPortal>
       <div className="fund-dialog-overlay" role="presentation" onClick={onClose}>
-        <form className="fund-dialog fund-round-composer" role="dialog" aria-modal="true" aria-labelledby="fund-round-composer-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
+        <form ref={dialogRef} tabIndex={-1} className="fund-dialog fund-round-composer" role="dialog" aria-modal="true" aria-labelledby="fund-round-composer-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
           <div className="fund-dialog__head">
             <h2 id="fund-round-composer-title" className="fund-dialog__title text-headline">{t('fund.newRound')}</h2>
             <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose}>

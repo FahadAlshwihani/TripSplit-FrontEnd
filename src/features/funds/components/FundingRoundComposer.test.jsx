@@ -78,3 +78,12 @@ test('Escape-independent close via the close button', () => {
   fireEvent.click(screen.getByLabelText('common.close'));
   expect(onClose).toHaveBeenCalled();
 });
+
+test('Escape closes the funding round dialog', () => {
+  const onClose = jest.fn();
+  render(<FundingRoundComposer members={members} currency="SAR" onSubmit={jest.fn()} onClose={onClose} />);
+
+  fireEvent.keyDown(document, { key: 'Escape' });
+
+  expect(onClose).toHaveBeenCalledTimes(1);
+});
