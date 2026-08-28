@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ModalPortal from '../../../shared/components/ModalPortal';
 import Money from '../../../shared/components/Money';
+import useModalDialog from '../../../shared/hooks/useModalDialog';
 
 /*
   mode="report" -- a member's own "I paid into the Fund" (always pending
@@ -27,6 +28,7 @@ const ContributionActionDialog = ({ mode, round, members, currentMember, currenc
   const [acknowledged, setAcknowledged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const dialogRef = useModalDialog(onClose, { closeDisabled: submitting });
 
   const selectedRow = mode === 'report' ? initialRow : memberRow(memberId);
   const remaining = selectedRow ? Number(selectedRow.remaining) : null;
@@ -58,7 +60,7 @@ const ContributionActionDialog = ({ mode, round, members, currentMember, currenc
   return (
     <ModalPortal>
       <div className="fund-dialog-overlay" role="presentation" onClick={onClose}>
-        <form className="fund-dialog" role="dialog" aria-modal="true" aria-labelledby="fund-contribution-dialog-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
+        <form ref={dialogRef} tabIndex={-1} className="fund-dialog" role="dialog" aria-modal="true" aria-labelledby="fund-contribution-dialog-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
           <div className="fund-dialog__head">
             <h2 id="fund-contribution-dialog-title" className="fund-dialog__title text-headline">{mode === 'report' ? t('fund.iPaidDialogTitle') : t('fund.recordContribution')}</h2>
             <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose}>
