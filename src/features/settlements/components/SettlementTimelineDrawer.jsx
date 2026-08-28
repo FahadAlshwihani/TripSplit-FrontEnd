@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ModalPortal from '../../../shared/components/ModalPortal';
 import Money from '../../../shared/components/Money';
 import { getSettlementTimeline } from '../api/settlementsApi';
+import { formatDateTime } from '../../../shared/utils/format';
 
 /*
   Full chronological history for one settlement -- who reported/recorded
@@ -19,7 +20,7 @@ const timelineCopyKey = (event) => {
 };
 
 const SettlementTimelineDrawer = ({ tripId, settlement, currency, onClose }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const drawerRef = useRef(null);
   const returnFocusRef = useRef(null);
   const [state, setState] = useState({ loading: true, error: null, events: [] });
@@ -74,7 +75,7 @@ const SettlementTimelineDrawer = ({ tripId, settlement, currency, onClose }) => 
                     <p className="settle-timeline__text">
                       {t(timelineCopyKey(event), { name: event.actor?.display_name || t('activity.system'), amount: event.summary?.amount, currency: event.summary?.currency || currency })}
                     </p>
-                    <span className="settle-timeline__date">{new Date(event.created_at).toLocaleString()}</span>
+                    <span className="settle-timeline__date"><bdi dir="ltr">{formatDateTime(event.created_at, i18n.language)}</bdi></span>
                   </div>
                 </li>
               ))}
