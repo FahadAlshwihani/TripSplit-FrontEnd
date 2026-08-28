@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ModalPortal from '../../../shared/components/ModalPortal';
+import useModalDialog from '../../../shared/hooks/useModalDialog';
 
 /*
   Extracted out of FundHolderCard so it participates in FundPage's single
@@ -14,6 +15,7 @@ const ChangeHolderDialog = ({ holder, activeMembers, onSave, onClose }) => {
   const { t } = useTranslation();
   const [nextHolderId, setNextHolderId] = useState(holder.id);
   const [saving, setSaving] = useState(false);
+  const dialogRef = useModalDialog(onClose, { closeDisabled: saving });
 
   const submit = async (event) => {
     event.preventDefault();
@@ -30,7 +32,7 @@ const ChangeHolderDialog = ({ holder, activeMembers, onSave, onClose }) => {
   return (
     <ModalPortal>
       <div className="fund-dialog-overlay" role="presentation" onClick={() => !saving && onClose()}>
-        <form className="fund-dialog" role="dialog" aria-modal="true" aria-labelledby="fund-holder-dialog-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
+        <form ref={dialogRef} tabIndex={-1} className="fund-dialog" role="dialog" aria-modal="true" aria-labelledby="fund-holder-dialog-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
           <div className="fund-dialog__head">
             <h2 id="fund-holder-dialog-title" className="fund-dialog__title text-headline">{t('fund.changeHolder')}</h2>
             <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose}>
