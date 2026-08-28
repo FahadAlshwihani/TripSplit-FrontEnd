@@ -53,11 +53,11 @@ const RefundDistributionModal = ({ available, currency, onPreview, onConfirm, on
 
   return (
     <ModalPortal>
-      <div className="fund-dialog-overlay" role="presentation" onClick={onClose}>
+      <div className="fund-dialog-overlay" role="presentation" onClick={() => !previewing && !submitting && onClose()}>
         <div ref={dialogRef} tabIndex={-1} className="fund-dialog fund-refund-modal" role="dialog" aria-modal="true" aria-labelledby="fund-refund-title" onClick={(event) => event.stopPropagation()}>
           <div className="fund-dialog__head">
             <h2 id="fund-refund-title" className="fund-dialog__title text-headline">{t('fund.distributeSurplus')}</h2>
-            <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose}><i className="bi bi-x-lg" aria-hidden="true" /></button>
+            <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose} disabled={previewing || submitting}><i className="bi bi-x-lg" aria-hidden="true" /></button>
           </div>
 
           <div className="fund-dialog__body">
@@ -112,7 +112,7 @@ const RefundDistributionModal = ({ available, currency, onPreview, onConfirm, on
 
           <div className="fund-dialog__footer">
             <div className="fund-dialog__footer-actions">
-              <button type="button" className="dash-btn dash-btn--secondary" onClick={onClose} disabled={submitting}>{t('common.cancel')}</button>
+              <button type="button" className="dash-btn dash-btn--secondary" onClick={onClose} disabled={previewing || submitting}>{t('common.cancel')}</button>
               <button type="button" className={`dash-btn dash-btn--primary${submitting ? ' dash-btn--loading' : ''}`} disabled={!preview || !acknowledged || submitting} onClick={confirm}>
                 {submitting && <span className="dash-btn__spinner" aria-hidden="true" />}
                 {t('fund.distribute')}
