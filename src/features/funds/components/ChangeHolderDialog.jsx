@@ -35,7 +35,7 @@ const ChangeHolderDialog = ({ holder, activeMembers, onSave, onClose }) => {
         <form ref={dialogRef} tabIndex={-1} className="fund-dialog" role="dialog" aria-modal="true" aria-labelledby="fund-holder-dialog-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
           <div className="fund-dialog__head">
             <h2 id="fund-holder-dialog-title" className="fund-dialog__title text-headline">{t('fund.changeHolder')}</h2>
-            <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose}>
+            <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose} disabled={saving}>
               <i className="bi bi-x-lg" aria-hidden="true" />
             </button>
           </div>

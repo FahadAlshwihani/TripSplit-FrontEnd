@@ -18,3 +18,16 @@ test('enters keyboard focus and closes on Escape', () => {
 
   expect(onClose).toHaveBeenCalledTimes(1);
 });
+
+test('cannot dismiss while a holder change is in flight', () => {
+  const onClose = jest.fn();
+  const onSave = jest.fn(() => new Promise(() => {}));
+  render(<ChangeHolderDialog holder={members[0]} activeMembers={members} onSave={onSave} onClose={onClose} />);
+  fireEvent.change(screen.getByLabelText('fund.holder'), { target: { value: 'm2' } });
+  fireEvent.click(screen.getByRole('button', { name: 'fund.changeHolder' }));
+
+  fireEvent.keyDown(document, { key: 'Escape' });
+  fireEvent.click(screen.getByRole('button', { name: 'common.close' }));
+
+  expect(onClose).not.toHaveBeenCalled();
+});
