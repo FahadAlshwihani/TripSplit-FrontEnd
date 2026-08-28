@@ -1,6 +1,15 @@
 import en from './locales/en.json';
 import ar from './locales/ar.json';
 
+test('English and Arabic bundles have exact non-empty key parity', () => {
+  const englishKeys = Object.keys(en).sort();
+  const arabicKeys = Object.keys(ar).sort();
+
+  expect(arabicKeys).toEqual(englishKeys);
+  expect(englishKeys.filter((key) => typeof en[key] !== 'string' || !en[key].trim())).toEqual([]);
+  expect(arabicKeys.filter((key) => typeof ar[key] !== 'string' || !ar[key].trim())).toEqual([]);
+});
+
 test('every home.* key present in the English bundle has a non-empty Arabic translation', () => {
   const homeKeys = Object.keys(en).filter((key) => key.startsWith('home.'));
   expect(homeKeys.length).toBeGreaterThan(0);
