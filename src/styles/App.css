@@ -10,7 +10,6 @@ body, html {
   width: 100%;
   height: 100%;
   overflow-x: hidden;
-  color: white; /* Set default text color to white */
   font-family: 'Exo', sans-serif; /* Ensure consistent font */
 }
 
@@ -148,44 +147,52 @@ body, html {
 }
 
 /* Additional styles for text elements */
-h1, h2, h3, h4, h5, h6 {
+.MainLayout h1,
+.MainLayout h2,
+.MainLayout h3,
+.MainLayout h4,
+.MainLayout h5,
+.MainLayout h6 {
   color: white; /* Ensure all headings are white */
 }
 
-p, span, a, li {
+.MainLayout p,
+.MainLayout span,
+.MainLayout a,
+.MainLayout li {
   color: white; /* Ensure all paragraph, span, anchor, and list item text is white */
 }
 
-a {
+.MainLayout a {
   text-decoration: none; /* Remove underline from links */
 }
 
-a:hover {
+.MainLayout a:hover {
   text-decoration: underline; /* Underline on hover for better visibility */
 }
 
-.text-muted {
+.MainLayout .text-muted {
   color: rgba(255, 255, 255, 0.7); /* Muted text color */
 }
 
-.custom-card {
+.MainLayout .custom-card {
   background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent background for cards */
   border: 1px solid rgba(255, 255, 255, 0.2); /* Light border for cards */
 }
 
-.alert {
+.MainLayout .alert {
   background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent background for alerts */
   color: white; /* Ensure alert text is white */
 }
 
-.btn {
+.MainLayout .btn {
   color: white; /* Button text color */
 }
 
-.btn-danger {
+.MainLayout .btn-danger {
   background-color: #e94560; /* Red background for danger buttons */
 }
 
-.btn-primary {
+.MainLayout .btn-primary {
   background-color: #ffd700; /* Gold background for primary buttons */
 }
