@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ModalPortal from '../../../shared/components/ModalPortal';
 import SegmentedControl from '../../../shared/components/SegmentedControl';
 import Money from '../../../shared/components/Money';
+import useModalDialog from '../../../shared/hooks/useModalDialog';
 
 const METHODS = ['proportional_to_net_contributions', 'equal', 'custom'];
 
@@ -23,6 +24,7 @@ const RefundDistributionModal = ({ available, currency, onPreview, onConfirm, on
   const [acknowledged, setAcknowledged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const dialogRef = useModalDialog(onClose, { closeDisabled: previewing || submitting });
 
   const runPreview = async () => {
     setPreviewing(true);
@@ -52,7 +54,7 @@ const RefundDistributionModal = ({ available, currency, onPreview, onConfirm, on
   return (
     <ModalPortal>
       <div className="fund-dialog-overlay" role="presentation" onClick={onClose}>
-        <div className="fund-dialog fund-refund-modal" role="dialog" aria-modal="true" aria-labelledby="fund-refund-title" onClick={(event) => event.stopPropagation()}>
+        <div ref={dialogRef} tabIndex={-1} className="fund-dialog fund-refund-modal" role="dialog" aria-modal="true" aria-labelledby="fund-refund-title" onClick={(event) => event.stopPropagation()}>
           <div className="fund-dialog__head">
             <h2 id="fund-refund-title" className="fund-dialog__title text-headline">{t('fund.distributeSurplus')}</h2>
             <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose}><i className="bi bi-x-lg" aria-hidden="true" /></button>
