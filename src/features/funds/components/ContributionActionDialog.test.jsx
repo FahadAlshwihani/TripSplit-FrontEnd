@@ -16,3 +16,15 @@ test('contribution dialog closes on Escape and starts focus inside', () => {
 
   expect(onClose).toHaveBeenCalledTimes(1);
 });
+
+test('cannot dismiss while a contribution submission is in flight', () => {
+  const onClose = jest.fn();
+  const onSave = jest.fn(() => new Promise(() => {}));
+  render(<ContributionActionDialog mode="report" round={round} members={[member]} currentMember={member} currency="SAR" onSave={onSave} onClose={onClose} />);
+  fireEvent.click(screen.getByRole('button', { name: 'fund.iPaidSubmit' }));
+
+  fireEvent.keyDown(document, { key: 'Escape' });
+  fireEvent.click(screen.getByRole('button', { name: 'common.close' }));
+
+  expect(onClose).not.toHaveBeenCalled();
+});

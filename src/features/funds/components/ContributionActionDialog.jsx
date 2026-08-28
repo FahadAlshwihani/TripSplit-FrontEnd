@@ -59,11 +59,11 @@ const ContributionActionDialog = ({ mode, round, members, currentMember, currenc
 
   return (
     <ModalPortal>
-      <div className="fund-dialog-overlay" role="presentation" onClick={onClose}>
+      <div className="fund-dialog-overlay" role="presentation" onClick={() => !submitting && onClose()}>
         <form ref={dialogRef} tabIndex={-1} className="fund-dialog" role="dialog" aria-modal="true" aria-labelledby="fund-contribution-dialog-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
           <div className="fund-dialog__head">
             <h2 id="fund-contribution-dialog-title" className="fund-dialog__title text-headline">{mode === 'report' ? t('fund.iPaidDialogTitle') : t('fund.recordContribution')}</h2>
-            <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose}>
+            <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose} disabled={submitting}>
               <i className="bi bi-x-lg" aria-hidden="true" />
             </button>
           </div>
