@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import GuestTripsList from './GuestTripsList';
 import { getGuestSession } from '../api/guestSessionApi';
@@ -14,8 +14,7 @@ test('renders nothing while loading, and nothing once resolved with no saved tri
   getGuestSession.mockReturnValue(new Promise((resolve) => { resolvePromise = resolve; }));
   const { container } = renderList();
   expect(container).toBeEmptyDOMElement();
-  resolvePromise({ guest: null, trips: [] });
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await act(async () => { resolvePromise({ guest: null, trips: [] }); });
   expect(container).toBeEmptyDOMElement();
 });
 
@@ -35,8 +34,9 @@ test('renders a banned trip as a non-actionable notice, not a button', async () 
 });
 
 test('a failed fetch does not throw or leave a broken UI', async () => {
-  getGuestSession.mockRejectedValue(new Error('network'));
+  let rejectPromise;
+  getGuestSession.mockReturnValue(new Promise((resolve, reject) => { rejectPromise = reject; }));
   const { container } = renderList();
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await act(async () => { rejectPromise(new Error('network')); });
   expect(container).toBeEmptyDOMElement();
 });
