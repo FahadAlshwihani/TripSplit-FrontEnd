@@ -63,11 +63,11 @@ const FundingRoundComposer = ({ members, currency, prefill, onSubmit, onClose })
 
   return (
     <ModalPortal>
-      <div className="fund-dialog-overlay" role="presentation" onClick={onClose}>
+      <div className="fund-dialog-overlay" role="presentation" onClick={() => !submitting && onClose()}>
         <form ref={dialogRef} tabIndex={-1} className="fund-dialog fund-round-composer" role="dialog" aria-modal="true" aria-labelledby="fund-round-composer-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
           <div className="fund-dialog__head">
             <h2 id="fund-round-composer-title" className="fund-dialog__title text-headline">{t('fund.newRound')}</h2>
-            <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose}>
+            <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose} disabled={submitting}>
               <i className="bi bi-x-lg" aria-hidden="true" />
             </button>
           </div>

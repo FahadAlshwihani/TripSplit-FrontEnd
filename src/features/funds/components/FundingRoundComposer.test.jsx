@@ -87,3 +87,16 @@ test('Escape closes the funding round dialog', () => {
 
   expect(onClose).toHaveBeenCalledTimes(1);
 });
+
+test('cannot dismiss while a round submission is in flight', () => {
+  const onClose = jest.fn();
+  const onSubmit = jest.fn(() => new Promise(() => {}));
+  render(<FundingRoundComposer members={members} currency="SAR" onSubmit={onSubmit} onClose={onClose} />);
+  fill();
+  fireEvent.click(screen.getByText('fund.createRound'));
+
+  fireEvent.keyDown(document, { key: 'Escape' });
+  fireEvent.click(screen.getByLabelText('common.close'));
+
+  expect(onClose).not.toHaveBeenCalled();
+});
