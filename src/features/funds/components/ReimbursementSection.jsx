@@ -73,11 +73,11 @@ const ReimbursementDialog = ({ candidates, members, currency, onSave, onClose })
 
   return (
     <ModalPortal>
-      <div className="fund-dialog-overlay" role="presentation" onClick={onClose}>
+      <div className="fund-dialog-overlay" role="presentation" onClick={() => !submitting && onClose()}>
         <form ref={dialogRef} tabIndex={-1} className="fund-dialog" role="dialog" aria-modal="true" aria-labelledby="fund-reimburse-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
           <div className="fund-dialog__head">
             <h2 id="fund-reimburse-title" className="fund-dialog__title text-headline">{t('fund.reimburseAction')}</h2>
-            <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose}><i className="bi bi-x-lg" aria-hidden="true" /></button>
+            <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose} disabled={submitting}><i className="bi bi-x-lg" aria-hidden="true" /></button>
           </div>
           <div className="fund-dialog__body">
             {candidates.length > 0 && (
