@@ -16,6 +16,12 @@ export const formatDate = (value, options = { month: 'short', day: 'numeric', ye
   return new Date(value).toLocaleDateString(undefined, options);
 };
 
+export const formatDateTime = (value, locale, options = { dateStyle: 'medium', timeStyle: 'short' }) => {
+  if (!value) return null;
+  const language = locale?.startsWith('ar') ? 'ar-SA' : locale?.startsWith('en') ? 'en' : undefined;
+  return new Intl.DateTimeFormat(language, options).format(new Date(value));
+};
+
 export const formatDateRange = (start, end) => {
   if (!start && !end) return null;
   if (start && end) return `${formatDate(start)} – ${formatDate(end)}`;
