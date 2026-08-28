@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ModalPortal from '../../../shared/components/ModalPortal';
 import Money from '../../../shared/components/Money';
 import { formatDate } from '../../../shared/utils/format';
+import useModalDialog from '../../../shared/hooks/useModalDialog';
 
 /*
   Reimbursements: the Fund paying a member back for something they
@@ -48,6 +49,7 @@ const ReimbursementDialog = ({ candidates, members, currency, onSave, onClose })
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const dialogRef = useModalDialog(onClose, { closeDisabled: submitting });
 
   const pickCandidate = (candidate) => {
     setMemberId(candidate.member_id);
@@ -72,7 +74,7 @@ const ReimbursementDialog = ({ candidates, members, currency, onSave, onClose })
   return (
     <ModalPortal>
       <div className="fund-dialog-overlay" role="presentation" onClick={onClose}>
-        <form className="fund-dialog" role="dialog" aria-modal="true" aria-labelledby="fund-reimburse-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
+        <form ref={dialogRef} tabIndex={-1} className="fund-dialog" role="dialog" aria-modal="true" aria-labelledby="fund-reimburse-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
           <div className="fund-dialog__head">
             <h2 id="fund-reimburse-title" className="fund-dialog__title text-headline">{t('fund.reimburseAction')}</h2>
             <button type="button" className="fund-dialog__close" aria-label={t('common.close')} onClick={onClose}><i className="bi bi-x-lg" aria-hidden="true" /></button>
