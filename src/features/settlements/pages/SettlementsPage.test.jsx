@@ -2,12 +2,13 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import SettlementsPage from './SettlementsPage';
-import { getSettlements, getSettlementTimeline, recordAdminSettlement, reviewSettlement } from '../api/settlementsApi';
+import { getSettlementPage, getSettlements, getSettlementTimeline, recordAdminSettlement, reviewSettlement } from '../api/settlementsApi';
 import { getMembers } from '../../members/api/membersApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key), i18n: { language: 'en', changeLanguage: jest.fn() } }) }));
 jest.mock('../api/settlementsApi', () => ({
   getSettlements: jest.fn(),
+  getSettlementPage: jest.fn(),
   getSettlementTimeline: jest.fn(),
   reviewSettlement: jest.fn(),
   recordAdminSettlement: jest.fn(),
@@ -49,6 +50,17 @@ test('renders both settlement rows with their status badges', async () => {
   expect(screen.getByRole('button', { name: confirmedLabel })).toBeInTheDocument();
   expect(screen.getByText('settlements.status.pending')).toBeInTheDocument();
   expect(screen.getByText('settlements.status.confirmed')).toBeInTheDocument();
+});
+
+test('loads subsequent settlement history pages instead of stopping at the first page', async () => {
+  getSettlements.mockResolvedValue({ results: [pendingRow], next: '/api/v1/trips/t1/settlements/?page=2' });
+  getSettlementPage.mockResolvedValue({ results: [confirmedRow], next: null });
+  renderPage();
+
+  fireEvent.click(await screen.findByRole('button', { name: 'common.loadMore' }));
+
+  expect(await screen.findByRole('button', { name: confirmedLabel })).toBeInTheDocument();
+  expect(getSettlementPage).toHaveBeenCalledWith('/api/v1/trips/t1/settlements/?page=2', 't1', expect.anything());
 });
 
 test('a confirmed row shows both real payer/recipient avatars', async () => {

@@ -6,7 +6,7 @@ import ErrorState from '../../../shared/components/ErrorState';
 import SegmentedControl from '../../../shared/components/SegmentedControl';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
 import { getMembers } from '../../members/api/membersApi';
-import { getSettlements, recordAdminSettlement, reviewSettlement } from '../api/settlementsApi';
+import { getSettlementPage, getSettlements, recordAdminSettlement, reviewSettlement } from '../api/settlementsApi';
 import SettlementActionDialog from '../components/SettlementActionDialog';
 import SettlementLedgerRow from '../components/SettlementLedgerRow';
 import SettlementTimelineDrawer from '../components/SettlementTimelineDrawer';
@@ -19,10 +19,9 @@ import '../styles/settlements.css';
   page never duplicates that UI, it's the historical record you click
   into for the full timeline. See docs/api/settlements.md.
 
-  Status filtering is client-side over the loaded page (server-side
-  filtering isn't offered by GET /settlements/ today) -- a trip with an
-  unusually large settlement history may need "load more" before an
-  older filtered row appears; documented as a known limitation.
+  Status filtering is client-side over the pages loaded so far (server-
+  side filtering isn't offered by GET /settlements/ today). Load More
+  preserves the already-loaded ledger while appending older history.
 */
 const FILTERS = [
   { value: 'all', key: 'all' },
@@ -47,13 +46,14 @@ export default function SettlementsPage() {
       getSettlements(tripId, { ...config, params: { page_size: 100 } }),
       getMembers(tripId, config),
     ]);
-    return { settlements: settlementPage.results, members: members.results };
+    return { settlementPage, members: members.results };
   }, [tripId]);
 
   if (resource.loading) return <NeoLoading />;
   if (resource.error) return <ErrorState message={resource.error.message} onRetry={resource.retry} />;
 
-  const { settlements, members } = resource.data;
+  const { settlementPage, members } = resource.data;
+  const settlements = settlementPage.results;
   const currency = trip.currency;
   const readOnly = !permissions.canRecordSettlement;
   const canRecordAdmin = !readOnly && ['owner', 'admin'].includes(currentMember?.role);
@@ -61,6 +61,16 @@ export default function SettlementsPage() {
   const membersById = Object.fromEntries(members.map((member) => [member.id, member]));
 
   const rows = filter === 'all' ? settlements : settlements.filter((row) => row.status === filter);
+  const loadMore = () => resource.loadMore(
+    (signal) => getSettlementPage(settlementPage.next, tripId, { signal }),
+    (current, page) => ({
+      ...current,
+      settlementPage: {
+        ...page,
+        results: [...current.settlementPage.results, ...page.results],
+      },
+    }),
+  );
 
   const runReview = async (settlement, decision) => {
     setBusyId(settlement.id);
@@ -132,6 +142,12 @@ export default function SettlementsPage() {
             />
           ))}
         </div>
+      )}
+
+      {settlementPage.next && (
+        <button type="button" className="dash-btn dash-btn--secondary" onClick={loadMore} disabled={resource.loadingMore}>
+          {t('common.loadMore')}
+        </button>
       )}
 
       {timelineTarget && (
