@@ -17,6 +17,7 @@ export const getAccountTrips = (filterValue, config) => responseData(apiClient.g
 export const leaveTrip = (id) => responseData(apiClient.post(`/trips/${id}/leave/`, {}, tripRequest(id)));
 export const getTrip = (id, config) => responseData(apiClient.get(`/trips/${id}/`, tripRequest(id, config)));
 export const updateTrip = (id, payload) => responseData(apiClient.patch(`/trips/${id}/`, payload, tripRequest(id)));
+export const rotateJoinCode = (id) => responseData(apiClient.post(`/trips/${id}/rotate-join-code/`, {}, tripRequest(id)));
 export const archiveTrip = (id) => responseData(apiClient.delete(`/trips/${id}/`, tripRequest(id)));
 export const restoreTrip = (id) => responseData(apiClient.post(`/trips/${id}/restore/`, {}, tripRequest(id)));
 export const closeTrip = (id) => responseData(apiClient.post(`/trips/${id}/close/`, {}, tripRequest(id)));

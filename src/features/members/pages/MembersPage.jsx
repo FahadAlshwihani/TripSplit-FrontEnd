@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import '../styles/members.css';
@@ -7,39 +7,67 @@ import MemberDetail from '../components/MemberDetail';
 import Loading from '../../../components/Loading';
 import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
+import BanMemberDialog from '../../governance/components/BanMemberDialog';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
 import { getMemberDetail, getMembers, leaveTrip, removeMember, transferOwnership, updateMember } from '../api/membersApi';
+import { banMember } from '../../governance/api/governanceApi';
+import { getBalances } from '../../balances/api/balancesApi';
 
 /*
+  Desktop master/detail (Stitch's own reference layout): the list on the
+  left, the selected member's financial record on the right, both
+  visible together -- CSS alone (members.css) decides the column split
+  and collapses to a single column with the detail replacing the list
+  full-width below the mobile breakpoint (never a squeezed two-column
+  table). onBack clears the selection, which is what drives that
+  collapse back to the list on mobile.
+
   Every destructive/high-impact mutation (promote, demote, remove,
-  transfer, leave) goes through a ConfirmDialog before it ever reaches
-  the API -- none of these fired with a bare click before. Remove
-  additionally fetches the member's own financial statistics first so
-  the confirmation can warn when the member still has an open balance
-  (removal never clears it -- see member_balance()/deactivate_member()),
-  matching the same warning pattern the brief requires before a
-  financial-obligation-carrying member is removed.
+  transfer, leave, ban) goes through a ConfirmDialog/BanMemberDialog
+  before it ever reaches the API. Remove additionally fetches the
+  member's own financial statistics first so the confirmation can warn
+  when the member still has an open balance (removal never clears it).
 */
 export default function MembersPage() {
   const { trip, tripId, currentMember } = useOutletContext();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const state = useRouteResource((signal) => getMembers(tripId, { signal }), [tripId]);
+  const balancesState = useRouteResource((signal) => getBalances(tripId, { signal }), [tripId]);
+  const [selectedId, setSelectedId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState(null);
   const [pending, setPending] = useState(null); // { kind, member, hasBalance } | null
+  const [banTarget, setBanTarget] = useState(null);
   const [busy, setBusy] = useState(false);
+
+  const members = state.data?.results || [];
+
+  // Default-select the current viewer (or the first member) once the
+  // list is loaded, so the desktop detail panel never sits empty --
+  // never re-selects out from under an existing choice.
+  useEffect(() => {
+    if (selectedId || !members.length) return;
+    setSelectedId(currentMember?.id && members.some((m) => m.id === currentMember.id) ? currentMember.id : members[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [members.length]);
+
+  useEffect(() => {
+    if (!selectedId) { setDetail(null); return; }
+    let cancelled = false;
+    getMemberDetail(tripId, selectedId).then((data) => { if (!cancelled) setDetail(data); }).catch((e) => { if (!cancelled) setError(e); });
+    return () => { cancelled = true; };
+  }, [tripId, selectedId]);
 
   const run = async (action) => {
     try {
       await action();
-      await state.retry();
+      await Promise.all([state.retry(), balancesState.retry()]);
+      if (selectedId) setDetail(await getMemberDetail(tripId, selectedId));
     } catch (e) {
       setError(e);
     }
   };
-
-  const openDetails = (member) => run(async () => setDetail(await getMemberDetail(tripId, member.id)));
 
   const requestRemove = async (member) => {
     try {
@@ -60,7 +88,7 @@ export default function MembersPage() {
       else if (kind === 'remove') await removeMember(tripId, member.id);
       else if (kind === 'transfer') await transferOwnership(tripId, member.id);
       else if (kind === 'leave') { await leaveTrip(tripId); navigate('/'); return; }
-      await state.retry();
+      await run(async () => {});
       setPending(null);
     } catch (e) {
       setError(e);
@@ -89,19 +117,32 @@ export default function MembersPage() {
   };
   const dialog = dialogFor();
 
+  const balancesByMemberId = Object.fromEntries((balancesState.data?.members || []).map((row) => [row.member_id, row.balance]));
+
   return (
-    <>
+    <div className={`members-layout${selectedId ? ' members-layout--detail-open' : ''}`}>
       {error && <ErrorState message={error.message} />}
       <MembersPanel
-        members={state.data.results}
+        members={members}
         currentMember={currentMember}
-        onDetails={openDetails}
+        currency={trip.currency}
+        selectedId={selectedId}
+        onSelect={(member) => setSelectedId(member.id)}
+        balancesByMemberId={balancesByMemberId}
         onRole={(member, role) => setPending({ kind: role === 'admin' ? 'promote' : 'demote', member })}
         onRemove={requestRemove}
         onTransfer={(member) => setPending({ kind: 'transfer', member })}
         onLeave={() => setPending({ kind: 'leave', member: currentMember })}
+        onBan={(member) => setBanTarget(member)}
       />
-      <MemberDetail detail={detail} currency={trip.currency} tripId={tripId} onClose={() => setDetail(null)} />
+      <MemberDetail detail={detail} currency={trip.currency} tripId={tripId} onBack={() => setSelectedId(null)} />
+      {banTarget && (
+        <BanMemberDialog
+          member={banTarget}
+          onBan={async (payload) => { await run(() => banMember(tripId, banTarget.id, payload)); setBanTarget(null); }}
+          onClose={() => setBanTarget(null)}
+        />
+      )}
       {dialog && (
         <ConfirmDialog
           title={dialog.title}
@@ -112,6 +153,6 @@ export default function MembersPage() {
           onCancel={() => !busy && setPending(null)}
         />
       )}
-    </>
+    </div>
   );
 }

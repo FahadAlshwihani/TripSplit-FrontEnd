@@ -1,45 +1,82 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Avatar from '../../profile/components/Avatar';
 import { avatarKeyFromAvatar } from '../../profile/utils/avatarKey';
+import Money from '../../../shared/components/Money';
+import MemberActionsMenu from './MemberActionsMenu';
 
 /*
-  Every row action renders strictly from the member's own server-computed
-  `capabilities` (see apps/trips/permissions.py::member_capabilities) --
-  never from a coarse role==='admin' guess. That's what keeps an Admin
-  from ever seeing a "Remove" button aimed at another Admin (the backend
-  denies it, but the old code only checked `role !== 'owner'`, so the
-  button rendered and only failed on click).
+  The left-hand list in the Members master/detail layout. Search is a
+  plain client-side name filter (the brief explicitly says not to
+  overbuild this) -- the full member list is already fetched for the
+  page, so no separate search endpoint exists or is needed.
+
+  Every row's balance comes from GET /trips/{id}/balances/ (the same
+  canonical calculate_balances() the Balances page itself renders from),
+  passed in as `balancesByMemberId` -- never recomputed here.
 */
-const MembersPanel = ({ members, currentMember, onRole, onRemove, onTransfer, onLeave, onDetails }) => {
+const MembersPanel = ({ members, currentMember, currency, selectedId, onSelect, balancesByMemberId, onRole, onRemove, onTransfer, onLeave, onBan }) => {
   const { t } = useTranslation();
+  const [search, setSearch] = useState('');
+
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return members;
+    return members.filter((member) => member.display_name.toLowerCase().includes(query));
+  }, [members, search]);
+
   return (
-    <section className="card-pc">
-      <h2>{t('members.title')} ({members.length})</h2>
-      {members.map((member) => {
-        const caps = member.capabilities || {};
-        const hasAnyAction = caps.can_promote || caps.can_demote || caps.can_remove || caps.can_transfer_ownership;
-        return (
-          <div className="management-row" key={member.id}>
-            <button className="member-avatar" onClick={() => onDetails(member)} aria-label={`${t('members.details')} ${member.display_name}`}>
-              <Avatar avatarKey={avatarKeyFromAvatar(member.avatar)} displayName={member.display_name} size="sm" />
-            </button>
-            <div>
-              <strong>{member.display_name}</strong>
-              <small>{t(`role.${member.role}`)} · {t(`identity.${member.identity_type}`)}</small>
-            </div>
-            {hasAnyAction && (
-              <div className="row-actions">
-                {caps.can_promote && <button onClick={() => onRole(member, 'admin')}>{t('members.promote')}</button>}
-                {caps.can_demote && <button onClick={() => onRole(member, 'member')}>{t('members.demote')}</button>}
-                {caps.can_remove && <button onClick={() => onRemove(member)}>{t('members.remove')}</button>}
-                {caps.can_transfer_ownership && <button onClick={() => onTransfer(member)}>{t('members.transfer')}</button>}
-              </div>
-            )}
-          </div>
-        );
-      })}
-      {currentMember?.role !== 'owner' && <button className="pc-btn-danger" onClick={onLeave}>{t('members.leave')}</button>}
+    <section className="members-list card-pc">
+      <div className="members-list__head">
+        <h2>{t('members.title')} ({members.length})</h2>
+      </div>
+      <label className="dash-visually-hidden" htmlFor="members-search">{t('members.searchPlaceholder')}</label>
+      <input
+        id="members-search"
+        type="search"
+        className="members-list__search"
+        placeholder={t('members.searchPlaceholder')}
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+      />
+      <ul className="members-list__rows">
+        {filtered.map((member) => {
+          const balance = balancesByMemberId?.[member.id];
+          const isSelected = member.id === selectedId;
+          const isCurrentMember = member.id === currentMember?.id;
+          return (
+            <li key={member.id}>
+              <button
+                type="button"
+                className={`members-list__row${isSelected ? ' members-list__row--selected' : ''}`}
+                onClick={() => onSelect(member)}
+                aria-current={isSelected}
+              >
+                <Avatar avatarKey={avatarKeyFromAvatar(member.avatar)} displayName={member.display_name} size="sm" />
+                <span className="members-list__row-main">
+                  <span className="members-list__row-name">{member.display_name}</span>
+                  <span className="members-list__row-meta text-copy-sm">
+                    <span className={`members-list__badge members-list__badge--${member.role}`}>{t(`role.${member.role}`)}</span>
+                    <span className="members-list__badge members-list__badge--identity">{t(`identity.${member.identity_type}`)}</span>
+                  </span>
+                </span>
+                {balance !== undefined && <Money value={balance} currency={currency} variant="tabular" className="members-list__row-balance" />}
+              </button>
+              <MemberActionsMenu
+                member={{ ...member, isCurrentMember }}
+                label={`${t('members.details')} ${member.display_name}`}
+                onPromote={(m) => onRole(m, 'admin')}
+                onDemote={(m) => onRole(m, 'member')}
+                onTransfer={onTransfer}
+                onRemove={onRemove}
+                onBan={onBan}
+                onLeave={onLeave}
+              />
+            </li>
+          );
+        })}
+        {!filtered.length && <li className="members-list__empty text-copy-sm">{t('members.noSearchResults')}</li>}
+      </ul>
     </section>
   );
 };

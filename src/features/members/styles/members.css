@@ -2,14 +2,172 @@
   Members is its own lazy-loaded route chunk, so it cannot rely on
   another feature's CSS (or the legacy, hard-coded-dark CardStyles.css)
   having already loaded -- see governance.css's own comment for the same
-  reasoning. Uses the current semantic-token system, not the legacy
-  rgba()-on-dark values CardStyles.css still carries for `.member-detail`.
-  Class prefix `member-detail__`.
+  reasoning. Uses the current semantic-token system throughout.
 */
 
-.member-detail__card { display: flex; flex-direction: column; gap: var(--space-3); }
+/* ------------------------------------------------------------------ */
+/* Master/detail shell -- desktop: two balanced columns (list ~46%,
+   detail ~54%, matching the Stitch reference's proportions), both
+   visible together. Below the mobile breakpoint, only ONE column ever
+   renders at a time: the list by default, or the detail full-width
+   once a member is selected -- never a squeezed two-column table. */
+.members-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 46%) 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
 
-.member-detail__balance {
+@media (max-width: 860px) {
+  .members-layout { grid-template-columns: 1fr; }
+  .members-layout .members-list { display: block; }
+  .members-layout .member-detail-panel { display: none; }
+  .members-layout.members-layout--detail-open .members-list { display: none; }
+  .members-layout.members-layout--detail-open .member-detail-panel { display: flex; }
+}
+
+/* ------------------------------------------------------------------ */
+/* List (left column) */
+
+.members-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.members-list__head { display: flex; align-items: center; justify-content: space-between; }
+.members-list__head h2 { margin: 0; }
+
+.members-list__search {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--text-body);
+}
+
+.members-list__rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.members-list__rows > li { display: flex; align-items: center; gap: var(--space-1); }
+.members-list__empty { padding: var(--space-4); text-align: center; color: var(--color-text-muted); }
+
+.members-list__row {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--press-duration) ease, border-color var(--press-duration) ease;
+}
+.members-list__row:hover { background: var(--color-surface-alt); }
+.members-list__row--selected {
+  background: var(--color-primary-soft);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.members-list__row-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.members-list__row-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.members-list__row-meta { display: flex; align-items: center; gap: var(--space-1); color: var(--color-text-muted); }
+.members-list__row-balance { flex: 0 0 auto; font-size: 13px; }
+
+.members-list__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px var(--space-1);
+  border-radius: 999px;
+  border: var(--border-width) solid var(--color-border-subtle);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+}
+.members-list__badge--owner { background: var(--nc-indigo-100); border-color: var(--nc-indigo-700); }
+.members-list__badge--admin { background: var(--color-surface-alt); }
+.members-list__badge--identity { opacity: 0.8; }
+
+/* ------------------------------------------------------------------ */
+/* Per-row three-dot action menu -- rect-anchored via getBoundingClientRect
+   at open time (see MemberActionsMenu.jsx), portaled to document.body
+   so it can never be clipped by an ancestor row. */
+
+.member-actions-menu__trigger {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+}
+.member-actions-menu__trigger:hover { background: var(--color-surface-alt); border-color: var(--color-border); }
+
+.member-actions-menu__panel {
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: var(--space-1);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+}
+.member-actions-menu__panel button {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  text-align: start;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font: var(--text-body-sm);
+}
+.member-actions-menu__panel button:hover { background: var(--color-surface-alt); }
+.member-actions-menu__panel .member-actions-menu__danger { color: var(--color-danger); }
+
+/* ------------------------------------------------------------------ */
+/* Detail (right column) -- the Stitch "Financial Record" bento card. */
+
+.member-detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+}
+.member-detail-panel--empty { align-items: center; justify-content: center; min-height: 240px; color: var(--color-text-muted); }
+
+.member-detail-panel__back {
+  display: none;
+  align-items: center;
+  gap: var(--space-1);
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  padding: 0;
+  font: var(--text-body-sm);
+}
+@media (max-width: 860px) {
+  .member-detail-panel__back { display: inline-flex; }
+}
+
+.member-detail-panel__header { display: flex; align-items: flex-start; gap: var(--space-3); }
+.member-detail-panel__header h2 { margin: 0; }
+.member-detail-panel__meta { margin: 2px 0 0; color: var(--color-text-muted); }
+
+.member-detail-panel__balance {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -18,6 +176,26 @@
   border-radius: var(--radius-md);
   background: var(--color-surface-container);
 }
+.member-detail-panel__balance-label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
+.member-detail-panel__balance .money { font-size: 1.5rem; }
 
-.member-detail__balance-label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
-.member-detail__balance .money { font-size: var(--text-headline-sm, 1.5rem); }
+.member-detail-panel__bento {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+}
+.member-detail-panel__bento > div {
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+}
+.member-detail-panel__bento dt { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; margin: 0 0 2px; }
+.member-detail-panel__bento dd { margin: 0; font-weight: 600; }
+@media (max-width: 480px) {
+  .member-detail-panel__bento { grid-template-columns: repeat(2, 1fr); }
+}
+
+.member-detail-panel__fund { display: flex; flex-direction: column; gap: var(--space-2); padding-top: var(--space-2); border-top: var(--border-width) solid var(--color-border-subtle); }
+.member-detail-panel__bento--fund { grid-template-columns: repeat(2, 1fr); }
