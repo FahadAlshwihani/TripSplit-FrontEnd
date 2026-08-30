@@ -43,3 +43,33 @@ test('a destructive confirmation (the default) uses the danger style', () => {
   render(<ConfirmDialog title="t" body="b" onConfirm={jest.fn()} onCancel={jest.fn()} />);
   expect(screen.getByRole('button', { name: 'common.delete' })).toHaveClass('dash-btn--danger');
 });
+
+test('Tab is contained within the dialog -- forward wraps from the last control to the first, reverse the other way', () => {
+  render(<ConfirmDialog title="t" body="b" onConfirm={jest.fn()} onCancel={jest.fn()} />);
+  const cancelBtn = screen.getByRole('button', { name: 'common.cancel' });
+  const confirmBtn = screen.getByRole('button', { name: 'common.delete' });
+
+  expect(confirmBtn).toHaveFocus();
+  fireEvent.keyDown(document, { key: 'Tab' });
+  expect(cancelBtn).toHaveFocus();
+  fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+  expect(confirmBtn).toHaveFocus();
+});
+
+test('closing returns focus to whatever triggered the dialog', () => {
+  const Wrapper = () => {
+    const [open, setOpen] = React.useState(false);
+    return (
+      <>
+        <button onClick={() => setOpen(true)}>open</button>
+        {open && <ConfirmDialog title="t" body="b" onConfirm={jest.fn()} onCancel={() => setOpen(false)} />}
+      </>
+    );
+  };
+  render(<Wrapper />);
+  const trigger = screen.getByRole('button', { name: 'open' });
+  trigger.focus();
+  fireEvent.click(trigger);
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(trigger).toHaveFocus();
+});
