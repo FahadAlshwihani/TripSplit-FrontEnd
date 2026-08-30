@@ -70,3 +70,65 @@
 .field-control:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform: none; }
 
 select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 2 * var(--border-width)); }
+
+/* ------------------------------------------------------------------ */
+/* Page layout -- Stitch's Access Control structure: MAIN (Join
+   Requests, Pending Invitations) + SIDE (Restricted/Banned, Access
+   Settings) on desktop. Below the breakpoint every section simply
+   stacks in document order -- never a cramped side column. */
+
+.governance-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas: "title" "main" "side";
+  gap: var(--space-4);
+}
+.governance-layout__title { grid-area: title; margin: 0; }
+.governance-layout__main { grid-area: main; display: flex; flex-direction: column; gap: var(--space-4); }
+.governance-layout__side { grid-area: side; display: flex; flex-direction: column; gap: var(--space-4); }
+
+@media (min-width: 960px) {
+  .governance-layout {
+    grid-template-columns: 1fr minmax(300px, 34%);
+    grid-template-areas: "title title" "main side";
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Access Settings card -- same .acc-switch recipe AccountNotifications
+   already uses (see account.css), copied here for the same "own lazy
+   chunk" reason as the rest of this file. */
+
+.governance-settings { display: flex; flex-direction: column; gap: var(--space-3); }
+.governance-settings__row { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.governance-settings__label { font-weight: 600; }
+.governance-settings__hint { margin: 2px 0 0; color: var(--color-text-muted); }
+.governance-settings__link { display: flex; flex-direction: column; gap: var(--space-2); }
+.governance-settings__link-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+.acc-switch { position: relative; display: inline-flex; flex: 0 0 auto; width: 40px; height: 22px; }
+.acc-switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.acc-switch__track {
+  position: absolute;
+  inset: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+  transition: background-color 0.15s ease;
+}
+.acc-switch__track::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 2px;
+  top: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-border);
+  transition: transform 0.15s ease;
+}
+.acc-switch input:checked ~ .acc-switch__track { background: var(--color-primary-soft); }
+.acc-switch input:checked ~ .acc-switch__track::before { transform: translateX(18px); background: var(--nc-indigo-700); }
+[dir="rtl"] .acc-switch input:checked ~ .acc-switch__track::before { transform: translateX(-18px); }
+.acc-switch input:focus-visible ~ .acc-switch__track { outline: 2px solid var(--nc-indigo-700); outline-offset: 2px; }
+.acc-switch input:disabled ~ .acc-switch__track { opacity: 0.5; cursor: not-allowed; }

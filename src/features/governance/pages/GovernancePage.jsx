@@ -11,9 +11,10 @@ import useRouteResource from '../../../shared/hooks/useRouteResource';
 import { banMember, getBans, getJoinRequests, kickMember, reviewJoinRequest, revokeBan } from '../api/governanceApi';
 import { createInvitation, getInvitations, resendInvitation, revokeInvitation } from '../../invitations/api/invitationsApi';
 import { getMembers } from '../../members/api/membersApi';
+import { rotateJoinCode, updateTrip } from '../../trips/api/tripsApi';
 
 export default function GovernancePage() {
-  const { tripId, permissions } = useOutletContext();
+  const { trip, setTrip, tripId, permissions } = useOutletContext();
   const { t } = useTranslation();
   const [error, setError] = useState(null);
   const [pending, setPending] = useState(null); // { kind: 'kick'|'unban', member|ban } | null
@@ -72,6 +73,7 @@ export default function GovernancePage() {
     <>
       {error && <ErrorState message={error.message} />}
       <GovernancePanel
+        trip={trip}
         {...state.data}
         onReview={(r, d) => run(() => reviewJoinRequest(tripId, r.id, d))}
         onInvite={(p) => run(() => createInvitation(tripId, p))}
@@ -80,6 +82,8 @@ export default function GovernancePage() {
         onKick={(member) => setPending({ kind: 'kick', member })}
         onBan={(member) => setBanTarget(member)}
         onUnban={(ban) => setPending({ kind: 'unban', ban })}
+        onUpdateSettings={async (payload) => { const updated = await updateTrip(tripId, payload); setTrip(updated); }}
+        onRotateLink={async () => { const updated = await rotateJoinCode(tripId); setTrip(updated); }}
       />
       {banTarget && (
         <BanMemberDialog

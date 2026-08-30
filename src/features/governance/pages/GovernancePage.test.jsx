@@ -5,6 +5,7 @@ import GovernancePage from './GovernancePage';
 import { banMember, getBans, getJoinRequests, kickMember, revokeBan } from '../api/governanceApi';
 import { getInvitations } from '../../invitations/api/invitationsApi';
 import { getMembers } from '../../members/api/membersApi';
+import { rotateJoinCode, updateTrip } from '../../trips/api/tripsApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key), i18n: { language: 'en' } }) }));
 jest.mock('../api/governanceApi', () => ({
@@ -22,14 +23,16 @@ jest.mock('../../invitations/api/invitationsApi', () => ({
   revokeInvitation: jest.fn(),
 }));
 jest.mock('../../members/api/membersApi', () => ({ getMembers: jest.fn() }));
+jest.mock('../../trips/api/tripsApi', () => ({ updateTrip: jest.fn(), rotateJoinCode: jest.fn() }));
 
 const noCaps = { can_promote: false, can_demote: false, can_remove: false, can_ban: false, can_transfer_ownership: false, can_settle_with: false };
 const moderatable = { id: 'm2', display_name: 'Regular', role: 'member', identity_type: 'registered', active: true, avatar: { type: 'initials', color: 'slate' }, capabilities: { ...noCaps, can_remove: true, can_ban: true } };
+const baseTrip = { currency: 'SAR', join_code: 'ABC12345', join_policy: 'open' };
 
-const renderPage = () => render(
+const renderPage = (ctxOverrides = {}) => render(
   <MemoryRouter initialEntries={['/trips/t1/governance']}>
     <Routes>
-      <Route path="/trips/:tripId" element={<Outlet context={{ tripId: 't1', permissions: { canManageMembers: true } }} />}>
+      <Route path="/trips/:tripId" element={<Outlet context={{ trip: baseTrip, setTrip: jest.fn(), tripId: 't1', permissions: { canManageMembers: true }, ...ctxOverrides }} />}>
         <Route path="governance" element={<GovernancePage />} />
       </Route>
     </Routes>
@@ -84,11 +87,45 @@ test('governance access denial uses a localized message, not hardcoded English',
   render(
     <MemoryRouter initialEntries={['/trips/t1/governance']}>
       <Routes>
-        <Route path="/trips/:tripId" element={<Outlet context={{ tripId: 't1', permissions: { canManageMembers: false } }} />}>
+        <Route path="/trips/:tripId" element={<Outlet context={{ trip: baseTrip, setTrip: jest.fn(), tripId: 't1', permissions: { canManageMembers: false } }} />}>
           <Route path="governance" element={<GovernancePage />} />
         </Route>
       </Routes>
     </MemoryRouter>,
   );
   expect(await screen.findByText('governance.accessDenied')).toBeInTheDocument();
+});
+
+test('toggling Require Approval PATCHes the trip join_policy, not a client-side guess', async () => {
+  updateTrip.mockResolvedValue({ ...baseTrip, join_policy: 'approval_required' });
+  renderPage();
+  await screen.findByLabelText('governance.requireApproval');
+  fireEvent.click(screen.getByLabelText('governance.requireApproval'));
+  await waitFor(() => expect(updateTrip).toHaveBeenCalledWith('t1', { join_policy: 'approval_required' }));
+});
+
+test('turning the invite link off sends invite_only regardless of the approval toggle', async () => {
+  updateTrip.mockResolvedValue({ ...baseTrip, join_policy: 'invite_only' });
+  renderPage();
+  await screen.findByLabelText('governance.inviteLinkActive');
+  fireEvent.click(screen.getByLabelText('governance.inviteLinkActive'));
+  await waitFor(() => expect(updateTrip).toHaveBeenCalledWith('t1', { join_policy: 'invite_only' }));
+});
+
+test('the invite link field and copy/rotate actions disappear once the link is off', async () => {
+  renderPage({ trip: { ...baseTrip, join_policy: 'invite_only' } });
+  await screen.findByLabelText('governance.inviteLinkActive');
+  expect(screen.queryByText('governance.copyLink')).not.toBeInTheDocument();
+  expect(screen.queryByText('governance.rotateLink')).not.toBeInTheDocument();
+});
+
+test('rotating the invite link requires confirmation before calling the API', async () => {
+  rotateJoinCode.mockResolvedValue({ ...baseTrip, join_code: 'NEWCODE1' });
+  renderPage();
+  await screen.findByText('governance.rotateLink');
+  fireEvent.click(screen.getByText('governance.rotateLink'));
+  expect(rotateJoinCode).not.toHaveBeenCalled();
+  const dialog = await screen.findByRole('alertdialog');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'governance.rotateLink' }));
+  await waitFor(() => expect(rotateJoinCode).toHaveBeenCalledWith('t1'));
 });
