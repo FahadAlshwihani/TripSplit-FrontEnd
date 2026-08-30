@@ -169,3 +169,17 @@ test('clicking the close button closes the drawer', () => {
   fireEvent.click(screen.getByRole('button', { name: 'common.close' }));
   expect(onClose).toHaveBeenCalled();
 });
+
+test('opening the drawer moves focus into it, and Tab is contained within it', () => {
+  setup();
+  const closeBtn = screen.getByRole('button', { name: 'common.close' });
+  const deleteBtn = screen.getByRole('button', { name: 'common.delete' });
+  expect(closeBtn).toHaveFocus();
+
+  deleteBtn.focus();
+  fireEvent.keyDown(document, { key: 'Tab' });
+  expect(closeBtn).toHaveFocus();
+
+  fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+  expect(deleteBtn).toHaveFocus();
+});

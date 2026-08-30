@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import ModalPortal from '../../../shared/components/ModalPortal';
+import useModalDialog from '../../../shared/hooks/useModalDialog';
 import Avatar from '../../profile/components/Avatar';
 import { avatarKeyFromAvatar } from '../../profile/utils/avatarKey';
 import Money from '../../../shared/components/Money';
@@ -31,25 +32,11 @@ const shareDetail = (row, splitType, t) => {
 */
 const ExpenseDetailsDrawer = ({ expense, category, budget, membersById, currency, canEdit, canCreateExpense, onEdit, onDuplicate, onDelete, onClose }) => {
   const { t } = useTranslation();
-  const drawerRef = useRef(null);
-  const returnFocusRef = useRef(null);
+  const drawerRef = useModalDialog(onClose);
   const isForeign = expense.original_currency && expense.original_currency !== currency;
   const payment = paymentSummary(expense, membersById);
   const creator = expense.created_by ? membersById[expense.created_by] : null;
   const wasUpdated = expense.updated_at && expense.created_at && expense.updated_at !== expense.created_at;
-
-  useEffect(() => {
-    returnFocusRef.current = document.activeElement;
-    const handleKeyDown = (event) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      if (returnFocusRef.current instanceof HTMLElement) returnFocusRef.current.focus();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => { drawerRef.current?.focus(); }, []);
 
   const scopeCardValue = expense.scope === 'personal'
     ? t('expenses.ledger.filterPersonal')
