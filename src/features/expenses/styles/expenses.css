@@ -158,12 +158,21 @@
 /* ---------------------------------------------------------------------- */
 /* Filter popover */
 
-.exp-filter-overlay { position: fixed; inset: 0; z-index: var(--z-modal); }
-
+/* Base/fallback position only -- the real desktop position is computed
+   from the trigger button's own measured rect (ExpenseFilterPopover.jsx,
+   the same anchoring approach TripMoreActionsMenu already uses) and
+   applied as an inline style, which wins on specificity the instant it's
+   set (synchronously, before paint). This rule only matters for the
+   otherwise-unstyled instant before that -- it is deliberately no longer
+   a fixed, inset:0 "overlay" positioning CONTEXT: that was the desktop
+   bug -- the panel positioned itself relative to the VIEWPORT corner,
+   never the trigger, which is why it visually detached from the button
+   the moment the page layout put that button anywhere else. */
 .exp-filter-panel {
-  position: absolute;
+  position: fixed;
   inset-block-start: 56px;
   inset-inline-end: 0;
+  z-index: var(--z-popover);
   width: min(320px, calc(100vw - 32px));
   display: flex;
   flex-direction: column;
@@ -175,8 +184,11 @@
   box-shadow: var(--shadow-hard-md);
 }
 
+/* Mobile is untouched: a fixed bottom sheet, never trigger-anchored --
+   ExpenseFilterPopover.jsx explicitly skips its own position computation
+   below this exact breakpoint, so this rule always has the only say. */
 @media (max-width: 640px) {
-  .exp-filter-panel { position: fixed; inset-inline: var(--page-margin-mobile); inset-block-end: var(--space-4); inset-block-start: auto; width: auto; }
+  .exp-filter-panel { inset-inline: var(--page-margin-mobile); inset-block-end: var(--space-4); inset-block-start: auto; width: auto; }
 }
 
 .exp-filter-field { display: flex; flex-direction: column; gap: var(--space-1); }

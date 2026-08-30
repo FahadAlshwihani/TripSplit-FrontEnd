@@ -63,6 +63,7 @@ const ExpenseFilterBar = ({ filters, setFilters, hasActiveFilters, categories, c
           type="button"
           className={`exp-utility-btn${hasActiveFilters ? ' is-active' : ''}`}
           aria-label={t('expenses.ledger.filter')}
+          aria-haspopup="true"
           aria-expanded={filterOpen}
           onClick={() => setFilterOpen((open) => !open)}
         >
