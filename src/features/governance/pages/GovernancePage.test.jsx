@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import GovernancePage from './GovernancePage';
 import { banMember, getBans, getJoinRequests, kickMember, revokeBan } from '../api/governanceApi';
-import { getInvitations } from '../../invitations/api/invitationsApi';
+import { createInvitation, getInvitations } from '../../invitations/api/invitationsApi';
 import { getMembers } from '../../members/api/membersApi';
 import { rotateJoinCode, updateTrip } from '../../trips/api/tripsApi';
 
@@ -128,4 +128,16 @@ test('rotating the invite link requires confirmation before calling the API', as
   const dialog = await screen.findByRole('alertdialog');
   fireEvent.click(within(dialog).getByRole('button', { name: 'governance.rotateLink' }));
   await waitFor(() => expect(rotateJoinCode).toHaveBeenCalledWith('t1'));
+});
+
+test('Add member opens the invite dialog and sends a real email invitation', async () => {
+  createInvitation.mockResolvedValue({});
+  renderPage();
+  await screen.findByText('governance.addMember');
+  fireEvent.click(screen.getByText('governance.addMember'));
+  const dialog = await screen.findByRole('dialog', { name: 'governance.addMember' });
+  fireEvent.change(within(dialog).getByLabelText('governance.inviteEmail'), { target: { value: 'friend@example.com' } });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'governance.sendInvite' }));
+  await waitFor(() => expect(createInvitation).toHaveBeenCalledWith('t1', { email: 'friend@example.com' }));
+  await waitFor(() => expect(screen.queryByRole('dialog', { name: 'governance.addMember' })).not.toBeInTheDocument());
 });

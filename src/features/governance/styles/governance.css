@@ -42,6 +42,11 @@
 .governance-dialog__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .governance-dialog__head h2 { margin: 0; color: var(--color-text); }
 .governance-dialog__footer { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); flex-wrap: wrap; }
+.governance-dialog__divider { display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: var(--tracking-label); }
+.governance-dialog__error { color: var(--color-danger); margin: 0; }
+
+.governance-section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.governance-section-head h3 { margin: 0; }
 
 .field-group { display: flex; flex-direction: column; gap: var(--space-1); }
 .field-label { display: inline-flex; align-items: center; gap: var(--space-1); font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }

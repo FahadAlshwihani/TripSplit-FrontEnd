@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import '../styles/governance.css';
 import GovernancePanel from '../components/GovernancePanel';
 import BanMemberDialog from '../components/BanMemberDialog';
+import InviteMemberDialog from '../components/InviteMemberDialog';
 import Loading from '../../../components/Loading';
 import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
@@ -19,6 +20,7 @@ export default function GovernancePage() {
   const [error, setError] = useState(null);
   const [pending, setPending] = useState(null); // { kind: 'kick'|'unban', member|ban } | null
   const [banTarget, setBanTarget] = useState(null); // member | null
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const state = useRouteResource(async (signal) => {
@@ -76,7 +78,7 @@ export default function GovernancePage() {
         trip={trip}
         {...state.data}
         onReview={(r, d) => run(() => reviewJoinRequest(tripId, r.id, d))}
-        onInvite={(p) => run(() => createInvitation(tripId, p))}
+        onOpenInvite={() => setInviteOpen(true)}
         onResendInvite={(r) => run(() => resendInvitation(tripId, r.id))}
         onRevokeInvite={(r) => run(() => revokeInvitation(tripId, r.id))}
         onKick={(member) => setPending({ kind: 'kick', member })}
@@ -90,6 +92,12 @@ export default function GovernancePage() {
           member={banTarget}
           onBan={async (payload) => { await run(() => banMember(tripId, banTarget.id, payload)); setBanTarget(null); }}
           onClose={() => setBanTarget(null)}
+        />
+      )}
+      {inviteOpen && (
+        <InviteMemberDialog
+          onInvite={(p) => run(() => createInvitation(tripId, p))}
+          onClose={() => setInviteOpen(false)}
         />
       )}
       {dialog && (

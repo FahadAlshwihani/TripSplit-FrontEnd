@@ -12,14 +12,14 @@ import AccessSettingsCard from './AccessSettingsCard';
   mobile (governance.css collapses the grid below the breakpoint) --
   never a cramped side column at narrow widths.
 */
-export default function GovernancePanel({ trip, requests, invitations, bans, members, onReview, onInvite, onRevokeInvite, onResendInvite, onKick, onBan, onUnban, onUpdateSettings, onRotateLink }) {
+export default function GovernancePanel({ trip, requests, invitations, bans, members, onReview, onOpenInvite, onRevokeInvite, onResendInvite, onKick, onBan, onUnban, onUpdateSettings, onRotateLink }) {
   const { t } = useTranslation();
   return (
     <div className="governance-layout">
       <h2 className="governance-layout__title">{t('governance.title')}</h2>
       <div className="governance-layout__main">
         <section className="card-pc"><JoinRequestsSection requests={requests} onReview={onReview} /></section>
-        <section className="card-pc"><InvitationsSection invitations={invitations} onInvite={onInvite} onResend={onResendInvite} onRevoke={onRevokeInvite} /></section>
+        <section className="card-pc"><InvitationsSection invitations={invitations} onOpenInvite={onOpenInvite} onResend={onResendInvite} onRevoke={onRevokeInvite} /></section>
       </div>
       <div className="governance-layout__side">
         <section className="card-pc"><BansSection members={members} bans={bans} onKick={onKick} onBan={onBan} onUnban={onUnban} /></section>
