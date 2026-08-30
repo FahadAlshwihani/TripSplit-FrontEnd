@@ -1,0 +1,23 @@
+/*
+  Members is its own lazy-loaded route chunk, so it cannot rely on
+  another feature's CSS (or the legacy, hard-coded-dark CardStyles.css)
+  having already loaded -- see governance.css's own comment for the same
+  reasoning. Uses the current semantic-token system, not the legacy
+  rgba()-on-dark values CardStyles.css still carries for `.member-detail`.
+  Class prefix `member-detail__`.
+*/
+
+.member-detail__card { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.member-detail__balance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-container);
+}
+
+.member-detail__balance-label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
+.member-detail__balance .money { font-size: var(--text-headline-sm, 1.5rem); }
