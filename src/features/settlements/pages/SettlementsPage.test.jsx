@@ -78,6 +78,13 @@ test('a confirmed row shows the payment date and the confirmation date -- a real
   expect(within(row).getByText(/settlements.confirmedAtLabel/)).toBeInTheDocument();
 });
 
+test('a row shows who recorded it and when, when that provenance is available', async () => {
+  getSettlements.mockResolvedValue({ results: [{ ...confirmedRow, created_by_name: 'Fahad', created_at: '2026-08-09T18:00:00Z' }] });
+  renderPage();
+  const row = await screen.findByRole('button', { name: confirmedLabel });
+  expect(within(row).getByText(/settlements.recordedByLabel/)).toBeInTheDocument();
+});
+
 test('a pending row shows no confirmation date -- it has not happened yet', async () => {
   renderPage();
   const row = await screen.findByRole('button', { name: pendingLabel });

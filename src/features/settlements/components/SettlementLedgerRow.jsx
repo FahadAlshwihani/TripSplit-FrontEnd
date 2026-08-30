@@ -48,6 +48,9 @@ const SettlementLedgerRow = ({ settlement, currency, fromMember, toMember, canRe
         <div className="settle-row__meta">
           <span className={`settle-status-badge settle-status-badge--${settlement.status}`}><i className={`bi ${STATUS_ICON[settlement.status]}`} aria-hidden="true" />{t(`settlements.status.${settlement.status}`)}</span>
           <span className="settle-row__date">{t('settlements.paymentDateLabel')}: {formatDate(settlement.settlement_date)}</span>
+          {settlement.created_by_name && (
+            <span className="settle-row__date">{t('settlements.recordedByLabel')}: {settlement.created_by_name} • {formatDate(settlement.created_at)}</span>
+          )}
           {confirmed && settlement.reviewed_at && (
             <span className="settle-row__date settle-row__date--confirmed">{t('settlements.confirmedAtLabel')}: {formatDate(settlement.reviewed_at)} • {formatTime(settlement.reviewed_at)}</span>
           )}
