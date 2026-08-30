@@ -11,6 +11,7 @@ import {
 import { getMembers } from '../../members/api/membersApi';
 import { getCategories, getCategoryBudgets } from '../../categories/api/categoriesApi';
 import { getExpenses } from '../../expenses/api/expensesApi';
+import { getActivity, getActivityPage } from '../../activity/api/activityApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key), i18n: { language: 'en', changeLanguage: jest.fn() } }) }));
 jest.mock('../api/fundsApi', () => ({
@@ -25,6 +26,7 @@ jest.mock('../api/fundsApi', () => ({
 jest.mock('../../members/api/membersApi', () => ({ getMembers: jest.fn() }));
 jest.mock('../../categories/api/categoriesApi', () => ({ getCategories: jest.fn(), getCategoryBudgets: jest.fn() }));
 jest.mock('../../expenses/api/expensesApi', () => ({ getExpenses: jest.fn() }));
+jest.mock('../../activity/api/activityApi', () => ({ getActivity: jest.fn(), getActivityPage: jest.fn() }));
 jest.mock('../../expenses/components/ExpenseDetailsDrawer', () => ({ __esModule: true, default: ({ expense, onClose }) => (<div data-testid="expense-drawer">{expense.title}<button onClick={onClose}>close-drawer</button></div>) }));
 
 const fahad = { id: 'm1', display_name: 'Fahad', role: 'owner', active: true, avatar: { type: 'initials', color: 'indigo' } };
@@ -72,10 +74,12 @@ const renderPage = () => render(
 
 beforeEach(() => {
   jest.clearAllMocks();
+  localStorage.clear();
   getMembers.mockResolvedValue({ results: members });
   getCategories.mockResolvedValue({ results: [] });
   getCategoryBudgets.mockResolvedValue({ results: [] });
   getExpenses.mockResolvedValue({ results: [] });
+  getActivity.mockResolvedValue({ results: [], next: null });
   getFund.mockResolvedValue(baseFund);
 });
 
@@ -189,6 +193,23 @@ test('a "check later" click on a pending contribution never calls confirm or rej
   expect(screen.queryByRole('button', { name: 'fund.confirmContribution' })).not.toBeInTheDocument();
 });
 
+test('"check later" survives a reload -- it is not reset by remounting the page', async () => {
+  const pendingContribution = { id: 'c1', round_id: 'r1', round_title: 'Initial Collection', member_id: 'm2', display_name: 'Saud', amount: '200.00', contribution_date: '2026-01-05', note: '', voided: false, status: 'pending', origin: 'member_reported', recorded_by: 'Saud', reviewed_by: null, reviewed_at: null, review_note: '', retry_cooldown_active: false, corrections: [] };
+  getFund.mockResolvedValue({ ...baseFund, contributions: [pendingContribution] });
+  const first = renderPage();
+  await screen.findByText('fund.pendingReviewTitle');
+  fireEvent.click(screen.getByRole('button', { name: 'fund.checkLater' }));
+  expect(screen.queryByRole('button', { name: 'fund.confirmContribution' })).not.toBeInTheDocument();
+  first.unmount();
+
+  renderPage();
+  await screen.findByText('fund.pendingReviewTitle');
+  // The row itself must still be there (never hidden) -- only its
+  // action prompt stays suppressed across the simulated reload.
+  expect(screen.getAllByText(/Saud/).length).toBeGreaterThan(0);
+  expect(screen.queryByRole('button', { name: 'fund.confirmContribution' })).not.toBeInTheDocument();
+});
+
 test('a rejected contribution stays visible with retry, new-payment, and direct-record recovery actions', async () => {
   getFund.mockResolvedValue({ ...baseFund, contributions: [{ id: 'c1', round_id: 'r1', round_title: 'Initial Collection', member_id: 'm2', display_name: 'Saud', amount: '200.00', contribution_date: '2026-01-05', note: '', voided: false, status: 'rejected', origin: 'member_reported', recorded_by: 'Saud', reviewed_by: 'Fahad', reviewed_at: '2026-01-06T00:00:00Z', review_note: '', retry_cooldown_active: false, corrections: [] }] });
   retryFundContribution.mockResolvedValue({ id: 'c1', status: 'pending' });
@@ -200,6 +221,14 @@ test('a rejected contribution stays visible with retry, new-payment, and direct-
   // "Record" is offered both as a round-level action and, per brief
   // part 10, again right on the rejected row itself as a recovery path.
   expect(screen.getAllByRole('button', { name: 'fund.recordContribution' }).length).toBeGreaterThan(0);
+});
+
+test('sending a Fund contribution reminder calls the reminder API for that member', async () => {
+  remindContribution.mockResolvedValue({ status: 'sent' });
+  renderPage();
+  await screen.findByText('fund.title');
+  fireEvent.click(screen.getByRole('button', { name: 'fund.remind' }));
+  await waitFor(() => expect(remindContribution).toHaveBeenCalledWith('t1', 'r1', 'm2'));
 });
 
 test('the holder confirms a pending contribution', async () => {
@@ -258,4 +287,53 @@ test('clicking a recent Fund expense opens the canonical ExpenseDetailsDrawer', 
   renderPage();
   fireEvent.click(await screen.findByText('Airbnb Tbilisi'));
   expect(await screen.findByTestId('expense-drawer')).toBeInTheDocument();
+});
+
+test('Fund history shows only Fund-scoped activity, resolving a real copy key per event type', async () => {
+  getActivity.mockResolvedValue({
+    results: [
+      { id: 'a1', event_type: 'fund_contribution_reported', actor: fahad, summary: { member: 'Fahad', amount: '500.00', currency: 'SAR' }, created_at: '2026-01-03T10:00:00Z' },
+      { id: 'a2', event_type: 'expense_created', actor: fahad, summary: { title: 'Dinner' }, created_at: '2026-01-02T10:00:00Z' },
+    ],
+    next: 'https://api/next-page',
+  });
+  renderPage();
+  fireEvent.click(await screen.findByText('fund.historyTitle'));
+  const dialog = await screen.findByRole('dialog');
+  // The mocked t() renders the literal key -- this proves the FUND event
+  // resolved to its own copy key (not a missing/fallback one), while the
+  // non-Fund expense_created event was filtered out entirely.
+  expect(within(dialog).getByText(/activity\.fund_contribution_reported/)).toBeInTheDocument();
+  expect(within(dialog).queryByText(/expense_created/)).not.toBeInTheDocument();
+  expect(within(dialog).queryByText('Dinner')).not.toBeInTheDocument();
+});
+
+test('Escape closes the Fund history dialog and returns focus to its trigger', async () => {
+  renderPage();
+  const trigger = await screen.findByText('fund.historyTitle');
+  trigger.focus();
+  fireEvent.click(trigger);
+  await screen.findByRole('dialog');
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();
+});
+
+test('Fund history "load more" fetches the next page and merges it in, without duplicating events', async () => {
+  getActivity.mockResolvedValue({
+    results: [{ id: 'a1', event_type: 'fund_closed', actor: fahad, summary: {}, created_at: '2026-01-03T10:00:00Z' }],
+    next: 'https://api/next-page',
+  });
+  getActivityPage.mockResolvedValue({
+    results: [{ id: 'a2', event_type: 'fund_created', actor: fahad, summary: {}, created_at: '2026-01-01T10:00:00Z' }],
+    next: null,
+  });
+  renderPage();
+  fireEvent.click(await screen.findByText('fund.historyTitle'));
+  const dialog = await screen.findByRole('dialog');
+  expect(within(dialog).getAllByText(/activity\.fund_/).length).toBe(1);
+  fireEvent.click(within(dialog).getByText('common.loadMore'));
+  await waitFor(() => expect(getActivityPage).toHaveBeenCalledWith('https://api/next-page', 't1', expect.anything()));
+  expect(await within(dialog).findByText(/activity\.fund_created/)).toBeInTheDocument();
+  expect(within(dialog).queryByText('common.loadMore')).not.toBeInTheDocument();
 });
