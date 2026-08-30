@@ -65,6 +65,12 @@ beforeEach(() => {
   getSettlementTimeline.mockResolvedValue([]);
 });
 
+test('links to the full Settlement History ledger page', async () => {
+  renderPage();
+  const link = await screen.findByRole('link', { name: /settlements.title/ });
+  expect(link).toHaveAttribute('href', '/trips/t1/settlements');
+});
+
 test('renders the net balance card from the authoritative my_net_balance field', async () => {
   renderPage();
   expect(await findMoney('620.00 SAR')).toBeInTheDocument();

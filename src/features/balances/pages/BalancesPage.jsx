@@ -205,6 +205,17 @@ export default function BalancesPage() {
             <i className="bi bi-person-check" aria-hidden="true" /> {t('settlements.recordExternal')}
           </button>
         )}
+        {/* Entry point into the full, permanently-paginated Settlement
+            Ledger (SettlementsPage) -- Balances itself only ever shows
+            CURRENT actionable debt (a settled pair correctly disappears
+            from here once at zero), never a history the user could scroll
+            back through; this is the one link out to where that history
+            actually lives. Plain <a>, matching the established cross-
+            feature navigation pattern (see RecentFundExpenses' "View
+            Ledger" link), not a dialog -- it's a real page. */}
+        <a className="dash-btn dash-btn--secondary" href={`/trips/${tripId}/settlements`}>
+          <i className="bi bi-clock-history" aria-hidden="true" /> {t('settlements.title')}
+        </a>
       </div>
 
       {remindAllResult && (
