@@ -10,6 +10,7 @@ import { getCategories, getCategoryBudgets } from '../../categories/api/categori
 import { getExpenses } from '../../expenses/api/expensesApi';
 import { membersById as buildMembersById } from '../../expenses/utils/expensePresentation';
 import ExpenseDetailsDrawer from '../../expenses/components/ExpenseDetailsDrawer';
+import { getActivity, getActivityPage } from '../../activity/api/activityApi';
 import {
   cancelFundingRound, closeFund, completeFundingRound, confirmFundContribution, correctFundContribution, createFund,
   createFundingRound, getFund, previewFundRefund, recordFundContribution, recordFundReimbursement, recordFundRefunds,
@@ -27,6 +28,7 @@ import ReimbursementSection from '../components/ReimbursementSection';
 import FundRefundHistory from '../components/FundRefundHistory';
 import RefundDistributionModal from '../components/RefundDistributionModal';
 import RecentFundExpenses from '../components/RecentFundExpenses';
+import FundHistoryDialog, { FUND_EVENT_TYPES } from '../components/FundHistoryDialog';
 // Fund dialogs reuse the exact same field/button/composer primitives
 // Expenses' and Balances/Settlements' own dialogs already use
 // (.field-control, .field-group, .exp-composer__*, .bal-remind-btn,
@@ -65,20 +67,26 @@ export default function FundPage() {
 
   const resource = useRouteResource(async (signal) => {
     const config = { signal };
-    const [fund, members, categories, budgets, recentExpenses] = await Promise.all([
+    const [fund, members, categories, budgets, recentExpenses, activity] = await Promise.all([
       getFund(tripId, config),
       getMembers(tripId, config),
       getCategories(tripId, config),
       getCategoryBudgets(tripId, config),
       getExpenses(tripId, { ...config, params: { payment_source: 'trip_fund', page_size: 5 } }),
+      // Fund's own "سجل الصندوق" history dialog reuses the trip-wide
+      // activity feed, filtered client-side to Fund event types (see
+      // FUND_EVENT_TYPES) -- never a second, parallel audit-log system.
+      // A larger page size than the default 25 so Fund events aren't
+      // crowded out by unrelated trip activity before client filtering.
+      getActivity(tripId, { ...config, params: { page_size: 50 } }),
     ]);
-    return { fund, members: members.results, categories: categories.results, budgets: budgets.results, recentExpenses: recentExpenses.results };
+    return { fund, members: members.results, categories: categories.results, budgets: budgets.results, recentExpenses: recentExpenses.results, activity };
   }, [tripId]);
 
   const [actionError, setActionError] = useState(null);
   // null | { type: 'create-round', prefill? } | { type: 'report-contribution'|'record-contribution', round }
   // | { type: 'change-holder' } | { type: 'reimbursement' } | { type: 'refund' } | { type: 'close-confirm' }
-  // | { type: 'expense-details', expense }
+  // | { type: 'expense-details', expense } | { type: 'history' }
   const [fundDialog, setFundDialog] = useState(null);
   const closeDialog = () => setFundDialog(null);
   const [busyKey, setBusyKey] = useState(null); // contribution/round id currently mid-action
@@ -86,11 +94,12 @@ export default function FundPage() {
   if (resource.loading) return <NeoLoading />;
   if (resource.error) return <ErrorState message={resource.error.message} onRetry={resource.retry} />;
 
-  const { fund, members, categories, budgets, recentExpenses } = resource.data;
+  const { fund, members, categories, budgets, recentExpenses, activity } = resource.data;
   const currency = trip.currency;
   const activeMembers = members.filter((member) => member.active);
   const categoriesByCode = Object.fromEntries(categories.map((category) => [category.code, category]));
   const membersLookup = buildMembersById(members);
+  const fundEvents = activity.results.filter((event) => FUND_EVENT_TYPES.has(event.event_type));
 
   const run = async (action) => {
     try {
@@ -149,6 +158,11 @@ export default function FundPage() {
 
   const handleCloseFund = async () => { await run(() => closeFund(tripId)); closeDialog(); };
 
+  const loadMoreActivity = () => resource.loadMore(
+    (signal) => getActivityPage(activity.next, tripId, { signal }),
+    (current, page) => ({ ...current, activity: { ...page, results: [...current.activity.results, ...page.results] } }),
+  );
+
   const openRounds = fund ? fund.rounds.filter((round) => round.status === 'open') : [];
   const completedRounds = fund ? fund.rounds.filter((round) => round.status !== 'open') : [];
   const deficit = fund ? Number(fund.accounting.deficit) : 0;
@@ -160,10 +174,17 @@ export default function FundPage() {
           <h1 className="fund-page__title text-display">{t('fund.title')}</h1>
           <p className="fund-page__subtitle text-copy-lg">{t('fund.pageSubtitle')}</p>
         </div>
-        {fund && canManage && fund.status === 'active' && (
-          <button type="button" className="dash-btn dash-btn--primary" onClick={() => setFundDialog({ type: 'create-round' })}>
-            <i className="bi bi-plus-lg" aria-hidden="true" /> {t('fund.newRound')}
-          </button>
+        {fund && (
+          <div className="fund-page__header-actions">
+            <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setFundDialog({ type: 'history' })}>
+              <i className="bi bi-clock-history" aria-hidden="true" /> {t('fund.historyTitle')}
+            </button>
+            {canManage && fund.status === 'active' && (
+              <button type="button" className="dash-btn dash-btn--primary" onClick={() => setFundDialog({ type: 'create-round' })}>
+                <i className="bi bi-plus-lg" aria-hidden="true" /> {t('fund.newRound')}
+              </button>
+            )}
+          </div>
         )}
       </header>
 
@@ -334,6 +355,16 @@ export default function FundPage() {
           destructive={false}
           onConfirm={handleCloseFund}
           onCancel={closeDialog}
+        />
+      )}
+
+      {fundDialog?.type === 'history' && (
+        <FundHistoryDialog
+          events={fundEvents}
+          hasMore={Boolean(activity.next)}
+          loadingMore={resource.loadingMore}
+          onLoadMore={loadMoreActivity}
+          onClose={closeDialog}
         />
       )}
 
