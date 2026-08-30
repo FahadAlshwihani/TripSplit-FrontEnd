@@ -4,6 +4,7 @@ import Avatar from '../../profile/components/Avatar';
 import { avatarKeyFromAvatar } from '../../profile/utils/avatarKey';
 import Money from '../../../shared/components/Money';
 import { formatDate } from '../../../shared/utils/format';
+import { loadCheckedLater, markCheckedLater } from '../utils/checkLaterStore';
 
 const STATUS_ICON = { open: 'bi-hourglass-split', completed: 'bi-check-circle', cancelled: 'bi-slash-circle' };
 
@@ -24,10 +25,15 @@ const FundingRoundLedgerCard = ({
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   // "Check later" is explicitly a no-op: it never touches contribution
-  // status or the Fund balance, it only hides that row's action prompt
-  // locally until the page next refreshes (per brief part 9's [شيّك
-  // بعدين] -- "no financial transition").
-  const [checkedLater, setCheckedLater] = useState(() => new Set());
+  // status or the Fund balance, it only suppresses that row's action
+  // prompt (per brief part 9's [شيّك بعدين] -- "no financial
+  // transition") -- the row itself always stays visible regardless.
+  // Persisted in localStorage (see checkLaterStore) keyed by the
+  // contribution's own globally-unique id, so a dismissal survives a
+  // reload/revisit instead of resetting on every mount; once a
+  // contribution leaves the pending list (confirmed/rejected) its
+  // stale entry is simply never looked up again.
+  const [checkedLater, setCheckedLater] = useState(loadCheckedLater);
 
   const stats = round.statistics;
   const myRow = stats.members.find((row) => row.member_id === currentMember?.id);
@@ -146,7 +152,7 @@ const FundingRoundLedgerCard = ({
                         <button type="button" className="bal-remind-btn" disabled={busyKey === row.id} onClick={() => setRejectTarget(row)}>
                           <i className="bi bi-x-lg" aria-hidden="true" /> <span className="bal-remind-btn__label">{t('fund.rejectContribution')}</span>
                         </button>
-                        <button type="button" className="bal-remind-btn" onClick={() => setCheckedLater((current) => new Set(current).add(row.id))}>
+                        <button type="button" className="bal-remind-btn" onClick={() => setCheckedLater(markCheckedLater(row.id))}>
                           <i className="bi bi-clock" aria-hidden="true" /> <span className="bal-remind-btn__label">{t('fund.checkLater')}</span>
                         </button>
                       </span>
