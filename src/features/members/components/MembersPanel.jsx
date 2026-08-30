@@ -15,9 +15,15 @@ import MemberActionsMenu from './MemberActionsMenu';
   canonical calculate_balances() the Balances page itself renders from),
   passed in as `balancesByMemberId` -- never recomputed here.
 */
-const MembersPanel = ({ members, currentMember, currency, selectedId, onSelect, balancesByMemberId, onRole, onRemove, onTransfer, onLeave, onBan }) => {
+const MembersPanel = ({ members, currentMember, currency, selectedId, onSelect, balancesByMemberId, onRole, onRemove, onTransfer, onLeave, onBan, showHistorical, onToggleHistorical }) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
+
+  // "Members (N)" is always the ACTIVE count, even while the historical
+  // toggle is on and `members` includes left/removed rows too (brief
+  // 73/74 -- never count a pending invite, banned non-member, or
+  // historical member in this number).
+  const activeCount = members.filter((member) => member.active !== false).length;
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -28,7 +34,13 @@ const MembersPanel = ({ members, currentMember, currency, selectedId, onSelect, 
   return (
     <section className="members-list card-pc">
       <div className="members-list__head">
-        <h2>{t('members.title')} ({members.length})</h2>
+        <h2>{t('members.title')} ({activeCount})</h2>
+        {onToggleHistorical && (
+          <label className="members-list__historical-toggle text-copy-sm">
+            <input type="checkbox" checked={showHistorical} onChange={(event) => onToggleHistorical(event.target.checked)} />
+            {t('members.showHistorical')}
+          </label>
+        )}
       </div>
       <label className="dash-visually-hidden" htmlFor="members-search">{t('members.searchPlaceholder')}</label>
       <input
@@ -58,6 +70,7 @@ const MembersPanel = ({ members, currentMember, currency, selectedId, onSelect, 
                   <span className="members-list__row-meta text-copy-sm">
                     <span className={`members-list__badge members-list__badge--${member.role}`}>{t(`role.${member.role}`)}</span>
                     <span className="members-list__badge members-list__badge--identity">{t(`identity.${member.identity_type}`)}</span>
+                    {member.active === false && <span className="members-list__badge members-list__badge--inactive">{t('members.inactive')}</span>}
                   </span>
                 </span>
                 {balance !== undefined && <Money value={balance} currency={currency} variant="tabular" className="members-list__row-balance" />}

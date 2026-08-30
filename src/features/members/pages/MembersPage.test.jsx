@@ -2,13 +2,14 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import MembersPage from './MembersPage';
-import { getMemberDetail, getMembers, leaveTrip, removeMember, transferOwnership, updateMember } from '../api/membersApi';
+import { getAllMembers, getMemberDetail, getMembers, leaveTrip, removeMember, transferOwnership, updateMember } from '../api/membersApi';
 import { getBalances } from '../../balances/api/balancesApi';
 import { banMember } from '../../governance/api/governanceApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key), i18n: { language: 'en' } }) }));
 jest.mock('../api/membersApi', () => ({
   getMembers: jest.fn(),
+  getAllMembers: jest.fn(),
   getMemberDetail: jest.fn(),
   updateMember: jest.fn(),
   removeMember: jest.fn(),
@@ -136,4 +137,15 @@ test('banning from the Members action menu opens the real ban dialog, not an ins
   const dialog = await screen.findByRole('dialog', { name: /governance\.banTitle/ });
   fireEvent.click(within(dialog).getByRole('button', { name: 'governance.confirmBanAction' }));
   await waitFor(() => expect(banMember).toHaveBeenCalledWith('t1', 'm2', { duration: '24h', reason: '' }));
+});
+
+test('checking "show historical" refetches through getAllMembers, not the active-only endpoint', async () => {
+  const leftMember = { ...regular, id: 'm3', display_name: 'LeftPerson', active: false, capabilities: noCaps };
+  getAllMembers.mockResolvedValue({ results: [owner, regular, leftMember] });
+  renderPage();
+  await screen.findByText('Regular');
+  expect(getAllMembers).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByLabelText('members.showHistorical'));
+  await screen.findByText('LeftPerson');
+  expect(getAllMembers).toHaveBeenCalledWith('t1', expect.anything());
 });

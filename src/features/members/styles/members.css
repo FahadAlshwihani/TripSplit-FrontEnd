@@ -30,8 +30,9 @@
 /* List (left column) */
 
 .members-list { display: flex; flex-direction: column; gap: var(--space-3); }
-.members-list__head { display: flex; align-items: center; justify-content: space-between; }
+.members-list__head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
 .members-list__head h2 { margin: 0; }
+.members-list__historical-toggle { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--color-text-muted); cursor: pointer; }
 
 .members-list__search {
   display: block;
@@ -88,6 +89,7 @@
 .members-list__badge--owner { background: var(--nc-indigo-100); border-color: var(--nc-indigo-700); }
 .members-list__badge--admin { background: var(--color-surface-alt); }
 .members-list__badge--identity { opacity: 0.8; }
+.members-list__badge--inactive { color: var(--color-text-muted); border-style: dashed; }
 
 /* ------------------------------------------------------------------ */
 /* Per-row three-dot action menu -- rect-anchored via getBoundingClientRect

@@ -9,7 +9,7 @@ import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 import BanMemberDialog from '../../governance/components/BanMemberDialog';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
-import { getMemberDetail, getMembers, leaveTrip, removeMember, transferOwnership, updateMember } from '../api/membersApi';
+import { getAllMembers, getMemberDetail, getMembers, leaveTrip, removeMember, transferOwnership, updateMember } from '../api/membersApi';
 import { banMember } from '../../governance/api/governanceApi';
 import { getBalances } from '../../balances/api/balancesApi';
 
@@ -32,7 +32,11 @@ export default function MembersPage() {
   const { trip, tripId, currentMember } = useOutletContext();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const state = useRouteResource((signal) => getMembers(tripId, { signal }), [tripId]);
+  const [showHistorical, setShowHistorical] = useState(false);
+  const state = useRouteResource(
+    (signal) => (showHistorical ? getAllMembers(tripId, { signal }) : getMembers(tripId, { signal })),
+    [tripId, showHistorical],
+  );
   const balancesState = useRouteResource((signal) => getBalances(tripId, { signal }), [tripId]);
   const [selectedId, setSelectedId] = useState(null);
   const [detail, setDetail] = useState(null);
@@ -134,6 +138,8 @@ export default function MembersPage() {
         onTransfer={(member) => setPending({ kind: 'transfer', member })}
         onLeave={() => setPending({ kind: 'leave', member: currentMember })}
         onBan={(member) => setBanTarget(member)}
+        showHistorical={showHistorical}
+        onToggleHistorical={setShowHistorical}
       />
       <MemberDetail detail={detail} currency={trip.currency} tripId={tripId} onBack={() => setSelectedId(null)} />
       {banTarget && (
