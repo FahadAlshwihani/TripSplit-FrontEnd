@@ -2,7 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import GovernancePanel from '../components/GovernancePanel';
 
-jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: 'en' } }) }));
 
 test('renders pending request and calls approval action', () => {
   const onReview = jest.fn();
