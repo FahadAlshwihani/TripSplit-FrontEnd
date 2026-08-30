@@ -25,6 +25,34 @@ const renderPanel = (members, overrides = {}) => render(
 
 const openMenuFor = (name) => fireEvent.click(screen.getByRole('button', { name: `members.details ${name}` }));
 
+describe('role carries more visual weight than identity', () => {
+  test('owner and admin get the emphasized role badge treatment, plain member does not', () => {
+    const members = [
+      { id: 'o1', display_name: 'Owner', role: 'owner', identity_type: 'registered', avatar: {}, capabilities: noCaps },
+      { id: 'a1', display_name: 'Admin', role: 'admin', identity_type: 'registered', avatar: {}, capabilities: noCaps },
+      { id: 'm1', display_name: 'Member', role: 'member', identity_type: 'registered', avatar: {}, capabilities: noCaps },
+    ];
+    renderPanel(members);
+    expect(screen.getByText('role.owner')).toHaveClass('mem-badge--role-owner');
+    expect(screen.getByText('role.admin')).toHaveClass('mem-badge--role-admin');
+    expect(screen.getByText('role.member')).toHaveClass('mem-badge--role-member');
+    // Identity is always the plain neutral pill, regardless of role.
+    expect(screen.getAllByText('identity.registered')[0]).toHaveClass('mem-badge--identity');
+  });
+
+  test('an inactive (historical) row gets a distinct muted badge', () => {
+    const members = [{ id: 'm1', display_name: 'Gone', role: 'member', identity_type: 'registered', active: false, avatar: {}, capabilities: noCaps }];
+    renderPanel(members);
+    expect(screen.getByText('members.inactive')).toHaveClass('mem-badge--inactive');
+  });
+});
+
+test('a selected row is marked with the dedicated selected class, not shadow alone', () => {
+  const members = [{ id: 'm1', display_name: 'Fahad', role: 'member', identity_type: 'registered', avatar: {}, capabilities: noCaps }];
+  renderPanel(members, { selectedId: 'm1' });
+  expect(screen.getByText('Fahad').closest('.mem-row')).toHaveClass('mem-row--selected');
+});
+
 test('a registered member with a DiceBear avatar renders the generated image, not the legacy avatar_01 glyph', async () => {
   const members = [{ id: 'm1', display_name: 'Fahad', role: 'member', identity_type: 'registered', avatar: { type: 'dicebear', style: 'lorelei', seed: 'panel-test', animation: 'none' }, capabilities: noCaps }];
   const { container } = renderPanel(members);

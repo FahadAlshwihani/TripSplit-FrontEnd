@@ -47,6 +47,21 @@ beforeEach(() => {
   getMemberDetail.mockResolvedValue({ member: { ...owner, capabilities: noCaps }, statistics: baseStatistics });
 });
 
+test('mobile layout contract: the detail-open class only appears once a member is selected (CSS drives the single-surface swap below the breakpoint)', async () => {
+  const { container } = renderPage();
+  await screen.findByText('Regular');
+  // A default selection happens on load (the current viewer), so the
+  // class is already present once the detail panel finishes loading --
+  // wait for it, then clear it via Back to pin the "no selection" ->
+  // "selected" transition this class drives.
+  await screen.findByText('members.currentBalance');
+  expect(container.querySelector('.mem-layout')).toHaveClass('mem-layout--detail-open');
+  fireEvent.click(screen.getByText('common.back'));
+  expect(container.querySelector('.mem-layout')).not.toHaveClass('mem-layout--detail-open');
+  fireEvent.click(screen.getByText('Regular'));
+  await waitFor(() => expect(container.querySelector('.mem-layout')).toHaveClass('mem-layout--detail-open'));
+});
+
 test('selecting a member loads their detail panel from the canonical member_detail_view response', async () => {
   getMemberDetail.mockResolvedValue({ member: { ...regular, capabilities: noCaps }, statistics: { ...baseStatistics, expense_count: 3 } });
   renderPage();

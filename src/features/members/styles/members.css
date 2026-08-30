@@ -1,129 +1,226 @@
 /*
+  Members -- Neo-classic dashboard page, same token/press/typography
+  system as Expenses (`exp-`)/Balances (`bal-`)/Fund/Settlements, not a
+  page-specific reinvention. Class prefix `mem-` (the popover keeps its
+  own established `member-actions-menu__*` prefix).
+
   Members is its own lazy-loaded route chunk, so it cannot rely on
-  another feature's CSS (or the legacy, hard-coded-dark CardStyles.css)
-  having already loaded -- see governance.css's own comment for the same
-  reasoning. Uses the current semantic-token system throughout.
+  another feature's CSS having already loaded -- this file carries its
+  own copy of the couple of shared primitives it needs (the `.acc-switch`
+  toggle recipe), same reasoning as governance.css's own comment.
+
+  Also carries the same legacy-white-text guard expenses.css/balances.css
+  already need: App.css ships a bare `span, p, a, li { color: white }`
+  reset that otherwise wins (inheritance carries no cascade specificity)
+  over anything this page inherits from an ancestor.
 */
 
+.mem-page :where(span, p, a, li) { color: inherit; }
+
+.mem-page { display: flex; flex-direction: column; gap: var(--space-5); }
+
 /* ------------------------------------------------------------------ */
-/* Master/detail shell -- desktop: two balanced columns (list ~46%,
-   detail ~54%, matching the Stitch reference's proportions), both
-   visible together. Below the mobile breakpoint, only ONE column ever
-   renders at a time: the list by default, or the detail full-width
-   once a member is selected -- never a squeezed two-column table. */
-.members-layout {
+/* Page header -- identical structure to .exp-page__header/.bal-page__header. */
+
+.mem-page__header { display: flex; flex-direction: column; gap: var(--space-1); padding-block-end: var(--space-3); border-block-end: var(--border-width) solid var(--color-border); }
+.mem-page__heading { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.mem-page__title { margin: 0; color: var(--color-text); }
+.mem-page__subtitle { color: var(--color-text-muted); margin: 0; max-width: 48rem; }
+
+/* ------------------------------------------------------------------ */
+/* Master/detail shell -- desktop: two balanced columns (list ~44%,
+   detail ~56%, matching the Stitch reference's proportions), both
+   visible together, both starting from the same vertical baseline.
+   Below the mobile breakpoint, only ONE column ever renders at a time:
+   the list by default, or the detail full-width once a member is
+   selected -- never a squeezed two-column table. */
+.mem-layout {
   display: grid;
-  grid-template-columns: minmax(320px, 46%) 1fr;
-  gap: var(--space-4);
+  grid-template-columns: minmax(300px, 44%) 1fr;
+  gap: var(--space-5);
   align-items: start;
 }
 
 @media (max-width: 860px) {
-  .members-layout { grid-template-columns: 1fr; }
-  .members-layout .members-list { display: block; }
-  .members-layout .member-detail-panel { display: none; }
-  .members-layout.members-layout--detail-open .members-list { display: none; }
-  .members-layout.members-layout--detail-open .member-detail-panel { display: flex; }
+  .mem-layout { grid-template-columns: 1fr; gap: var(--space-4); }
+  .mem-layout .mem-list { display: flex; }
+  .mem-layout .mem-detail { display: none; }
+  .mem-layout.mem-layout--detail-open .mem-list { display: none; }
+  .mem-layout.mem-layout--detail-open .mem-detail { display: flex; }
 }
 
 /* ------------------------------------------------------------------ */
 /* List (left column) */
 
-.members-list { display: flex; flex-direction: column; gap: var(--space-3); }
-.members-list__head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
-.members-list__head h2 { margin: 0; }
-.members-list__historical-toggle { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--color-text-muted); cursor: pointer; }
+.mem-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+}
 
-.members-list__search {
-  display: block;
+.mem-list__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
+.mem-list__count { font: var(--text-label); font-size: 11px; }
+
+.mem-list__historical {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font: var(--text-body-sm);
+  cursor: pointer;
+}
+
+/* Search -- same recipe as .exp-toolbar__search-input (40px control,
+   icon inset, hard-shadow focus ring via border-color only, matching
+   every other search field in the app). */
+.mem-search { position: relative; }
+.mem-search__icon {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+.mem-search__input {
   width: 100%;
   min-height: 40px;
-  padding: var(--space-2) var(--space-3);
+  padding-inline-start: var(--space-8);
+  padding-inline-end: var(--space-3);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
-  font: var(--text-body);
+  font: var(--text-body-sm);
 }
+.mem-search__input:focus-visible { outline: none; border-color: var(--nc-indigo-700); }
 
-.members-list__rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
-.members-list__rows > li { display: flex; align-items: center; gap: var(--space-1); }
-.members-list__empty { padding: var(--space-4); text-align: center; color: var(--color-text-muted); }
+.mem-list__rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.mem-list__rows > li { display: flex; align-items: center; gap: var(--space-1); }
+.mem-list__empty { padding: var(--space-6) var(--space-4); text-align: center; color: var(--color-text-muted); }
 
-.members-list__row {
+/* Row -- ~64px tall, physical press language identical to
+   .dash-sidebar__link: flat/transparent border at rest, hover presses
+   INWARD (translate + shadow shrink, never a lift), selected uses a
+   real surface + emphasized border + shadow, never shadow alone. */
+.mem-row {
   flex: 1 1 auto;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   min-width: 0;
+  min-height: 64px;
   padding: var(--space-2) var(--space-3);
   border: var(--border-width) solid transparent;
   border-radius: var(--radius-sm);
   background: transparent;
+  color: var(--color-text);
   text-align: start;
   cursor: pointer;
-  transition: background-color var(--press-duration) ease, border-color var(--press-duration) ease;
+  box-shadow: 0 0 0 0 var(--color-border);
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
-.members-list__row:hover { background: var(--color-surface-alt); }
-.members-list__row--selected {
+.mem-row:hover {
+  background: var(--color-surface-alt);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-hard-sm-hover);
+  transform: var(--press-sm-hover);
+}
+.mem-row:active { box-shadow: 0 0 0 0 var(--color-border); transform: var(--press-sm-active); }
+
+.mem-row--selected,
+.mem-row--selected:hover {
   background: var(--color-primary-soft);
   border-color: var(--color-border);
+  border-width: var(--border-width-lg);
   box-shadow: var(--shadow-hard-sm);
+  transform: none;
 }
 
-.members-list__row-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.members-list__row-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.members-list__row-meta { display: flex; align-items: center; gap: var(--space-1); color: var(--color-text-muted); }
-.members-list__row-balance { flex: 0 0 auto; font-size: 13px; }
+.mem-row__main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.mem-row__name { font: var(--text-body); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mem-row__badges { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; }
+.mem-row__balance { flex: 0 0 auto; font-size: 13px; }
 
-.members-list__badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 1px var(--space-1);
-  border-radius: 999px;
-  border: var(--border-width) solid var(--color-border-subtle);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-label);
+@media (prefers-reduced-motion: reduce) {
+  .mem-row { transition: background-color 0.15s ease, border-color 0.15s ease; }
+  .mem-row:hover, .mem-row:active { transform: none; }
 }
-.members-list__badge--owner { background: var(--nc-indigo-100); border-color: var(--nc-indigo-700); }
-.members-list__badge--admin { background: var(--color-surface-alt); }
-.members-list__badge--identity { opacity: 0.8; }
-.members-list__badge--inactive { color: var(--color-text-muted); border-style: dashed; }
 
 /* ------------------------------------------------------------------ */
-/* Per-row three-dot action menu -- rect-anchored via getBoundingClientRect
-   at open time (see MemberActionsMenu.jsx), portaled to document.body
-   so it can never be clipped by an ancestor row. */
+/* Badge system -- role carries more visual weight than identity
+   (primary-tinted vs. a plain neutral pill), same pill geometry as
+   .dash-badge so it reads as the same family of control. */
+
+.mem-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font: var(--text-label);
+  font-size: 10px;
+}
+
+.mem-badge--role-owner,
+.mem-badge--role-admin {
+  background: var(--color-primary-soft);
+  border-color: var(--nc-indigo-700);
+  color: var(--nc-indigo-700);
+}
+:root[data-theme="dark"] .mem-badge--role-owner,
+:root[data-theme="dark"] .mem-badge--role-admin { color: var(--nc-indigo-500); }
+
+.mem-badge--role-member { background: var(--color-surface); color: var(--color-text); }
+
+.mem-badge--identity { background: var(--color-surface-alt); border-color: var(--color-border-subtle); color: var(--color-text-muted); font-weight: 400; }
+.mem-badge--inactive { background: transparent; border-style: dashed; color: var(--color-text-muted); }
+
+/* ------------------------------------------------------------------ */
+/* Three-dot action control -- same 40px square icon-button family as
+   .exp-utility-btn, vertically centered against the row it belongs to. */
 
 .member-actions-menu__trigger {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inline-size: 32px;
-  block-size: 32px;
-  border: var(--border-width) solid transparent;
+  inline-size: 40px;
+  block-size: 40px;
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: transparent;
+  background: var(--color-surface);
   color: var(--color-text-muted);
+  box-shadow: var(--shadow-hard-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
-.member-actions-menu__trigger:hover { background: var(--color-surface-alt); border-color: var(--color-border); }
+.member-actions-menu__trigger:hover { background: var(--color-surface-alt); color: var(--color-text); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.member-actions-menu__trigger:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
+.member-actions-menu__trigger[aria-expanded="true"] { background: var(--nc-indigo-700); border-color: var(--nc-indigo-700); color: var(--nc-white); }
 
 .member-actions-menu__panel {
-  z-index: var(--z-modal);
+  z-index: var(--z-popover);
   display: flex;
   flex-direction: column;
-  min-width: 180px;
+  gap: 2px;
+  min-width: 190px;
   padding: var(--space-1);
-  border: var(--border-width) solid var(--color-border);
+  border: var(--border-width-lg) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   box-shadow: var(--shadow-hard-md);
 }
 .member-actions-menu__panel button {
-  display: block;
+  display: flex;
+  align-items: center;
   width: 100%;
+  min-height: 40px;
   padding: var(--space-2) var(--space-3);
   border: none;
   background: transparent;
@@ -131,73 +228,161 @@
   border-radius: var(--radius-sm);
   color: var(--color-text);
   font: var(--text-body-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease;
 }
-.member-actions-menu__panel button:hover { background: var(--color-surface-alt); }
+.member-actions-menu__panel button:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); }
+.member-actions-menu__panel button:active { transform: var(--press-sm-active); }
 .member-actions-menu__panel .member-actions-menu__danger { color: var(--color-danger); }
+
+@media (prefers-reduced-motion: reduce) {
+  .member-actions-menu__trigger { transition: background-color 0.15s ease; }
+  .member-actions-menu__trigger:hover, .member-actions-menu__trigger:active { transform: none; }
+}
 
 /* ------------------------------------------------------------------ */
 /* Detail (right column) -- the Stitch "Financial Record" bento card. */
 
-.member-detail-panel {
+.mem-detail {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
+  gap: var(--space-4);
+  padding: var(--space-5);
   border: var(--border-width-lg) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
-  box-shadow: var(--shadow-hard-sm);
+  box-shadow: var(--shadow-hard-md);
 }
-.member-detail-panel--empty { align-items: center; justify-content: center; min-height: 240px; color: var(--color-text-muted); }
+.mem-detail--empty { align-items: center; justify-content: center; min-height: 280px; color: var(--color-text-muted); text-align: center; }
 
-.member-detail-panel__back {
+.mem-detail__back {
   display: none;
   align-items: center;
   gap: var(--space-1);
   align-self: flex-start;
-  border: none;
+  min-height: 36px;
+  padding-inline: var(--space-2);
+  margin-inline-start: calc(var(--space-2) * -1);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-muted);
-  padding: 0;
-  font: var(--text-body-sm);
+  font: var(--text-label);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
+.mem-detail__back i { font-size: 0.9rem; }
+.mem-detail__back:hover { background: var(--color-surface-alt); border-color: var(--color-border); box-shadow: var(--shadow-hard-sm-hover); transform: var(--press-sm-hover); }
+.mem-detail__back:active { box-shadow: 0 0 0 0 var(--color-border); transform: var(--press-sm-active); }
+
 @media (max-width: 860px) {
-  .member-detail-panel__back { display: inline-flex; }
+  .mem-detail__back { display: inline-flex; }
 }
 
-.member-detail-panel__header { display: flex; align-items: flex-start; gap: var(--space-3); }
-.member-detail-panel__header h2 { margin: 0; }
-.member-detail-panel__meta { margin: 2px 0 0; color: var(--color-text-muted); }
+/* Name is the dominant element; role/identity secondary; joined date
+   and email lowest emphasis -- never four equal-weight plain lines. */
+.mem-detail__header { display: flex; align-items: flex-start; gap: var(--space-3); }
+.mem-detail__identity { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.mem-detail__name { margin: 0; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mem-detail__badges { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; }
+.mem-detail__meta { display: flex; flex-direction: column; gap: 2px; margin-block-start: 2px; }
+.mem-detail__meta-row { color: var(--color-text-muted); font: var(--text-caption); }
+.mem-detail__email { direction: ltr; unicode-bidi: isolate; }
 
-.member-detail-panel__balance {
+/* Balance card -- same recipe as .bal-net-card, so "your own balance"
+   and "a specific member's balance" read as the same visual object
+   across the two pages. */
+.mem-balance-card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-4);
-  border: var(--border-width) solid var(--color-border);
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  border: var(--border-width-lg) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-container);
 }
-.member-detail-panel__balance-label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
-.member-detail-panel__balance .money { font-size: 1.5rem; }
+.mem-balance-card--positive { background: var(--color-success-soft); }
+.mem-balance-card--negative { background: var(--color-danger-soft); }
 
-.member-detail-panel__bento {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-2);
-  margin: 0;
+.mem-balance-card__label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); }
+.mem-balance-card__value { font: var(--text-display); font-size: 32px; color: var(--color-text); }
+.mem-balance-card--positive .mem-balance-card__value { color: var(--color-success); }
+.mem-balance-card--negative .mem-balance-card__value { color: var(--color-danger); }
+.mem-balance-card__value-currency { font: var(--text-body); color: var(--color-text-muted); margin-inline-start: var(--space-1); }
+
+.mem-balance-card__hint { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
+.mem-balance-card--positive .mem-balance-card__hint i { color: var(--color-success); }
+.mem-balance-card--negative .mem-balance-card__hint i { color: var(--color-danger); }
+
+/* Bento metrics grid -- same recipe as .exp-cards/.exp-card: fixed
+   min-height so a wrapped label never makes one cell visibly taller
+   than its neighbors, same label/value baseline across every cell. */
+.mem-bento { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); margin: 0; }
+
+@media (min-width: 480px) {
+  .mem-bento { grid-template-columns: repeat(3, 1fr); }
 }
-.member-detail-panel__bento > div {
-  padding: var(--space-2) var(--space-3);
-  border: var(--border-width) solid var(--color-border-subtle);
+
+.mem-bento > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: 80px;
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-surface-alt);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
 }
-.member-detail-panel__bento dt { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; margin: 0 0 2px; }
-.member-detail-panel__bento dd { margin: 0; font-weight: 600; }
-@media (max-width: 480px) {
-  .member-detail-panel__bento { grid-template-columns: repeat(2, 1fr); }
-}
+.mem-bento dt { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); margin: 0; }
+.mem-bento dd { font: var(--text-headline); font-size: 20px; color: var(--color-text); margin: 0; }
 
-.member-detail-panel__fund { display: flex; flex-direction: column; gap: var(--space-2); padding-top: var(--space-2); border-top: var(--border-width) solid var(--color-border-subtle); }
-.member-detail-panel__bento--fund { grid-template-columns: repeat(2, 1fr); }
+/* Fund Participation -- visually separate subsection, never mixed into
+   the personal balance card/bento above. A thin rule + its own label
+   is enough hierarchy; it doesn't need a second full card border
+   around it (Neo-classic borders establish hierarchy, not decorate
+   every region). */
+.mem-fund { display: flex; flex-direction: column; gap: var(--space-2); padding-block-start: var(--space-3); border-block-start: var(--border-width) solid var(--color-border-subtle); }
+.mem-fund__bento { grid-template-columns: repeat(2, 1fr); }
+
+/* ------------------------------------------------------------------ */
+/* Historical-members toggle -- same .acc-switch recipe already used in
+   AccountNotifications/Governance's AccessSettingsCard, copied here for
+   the same "own lazy chunk" reason. */
+
+.acc-switch { position: relative; display: inline-flex; flex: 0 0 auto; width: 36px; height: 20px; }
+.acc-switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.acc-switch__track {
+  position: absolute;
+  inset: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+  transition: background-color 0.15s ease;
+}
+.acc-switch__track::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 2px;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-border);
+  transition: transform 0.15s ease;
+}
+.acc-switch input:checked ~ .acc-switch__track { background: var(--color-primary-soft); }
+.acc-switch input:checked ~ .acc-switch__track::before { transform: translateX(16px); background: var(--nc-indigo-700); }
+[dir="rtl"] .acc-switch input:checked ~ .acc-switch__track::before { transform: translateX(-16px); }
+.acc-switch input:focus-visible ~ .acc-switch__track { outline: 2px solid var(--nc-indigo-700); outline-offset: 2px; }
+
+/* ------------------------------------------------------------------ */
+/* Mobile-first adjustments -- 320-430px is the primary target. */
+
+@media (max-width: 480px) {
+  .mem-detail { padding: var(--space-4); border-width: var(--border-width); box-shadow: var(--shadow-hard-sm); }
+  .mem-bento { grid-template-columns: repeat(2, 1fr); }
+  .mem-fund__bento { grid-template-columns: repeat(2, 1fr); }
+}

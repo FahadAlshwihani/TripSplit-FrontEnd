@@ -22,9 +22,9 @@ test('shows a neutral empty state when no member is selected', () => {
 test('renders the canonical Money component for the current balance, not a raw string', () => {
   const detail = { member: { ...baseMember, capabilities: { can_settle_with: false } }, statistics: baseStatistics };
   renderDetail(detail);
-  const balanceRow = screen.getByText('members.currentBalance').closest('.member-detail-panel__balance');
+  const balanceRow = screen.getByText('members.currentBalance').closest('.mem-balance-card');
   expect(balanceRow.querySelector('bdi[dir="ltr"]')).toBeInTheDocument();
-  expect(balanceRow.querySelector('.money__currency')).toHaveTextContent('SAR');
+  expect(balanceRow.querySelector('.mem-balance-card__value-currency')).toHaveTextContent('SAR');
 });
 
 test('shows Settle Up only when the server reports a real pairwise obligation, not from balance alone', () => {

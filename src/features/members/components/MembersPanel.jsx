@@ -32,26 +32,34 @@ const MembersPanel = ({ members, currentMember, currency, selectedId, onSelect, 
   }, [members, search]);
 
   return (
-    <section className="members-list card-pc">
-      <div className="members-list__head">
-        <h2>{t('members.title')} ({activeCount})</h2>
+    <section className="mem-list">
+      <div className="mem-list__head">
+        <span className="dash-badge mem-list__count">{activeCount}</span>
         {onToggleHistorical && (
-          <label className="members-list__historical-toggle text-copy-sm">
-            <input type="checkbox" checked={showHistorical} onChange={(event) => onToggleHistorical(event.target.checked)} />
+          <label className="mem-list__historical">
+            <span className="acc-switch">
+              <input type="checkbox" checked={showHistorical} onChange={(event) => onToggleHistorical(event.target.checked)} />
+              <span className="acc-switch__track" aria-hidden="true" />
+            </span>
             {t('members.showHistorical')}
           </label>
         )}
       </div>
-      <label className="dash-visually-hidden" htmlFor="members-search">{t('members.searchPlaceholder')}</label>
-      <input
-        id="members-search"
-        type="search"
-        className="members-list__search"
-        placeholder={t('members.searchPlaceholder')}
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-      />
-      <ul className="members-list__rows">
+
+      <div className="mem-search">
+        <i className="bi bi-search mem-search__icon" aria-hidden="true" />
+        <label className="dash-visually-hidden" htmlFor="members-search">{t('members.searchPlaceholder')}</label>
+        <input
+          id="members-search"
+          type="search"
+          className="mem-search__input"
+          placeholder={t('members.searchPlaceholder')}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      </div>
+
+      <ul className="mem-list__rows">
         {filtered.map((member) => {
           const balance = balancesByMemberId?.[member.id];
           const isSelected = member.id === selectedId;
@@ -60,20 +68,20 @@ const MembersPanel = ({ members, currentMember, currency, selectedId, onSelect, 
             <li key={member.id}>
               <button
                 type="button"
-                className={`members-list__row${isSelected ? ' members-list__row--selected' : ''}`}
+                className={`mem-row${isSelected ? ' mem-row--selected' : ''}`}
                 onClick={() => onSelect(member)}
                 aria-current={isSelected}
               >
                 <Avatar avatarKey={avatarKeyFromAvatar(member.avatar)} displayName={member.display_name} size="sm" />
-                <span className="members-list__row-main">
-                  <span className="members-list__row-name">{member.display_name}</span>
-                  <span className="members-list__row-meta text-copy-sm">
-                    <span className={`members-list__badge members-list__badge--${member.role}`}>{t(`role.${member.role}`)}</span>
-                    <span className="members-list__badge members-list__badge--identity">{t(`identity.${member.identity_type}`)}</span>
-                    {member.active === false && <span className="members-list__badge members-list__badge--inactive">{t('members.inactive')}</span>}
+                <span className="mem-row__main">
+                  <span className="mem-row__name">{member.display_name}</span>
+                  <span className="mem-row__badges">
+                    <span className={`mem-badge mem-badge--role-${member.role}`}>{t(`role.${member.role}`)}</span>
+                    <span className="mem-badge mem-badge--identity">{t(`identity.${member.identity_type}`)}</span>
+                    {member.active === false && <span className="mem-badge mem-badge--inactive">{t('members.inactive')}</span>}
                   </span>
                 </span>
-                {balance !== undefined && <Money value={balance} currency={currency} variant="tabular" className="members-list__row-balance" />}
+                {balance !== undefined && <Money value={balance} currency={currency} variant="tabular" className="mem-row__balance" />}
               </button>
               <MemberActionsMenu
                 member={{ ...member, isCurrentMember }}
@@ -88,7 +96,7 @@ const MembersPanel = ({ members, currentMember, currency, selectedId, onSelect, 
             </li>
           );
         })}
-        {!filtered.length && <li className="members-list__empty text-copy-sm">{t('members.noSearchResults')}</li>}
+        {!filtered.length && <li className="mem-list__empty text-copy-sm">{t('members.noSearchResults')}</li>}
       </ul>
     </section>
   );

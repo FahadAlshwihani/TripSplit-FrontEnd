@@ -123,25 +123,45 @@ export default function MembersPage() {
 
   const balancesByMemberId = Object.fromEntries((balancesState.data?.members || []).map((row) => [row.member_id, row.balance]));
 
+  const roleHandlers = {
+    onRole: (member, role) => setPending({ kind: role === 'admin' ? 'promote' : 'demote', member }),
+    onRemove: requestRemove,
+    onTransfer: (member) => setPending({ kind: 'transfer', member }),
+    onLeave: () => setPending({ kind: 'leave', member: currentMember }),
+    onBan: (member) => setBanTarget(member),
+  };
+
   return (
-    <div className={`members-layout${selectedId ? ' members-layout--detail-open' : ''}`}>
+    <div className="mem-page">
+      <div className="mem-page__header">
+        <div className="mem-page__heading">
+          <h1 className="text-display mem-page__title">{t('members.title')}</h1>
+        </div>
+        <p className="text-copy-lg mem-page__subtitle">{t('members.subtitle')}</p>
+      </div>
+
       {error && <ErrorState message={error.message} />}
-      <MembersPanel
-        members={members}
-        currentMember={currentMember}
-        currency={trip.currency}
-        selectedId={selectedId}
-        onSelect={(member) => setSelectedId(member.id)}
-        balancesByMemberId={balancesByMemberId}
-        onRole={(member, role) => setPending({ kind: role === 'admin' ? 'promote' : 'demote', member })}
-        onRemove={requestRemove}
-        onTransfer={(member) => setPending({ kind: 'transfer', member })}
-        onLeave={() => setPending({ kind: 'leave', member: currentMember })}
-        onBan={(member) => setBanTarget(member)}
-        showHistorical={showHistorical}
-        onToggleHistorical={setShowHistorical}
-      />
-      <MemberDetail detail={detail} currency={trip.currency} tripId={tripId} onBack={() => setSelectedId(null)} />
+      <div className={`mem-layout${selectedId ? ' mem-layout--detail-open' : ''}`}>
+        <MembersPanel
+          members={members}
+          currentMember={currentMember}
+          currency={trip.currency}
+          selectedId={selectedId}
+          onSelect={(member) => setSelectedId(member.id)}
+          balancesByMemberId={balancesByMemberId}
+          showHistorical={showHistorical}
+          onToggleHistorical={setShowHistorical}
+          {...roleHandlers}
+        />
+        <MemberDetail
+          detail={detail}
+          currency={trip.currency}
+          tripId={tripId}
+          currentMember={currentMember}
+          onBack={() => setSelectedId(null)}
+          {...roleHandlers}
+        />
+      </div>
       {banTarget && (
         <BanMemberDialog
           member={banTarget}
