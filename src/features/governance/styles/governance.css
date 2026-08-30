@@ -132,3 +132,24 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 [dir="rtl"] .acc-switch input:checked ~ .acc-switch__track::before { transform: translateX(-18px); }
 .acc-switch input:focus-visible ~ .acc-switch__track { outline: 2px solid var(--nc-indigo-700); outline-offset: 2px; }
 .acc-switch input:disabled ~ .acc-switch__track { opacity: 0.5; cursor: not-allowed; }
+
+/* ------------------------------------------------------------------ */
+/* Restricted/banned row -- richer than the plain .management-row
+   pattern (identity type, duration, banned-by, reason), still using
+   the same warning/error accent as everywhere else rather than
+   screaming red across the whole row. */
+
+.governance-ban-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-inline-start: 3px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.governance-ban-row__identity { display: flex; gap: var(--space-2); align-items: flex-start; }
+.governance-ban-row__meta { display: block; color: var(--color-text-muted); }
+.governance-ban-row__reason { display: block; color: var(--color-text-muted); font-style: italic; }
