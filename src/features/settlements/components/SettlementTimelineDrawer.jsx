@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ModalPortal from '../../../shared/components/ModalPortal';
 import Money from '../../../shared/components/Money';
 import { getSettlementTimeline } from '../api/settlementsApi';
 import { formatDateTime } from '../../../shared/utils/format';
+import useModalDialog from '../../../shared/hooks/useModalDialog';
 
 /*
   Full chronological history for one settlement -- who reported/recorded
@@ -21,21 +22,8 @@ const timelineCopyKey = (event) => {
 
 const SettlementTimelineDrawer = ({ tripId, settlement, currency, onClose }) => {
   const { t, i18n } = useTranslation();
-  const drawerRef = useRef(null);
-  const returnFocusRef = useRef(null);
+  const drawerRef = useModalDialog(onClose);
   const [state, setState] = useState({ loading: true, error: null, events: [] });
-
-  useEffect(() => {
-    returnFocusRef.current = document.activeElement;
-    const handleKeyDown = (event) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      if (returnFocusRef.current instanceof HTMLElement) returnFocusRef.current.focus();
-    };
-  }, [onClose]);
-
-  useEffect(() => { drawerRef.current?.focus(); }, []);
 
   useEffect(() => {
     let cancelled = false;
