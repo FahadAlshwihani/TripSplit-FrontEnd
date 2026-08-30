@@ -29,3 +29,25 @@ test('cannot dismiss while reimbursement submission is in flight', () => {
 
   expect(onClose).not.toHaveBeenCalled();
 });
+
+test('cannot submit more than the selected candidate\'s remaining reimbursable amount', () => {
+  const onSave = jest.fn();
+  const Dialog = ReimbursementSection.Dialog;
+  const member = { id: 'm1', display_name: 'Fahad' };
+  const candidate = { member_id: 'm1', display_name: 'Fahad', suggested_amount: '150.00' };
+  render(<Dialog candidates={[candidate]} members={[member]} currency="SAR" onSave={onSave} onClose={jest.fn()} />);
+
+  fireEvent.click(screen.getByRole('button', { name: /Fahad/ }));
+  const submit = screen.getByRole('button', { name: 'fund.reimburseAction' });
+  expect(submit).not.toBeDisabled();
+
+  fireEvent.change(screen.getByLabelText('fund.amount'), { target: { value: '151' } });
+  expect(screen.getByText('fund.errors.exceedsReimbursable')).toBeInTheDocument();
+  expect(submit).toBeDisabled();
+
+  fireEvent.change(screen.getByLabelText('fund.amount'), { target: { value: '150' } });
+  expect(screen.queryByText('fund.errors.exceedsReimbursable')).not.toBeInTheDocument();
+  expect(submit).not.toBeDisabled();
+  fireEvent.click(submit);
+  expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ member_id: 'm1', amount: '150' }));
+});

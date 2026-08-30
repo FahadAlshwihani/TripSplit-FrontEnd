@@ -56,7 +56,20 @@ const ReimbursementDialog = ({ candidates, members, currency, onSave, onClose })
     setAmount(candidate.suggested_amount);
   };
 
-  const isValid = memberId && Number(amount) > 0;
+  // Client-side cap, mirroring ContributionActionDialog's "I Paid"
+  // remaining check -- reimbursement_candidates()'s suggested_amount is
+  // already net of every prior confirmed reimbursement (see
+  // apps.funds.services.reimbursement_candidates), so it's exactly the
+  // live remaining claim for a member who appears here. The server
+  // (record_reimbursement) independently re-enforces this regardless --
+  // this only saves a wasted round trip for the common "pick a
+  // suggested candidate" path; a member typed in via the free select
+  // who isn't in `candidates` still submits and is validated server-side.
+  const selectedCandidate = candidates.find((candidate) => candidate.member_id === memberId);
+  const remaining = selectedCandidate ? Number(selectedCandidate.suggested_amount) : null;
+  const overRemaining = remaining != null && Number(amount) > remaining;
+
+  const isValid = memberId && Number(amount) > 0 && !overRemaining;
 
   const submit = async (event) => {
     event.preventDefault();
@@ -101,9 +114,10 @@ const ReimbursementDialog = ({ candidates, members, currency, onSave, onClose })
               </div>
               <div className="field-group">
                 <label className="field-label" htmlFor="fund-reimburse-amount">{t('fund.amount')}</label>
-                <input id="fund-reimburse-amount" type="number" inputMode="decimal" min="0.01" step="0.01" className="field-control field-control--amount" value={amount} onChange={(event) => setAmount(event.target.value)} />
+                <input id="fund-reimburse-amount" type="number" inputMode="decimal" min="0.01" max={remaining ?? undefined} step="0.01" className="field-control field-control--amount" value={amount} onChange={(event) => setAmount(event.target.value)} />
               </div>
             </div>
+            {overRemaining && <p className="field-error" role="alert">{t('fund.errors.exceedsReimbursable', { amount: remaining })}</p>}
             <div className="field-group">
               <label className="field-label" htmlFor="fund-reimburse-reason">{t('fund.reason')}</label>
               <input id="fund-reimburse-reason" className="field-control" value={reason} onChange={(event) => setReason(event.target.value)} />
