@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -121,4 +123,25 @@ test('onBack, when provided, calls back on click', () => {
   renderDetail(detail, { onBack });
   fireEvent.click(screen.getByText('common.back'));
   expect(onBack).toHaveBeenCalled();
+});
+
+test('the back arrow icon carries a dedicated class for RTL mirroring, same as the rest of the app (never a hardcoded single-direction glyph)', () => {
+  const onBack = jest.fn();
+  const detail = { member: { ...baseMember, capabilities: { can_settle_with: false } }, statistics: baseStatistics };
+  const { container } = renderDetail(detail, { onBack });
+  const icon = container.querySelector('.mem-back i');
+  expect(icon).toHaveClass('bi-arrow-left', 'mem-back__icon');
+});
+
+test('members.css mirrors the back arrow under RTL using the exact same recipe CreateTripPage/JoinTripPage already use ([dir="rtl"] + scaleX(-1)), not a bespoke direction system', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'styles', 'members.css'), 'utf8');
+  expect(css).toMatch(/\[dir=["']rtl["']\]\s*\.mem-back__icon\s*\{[^}]*transform:\s*scaleX\(-1\)/);
+});
+
+test('Back reuses the canonical dash-btn secondary component -- not a one-off Members-only button style', () => {
+  const onBack = jest.fn();
+  const detail = { member: { ...baseMember, capabilities: { can_settle_with: false } }, statistics: baseStatistics };
+  renderDetail(detail, { onBack });
+  const backButton = screen.getByText('common.back').closest('button');
+  expect(backButton).toHaveClass('dash-btn', 'dash-btn--secondary');
 });

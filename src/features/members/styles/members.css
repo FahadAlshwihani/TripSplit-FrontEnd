@@ -244,16 +244,30 @@
   align-items: center;
   justify-content: center;
   inline-size: 32px;
-  block-size: 32px;
+  block-size: 40px;
   border: var(--border-width) solid transparent;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-muted);
+  font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 .member-actions-menu__trigger:hover { background: var(--color-surface-alt); border-color: var(--color-border-subtle); color: var(--color-text); }
 .member-actions-menu__trigger[aria-expanded="true"] { background: var(--color-primary-soft); border-color: var(--nc-indigo-700); color: var(--nc-indigo-700); }
+
+/* List rows only: the wrapper stretches to the row's full height
+   (inherited from the <li>'s `align-items: stretch`) and the trigger
+   fills THAT stretched box (block-size: 100%, not a fixed px value),
+   so its top/bottom edges land exactly on the row's own top/bottom
+   edges regardless of the row's actual rendered height -- width stays
+   fixed, only the height contract changes. The detail-header usage
+   (inside .mem-profile-card, a flex-start multi-line block) is
+   deliberately NOT included here -- it keeps the fixed 40px trigger
+   above, since stretching to a tall multi-line card header would make
+   the button disproportionately huge there instead. */
+.mem-list__rows > li .member-actions-menu { align-self: stretch; }
+.mem-list__rows > li .member-actions-menu__trigger { flex: 1 1 auto; block-size: 100%; font-size: 1.1rem; }
 
 .member-actions-menu__panel {
   z-index: var(--z-popover);
@@ -294,11 +308,24 @@
 /* Back -- reuses the canonical .dash-btn secondary recipe (same
    border/shadow/press physics as every other dashboard button) rather
    than a one-off Members style; only mobile-visibility and a tighter
-   inline size are added on top. */
-.mem-back { display: none; align-self: flex-start; min-height: 32px; padding-inline: var(--space-3); }
+   inline size are added on top. Pulled closer to the profile card
+   below it (a smaller gap than the stack's own default) so it reads
+   as "back to the list, attached to this detail" rather than a
+   standalone control floating under the page title. Icon direction:
+   same [dir="rtl"] scaleX(-1) mirror already used by
+   CreateTripPage/JoinTripPage's own back arrows -- not a new pattern. */
+.mem-back {
+  display: none;
+  align-self: flex-start;
+  min-height: 32px;
+  padding-inline: var(--space-3);
+  margin-block-end: calc(var(--space-2) - var(--space-4));
+}
 @media (max-width: 860px) {
   .mem-back { display: inline-flex; }
 }
+.mem-back__icon { font-size: 1rem; line-height: 1; }
+[dir="rtl"] .mem-back__icon { transform: scaleX(-1); }
 
 /* Profile card -- compact, dense hierarchy: name strongest, email
    secondary, role badge compact, three-dot cleanly at the opposite edge. */
@@ -339,9 +366,15 @@
   padding: var(--space-3) var(--space-4);
   border-block-end: var(--border-width) solid var(--color-border-subtle);
 }
-.mem-financial-card__title { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text); }
-.mem-financial-card__title i { color: var(--nc-indigo-700); }
-.mem-financial-card__current-label { color: var(--color-text-faint); font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); }
+/* line-height: 1 on both title and label is deliberate -- Space
+   Grotesk (--text-title) and JetBrains Mono (--text-label) ship
+   different default line-height metrics, so even with align-items:
+   center on the header, the two could still read as baseline-drifted
+   by a couple px. Pinning both to line-height 1 removes that variable,
+   the same fix already applied to the member-row text elements. */
+.mem-financial-card__title { display: flex; align-items: center; gap: var(--space-2); margin: 0; line-height: 1; color: var(--color-text); }
+.mem-financial-card__title i { color: var(--nc-indigo-700); line-height: 1; }
+.mem-financial-card__current-label { display: inline-flex; align-items: center; line-height: 1; color: var(--color-text-faint); font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); }
 
 .mem-financial-card__body { display: flex; flex-direction: column; padding: var(--space-4); gap: var(--space-4); }
 

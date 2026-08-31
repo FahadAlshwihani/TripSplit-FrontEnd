@@ -36,7 +36,7 @@ const MemberDetail = ({ detail, currency, tripId, onBack, onRole, onRemove, onTr
 
   const back = onBack && (
     <button type="button" className="dash-btn dash-btn--secondary mem-back" onClick={onBack}>
-      <i className="bi bi-arrow-left" aria-hidden="true" /> <span className="dash-btn__label">{t('common.back')}</span>
+      <i className="bi bi-arrow-left mem-back__icon" aria-hidden="true" /> <span className="dash-btn__label">{t('common.back')}</span>
     </button>
   );
 
