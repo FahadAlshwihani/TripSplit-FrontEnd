@@ -1,0 +1,141 @@
+/*
+  Activity ledger -- built against the approved Stitch reference: sparse
+  page, grouped dates with a long divider rule, one compact ledger card
+  per date group with shared row dividers (never a floating heavy-shadow
+  card per row). Class prefix `act-` mirrors every other page (`exp-`,
+  `mem-`, `ov-`): one file per trip-scoped page, sharing tokens/
+  typography/press system, never a page-specific reinvention of them.
+*/
+
+.act-page { display: flex; flex-direction: column; gap: var(--space-5); }
+
+.act-page__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-block-end: var(--space-3);
+  border-block-end: var(--border-width) solid var(--color-border);
+}
+
+.act-page__title { margin: 0; color: var(--color-text); }
+.act-page__subtitle { color: var(--color-text-muted); margin: 0; max-width: 48rem; }
+
+/* ---------------------------------------------------------------------- */
+/* Toolbar -- search + compact family filter */
+
+.act-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+@media (min-width: 700px) {
+  .act-toolbar { flex-direction: row; align-items: center; }
+  .act-toolbar__search { flex: 1 1 auto; }
+}
+
+.act-toolbar__search { position: relative; min-width: 0; }
+
+.act-toolbar__search-icon {
+  position: absolute;
+  inset-inline-start: var(--space-3);
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.act-toolbar__search-input {
+  width: 100%;
+  min-height: 40px;
+  padding-inline-start: var(--space-8);
+  padding-inline-end: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.act-toolbar__search-input:focus-visible { outline: none; border-color: var(--nc-indigo-700); }
+
+/* The family strip is allowed to scroll horizontally on its own -- a
+   deliberate, contained exception to "the page never scrolls
+   horizontally" (see activity.css review notes / task brief item 23):
+   the PAGE itself never gains a horizontal scrollbar, only this one
+   inner control can, exactly like a native segmented/tab strip would. */
+.act-toolbar__families { max-width: 100%; overflow-x: auto; }
+.act-toolbar__families .seg-control { min-width: max-content; }
+
+/* ---------------------------------------------------------------------- */
+/* Ledger -- one section per date group */
+
+.act-ledger { display: flex; flex-direction: column; gap: var(--space-5); }
+
+.act-group__head { display: flex; align-items: center; gap: var(--space-3); margin-block-end: var(--space-2); }
+.act-group__label { margin: 0; color: var(--color-text-muted); text-transform: uppercase; white-space: nowrap; }
+.act-group__rule { flex: 1 1 auto; block-size: var(--border-width); background: var(--color-border); }
+
+.act-group__rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+  overflow: hidden;
+}
+
+.act-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-block-end: var(--border-width) solid var(--color-border-subtle);
+}
+.act-row:last-child { border-block-end: none; }
+
+@media (min-width: 700px) {
+  .act-row { align-items: center; }
+}
+
+.act-row__icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 40px;
+  block-size: 40px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-container);
+  color: var(--color-text);
+}
+.act-row__icon--success { background: var(--color-success-soft); color: var(--color-success); }
+.act-row__icon--danger { background: var(--color-danger-soft); color: var(--color-danger); }
+
+.act-row__body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.act-row__text { margin: 0; color: var(--color-text); font: var(--text-body); overflow-wrap: anywhere; }
+.act-row__actor { font-weight: 700; }
+.act-row__meta { margin: 0; color: var(--color-text-muted); font: var(--text-label); font-size: 11px; letter-spacing: var(--tracking-label); }
+
+.act-row__value {
+  flex: 0 0 auto;
+  font: var(--text-financial);
+  color: var(--color-text-muted);
+  align-self: flex-start;
+}
+@media (min-width: 700px) {
+  .act-row__value { align-self: center; }
+}
+.act-row__value--expense { color: var(--color-danger); }
+.act-row__value--success { color: var(--color-success); }
+.act-row__value--danger { color: var(--color-danger); }
+.act-row__value--muted { color: var(--color-text-muted); }
+.act-row__value--neutral { color: var(--color-text); }
+
+.act-load-more { display: flex; justify-content: center; }
