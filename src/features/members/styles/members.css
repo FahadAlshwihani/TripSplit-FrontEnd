@@ -269,12 +269,18 @@
 .mem-list__rows > li .member-actions-menu { align-self: stretch; }
 .mem-list__rows > li .member-actions-menu__trigger { flex: 1 1 auto; block-size: 100%; font-size: 1.1rem; }
 
+/* max-inline-size is a hard safety net on top of MemberActionsMenu.jsx's
+   own JS viewport-clamping: even a correctly-clamped LEFT position can't
+   help if the panel's own width is wider than the viewport has room for
+   at all (very narrow phones) -- this guarantees it always fits between
+   the two page gutters, wrapping its own content rather than overflowing. */
 .member-actions-menu__panel {
   z-index: var(--z-popover);
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 190px;
+  max-inline-size: calc(100vw - 16px);
   padding: var(--space-1);
   border: var(--border-width-lg) solid var(--color-border);
   border-radius: var(--radius-sm);

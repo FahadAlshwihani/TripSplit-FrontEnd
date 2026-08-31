@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import MemberActionsMenu from './MemberActionsMenu';
@@ -22,7 +24,15 @@ const renderMenu = (props = {}) => render(
 
 const openMenu = () => fireEvent.click(screen.getByRole('button', { name: 'members.details Fahad' }));
 
-afterEach(() => { document.documentElement.dir = 'ltr'; });
+const setViewport = (width, height = 768) => {
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
+  Object.defineProperty(window, 'innerHeight', { configurable: true, value: height });
+};
+
+afterEach(() => {
+  document.documentElement.dir = 'ltr';
+  setViewport(1024, 768);
+});
 
 test('anchors to the real trigger rect via position:fixed, not a hardcoded viewport offset', () => {
   renderMenu();
@@ -33,19 +43,72 @@ test('anchors to the real trigger rect via position:fixed, not a hardcoded viewp
   expect(panel.style.position).toBe('fixed');
   expect(panel.style.top).toBe('240px');
   expect(panel.style.left).toBe('500px');
-  expect(panel.style.right).toBe('');
 });
 
-test('anchors to the inline-end side under RTL, using the mirrored physical side', () => {
-  document.documentElement.dir = 'rtl';
+test('LTR: a trigger comfortably inside the viewport keeps its preferred (left-anchored) position', () => {
+  setViewport(1000);
   renderMenu();
   const trigger = screen.getByRole('button', { name: 'members.details Fahad' });
-  Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1000 });
   trigger.getBoundingClientRect = jest.fn(() => ({ top: 200, bottom: 236, left: 500, right: 536, width: 36, height: 36 }));
   openMenu();
   const panel = screen.getByRole('menu', { name: 'members.details Fahad' });
-  expect(panel.style.left).toBe('');
-  expect(panel.style.right).toBe('464px');
+  expect(panel.style.left).toBe('500px');
+});
+
+test('RTL: a trigger comfortably inside the viewport keeps its preferred (right-anchored) position, expressed as a clamped left value', () => {
+  document.documentElement.dir = 'rtl';
+  setViewport(1000);
+  renderMenu();
+  const trigger = screen.getByRole('button', { name: 'members.details Fahad' });
+  trigger.getBoundingClientRect = jest.fn(() => ({ top: 200, bottom: 236, left: 500, right: 536, width: 36, height: 36 }));
+  openMenu();
+  const panel = screen.getByRole('menu', { name: 'members.details Fahad' });
+  // Preferred RTL anchor: panel's right edge meets the trigger's right
+  // edge (536), so left = 536 - 200 (the width estimate) = 336 -- well
+  // within [8, 1000-200-8], so no clamping was needed here.
+  expect(panel.style.left).toBe('336px');
+});
+
+test('RTL viewport-collision fix: a trigger near the LEFT screen edge (its own preferred expansion direction) never pushes the menu off-screen', () => {
+  document.documentElement.dir = 'rtl';
+  setViewport(390); // a real mobile width
+  renderMenu();
+  const trigger = screen.getByRole('button', { name: 'members.details Fahad' });
+  // Trigger sitting right at the physical left edge -- exactly the
+  // real-world case from the bug report (RTL row actions live at the
+  // row's inline-end, the physical left edge on a narrow phone).
+  trigger.getBoundingClientRect = jest.fn(() => ({ top: 200, bottom: 236, left: 4, right: 40, width: 36, height: 36 }));
+  openMenu();
+  const panel = screen.getByRole('menu', { name: 'members.details Fahad' });
+  const left = parseFloat(panel.style.left);
+  expect(left).toBeGreaterThanOrEqual(8); // never negative / off the left edge
+  expect(left + 200).toBeLessThanOrEqual(390); // panel's right edge never exceeds the viewport
+});
+
+test('LTR viewport-collision fix: a trigger near the RIGHT screen edge never pushes the menu off-screen', () => {
+  setViewport(390);
+  renderMenu();
+  const trigger = screen.getByRole('button', { name: 'members.details Fahad' });
+  // Trigger sitting right at the physical right edge -- the LTR mirror
+  // of the same real-world case (row actions live at the row's
+  // inline-end, the physical right edge in LTR).
+  trigger.getBoundingClientRect = jest.fn(() => ({ top: 200, bottom: 236, left: 350, right: 386, width: 36, height: 36 }));
+  openMenu();
+  const panel = screen.getByRole('menu', { name: 'members.details Fahad' });
+  const left = parseFloat(panel.style.left);
+  expect(left).toBeGreaterThanOrEqual(8);
+  expect(left + 200).toBeLessThanOrEqual(390);
+});
+
+test('flips above the trigger when there is insufficient room below it (vertical collision)', () => {
+  setViewport(1024, 300);
+  renderMenu();
+  const trigger = screen.getByRole('button', { name: 'members.details Fahad' });
+  trigger.getBoundingClientRect = jest.fn(() => ({ top: 260, bottom: 290, left: 20, right: 56, width: 36, height: 36 }));
+  openMenu();
+  const panel = screen.getByRole('menu', { name: 'members.details Fahad' });
+  expect(panel.style.top).toBe('');
+  expect(panel.style.bottom).toBe('44px'); // innerHeight - rect.top + 4
 });
 
 test('Escape closes the menu and returns focus to the trigger', () => {
@@ -64,6 +127,24 @@ test('clicking outside the panel closes it', () => {
   expect(screen.getByRole('menu')).toBeInTheDocument();
   fireEvent.mouseDown(document.body);
   expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+});
+
+test('the panel is portal-mounted to document.body, never a descendant of an overflow:hidden ancestor', () => {
+  const { container } = renderMenu();
+  openMenu();
+  const panel = screen.getByRole('menu');
+  expect(container.contains(panel)).toBe(false);
+  expect(document.body.contains(panel)).toBe(true);
+});
+
+test('only one menu panel is ever mounted at a time, even across repeated opens', () => {
+  renderMenu();
+  openMenu();
+  expect(screen.getAllByRole('menu')).toHaveLength(1);
+  fireEvent.click(screen.getByRole('button', { name: 'members.details Fahad' })); // toggles closed
+  expect(screen.queryAllByRole('menu')).toHaveLength(0);
+  openMenu();
+  expect(screen.getAllByRole('menu')).toHaveLength(1);
 });
 
 test('only renders the actions the capabilities object grants', () => {
@@ -90,4 +171,9 @@ test('the self row always shows Leave and calls onLeave without triggering onRem
   fireEvent.click(screen.getByRole('menuitem', { name: 'members.leave' }));
   expect(onLeave).toHaveBeenCalled();
   expect(onRemove).not.toHaveBeenCalled();
+});
+
+test('members.css caps the panel width to the viewport as a hard safety net under the JS clamp', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'styles', 'members.css'), 'utf8');
+  expect(css).toMatch(/\.member-actions-menu__panel\s*\{[^}]*max-inline-size:\s*calc\(100vw/);
 });
