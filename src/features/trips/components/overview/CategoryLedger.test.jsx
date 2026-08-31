@@ -5,9 +5,9 @@ import CategoryLedger from './CategoryLedger';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
 
-const renderLedger = (categories) => render(
+const renderLedger = (categories, extra = {}) => render(
   <MemoryRouter>
-    <CategoryLedger categories={categories} currency="SAR" tripId="t1" />
+    <CategoryLedger categories={categories} currency="SAR" tripId="t1" {...extra} />
   </MemoryRouter>,
 );
 
@@ -87,4 +87,18 @@ test('a category with no budget allocation falls back to its share of total spen
   renderLedger([{ code: 'food', name: 'Food', icon_key: 'utensils', spent: '100.00', percent_of_total: 40, allocated_budget: null, remaining: null, over_budget: false, utilization_percentage: null }]);
   expect(document.querySelector('.ov-category__of')).not.toBeInTheDocument();
   expect(document.querySelector('.ov-category__fill')).toHaveStyle({ width: '40%' });
+});
+
+test('shows trip-wide allocated/unallocated as pure planning totals when a budget is set', () => {
+  renderLedger([], { totalAllocated: '9000.00', unallocated: '1000.00' });
+  const subline = document.querySelector('.ov-panel__subline');
+  expect(subline).toHaveTextContent('dashboard.overview.allocated');
+  expect(subline).toHaveTextContent('9,000.00');
+  expect(subline).toHaveTextContent('dashboard.overview.unallocated');
+  expect(subline).toHaveTextContent('1,000.00');
+});
+
+test('omits the allocated/unallocated line entirely when no budget is set (null, not zero)', () => {
+  renderLedger([], { totalAllocated: null, unallocated: null });
+  expect(document.querySelector('.ov-panel__subline')).not.toBeInTheDocument();
 });

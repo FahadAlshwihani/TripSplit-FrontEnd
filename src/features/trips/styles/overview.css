@@ -139,6 +139,7 @@
 }
 
 .ov-panel__title { margin: 0; display: flex; align-items: center; gap: var(--space-2); color: var(--color-text); }
+.ov-panel__subline { margin: 0; padding: var(--space-2) var(--space-3) 0; color: var(--color-text-muted); }
 .ov-panel__body { padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-3); }
 
 .ov-link {
@@ -155,6 +156,45 @@
 
 /* Compact -- never a giant empty rectangle just because there's no data. */
 .ov-empty { color: var(--color-text-muted); margin: 0; padding: var(--space-4) var(--space-3); text-align: center; }
+
+/* ---------------------------------------------------------------------- */
+/* Fund snapshot -- collection progress, available cash, and a compact
+   funding-rounds list. Trip budget IS the Fund's target (see
+   docs/architecture/fund-accounting.md); this panel is what actually
+   surfaces that on Overview. */
+
+.ov-fund-shortfall {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font: var(--text-body-sm);
+}
+.ov-fund-shortfall__amount { font-weight: 700; }
+
+.ov-fund-progress { display: flex; flex-direction: column; gap: var(--space-1); }
+.ov-fund-progress__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); color: var(--color-text-muted); }
+.ov-fund-progress__track { block-size: 8px; border-radius: var(--radius-pill); background: var(--color-surface-alt); border: var(--border-width) solid var(--color-border); overflow: hidden; }
+.ov-fund-progress__fill { block-size: 100%; background: var(--nc-indigo-700); border-radius: var(--radius-pill); }
+.ov-fund-progress__remaining { margin: 0; color: var(--color-text-muted); }
+
+.ov-fund-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
+@media (min-width: 560px) { .ov-fund-metrics { grid-template-columns: repeat(4, 1fr); } }
+.ov-fund-metric { display: flex; flex-direction: column; gap: 2px; }
+.ov-fund-metric .money { font: var(--text-financial); color: var(--color-text); }
+.ov-fund-metric__value--danger { color: var(--color-danger); }
+
+.ov-fund-rounds { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); padding-block-start: var(--space-2); border-block-start: var(--border-width) solid var(--color-border-subtle); }
+.ov-fund-rounds__row { display: flex; align-items: center; gap: var(--space-2); font: var(--text-body-sm); }
+.ov-fund-rounds__title { flex: 1 1 auto; min-width: 0; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov-fund-rounds__status { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); }
+.ov-fund-rounds__status--success { color: var(--color-success); }
+.ov-fund-rounds__status--muted { color: var(--color-text-faint); }
 
 /* Header utility controls (filter / refresh) -- same compact square
    Stitch controls as the rest of the app's icon-only buttons, real

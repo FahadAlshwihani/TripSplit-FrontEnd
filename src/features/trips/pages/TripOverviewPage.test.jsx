@@ -9,11 +9,15 @@ jest.mock('../api/tripsApi', () => ({ getTripOverview: jest.fn() }));
 
 const baseOverview = {
   trip: { title: 'Georgia Winter Trip', currency: 'SAR' },
-  summary: { budget: '12000.00', budget_set: true, total_spent: '7720.00', remaining: '4280.00', my_balance: '620.00' },
+  summary: { budget: '12000.00', budget_set: true, total_spent: '7720.00', remaining: '4280.00', my_balance: '620.00', total_allocated: null, unallocated: null },
   spending_split: { shared: '5000.00', personal: '2720.00', shared_percent: 65, personal_percent: 35 },
   category_ledger: [
     { code: 'food', name: 'Food & Dining', icon_key: 'utensils', spent: '3100.00', percent_of_total: 40 },
   ],
+  // No Fund set up on this trip -- the same shape apps.funds.services.
+  // get_fund_summary returns for has_fund: False.
+  fund: { has_fund: false, total_target: '12000.00', collected: '0.00', collection_remaining: '12000.00', collection_percent: 0, available: '0.00', spent_from_fund: '0.00', reimbursed: '0.00', refunded: '0.00', shortfall: '0.00' },
+  funding_rounds_summary: [],
   recent_activity: [
     { id: 'a1', event_type: 'expense_created', actor: { display_name: 'Sarah', avatar: { type: 'initials', key: 'i1' } }, target: { type: 'expense', id: 'e1' }, summary: { title: 'Ski Pass Rental', amount: '1200.00', currency: 'SAR', scope: 'shared' }, created_at: '2026-12-14T10:00:00Z' },
   ],
@@ -48,6 +52,25 @@ test('renders the four summary figures from the authoritative overview payload',
   expect(getMoney('7,720.00 SAR')).toBeInTheDocument();
   expect(getMoney('4,280.00 SAR')).toBeInTheDocument();
   expect(getMoney('620.00 SAR')).toBeInTheDocument();
+});
+
+test('a Fund-enabled trip renders the Fund snapshot panel with the same total_target as the budget card', async () => {
+  getTripOverview.mockResolvedValue({
+    ...baseOverview,
+    fund: { has_fund: true, total_target: '12000.00', collected: '9500.00', collection_remaining: '2500.00', collection_percent: 79, available: '3200.00', spent_from_fund: '5800.00', reimbursed: '500.00', refunded: '0.00', shortfall: '0.00' },
+    funding_rounds_summary: [{ id: 'r1', title: 'Initial Trip Budget', target_amount: '12000.00', status: 'open' }],
+  });
+  renderPage();
+  expect(await screen.findByText('dashboard.overview.fundTitle')).toBeInTheDocument();
+  expect(getMoney('9,500.00 SAR')).toBeInTheDocument(); // collected
+  expect(getMoney('3,200.00 SAR')).toBeInTheDocument(); // available
+});
+
+test('a trip with no Fund set up shows no Fund snapshot panel at all -- Overview looks exactly as before', async () => {
+  getTripOverview.mockResolvedValue(baseOverview); // fund.has_fund: false
+  renderPage();
+  await findMoney('12,000.00 SAR');
+  expect(screen.queryByText('dashboard.overview.fundTitle')).not.toBeInTheDocument();
 });
 
 test('a positive balance is marked positive, distinct from a negative one', async () => {

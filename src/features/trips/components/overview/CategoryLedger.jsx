@@ -4,9 +4,14 @@ import { useTranslation } from 'react-i18next';
 import Money from '../../../../shared/components/Money';
 import { categoryColor, categoryIconClass, categoryLabel, categoryTileColor } from '../../../../shared/utils/categoryPresentation';
 
-const CategoryLedger = ({ categories, currency, tripId }) => {
+const CategoryLedger = ({ categories, currency, tripId, totalAllocated, unallocated }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // Category budgets are pure planning allocations of the trip's total
+  // budget -- they never move Fund cash (see docs/architecture/
+  // fund-accounting.md). Only shown once at least one category has a
+  // real allocation, mirroring the server's own budget_set gate.
+  const showAllocationSummary = totalAllocated !== null && totalAllocated !== undefined;
 
   return (
     <section className="ov-panel ov-panel--categories">
@@ -16,6 +21,13 @@ const CategoryLedger = ({ categories, currency, tripId }) => {
           {t('dashboard.overview.viewDetails')}
         </button>
       </header>
+      {showAllocationSummary && (
+        <p className="ov-panel__subline text-copy-sm">
+          {t('dashboard.overview.allocated')} <Money value={totalAllocated} currency={currency} variant="tabular" />
+          {' · '}
+          {t('dashboard.overview.unallocated')} <Money value={unallocated} currency={currency} variant="tabular" />
+        </p>
+      )}
       <div className="ov-panel__body">
         {categories.length ? categories.map((row) => {
           // A category with an allocated budget shows utilization

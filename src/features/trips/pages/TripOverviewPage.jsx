@@ -5,6 +5,7 @@ import NeoLoading from '../../../shared/components/NeoLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import useTripOverview from '../hooks/useTripOverview';
 import OverviewSummaryCards from '../components/overview/OverviewSummaryCards';
+import FundSnapshot from '../components/overview/FundSnapshot';
 import CategoryLedger from '../components/overview/CategoryLedger';
 import SpendingSplit from '../components/overview/SpendingSplit';
 import RecentActivity from '../components/overview/RecentActivity';
@@ -20,7 +21,7 @@ export default function TripOverviewPage() {
     return <ErrorState title={t('dashboard.overview.errorLoad')} onRetry={resource.retry} />;
   }
 
-  const { trip, summary, spending_split: split, category_ledger: categories, recent_activity: activity } = resource.data;
+  const { trip, summary, spending_split: split, category_ledger: categories, fund, funding_rounds_summary: roundsSummary, recent_activity: activity } = resource.data;
 
   return (
     <div className="ov-page">
@@ -44,8 +45,10 @@ export default function TripOverviewPage() {
 
       <OverviewSummaryCards summary={summary} currency={trip.currency} />
 
+      <FundSnapshot fund={fund} roundsSummary={roundsSummary} currency={trip.currency} tripId={tripId} />
+
       <div className="ov-page__mid">
-        <CategoryLedger categories={categories} currency={trip.currency} tripId={tripId} />
+        <CategoryLedger categories={categories} currency={trip.currency} tripId={tripId} totalAllocated={summary.total_allocated} unallocated={summary.unallocated} />
         <SpendingSplit split={split} />
       </div>
 
