@@ -75,6 +75,13 @@ test('never renders a fake placeholder email when the server omits it', () => {
   expect(screen.queryByText(/@/)).not.toBeInTheDocument();
 });
 
+test('the detail-header action menu uses the exact same trigger class as the list-row one -- one component/style family, not a separate size', () => {
+  const detail = { member: { ...baseMember, capabilities: { can_remove: true } }, statistics: baseStatistics };
+  renderDetail(detail, { onRole: jest.fn(), onRemove: jest.fn(), onTransfer: jest.fn(), onLeave: jest.fn(), onBan: jest.fn() });
+  const trigger = screen.getByRole('button', { name: `members.details ${baseMember.display_name}` });
+  expect(trigger).toHaveClass('member-actions-menu__trigger');
+});
+
 test('onBack, when provided, calls back on click', () => {
   const onBack = jest.fn();
   const detail = { member: { ...baseMember, capabilities: { can_settle_with: false } }, statistics: baseStatistics };

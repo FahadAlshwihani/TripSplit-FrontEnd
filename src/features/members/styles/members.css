@@ -66,12 +66,32 @@
 .mem-list__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
 .mem-list__count { font: var(--text-label); font-size: 11px; }
 
-.mem-list__historical {
+/* Toolbar -- search + historical-members toggle as ONE control row
+   (same recipe as .exp-toolbar), instead of the toggle sitting as a
+   loose setting disconnected from search/filtering. Both children are
+   pinned to the same 40px control height so neither "floats" at a
+   visually different size next to the other. */
+.mem-toolbar { display: flex; align-items: center; gap: var(--space-2); }
+
+@media (max-width: 480px) {
+  .mem-toolbar { flex-direction: column; align-items: stretch; }
+}
+
+.mem-toolbar .mem-search { flex: 1 1 auto; min-width: 0; }
+
+.mem-toolbar__historical {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding-inline: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
   color: var(--color-text-muted);
   font: var(--text-body-sm);
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -101,7 +121,16 @@
 .mem-search__input:focus-visible { outline: none; border-color: var(--nc-indigo-700); }
 
 .mem-list__rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
-.mem-list__rows > li { display: flex; align-items: center; gap: var(--space-1); }
+/* `stretch` (not `center`) is load-bearing: .mem-row and the action
+   menu are two SEPARATE flex children of this <li> (a button can't
+   nest inside a button), so each one centers ITS OWN content
+   independently -- if they don't share the exact same box height,
+   two independently-centered boxes can still end up visually offset
+   from each other by a few px. Stretching both to the row's full
+   height first, then centering content inside each, is what actually
+   guarantees identical geometry regardless of which one's natural
+   content height is taller. */
+.mem-list__rows > li { display: flex; align-items: stretch; gap: var(--space-1); }
 .mem-list__empty { padding: var(--space-6) var(--space-4); text-align: center; color: var(--color-text-muted); }
 
 /* Row -- ~64px tall, physical press language identical to
@@ -142,10 +171,17 @@
   transform: none;
 }
 
-.mem-row__main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.mem-row__name { font: var(--text-body); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mem-row__badges { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; }
-.mem-row__balance { flex: 0 0 auto; font-size: 13px; }
+.mem-row__main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+/* line-height: 1 on every text element inside the row is deliberate --
+   mixed font families (Work Sans name, JetBrains Mono badges/balance)
+   ship different default line-height metrics, so even a geometrically
+   correct align-items:center can still look like text sits 2-3px off
+   from its neighbor if each element's own line-box is a different
+   height. Pinning line-height removes that variable entirely instead
+   of compensating with per-element margin hacks. */
+.mem-row__name { font: var(--text-body); font-weight: 700; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mem-row__badges { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; line-height: 1; }
+.mem-row__balance { flex: 0 0 auto; font-size: 13px; line-height: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   .mem-row { transition: background-color 0.15s ease, border-color 0.15s ease; }
@@ -160,7 +196,8 @@
 .mem-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px var(--space-2);
+  line-height: 1;
+  padding: 3px var(--space-2) 2px;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-pill);
   font: var(--text-label);
@@ -183,7 +220,13 @@
 
 /* ------------------------------------------------------------------ */
 /* Three-dot action control -- same 40px square icon-button family as
-   .exp-utility-btn, vertically centered against the row it belongs to. */
+   .exp-utility-btn, vertically centered against the row it belongs to.
+   The wrapper itself stretches to the full row height (see the <li>
+   `align-items: stretch` comment above) and centers its 40px trigger
+   inside that -- so the trigger's visual center always lands on the
+   exact same line as .mem-row's internally-centered content, in the
+   list AND in the detail header (both reuse this same component). */
+.member-actions-menu { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
 
 .member-actions-menu__trigger {
   flex: 0 0 auto;

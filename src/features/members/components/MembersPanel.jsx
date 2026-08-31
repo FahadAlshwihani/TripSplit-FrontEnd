@@ -35,8 +35,23 @@ const MembersPanel = ({ members, currentMember, currency, selectedId, onSelect, 
     <section className="mem-list">
       <div className="mem-list__head">
         <span className="dash-badge mem-list__count">{activeCount}</span>
+      </div>
+
+      <div className="mem-toolbar">
+        <div className="mem-search">
+          <i className="bi bi-search mem-search__icon" aria-hidden="true" />
+          <label className="dash-visually-hidden" htmlFor="members-search">{t('members.searchPlaceholder')}</label>
+          <input
+            id="members-search"
+            type="search"
+            className="mem-search__input"
+            placeholder={t('members.searchPlaceholder')}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
         {onToggleHistorical && (
-          <label className="mem-list__historical">
+          <label className="mem-toolbar__historical">
             <span className="acc-switch">
               <input type="checkbox" checked={showHistorical} onChange={(event) => onToggleHistorical(event.target.checked)} />
               <span className="acc-switch__track" aria-hidden="true" />
@@ -44,19 +59,6 @@ const MembersPanel = ({ members, currentMember, currency, selectedId, onSelect, 
             {t('members.showHistorical')}
           </label>
         )}
-      </div>
-
-      <div className="mem-search">
-        <i className="bi bi-search mem-search__icon" aria-hidden="true" />
-        <label className="dash-visually-hidden" htmlFor="members-search">{t('members.searchPlaceholder')}</label>
-        <input
-          id="members-search"
-          type="search"
-          className="mem-search__input"
-          placeholder={t('members.searchPlaceholder')}
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
       </div>
 
       <ul className="mem-list__rows">
