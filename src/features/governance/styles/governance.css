@@ -88,7 +88,9 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
   grid-template-areas: "title" "main" "side";
   gap: var(--space-4);
 }
-.governance-layout__title { grid-area: title; margin: 0; }
+.governance-layout__title { grid-area: title; display: flex; flex-direction: column; gap: var(--space-1); }
+.governance-layout__title h1 { margin: 0; color: var(--color-text); }
+.governance-layout__subtitle { margin: 0; color: var(--color-text-muted); max-width: 48rem; }
 .governance-layout__main { grid-area: main; display: flex; flex-direction: column; gap: var(--space-4); }
 .governance-layout__side { grid-area: side; display: flex; flex-direction: column; gap: var(--space-4); }
 
@@ -98,6 +100,106 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
     grid-template-areas: "title title" "main side";
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Panel shell -- same bordered/hard-shadow chrome as every other
+   feature's card (Members' .mem-list, Overview's .ov-panel), replacing
+   this feature's old dark-rgba .card-pc leftover from before the
+   Neo-classic system existed. */
+
+.gov-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+  padding: var(--space-3) var(--space-3) var(--space-4);
+}
+
+.gov-section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.gov-section-head__title { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text); }
+.gov-section-head__title .bi { color: var(--nc-indigo-700); }
+
+.gov-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  border: var(--border-width) solid var(--color-border);
+  color: var(--color-text-muted);
+  font: var(--text-label);
+  font-size: 11px;
+}
+
+.gov-text-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--nc-indigo-700);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  cursor: pointer;
+}
+.gov-text-action:hover { text-decoration: underline; }
+
+/* Join Requests / Invitations -- one bordered group, rows stacked with
+   a hairline divider between them (Stitch's own recipe), not a
+   bordered "card" per row. */
+
+.gov-list { list-style: none; margin: 0; padding: 0; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; }
+.gov-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-block-end: var(--border-width) solid var(--color-border-subtle);
+}
+.gov-row:last-child { border-block-end: none; }
+
+@media (min-width: 560px) {
+  .gov-row { flex-direction: row; align-items: center; justify-content: space-between; }
+}
+
+.gov-row__identity { display: flex; align-items: flex-start; gap: var(--space-2); min-width: 0; }
+.gov-row__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gov-row__name { display: flex; align-items: center; gap: var(--space-2); font: var(--text-body); font-weight: 700; color: var(--color-text); }
+.gov-row__meta { color: var(--color-text-muted); font: var(--text-body-sm); }
+
+.gov-row__actions { display: flex; gap: var(--space-2); flex: 0 0 auto; align-self: stretch; }
+@media (min-width: 560px) { .gov-row__actions { align-self: auto; } }
+.gov-row__actions .dash-btn { flex: 1 1 0; }
+@media (min-width: 560px) { .gov-row__actions .dash-btn { flex: 0 0 auto; } }
+
+.gov-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font: var(--text-label);
+  font-size: 10px;
+}
+
+.gov-empty { color: var(--color-text-muted); margin: 0; padding: var(--space-5) var(--space-3); text-align: center; }
+
+/* Restricted list -- reuses .governance-ban-row (defined below) inside
+   the same .gov-list rhythm, just without the hairline divider since
+   each row already carries its own accent border. */
+.gov-list--restricted { border: none; border-radius: 0; display: flex; flex-direction: column; gap: var(--space-2); overflow: visible; }
+
+.governance-settings__title { margin: 0; color: var(--color-text-muted); text-transform: uppercase; }
 
 /* ------------------------------------------------------------------ */
 /* Access Settings card -- same .acc-switch recipe AccountNotifications
@@ -146,9 +248,8 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 
 .governance-ban-row {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
+  flex-direction: column;
+  gap: var(--space-2);
   padding: var(--space-3);
   border: var(--border-width) solid var(--color-border-subtle);
   border-inline-start: 3px solid var(--color-danger);
@@ -158,3 +259,4 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 .governance-ban-row__identity { display: flex; gap: var(--space-2); align-items: flex-start; }
 .governance-ban-row__meta { display: block; color: var(--color-text-muted); }
 .governance-ban-row__reason { display: block; color: var(--color-text-muted); font-style: italic; }
+.gov-unban-btn { align-self: stretch; }

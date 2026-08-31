@@ -15,11 +15,19 @@ import ConfirmDialog from '../../../shared/components/ConfirmDialog';
   approval for -- the toggle is disabled, not merely unchecked, whenever
   the link itself is off.
 */
-const AccessSettingsCard = ({ trip, onUpdateSettings, onRotateLink }) => {
+const AccessSettingsCard = ({ trip, onUpdateSettings, onRotateLink, capabilities }) => {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [rotateConfirmOpen, setRotateConfirmOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  // Omitted entirely (e.g. existing tests that render this card in
+  // isolation) means "fully allowed" -- this card only ever renders in
+  // production behind GovernancePage's own can_view_governance gate,
+  // which is the same underlying check every one of these flags
+  // collapses to today (see apps.trips.permissions.governance_capabilities).
+  const canManageApproval = capabilities ? Boolean(capabilities.can_manage_approval_setting) : true;
+  const canManageLink = capabilities ? Boolean(capabilities.can_manage_invite_link) : true;
 
   const inviteLinkActive = trip.join_policy !== 'invite_only';
   const requireApproval = trip.join_policy === 'approval_required';
@@ -59,8 +67,8 @@ const AccessSettingsCard = ({ trip, onUpdateSettings, onRotateLink }) => {
   };
 
   return (
-    <section className="governance-settings card-pc">
-      <h3>{t('governance.accessSettings')}</h3>
+    <section className="governance-settings gov-panel">
+      <h3 className="text-label governance-settings__title">{t('governance.accessSettings')}</h3>
 
       <div className="governance-settings__row">
         <div>
@@ -68,7 +76,7 @@ const AccessSettingsCard = ({ trip, onUpdateSettings, onRotateLink }) => {
           <p className="text-copy-sm governance-settings__hint">{t('governance.requireApprovalHint')}</p>
         </div>
         <label className="acc-switch">
-          <input type="checkbox" checked={requireApproval} disabled={busy || !inviteLinkActive} onChange={toggleRequireApproval} aria-label={t('governance.requireApproval')} />
+          <input type="checkbox" checked={requireApproval} disabled={busy || !inviteLinkActive || !canManageApproval} onChange={toggleRequireApproval} aria-label={t('governance.requireApproval')} />
           <span className="acc-switch__track" aria-hidden="true" />
         </label>
       </div>
@@ -79,7 +87,7 @@ const AccessSettingsCard = ({ trip, onUpdateSettings, onRotateLink }) => {
           <p className="text-copy-sm governance-settings__hint">{t('governance.inviteLinkActiveHint')}</p>
         </div>
         <label className="acc-switch">
-          <input type="checkbox" checked={inviteLinkActive} disabled={busy} onChange={toggleLinkActive} aria-label={t('governance.inviteLinkActive')} />
+          <input type="checkbox" checked={inviteLinkActive} disabled={busy || !canManageLink} onChange={toggleLinkActive} aria-label={t('governance.inviteLinkActive')} />
           <span className="acc-switch__track" aria-hidden="true" />
         </label>
       </div>
@@ -88,14 +96,16 @@ const AccessSettingsCard = ({ trip, onUpdateSettings, onRotateLink }) => {
         <div className="governance-settings__link">
           <label className="dash-visually-hidden" htmlFor="governance-invite-link">{t('governance.inviteLinkUrl')}</label>
           <input id="governance-invite-link" className="field-control" readOnly value={inviteLink} onFocus={(event) => event.target.select()} dir="ltr" />
-          <div className="governance-settings__link-actions">
-            <button type="button" className="dash-btn dash-btn--secondary" onClick={copyLink}>
-              {copied ? t('governance.copied') : t('governance.copyLink')}
-            </button>
-            <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setRotateConfirmOpen(true)} disabled={busy}>
-              {t('governance.rotateLink')}
-            </button>
-          </div>
+          {canManageLink && (
+            <div className="governance-settings__link-actions">
+              <button type="button" className="dash-btn dash-btn--secondary" onClick={copyLink}>
+                {copied ? t('governance.copied') : t('governance.copyLink')}
+              </button>
+              <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setRotateConfirmOpen(true)} disabled={busy}>
+                {t('governance.rotateLink')}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

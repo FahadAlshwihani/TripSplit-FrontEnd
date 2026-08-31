@@ -12,18 +12,31 @@ import AccessSettingsCard from './AccessSettingsCard';
   mobile (governance.css collapses the grid below the breakpoint) --
   never a cramped side column at narrow widths.
 */
-export default function GovernancePanel({ trip, requests, invitations, bans, members, onReview, onOpenInvite, onRevokeInvite, onResendInvite, onKick, onBan, onUnban, onUpdateSettings, onRotateLink }) {
+export default function GovernancePanel({ trip, capabilities, requests, invitations, bans, onReview, onOpenInvite, onRevokeInvite, onResendInvite, onUnban, onUpdateSettings, onRotateLink }) {
   const { t } = useTranslation();
   return (
     <div className="governance-layout">
-      <h2 className="governance-layout__title">{t('governance.title')}</h2>
+      <div className="governance-layout__title">
+        <h1 className="text-display">{t('governance.title')}</h1>
+        <p className="text-copy-lg governance-layout__subtitle">{t('governance.subtitle', { tripTitle: trip.title })}</p>
+      </div>
       <div className="governance-layout__main">
-        <section className="card-pc"><JoinRequestsSection requests={requests} onReview={onReview} /></section>
-        <section className="card-pc"><InvitationsSection invitations={invitations} onOpenInvite={onOpenInvite} onResend={onResendInvite} onRevoke={onRevokeInvite} /></section>
+        <section className="gov-panel"><JoinRequestsSection requests={requests} onReview={onReview} canReview={capabilities?.can_review_join_requests} /></section>
+        <section className="gov-panel">
+          <InvitationsSection
+            invitations={invitations}
+            onOpenInvite={onOpenInvite}
+            onResend={onResendInvite}
+            onRevoke={onRevokeInvite}
+            canInvite={capabilities?.can_invite}
+            canResend={capabilities?.can_resend_invite}
+            canRevoke={capabilities?.can_revoke_invite}
+          />
+        </section>
       </div>
       <div className="governance-layout__side">
-        <section className="card-pc"><BansSection members={members} bans={bans} onKick={onKick} onBan={onBan} onUnban={onUnban} /></section>
-        <AccessSettingsCard trip={trip} onUpdateSettings={onUpdateSettings} onRotateLink={onRotateLink} />
+        <section className="gov-panel"><BansSection bans={bans} onUnban={onUnban} canUnban={capabilities?.can_unban} /></section>
+        <AccessSettingsCard trip={trip} onUpdateSettings={onUpdateSettings} onRotateLink={onRotateLink} capabilities={capabilities} />
       </div>
     </div>
   );

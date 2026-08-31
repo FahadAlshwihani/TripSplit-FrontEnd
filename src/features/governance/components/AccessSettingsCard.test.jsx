@@ -58,3 +58,17 @@ test('rotate link requires confirmation before calling the API', async () => {
   fireEvent.click(within(dialog).getByRole('button', { name: 'governance.rotateLink' }));
   await waitFor(() => expect(onRotateLink).toHaveBeenCalled());
 });
+
+test('without can_manage_approval_setting the approval toggle is disabled -- never a role guess', () => {
+  const capabilities = { can_manage_approval_setting: false, can_manage_invite_link: true };
+  renderCard({ join_code: 'ABC', join_policy: 'open' }, { capabilities });
+  expect(screen.getByLabelText('governance.requireApproval')).toBeDisabled();
+});
+
+test('without can_manage_invite_link the link toggle is disabled and copy/rotate are hidden', () => {
+  const capabilities = { can_manage_approval_setting: true, can_manage_invite_link: false };
+  renderCard({ join_code: 'ABC', join_policy: 'open' }, { capabilities });
+  expect(screen.getByLabelText('governance.inviteLinkActive')).toBeDisabled();
+  expect(screen.queryByText('governance.copyLink')).not.toBeInTheDocument();
+  expect(screen.queryByText('governance.rotateLink')).not.toBeInTheDocument();
+});

@@ -3,35 +3,41 @@ import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import '../styles/governance.css';
 import GovernancePanel from '../components/GovernancePanel';
-import BanMemberDialog from '../components/BanMemberDialog';
 import InviteMemberDialog from '../components/InviteMemberDialog';
 import NeoLoading from '../../../shared/components/NeoLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
-import { banMember, getBans, getJoinRequests, kickMember, reviewJoinRequest, revokeBan } from '../api/governanceApi';
+import { getBans, getJoinRequests, reviewJoinRequest, revokeBan } from '../api/governanceApi';
 import { createInvitation, getInvitations, resendInvitation, revokeInvitation } from '../../invitations/api/invitationsApi';
-import { getMembers } from '../../members/api/membersApi';
 import { rotateJoinCode, updateTrip } from '../../trips/api/tripsApi';
 
+/*
+  Access/entry control only -- who's asking to join, who's invited, who's
+  restricted, and the trip's join policy. Promote/demote/transfer/remove
+  are Members-page concerns (see docs/architecture/membership.md's page-
+  split rationale); Ban is also initiated from there (MemberActionsMenu
+  reuses this feature's own BanMemberDialog/banMember, see MembersPage.jsx)
+  rather than duplicated here as a second "moderate members" list, which
+  the Stitch reference itself never depicted -- this page's Restricted
+  section is read+unban only.
+*/
 export default function GovernancePage() {
-  const { trip, setTrip, tripId, permissions } = useOutletContext();
+  const { trip, setTrip, tripId } = useOutletContext();
   const { t } = useTranslation();
   const [error, setError] = useState(null);
-  const [pending, setPending] = useState(null); // { kind: 'kick'|'unban', member|ban } | null
-  const [banTarget, setBanTarget] = useState(null); // member | null
+  const [pending, setPending] = useState(null); // { kind: 'unban', ban } | null
   const [inviteOpen, setInviteOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const state = useRouteResource(async (signal) => {
     const config = { signal };
-    const [requests, invitations, bans, members] = await Promise.all([
+    const [requests, invitations, bans] = await Promise.all([
       getJoinRequests(tripId, config),
       getInvitations(tripId, config),
       getBans(tripId, config),
-      getMembers(tripId, config),
     ]);
-    return { requests: requests.results, invitations: invitations.results, bans: bans.results, members: members.results };
+    return { requests: requests.results, invitations: invitations.results, bans: bans.results };
   }, [tripId]);
 
   const run = async (action) => {
@@ -45,7 +51,11 @@ export default function GovernancePage() {
     }
   };
 
-  if (!permissions.canManageMembers) return <ErrorState message={t('governance.accessDenied')} />;
+  // Capability-driven, never a role guess -- trip.governance_capabilities
+  // is server-computed (apps.trips.permissions.governance_capabilities),
+  // returned alongside every GET /trips/{id}/ response.
+  const capabilities = trip.governance_capabilities || {};
+  if (!capabilities.can_view_governance) return <ErrorState message={t('governance.accessDenied')} />;
   if (state.loading) return <NeoLoading />;
   if (state.error) return <ErrorState message={state.error.message} onRetry={state.retry} />;
 
@@ -53,8 +63,7 @@ export default function GovernancePage() {
     if (!pending || busy) return;
     setBusy(true);
     try {
-      if (pending.kind === 'kick') await kickMember(tripId, pending.member.id);
-      else if (pending.kind === 'unban') await revokeBan(tripId, pending.ban.id);
+      await revokeBan(tripId, pending.ban.id);
       await state.retry();
       setPending(null);
     } catch (e) {
@@ -65,35 +74,25 @@ export default function GovernancePage() {
     }
   };
 
-  const dialog = pending?.kind === 'kick'
-    ? { title: t('governance.confirmKickTitle', { name: pending.member.display_name }), body: t('governance.confirmKickBody'), confirmLabel: t('governance.kick') }
-    : pending?.kind === 'unban'
-      ? { title: t('governance.confirmUnbanTitle', { name: pending.ban.member?.display_name || t('activity.unknown') }), body: t('governance.confirmUnbanBody'), confirmLabel: t('governance.unban'), destructive: false }
-      : null;
+  const dialog = pending?.kind === 'unban'
+    ? { title: t('governance.confirmUnbanTitle', { name: pending.ban.member?.display_name || t('activity.unknown') }), body: t('governance.confirmUnbanBody'), confirmLabel: t('governance.unban'), destructive: false }
+    : null;
 
   return (
     <>
       {error && <ErrorState message={error.message} />}
       <GovernancePanel
         trip={trip}
+        capabilities={capabilities}
         {...state.data}
         onReview={(r, d) => run(() => reviewJoinRequest(tripId, r.id, d))}
         onOpenInvite={() => setInviteOpen(true)}
         onResendInvite={(r) => run(() => resendInvitation(tripId, r.id))}
         onRevokeInvite={(r) => run(() => revokeInvitation(tripId, r.id))}
-        onKick={(member) => setPending({ kind: 'kick', member })}
-        onBan={(member) => setBanTarget(member)}
         onUnban={(ban) => setPending({ kind: 'unban', ban })}
         onUpdateSettings={async (payload) => { const updated = await updateTrip(tripId, payload); setTrip(updated); }}
         onRotateLink={async () => { const updated = await rotateJoinCode(tripId); setTrip(updated); }}
       />
-      {banTarget && (
-        <BanMemberDialog
-          member={banTarget}
-          onBan={async (payload) => { await run(() => banMember(tripId, banTarget.id, payload)); setBanTarget(null); }}
-          onClose={() => setBanTarget(null)}
-        />
-      )}
       {inviteOpen && (
         <InviteMemberDialog
           onInvite={(p) => run(() => createInvitation(tripId, p))}
