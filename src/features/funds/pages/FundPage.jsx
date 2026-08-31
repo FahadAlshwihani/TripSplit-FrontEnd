@@ -18,6 +18,7 @@ import {
 } from '../api/fundsApi';
 import FundSetup from '../components/FundSetup';
 import FundSummary from '../components/FundSummary';
+import EditFundTargetDialog from '../components/EditFundTargetDialog';
 import FundHolderCard from '../components/FundHolderCard';
 import ChangeHolderDialog from '../components/ChangeHolderDialog';
 import FundingRoundComposer from '../components/FundingRoundComposer';
@@ -122,9 +123,15 @@ export default function FundPage() {
     }
   };
 
-  const handleCreateFund = (holderId) => run(() => createFund(tripId, { holder_id: holderId }));
+  const handleCreateFund = (holderId, targetAmount) => run(() => createFund(tripId, { holder_id: holderId, ...(targetAmount ? { target_amount: targetAmount } : {}) }));
 
   const handleChangeHolder = async (holderId) => { await run(() => updateFund(tripId, { holder_id: holderId })); closeDialog(); };
+
+  // The ONE place the trip's budget/Fund target is ever changed (see
+  // docs/architecture/fund-accounting.md, "The Trip Fund is the
+  // budget") -- an explicit, owner/admin-only action, never inferred
+  // from creating/completing/cancelling a FundingRound.
+  const handleUpdateTarget = async (targetAmount) => { await run(() => updateFund(tripId, { target_amount: targetAmount })); closeDialog(); };
 
   const openTopUpComposer = () => setFundDialog({ type: 'create-round', prefill: { title: t('fund.topup'), target_amount: fund.accounting.deficit } });
 
@@ -218,7 +225,15 @@ export default function FundPage() {
             </div>
           )}
 
-          <FundSummary accounting={fund.accounting} currency={currency} />
+          <FundSummary
+            accounting={fund.accounting}
+            targetAmount={fund.total_target}
+            collected={fund.accounting.collected}
+            collectionRemaining={fund.collection_remaining}
+            currency={currency}
+            canManage={canManage}
+            onEditTarget={() => setFundDialog({ type: 'edit-target' })}
+          />
 
           <FundHolderCard holder={fund.holder} canManage={canManage} onChangeHolder={() => setFundDialog({ type: 'change-holder' })} />
 
@@ -342,6 +357,10 @@ export default function FundPage() {
 
       {fundDialog?.type === 'change-holder' && (
         <ChangeHolderDialog holder={fund.holder} activeMembers={activeMembers} onSave={handleChangeHolder} onClose={closeDialog} />
+      )}
+
+      {fundDialog?.type === 'edit-target' && (
+        <EditFundTargetDialog currentTarget={fund.total_target} collected={fund.accounting.collected} currency={currency} onSave={handleUpdateTarget} onClose={closeDialog} />
       )}
 
       {fundDialog?.type === 'reimbursement' && (

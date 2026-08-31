@@ -102,6 +102,41 @@ test('shows the empty setup state and creates a fund with the chosen holder', as
   await waitFor(() => expect(createFund).toHaveBeenCalledWith('t1', { holder_id: 'm1' }));
 });
 
+test('the Fund can be created WITH an initial budget target in the same step -- optional, never forced', async () => {
+  getFund.mockResolvedValue(null);
+  createFund.mockResolvedValue(baseFund);
+  renderPage();
+  await screen.findByText('fund.setupBody');
+  fireEvent.change(screen.getByLabelText('fund.targetOptional'), { target: { value: '7500' } });
+  fireEvent.click(screen.getByText('fund.create'));
+  await waitFor(() => expect(createFund).toHaveBeenCalledWith('t1', { holder_id: 'm1', target_amount: '7500' }));
+});
+
+test('the budget target is shown prominently on the Fund page, with an Edit action for managers', async () => {
+  renderPage();
+  await screen.findByText('fund.title');
+  expect(screen.getByText('fund.budgetTarget')).toBeInTheDocument();
+  expect(screen.getByText('fund.editBudget')).toBeInTheDocument();
+});
+
+test('editing the budget target calls the Fund PATCH with the new value', async () => {
+  updateFund.mockResolvedValue({ ...baseFund, total_target: '9000.00' });
+  renderPage();
+  await screen.findByText('fund.title');
+  fireEvent.click(screen.getByText('fund.editBudget'));
+  const input = await screen.findByLabelText('fund.budgetTarget');
+  fireEvent.change(input, { target: { value: '9000' } });
+  fireEvent.click(screen.getByText('common.save'));
+  await waitFor(() => expect(updateFund).toHaveBeenCalledWith('t1', { target_amount: '9000' }));
+});
+
+test('a Fund with no target set yet shows the zero-state prompt instead of a fake 0.00 budget', async () => {
+  getFund.mockResolvedValue({ ...baseFund, total_target: '0.00', collection_remaining: '0.00' });
+  renderPage();
+  await screen.findByText('fund.title');
+  expect(screen.getByText('fund.budgetNotSetYet')).toBeInTheDocument();
+});
+
 test('a shortfall renders the alert and pre-fills the top-up round composer', async () => {
   getFund.mockResolvedValue({ ...baseFund, accounting: { ...baseAccounting, balance: '-600.00', surplus: '0.00', deficit: '600.00' } });
   renderPage();

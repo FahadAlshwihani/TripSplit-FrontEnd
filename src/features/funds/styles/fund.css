@@ -169,7 +169,27 @@
 .fund-summary { display: grid; grid-template-columns: 1fr; gap: var(--space-3); }
 @media (min-width: 720px) {
   .fund-summary { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: stretch; }
+  .fund-summary__budget { grid-column: 1 / -1; }
 }
+
+.fund-summary__budget {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+}
+.fund-summary__budget-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fund-summary__budget-label { color: var(--color-text-muted); text-transform: uppercase; }
+.fund-summary__budget-value { font: var(--text-headline); font-size: 22px; color: var(--color-text); }
+.fund-summary__budget-value-currency { font: var(--text-body-sm); color: var(--color-text-muted); margin-inline-start: var(--space-1); }
+.fund-summary__budget-unset { color: var(--color-text-muted); font-style: italic; }
+.fund-summary__budget-collected { margin: 0; color: var(--color-text-muted); }
 
 .fund-summary__primary {
   display: flex;
