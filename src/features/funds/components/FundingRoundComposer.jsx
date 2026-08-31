@@ -19,7 +19,7 @@ const METHODS = ['equal', 'custom', 'percentage', 'shares'];
 const FundingRoundComposer = ({ members, currency, prefill, onSubmit, onClose }) => {
   const { t } = useTranslation();
   const [title, setTitle] = useState(prefill?.title || '');
-  const [reason, setReason] = useState('');
+  const [reason, setReason] = useState(prefill?.reason || '');
   const [targetAmount, setTargetAmount] = useState(prefill?.target_amount ? Number(prefill.target_amount).toFixed(2) : '');
   const [method, setMethod] = useState('equal');
   const [participantIds, setParticipantIds] = useState(members.map((member) => member.id));

@@ -128,6 +128,18 @@ export default function FundPage() {
 
   const openTopUpComposer = () => setFundDialog({ type: 'create-round', prefill: { title: t('fund.topup'), target_amount: fund.accounting.deficit } });
 
+  // A round is a COLLECTION MECHANISM against the trip's explicit
+  // budget (see docs/architecture/fund-accounting.md) -- it never
+  // defines or changes that budget itself, so this only ever pre-fills
+  // the round's target with what's still outstanding
+  // (collection_remaining, server-computed from budget - confirmed
+  // contributions -- never re-derived here), never the raw budget
+  // figure. The user can always type a smaller amount if only a
+  // partial collection is intended this round.
+  const newRoundPrefill = fund && Number(fund.collection_remaining) > 0
+    ? { target_amount: fund.collection_remaining }
+    : undefined;
+
   const handleCreateRound = async (payload) => { await run(() => createFundingRound(tripId, payload)); closeDialog(); };
 
   const handleContributionSave = async (payload) => {
@@ -180,7 +192,7 @@ export default function FundPage() {
               <i className="bi bi-clock-history" aria-hidden="true" /> {t('fund.historyTitle')}
             </button>
             {canManage && fund.status === 'active' && (
-              <button type="button" className="dash-btn dash-btn--primary" onClick={() => setFundDialog({ type: 'create-round' })}>
+              <button type="button" className="dash-btn dash-btn--primary" onClick={() => setFundDialog({ type: 'create-round', prefill: newRoundPrefill })}>
                 <i className="bi bi-plus-lg" aria-hidden="true" /> {t('fund.newRound')}
               </button>
             )}
@@ -217,6 +229,11 @@ export default function FundPage() {
                 <i className="bi bi-piggy-bank bal-empty__icon" aria-hidden="true" />
                 <h3 className="bal-empty__title text-headline-sm">{t('fund.emptyRoundsTitle')}</h3>
                 <p className="bal-empty__body">{t('fund.emptyRoundsBody')}</p>
+                {canManage && (
+                  <button type="button" className="dash-btn dash-btn--primary" onClick={() => setFundDialog({ type: 'create-round', prefill: newRoundPrefill })}>
+                    <i className="bi bi-plus-lg" aria-hidden="true" /> {t('fund.newRound')}
+                  </button>
+                )}
               </div>
             ) : (
               <div className="fund-rounds">

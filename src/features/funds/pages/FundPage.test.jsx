@@ -53,6 +53,7 @@ const baseFund = {
   id: 'f1', name: 'Trip Fund', base_currency: 'SAR', status: 'active',
   holder: { id: 'm1', display_name: 'Fahad', avatar_key: '', avatar: { type: 'initials', color: 'indigo' } },
   accounting: baseAccounting,
+  total_target: '10000.00', collection_remaining: '9000.00',
   close_readiness: { open_rounds: 1, pending_contributions: 0, balance: '600.00', ready: false },
   rounds: [round1],
   contributions: [],
@@ -62,10 +63,10 @@ const baseFund = {
   created_at: '2026-01-01T00:00:00Z', closed_at: null,
 };
 
-const renderPage = () => render(
+const renderPage = (tripOverride = trip) => render(
   <MemoryRouter initialEntries={['/trips/t1/fund']}>
     <Routes>
-      <Route path="/trips/:tripId" element={<Outlet context={{ trip, tripId: 't1', currentMember: fahad, permissions }} />}>
+      <Route path="/trips/:tripId" element={<Outlet context={{ trip: tripOverride, tripId: 't1', currentMember: fahad, permissions }} />}>
         <Route path="fund" element={<FundPage />} />
       </Route>
     </Routes>
@@ -107,6 +108,24 @@ test('a shortfall renders the alert and pre-fills the top-up round composer', as
   expect(await screen.findByText('fund.shortfallTitle')).toBeInTheDocument();
   fireEvent.click(screen.getByText('fund.createTopup'));
   expect(await screen.findByLabelText('fund.target')).toHaveValue(600);
+});
+
+test('a round is a collection mechanism, not a budget-defining transaction: New Round pre-fills the TARGET from what is still outstanding, never the title, never the raw budget', async () => {
+  renderPage();
+  await screen.findByText('fund.title');
+  // Both the header's and the empty-state's "New Round" buttons open the
+  // same pre-filled composer -- either is a valid entry point.
+  fireEvent.click(screen.getAllByText('fund.newRound')[0]);
+  expect(await screen.findByLabelText('fund.roundTitle')).toHaveValue(''); // never pre-filled
+  expect(screen.getByLabelText('fund.target')).toHaveValue(9000); // collection_remaining, not total_target (10000)
+});
+
+test('a trip with nothing left to collect opens a fully blank composer -- no meaningless zero pre-fill', async () => {
+  getFund.mockResolvedValue({ ...baseFund, total_target: '1000.00', collection_remaining: '0.00' });
+  renderPage();
+  await screen.findByText('fund.title');
+  fireEvent.click(screen.getAllByText('fund.newRound')[0]);
+  expect(await screen.findByLabelText('fund.target')).toHaveValue(null);
 });
 
 test('creating an equal-split round submits the expected payload', async () => {
