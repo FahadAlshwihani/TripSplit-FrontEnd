@@ -23,20 +23,26 @@ const renderSnapshot = (props = {}) => render(
 
 const moneyMatcher = (text) => (_content, node) => node?.tagName?.toLowerCase() === 'bdi' && node.textContent.replace(/\s+/g, ' ').trim() === text;
 
-test('renders nothing when the trip has no Fund set up -- Overview stays exactly as before', () => {
-  const { container } = render(<MemoryRouter><FundSnapshot fund={{ has_fund: false }} roundsSummary={[]} currency="SAR" tripId="t1" /></MemoryRouter>);
-  expect(container).toBeEmptyDOMElement();
+test('a trip with no Fund set up shows the zero-state budget prompt, not a blank panel -- there is no other place budget is shown on Overview', () => {
+  render(<MemoryRouter><FundSnapshot fund={{ has_fund: false }} roundsSummary={[]} currency="SAR" tripId="t1" /></MemoryRouter>);
+  expect(screen.getByText('fund.budgetNotSetYet')).toBeInTheDocument();
+  expect(screen.getByText('fund.editBudget')).toHaveAttribute('href', '/trips/t1/fund');
 });
 
-test('renders nothing when fund is entirely undefined, never crashes', () => {
-  const { container } = render(<MemoryRouter><FundSnapshot roundsSummary={[]} currency="SAR" tripId="t1" /></MemoryRouter>);
-  expect(container).toBeEmptyDOMElement();
+test('a Fund that exists but has no target set yet (0) also shows the zero-state prompt, never a fake 0.00 budget', () => {
+  render(<MemoryRouter><FundSnapshot fund={{ has_fund: true, total_target: '0.00' }} roundsSummary={[]} currency="SAR" tripId="t1" /></MemoryRouter>);
+  expect(screen.getByText('fund.budgetNotSetYet')).toBeInTheDocument();
 });
 
-test('shows collection progress as collected / target, never available cash mislabeled as collected', () => {
+test('never crashes when fund is entirely undefined -- shows the zero-state prompt', () => {
+  render(<MemoryRouter><FundSnapshot roundsSummary={[]} currency="SAR" tripId="t1" /></MemoryRouter>);
+  expect(screen.getByText('fund.budgetNotSetYet')).toBeInTheDocument();
+});
+
+test('shows the budget target prominently, and collection progress as collected / target, never available cash mislabeled as collected', () => {
   renderSnapshot();
+  expect(screen.getAllByText(moneyMatcher('12,000.00 SAR')).length).toBeGreaterThanOrEqual(1); // the target, shown both as the headline figure and in the progress fraction
   expect(screen.getByText(moneyMatcher('9,500.00 SAR'))).toBeInTheDocument();
-  expect(screen.getByText(moneyMatcher('12,000.00 SAR'))).toBeInTheDocument();
   expect(screen.getByText(/79%/)).toBeInTheDocument();
 });
 

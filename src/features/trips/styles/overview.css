@@ -104,6 +104,14 @@
   .ov-card--spent { grid-column: 2; grid-row: 1 / span 2; order: 2; }
   .ov-card--remaining { grid-column: 3; grid-row: 1; order: 3; }
   .ov-card--balance { grid-column: 3; grid-row: 2; order: 4; }
+
+  /* Two-card variant (Total Spent + My Balance only -- budget/collection
+     figures live entirely in FundSnapshot now): a plain even 2-column
+     row, no row-splitting needed since there's nothing left to stack
+     beside either card. */
+  .ov-cards--compact { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; }
+  .ov-cards--compact .ov-card--spent { grid-column: auto; grid-row: auto; order: 1; }
+  .ov-cards--compact .ov-card--balance { grid-column: auto; grid-row: auto; order: 2; }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -162,6 +170,12 @@
    funding-rounds list. Trip budget IS the Fund's target (see
    docs/architecture/fund-accounting.md); this panel is what actually
    surfaces that on Overview. */
+
+.ov-fund-empty { align-items: center; text-align: center; gap: var(--space-3); padding: var(--space-5) var(--space-3); }
+.ov-fund-empty p { margin: 0; color: var(--color-text-muted); }
+
+.ov-fund-target-value { display: block; font: var(--text-display); font-size: 28px; color: var(--color-text); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.ov-fund-target-value-currency { font: var(--text-headline-sm); color: var(--color-text-muted); margin-inline-start: var(--space-1); }
 
 .ov-fund-shortfall {
   display: flex;

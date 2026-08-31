@@ -7,6 +7,10 @@ import { getTripOverview } from '../api/tripsApi';
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key) }) }));
 jest.mock('../api/tripsApi', () => ({ getTripOverview: jest.fn() }));
 
+// The Trip Fund IS the trip budget (see docs/architecture/
+// fund-accounting.md) -- Overview has no standalone Total Budget/
+// Remaining card any more; the `fund` block below is the ONE place
+// budget/collected/remaining-to-collect/available are shown.
 const baseOverview = {
   trip: { title: 'Georgia Winter Trip', currency: 'SAR' },
   summary: { budget: '12000.00', budget_set: true, total_spent: '7720.00', remaining: '4280.00', my_balance: '620.00', total_allocated: null, unallocated: null },
@@ -14,10 +18,8 @@ const baseOverview = {
   category_ledger: [
     { code: 'food', name: 'Food & Dining', icon_key: 'utensils', spent: '3100.00', percent_of_total: 40 },
   ],
-  // No Fund set up on this trip -- the same shape apps.funds.services.
-  // get_fund_summary returns for has_fund: False.
-  fund: { has_fund: false, total_target: '12000.00', collected: '0.00', collection_remaining: '12000.00', collection_percent: 0, available: '0.00', spent_from_fund: '0.00', reimbursed: '0.00', refunded: '0.00', shortfall: '0.00' },
-  funding_rounds_summary: [],
+  fund: { has_fund: true, total_target: '12000.00', collected: '9500.00', collection_remaining: '2500.00', collection_percent: 79, available: '3200.00', spent_from_fund: '5800.00', reimbursed: '500.00', refunded: '0.00', shortfall: '0.00' },
+  funding_rounds_summary: [{ id: 'r1', title: 'Initial round', target_amount: '12000.00', status: 'open' }],
   recent_activity: [
     { id: 'a1', event_type: 'expense_created', actor: { display_name: 'Sarah', avatar: { type: 'initials', key: 'i1' } }, target: { type: 'expense', id: 'e1' }, summary: { title: 'Ski Pass Rental', amount: '1200.00', currency: 'SAR', scope: 'shared' }, created_at: '2026-12-14T10:00:00Z' },
   ],
@@ -45,32 +47,31 @@ const queryMoney = (text) => screen.queryByText(moneyMatcher(text));
 
 beforeEach(() => jest.clearAllMocks());
 
-test('renders the four summary figures from the authoritative overview payload', async () => {
+test('renders total spent and my balance from the authoritative overview payload', async () => {
   getTripOverview.mockResolvedValue(baseOverview);
   renderPage();
-  expect(await findMoney('12,000.00 SAR')).toBeInTheDocument();
-  expect(getMoney('7,720.00 SAR')).toBeInTheDocument();
-  expect(getMoney('4,280.00 SAR')).toBeInTheDocument();
+  expect(await findMoney('7,720.00 SAR')).toBeInTheDocument();
   expect(getMoney('620.00 SAR')).toBeInTheDocument();
 });
 
-test('a Fund-enabled trip renders the Fund snapshot panel with the same total_target as the budget card', async () => {
-  getTripOverview.mockResolvedValue({
-    ...baseOverview,
-    fund: { has_fund: true, total_target: '12000.00', collected: '9500.00', collection_remaining: '2500.00', collection_percent: 79, available: '3200.00', spent_from_fund: '5800.00', reimbursed: '500.00', refunded: '0.00', shortfall: '0.00' },
-    funding_rounds_summary: [{ id: 'r1', title: 'Initial Trip Budget', target_amount: '12000.00', status: 'open' }],
-  });
+test('a Fund-enabled trip renders the Fund snapshot panel with its own budget target -- the sole budget presentation on the page', async () => {
+  getTripOverview.mockResolvedValue(baseOverview);
   renderPage();
-  expect(await screen.findByText('dashboard.overview.fundTitle')).toBeInTheDocument();
+  expect(await screen.findByText('fund.budgetTarget')).toBeInTheDocument();
+  expect(screen.getAllByText(moneyMatcher('12,000.00 SAR')).length).toBeGreaterThanOrEqual(1); // the target (shown both as headline and in the progress fraction)
   expect(getMoney('9,500.00 SAR')).toBeInTheDocument(); // collected
   expect(getMoney('3,200.00 SAR')).toBeInTheDocument(); // available
 });
 
-test('a trip with no Fund set up shows no Fund snapshot panel at all -- Overview looks exactly as before', async () => {
-  getTripOverview.mockResolvedValue(baseOverview); // fund.has_fund: false
+test('a trip with no Fund/target set yet shows the zero-state budget prompt, never a blank space', async () => {
+  getTripOverview.mockResolvedValue({
+    ...baseOverview,
+    fund: { has_fund: false, total_target: '0.00', collected: '0.00', collection_remaining: '0.00', collection_percent: 0, available: '0.00', spent_from_fund: '0.00', reimbursed: '0.00', refunded: '0.00', shortfall: '0.00' },
+    funding_rounds_summary: [],
+  });
   renderPage();
-  await findMoney('12,000.00 SAR');
-  expect(screen.queryByText('dashboard.overview.fundTitle')).not.toBeInTheDocument();
+  expect(await screen.findByText('fund.budgetNotSetYet')).toBeInTheDocument();
+  expect(screen.getByText('fund.editBudget')).toHaveAttribute('href', '/trips/t1/fund');
 });
 
 test('a positive balance is marked positive, distinct from a negative one', async () => {
@@ -85,13 +86,6 @@ test('a negative balance is marked negative', async () => {
   renderPage();
   await findMoney('-142.50 SAR');
   expect(document.querySelector('.ov-card--balance')).toHaveClass('is-negative');
-});
-
-test('a trip with no budget set shows "no budget" instead of a computed remaining figure', async () => {
-  getTripOverview.mockResolvedValue({ ...baseOverview, summary: { ...baseOverview.summary, budget_set: false, remaining: null } });
-  renderPage();
-  await screen.findByText('Georgia Winter Trip', { exact: false });
-  expect(screen.getAllByText('dashboard.overview.noBudgetSet').length).toBe(2);
 });
 
 test('an empty category ledger shows the empty-state message, not a broken chart', async () => {
@@ -124,13 +118,13 @@ test('renders the recent activity row with actor, title, and amount', async () =
 test('uses the trip currency from the overview payload itself, not a guessed default', async () => {
   getTripOverview.mockResolvedValue({ ...baseOverview, trip: { ...baseOverview.trip, currency: 'USD' } });
   renderPage();
-  expect(await findMoney('12,000.00 USD')).toBeInTheDocument();
+  expect(await findMoney('7,720.00 USD')).toBeInTheDocument();
 });
 
 test('the refresh control re-fetches the overview; the disabled filter control never fakes a working filter', async () => {
   getTripOverview.mockResolvedValue(baseOverview);
   renderPage();
-  await findMoney('12,000.00 SAR');
+  await findMoney('7,720.00 SAR');
   const filterBtn = screen.getByRole('button', { name: 'dashboard.overview.filter' });
   expect(filterBtn).toBeDisabled();
   const refreshBtn = screen.getByRole('button', { name: 'dashboard.overview.refresh' });
@@ -140,10 +134,6 @@ test('the refresh control re-fetches the overview; the disabled filter control n
 });
 
 test('a trip with no spending yet shows the neutral Spending Split empty state, never a misleading 100% badge', async () => {
-  // Budget/Remaining both land on "6,000.00 SAR", and Total Spent/My
-  // Balance both land on "0.00 SAR" -- a real, legitimate collision for
-  // an untouched trip (this is exactly the screenshot scenario), so
-  // assert counts rather than a single ambiguous getByText match.
   getTripOverview.mockResolvedValue({
     ...baseOverview,
     summary: { budget: '6000.00', budget_set: true, total_spent: '0.00', remaining: '6000.00', my_balance: '0.00' },
@@ -154,14 +144,13 @@ test('a trip with no spending yet shows the neutral Spending Split empty state, 
   renderPage();
   expect(await screen.findByText('dashboard.overview.noSpendingYet')).toBeInTheDocument();
   expect(screen.queryByText('100%')).not.toBeInTheDocument();
-  expect(screen.getAllByText(moneyMatcher('6,000.00 SAR'))).toHaveLength(2);
-  expect(screen.getAllByText(moneyMatcher('0.00 SAR'))).toHaveLength(2);
+  expect(screen.getAllByText(moneyMatcher('0.00 SAR')).length).toBeGreaterThanOrEqual(2); // total_spent + my_balance
 });
 
 test('every money amount is isolated for correct bidi rendering regardless of page direction', async () => {
   getTripOverview.mockResolvedValue(baseOverview);
   renderPage();
-  const node = await findMoney('12,000.00 SAR');
+  const node = await findMoney('7,720.00 SAR');
   expect(node).toHaveAttribute('dir', 'ltr');
-  expect(queryMoney('7,720.00 SAR')).toHaveAttribute('dir', 'ltr');
+  expect(queryMoney('620.00 SAR')).toHaveAttribute('dir', 'ltr');
 });
