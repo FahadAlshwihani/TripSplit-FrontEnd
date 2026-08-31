@@ -69,7 +69,12 @@ test('submits the create-trip payload and navigates directly into the new trip o
   fireEvent.change(screen.getByPlaceholderText('createTrip.namePlaceholder'), { target: { value: 'Tokyo' } });
   fireEvent.change(screen.getByPlaceholderText('guest.displayNamePlaceholder'), { target: { value: 'Alex' } });
   fireEvent.click(screen.getByText('createTrip.submit'));
-  await waitFor(() => expect(createTrip).toHaveBeenCalledWith(expect.objectContaining({ title: 'Tokyo', currency: 'SAR', budget: '0', join_policy: 'open', guest_name: 'Alex' })));
+  // No `budget` in the payload at all -- there is no independent Trip
+  // budget domain any more (see docs/architecture/fund-accounting.md,
+  // "The Trip Fund is the budget"); trip creation never asks for or
+  // sends one.
+  await waitFor(() => expect(createTrip).toHaveBeenCalledWith(expect.objectContaining({ title: 'Tokyo', currency: 'SAR', join_policy: 'open', guest_name: 'Alex' })));
+  expect(createTrip.mock.calls[0][0]).not.toHaveProperty('budget');
   expect(await screen.findByText('trip workspace overview')).toBeInTheDocument();
 });
 

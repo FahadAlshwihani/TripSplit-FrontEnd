@@ -36,7 +36,6 @@ const CreateTripPage = () => {
     start_date: '',
     end_date: '',
     currency: user?.preferred_currency || 'SAR',
-    budget: '',
     join_policy: 'open',
     password: '',
     guest_name: guestProfile?.display_name || '',
@@ -69,7 +68,6 @@ const CreateTripPage = () => {
       const payload = {
         title: form.title.trim(),
         currency: form.currency,
-        budget: form.budget ? form.budget.replace(/,/g, '') : '0',
         join_policy: form.join_policy,
         password: form.password,
         start_date: form.start_date || undefined,
@@ -165,34 +163,21 @@ const CreateTripPage = () => {
                   <i className="bi bi-cash-stack ct-section__icon" aria-hidden="true" />
                   {t('createTrip.section.financials')}
                 </h2>
-                <div className="ct-field-row">
-                  <div className="ct-field">
-                    <label className="ct-field__label text-label" htmlFor="ct-currency">{t('createTrip.baseCurrency')}</label>
-                    <CurrencyPicker
-                      id="ct-currency"
-                      value={form.currency}
-                      onChange={(code) => setForm({ ...form, currency: code })}
-                      label={t('createTrip.baseCurrency')}
-                    />
-                  </div>
-                  <div className="ct-field">
-                    <label className="ct-field__label text-label" htmlFor="ct-budget">{t('createTrip.budgetOptional')}</label>
-                    <div className="ct-field__control">
-                      <i className="bi bi-wallet2 ct-field__icon" aria-hidden="true" />
-                      <input
-                        id="ct-budget"
-                        className="ct-field__input"
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        step="0.01"
-                        value={form.budget}
-                        onChange={setField('budget')}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <p className="ct-field__hint text-copy-sm">{t('createTrip.budgetHint')}</p>
-                  </div>
+                {/* Budget lives entirely on the Fund now -- there is no
+                    independent "Trip budget" domain (see
+                    docs/architecture/fund-accounting.md, "The Trip Fund
+                    is the budget"). Trip creation stays focused on
+                    identity/basic setup; the real budget/kitty goal is
+                    established afterward, explicitly, on the Fund page. */}
+                <div className="ct-field">
+                  <label className="ct-field__label text-label" htmlFor="ct-currency">{t('createTrip.baseCurrency')}</label>
+                  <CurrencyPicker
+                    id="ct-currency"
+                    value={form.currency}
+                    onChange={(code) => setForm({ ...form, currency: code })}
+                    label={t('createTrip.baseCurrency')}
+                  />
+                  <p className="ct-field__hint text-copy-sm">{t('createTrip.budgetHint')}</p>
                 </div>
               </section>
 

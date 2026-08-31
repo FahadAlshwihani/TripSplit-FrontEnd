@@ -4,27 +4,25 @@ import TripSettings from './TripSettings';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
 
-const baseTrip = { title: 'Ski Trip', budget: '10000.00', total_budget: '10000.00', currency: 'SAR', join_policy: 'open', settlement_confirmation_mode: 'immediate' };
+const baseTrip = { title: 'Ski Trip', total_budget: '10000.00', currency: 'SAR', join_policy: 'open', settlement_confirmation_mode: 'immediate' };
 const permissions = { canEditTrip: true, canArchiveTrip: false, canRestoreTrip: false };
 
 const renderSettings = (props = {}) => render(
   <TripSettings trip={baseTrip} permissions={permissions} onUpdate={jest.fn()} onArchive={jest.fn()} onRestore={jest.fn()} {...props} />,
 );
 
-test('budget is always a plain editable field -- the explicit Fund budget target, never locked by Fund/round activity', () => {
-  const onUpdate = jest.fn();
-  renderSettings({ onUpdate });
-  fireEvent.change(screen.getByDisplayValue('10000.00'), { target: { value: '12000' } });
-  fireEvent.click(screen.getByText('common.save'));
-  expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({ budget: '12000' }));
+test('Settings never offers a budget field at all -- budget management lives entirely on the Fund page', () => {
+  renderSettings();
+  expect(screen.queryByDisplayValue('10000.00')).not.toBeInTheDocument();
+  expect(screen.queryByText('trip.budget')).not.toBeInTheDocument();
 });
 
-test('saving other fields still includes the current budget value in the payload (a plain form field, not conditionally omitted)', () => {
+test('saving other fields never includes a budget key in the payload', () => {
   const onUpdate = jest.fn();
   renderSettings({ onUpdate });
   fireEvent.change(screen.getByDisplayValue('Ski Trip'), { target: { value: 'Renamed Trip' } });
   fireEvent.click(screen.getByText('common.save'));
   const payload = onUpdate.mock.calls[0][0];
+  expect(payload).not.toHaveProperty('budget');
   expect(payload.title).toBe('Renamed Trip');
-  expect(payload.budget).toBe('10000.00');
 });
