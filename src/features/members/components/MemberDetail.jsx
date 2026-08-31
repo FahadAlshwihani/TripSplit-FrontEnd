@@ -8,11 +8,13 @@ import { formatDate, formatDateTime } from '../../../shared/utils/format';
 import MemberActionsMenu from './MemberActionsMenu';
 
 /*
-  The right-hand panel in the Members master/detail layout (Stitch's
-  "Financial Record" reference) -- an inline panel, not a modal, so it
-  carries no dialog/overlay chrome of its own; MembersPage decides
-  whether it renders beside the list (desktop) or replaces it
-  full-width (mobile, via onBack).
+  The right-hand stack in the Members master/detail layout -- rebuilt
+  to match Stitch's own two-card composition (a compact profile card,
+  then a Financial Record card) rather than one oversized, loosely
+  spaced card. Mobile renders the same two cards full-width, with a
+  canonical Back button on top instead of a desktop master/detail
+  frame -- MembersPage decides whether this renders beside the list
+  (desktop) or replaces it (mobile, via onBack).
 
   Settle Up is gated on capabilities.can_settle_with -- a real simplify_
   debts() pairwise edge between the viewer and this member, computed
@@ -20,23 +22,31 @@ import MemberActionsMenu from './MemberActionsMenu';
   member's own group-net balance is NOT sufficient: two members can each
   carry a large balance while owing each other nothing directly, so
   showing "Settle up" from balance alone would offer a settlement that
-  doesn't correspond to any real debt between these two people.
+  doesn't correspond to any real debt between these two people. Stitch's
+  own reference always shows the button; TripSplit's position is the
+  same, but the action/copy stays gated on this real obligation check.
 
-  Fund Participation (confirmed contributions / reimbursements) is a
-  visually SEPARATE block from current_balance -- the two ledgers never
-  mix, even though both come from the same member_detail_view response.
-
-  The balance card's three states (positive/negative/zero) reuse the
-  exact same visual recipe as Balances' own NetBalanceCard
-  (.bal-net-card / here .mem-balance-card) -- "a member's balance" reads
-  as the same kind of object wherever it appears in the app.
+  Fund Participation is a visually separate subsection (thin rule + own
+  label) inside the SAME financial-record card, reusing the integrated-
+  grid recipe -- never mixed into current_balance, never a second set
+  of floating mini-cards.
 */
 const MemberDetail = ({ detail, currency, tripId, onBack, onRole, onRemove, onTransfer, onLeave, onBan, currentMember }) => {
   const { t, i18n } = useTranslation();
+
+  const back = onBack && (
+    <button type="button" className="dash-btn dash-btn--secondary mem-back" onClick={onBack}>
+      <i className="bi bi-arrow-left" aria-hidden="true" /> <span className="dash-btn__label">{t('common.back')}</span>
+    </button>
+  );
+
   if (!detail) {
     return (
-      <div className="mem-detail mem-detail--empty">
-        <p className="text-copy-sm">{t('members.selectAMember')}</p>
+      <div className="mem-detail-stack">
+        {back}
+        <div className="mem-profile-card mem-profile-card--empty">
+          <p className="text-copy-sm">{t('members.selectAMember')}</p>
+        </div>
       </div>
     );
   }
@@ -48,25 +58,21 @@ const MemberDetail = ({ detail, currency, tripId, onBack, onRole, onRemove, onTr
   const isCurrentMember = member.id === currentMember?.id;
 
   return (
-    <div className="mem-detail">
-      {onBack && (
-        <button type="button" className="mem-detail__back" onClick={onBack}>
-          <i className="bi bi-arrow-left" aria-hidden="true" /> {t('common.back')}
-        </button>
-      )}
-      <header className="mem-detail__header">
+    <div className="mem-detail-stack">
+      {back}
+
+      <header className="mem-profile-card">
         <Avatar avatarKey={avatarKeyFromAvatar(member.avatar)} displayName={member.display_name} size="md" />
-        <div className="mem-detail__identity">
-          <h2 className="text-headline mem-detail__name">{member.display_name}</h2>
-          <span className="mem-detail__badges">
+        <div className="mem-profile-card__identity">
+          <h2 className="text-headline mem-profile-card__name">{member.display_name}</h2>
+          {member.email
+            ? <bdi dir="ltr" className="mem-profile-card__email">{member.email}</bdi>
+            : <span className="mem-profile-card__email">{t(`identity.${member.identity_type}`)}</span>}
+          <span className="mem-profile-card__badges">
             <span className={`mem-badge mem-badge--role-${member.role}`}>{t(`role.${member.role}`)}</span>
-            <span className="mem-badge mem-badge--identity">{t(`identity.${member.identity_type}`)}</span>
             {!member.active && <span className="mem-badge mem-badge--inactive">{t('members.inactive')}</span>}
           </span>
-          <span className="mem-detail__meta">
-            <span className="mem-detail__meta-row">{t('members.joined')}: {formatDate(member.joined_at)}</span>
-            {member.email && <span className="mem-detail__meta-row"><bdi dir="ltr" className="mem-detail__email">{member.email}</bdi></span>}
-          </span>
+          <span className="mem-profile-card__joined">{t('members.joined')}: {formatDate(member.joined_at)}</span>
         </div>
         {onRole && (
           <MemberActionsMenu
@@ -82,42 +88,47 @@ const MemberDetail = ({ detail, currency, tripId, onBack, onRole, onRemove, onTr
         )}
       </header>
 
-      <div className={`mem-balance-card mem-balance-card--${balanceState}`}>
-        <span className="mem-balance-card__label">{t('members.currentBalance')}</span>
-        <Money value={statistics.current_balance} currency={currency} variant="display" className="mem-balance-card__value" currencyClassName="mem-balance-card__value-currency" />
-        <p className="mem-balance-card__hint">
-          <i className={`bi ${balanceState === 'positive' ? 'bi-graph-up-arrow' : balanceState === 'negative' ? 'bi-graph-down-arrow' : 'bi-check-circle'}`} aria-hidden="true" />
-          {t(`members.balanceHint.${balanceState}`)}
-        </p>
-      </div>
+      <section className="mem-financial-card">
+        <div className="mem-financial-card__header">
+          <h3 className="text-title mem-financial-card__title"><i className="bi bi-bank" aria-hidden="true" /> {t('members.financialRecord')}</h3>
+          <span className="mem-financial-card__current-label">{t('members.currentBalance')}</span>
+        </div>
 
-      {canSettle && (
-        <Link to={`/trips/${tripId}/balances`} className="dash-btn dash-btn--primary">
-          {t('members.settleUp', { name: member.display_name })}
-        </Link>
-      )}
-      {!canSettle && balanceValue !== 0 && (
-        <Link to={`/trips/${tripId}/balances`} className="dash-btn dash-btn--secondary">{t('members.viewBalances')}</Link>
-      )}
+        <div className="mem-financial-card__body">
+          <div className={`mem-balance-panel mem-balance-panel--${balanceState}`}>
+            <Money value={statistics.current_balance} currency={currency} variant="display" className="mem-balance-panel__value" currencyClassName="mem-balance-panel__value-currency" />
+            <p className="mem-balance-panel__hint">
+              <i className={`bi ${balanceState === 'positive' ? 'bi-graph-up-arrow' : balanceState === 'negative' ? 'bi-graph-down-arrow' : 'bi-check-circle'}`} aria-hidden="true" />
+              {t(`members.balanceHint.${balanceState}`)}
+            </p>
+            {canSettle && (
+              <Link to={`/trips/${tripId}/balances`} className="dash-btn dash-btn--secondary">{t('members.settleUp', { name: member.display_name })}</Link>
+            )}
+            {!canSettle && balanceValue !== 0 && (
+              <Link to={`/trips/${tripId}/balances`} className="dash-btn dash-btn--secondary">{t('members.viewBalances')}</Link>
+            )}
+          </div>
 
-      <dl className="mem-bento">
-        <div><dt>{t('balances.paid')}</dt><dd><Money value={statistics.total_paid} currency={currency} variant="tabular" /></dd></div>
-        <div><dt>{t('balances.share')}</dt><dd><Money value={statistics.total_expense_share} currency={currency} variant="tabular" /></dd></div>
-        <div><dt>{t('members.personalSpending')}</dt><dd><Money value={statistics.total_personal_spending} currency={currency} variant="tabular" /></dd></div>
-        <div><dt>{t('balances.sent')}</dt><dd><Money value={statistics.settlements_sent} currency={currency} variant="tabular" /></dd></div>
-        <div><dt>{t('members.expenseCount')}</dt><dd>{statistics.expense_count}</dd></div>
-        <div><dt>{t('members.lastActivity')}</dt><dd>{statistics.last_activity_at ? formatDateTime(statistics.last_activity_at, i18n.language) : '—'}</dd></div>
-      </dl>
-
-      {hasFundParticipation && (
-        <section className="mem-fund">
-          <h3 className="text-label">{t('members.fundParticipation')}</h3>
-          <dl className="mem-bento mem-fund__bento">
-            <div><dt>{t('members.fundContributed')}</dt><dd><Money value={statistics.fund.contributed} currency={currency} variant="tabular" /></dd></div>
-            <div><dt>{t('members.fundReimbursed')}</dt><dd><Money value={statistics.fund.reimbursed} currency={currency} variant="tabular" /></dd></div>
+          <dl className="mem-financial-grid">
+            <div><dt>{t('balances.paid')}</dt><dd><Money value={statistics.total_paid} currency={currency} variant="tabular" /></dd></div>
+            <div><dt>{t('balances.share')}</dt><dd><Money value={statistics.total_expense_share} currency={currency} variant="tabular" /></dd></div>
+            <div><dt>{t('members.personalSpending')}</dt><dd><Money value={statistics.total_personal_spending} currency={currency} variant="tabular" /></dd></div>
+            <div><dt>{t('balances.sent')}</dt><dd><Money value={statistics.settlements_sent} currency={currency} variant="tabular" /></dd></div>
+            <div><dt>{t('members.expenseCount')}</dt><dd>{statistics.expense_count}</dd></div>
+            <div><dt>{t('members.lastActivity')}</dt><dd>{statistics.last_activity_at ? formatDateTime(statistics.last_activity_at, i18n.language) : '—'}</dd></div>
           </dl>
-        </section>
-      )}
+
+          {hasFundParticipation && (
+            <section className="mem-fund">
+              <h4 className="text-label">{t('members.fundParticipation')}</h4>
+              <dl className="mem-financial-grid mem-fund__grid">
+                <div><dt>{t('members.fundContributed')}</dt><dd><Money value={statistics.fund.contributed} currency={currency} variant="tabular" /></dd></div>
+                <div><dt>{t('members.fundReimbursed')}</dt><dd><Money value={statistics.fund.reimbursed} currency={currency} variant="tabular" /></dd></div>
+              </dl>
+            </section>
+          )}
+        </div>
+      </section>
     </div>
   );
 };

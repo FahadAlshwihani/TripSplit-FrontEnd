@@ -22,9 +22,9 @@ test('shows a neutral empty state when no member is selected', () => {
 test('renders the canonical Money component for the current balance, not a raw string', () => {
   const detail = { member: { ...baseMember, capabilities: { can_settle_with: false } }, statistics: baseStatistics };
   renderDetail(detail);
-  const balanceRow = screen.getByText('members.currentBalance').closest('.mem-balance-card');
+  const balanceRow = screen.getByText('members.currentBalance').closest('.mem-financial-card').querySelector('.mem-balance-panel');
   expect(balanceRow.querySelector('bdi[dir="ltr"]')).toBeInTheDocument();
-  expect(balanceRow.querySelector('.mem-balance-card__value-currency')).toHaveTextContent('SAR');
+  expect(balanceRow.querySelector('.mem-balance-panel__value-currency')).toHaveTextContent('SAR');
 });
 
 test('shows Settle Up only when the server reports a real pairwise obligation, not from balance alone', () => {
@@ -80,6 +80,39 @@ test('the detail-header action menu uses the exact same trigger class as the lis
   renderDetail(detail, { onRole: jest.fn(), onRemove: jest.fn(), onTransfer: jest.fn(), onLeave: jest.fn(), onBan: jest.fn() });
   const trigger = screen.getByRole('button', { name: `members.details ${baseMember.display_name}` });
   expect(trigger).toHaveClass('member-actions-menu__trigger');
+});
+
+test('renders two separate cards -- a compact profile card and a Financial Record card -- not one oversized card', () => {
+  const detail = { member: { ...baseMember, capabilities: { can_settle_with: false } }, statistics: baseStatistics };
+  const { container } = renderDetail(detail);
+  const profileCard = container.querySelector('.mem-profile-card');
+  const financialCard = container.querySelector('.mem-financial-card');
+  expect(profileCard).not.toBeNull();
+  expect(financialCard).not.toBeNull();
+  expect(profileCard).not.toBe(financialCard);
+  expect(profileCard.contains(financialCard)).toBe(false);
+});
+
+test('the Financial Record card header shows the section title and "Current Balance" on the same row', () => {
+  const detail = { member: { ...baseMember, capabilities: { can_settle_with: false } }, statistics: baseStatistics };
+  const { container } = renderDetail(detail);
+  const header = container.querySelector('.mem-financial-card__header');
+  expect(header).toHaveTextContent('members.financialRecord');
+  expect(header).toHaveTextContent('members.currentBalance');
+});
+
+test('the financial grid is one integrated region (internal borders), not separate floating mini-cards', () => {
+  const detail = { member: { ...baseMember, capabilities: { can_settle_with: false } }, statistics: baseStatistics };
+  const { container } = renderDetail(detail);
+  const grids = container.querySelectorAll('.mem-financial-grid');
+  expect(grids.length).toBe(1); // the personal-ledger grid; Fund's own grid only renders when there is Fund data
+  expect(grids[0].tagName.toLowerCase()).toBe('dl');
+});
+
+test('falls back to showing identity type (never a fake email) when the server omits email', () => {
+  const detail = { member: { ...baseMember, identity_type: 'guest', capabilities: { can_settle_with: false } }, statistics: baseStatistics };
+  renderDetail(detail);
+  expect(screen.getByText('identity.guest')).toBeInTheDocument();
 });
 
 test('onBack, when provided, calls back on click', () => {

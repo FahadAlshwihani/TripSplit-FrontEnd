@@ -54,19 +54,40 @@ test('shows the canonical NeoLoading state while members are loading, never the 
   expect(screen.getByText('common.loading')).toBeInTheDocument();
 });
 
-test('mobile layout contract: the detail-open class only appears once a member is selected (CSS drives the single-surface swap below the breakpoint)', async () => {
-  const { container } = renderPage();
-  await screen.findByText('Regular');
-  // A default selection happens on load (the current viewer), so the
-  // class is already present once the detail panel finishes loading --
-  // wait for it, then clear it via Back to pin the "no selection" ->
-  // "selected" transition this class drives.
-  await screen.findByText('members.currentBalance');
-  expect(container.querySelector('.mem-layout')).toHaveClass('mem-layout--detail-open');
-  fireEvent.click(screen.getByText('common.back'));
-  expect(container.querySelector('.mem-layout')).not.toHaveClass('mem-layout--detail-open');
-  fireEvent.click(screen.getByText('Regular'));
-  await waitFor(() => expect(container.querySelector('.mem-layout')).toHaveClass('mem-layout--detail-open'));
+describe('mobile flow: selecting a default member must never, by itself, force the detail view open', () => {
+  test('detailOpen stays false even after the default-selected member\'s detail data has fully loaded (the exact bug this pass fixes)', async () => {
+    const { container } = renderPage();
+    await screen.findByText('Regular');
+    // The default-select effect already picked the current viewer and
+    // its detail data has finished loading -- but that is a DATA
+    // concern (member_detail_view populated `detail`), never a
+    // navigation/UI concern. `detailOpen` (the class driving the mobile
+    // single-surface swap) must stay false until the user actually taps
+    // a row -- selectedId != null is not the same state as "the user
+    // opened detail".
+    await screen.findByText('members.currentBalance');
+    expect(container.querySelector('.mem-layout')).not.toHaveClass('mem-layout--detail-open');
+  });
+
+  test('tapping a member row opens detail; tapping Back returns to the list-only state', async () => {
+    const { container } = renderPage();
+    await screen.findByText('Regular');
+    await screen.findByText('members.currentBalance');
+    fireEvent.click(screen.getByText('Regular'));
+    await waitFor(() => expect(container.querySelector('.mem-layout')).toHaveClass('mem-layout--detail-open'));
+    fireEvent.click(screen.getByText('common.back'));
+    expect(container.querySelector('.mem-layout')).not.toHaveClass('mem-layout--detail-open');
+  });
+
+  test('the canonical Back control (dash-btn secondary + bi-arrow-left) is what closes detail, not a one-off Members-only button', async () => {
+    renderPage();
+    await screen.findByText('Regular');
+    await screen.findByText('members.currentBalance');
+    fireEvent.click(screen.getByText('Regular'));
+    const back = await screen.findByText('common.back');
+    const backButton = back.closest('button');
+    expect(backButton).toHaveClass('dash-btn', 'dash-btn--secondary', 'mem-back');
+  });
 });
 
 test('selecting a member loads their detail panel from the canonical member_detail_view response', async () => {

@@ -1,8 +1,7 @@
 /*
-  Members -- Neo-classic dashboard page, same token/press/typography
-  system as Expenses (`exp-`)/Balances (`bal-`)/Fund/Settlements, not a
-  page-specific reinvention. Class prefix `mem-` (the popover keeps its
-  own established `member-actions-menu__*` prefix).
+  Members -- rebuilt to match the Stitch master/detail reference much
+  more closely, using only the current dashboard's real tokens/press/
+  typography system (no page-specific reinvention). Class prefix `mem-`.
 
   Members is its own lazy-loaded route chunk, so it cannot rely on
   another feature's CSS having already loaded -- this file carries its
@@ -23,127 +22,150 @@
 /* Page header -- identical structure to .exp-page__header/.bal-page__header. */
 
 .mem-page__header { display: flex; flex-direction: column; gap: var(--space-1); padding-block-end: var(--space-3); border-block-end: var(--border-width) solid var(--color-border); }
-.mem-page__heading { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .mem-page__title { margin: 0; color: var(--color-text); }
 .mem-page__subtitle { color: var(--color-text-muted); margin: 0; max-width: 48rem; }
 
 /* ------------------------------------------------------------------ */
-/* Master/detail shell -- desktop: two balanced columns (list ~44%,
-   detail ~56%, matching the Stitch reference's proportions), both
-   visible together, both starting from the same vertical baseline.
-   Below the mobile breakpoint, only ONE column ever renders at a time:
-   the list by default, or the detail full-width once a member is
-   selected -- never a squeezed two-column table. */
+/* Master/detail shell -- Stitch's own proportions: two visually equal
+   columns, same vertical baseline, same card language. Below the
+   breakpoint only ONE surface renders at a time, driven by explicit
+   React state (`detailOpen`), never purely by a default selection --
+   see MembersPage.jsx's own comment for why that distinction matters. */
 .mem-layout {
   display: grid;
-  grid-template-columns: minmax(300px, 44%) 1fr;
-  gap: var(--space-5);
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
   align-items: start;
 }
 
 @media (max-width: 860px) {
   .mem-layout { grid-template-columns: 1fr; gap: var(--space-4); }
   .mem-layout .mem-list { display: flex; }
-  .mem-layout .mem-detail { display: none; }
+  .mem-layout .mem-detail-stack { display: none; }
   .mem-layout.mem-layout--detail-open .mem-list { display: none; }
-  .mem-layout.mem-layout--detail-open .mem-detail { display: flex; }
+  .mem-layout.mem-layout--detail-open .mem-detail-stack { display: flex; }
 }
 
 /* ------------------------------------------------------------------ */
-/* List (left column) */
+/* List card */
 
 .mem-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
-  box-shadow: var(--shadow-hard-sm);
+  box-shadow: var(--shadow-hard-md);
+  overflow: hidden;
 }
 
-.mem-list__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
-.mem-list__count { font: var(--text-label); font-size: 11px; }
+.mem-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-block-end: var(--border-width) solid var(--color-border-subtle);
+}
+.mem-list__title { display: flex; align-items: baseline; gap: var(--space-1); margin: 0; }
+.mem-list__count { color: var(--color-text-muted); font-weight: 400; }
 
-/* Toolbar -- search + historical-members toggle as ONE control row
-   (same recipe as .exp-toolbar), instead of the toggle sitting as a
-   loose setting disconnected from search/filtering. Both children are
-   pinned to the same 40px control height so neither "floats" at a
-   visually different size next to the other. */
-.mem-toolbar { display: flex; align-items: center; gap: var(--space-2); }
+.mem-list__add {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 32px;
+  padding-inline: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--text-label);
+  font-size: 11px;
+  text-decoration: none;
+  box-shadow: var(--shadow-hard-sm);
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+.mem-list__add:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.mem-list__add:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
+
+/* Toolbar -- deliberately subtle/compact (search + historical filter),
+   never taller or more visually loud than the list it sits above.
+   Both controls share a smaller 32px height, unbordered until focused/
+   interacted with, so the list of PEOPLE stays the visual focus. */
+.mem-toolbar { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); }
 
 @media (max-width: 480px) {
   .mem-toolbar { flex-direction: column; align-items: stretch; }
 }
 
-.mem-toolbar .mem-search { flex: 1 1 auto; min-width: 0; }
-
-.mem-toolbar__historical {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex: 0 0 auto;
-  min-height: 40px;
-  padding-inline: var(--space-3);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text-muted);
-  font: var(--text-body-sm);
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-/* Search -- same recipe as .exp-toolbar__search-input (40px control,
-   icon inset, hard-shadow focus ring via border-color only, matching
-   every other search field in the app). */
-.mem-search { position: relative; }
+.mem-search { position: relative; flex: 1 1 auto; min-width: 0; }
 .mem-search__icon {
   position: absolute;
-  inset-inline-start: var(--space-3);
+  inset-inline-start: var(--space-2);
   inset-block-start: 50%;
   transform: translateY(-50%);
-  color: var(--color-text-muted);
+  color: var(--color-text-faint);
+  font-size: 0.85rem;
   pointer-events: none;
 }
 .mem-search__input {
   width: 100%;
-  min-height: 40px;
-  padding-inline-start: var(--space-8);
-  padding-inline-end: var(--space-3);
-  border: var(--border-width) solid var(--color-border);
+  min-height: 32px;
+  padding-inline-start: var(--space-6);
+  padding-inline-end: var(--space-2);
+  border: var(--border-width) solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  background: var(--color-surface-alt);
   color: var(--color-text);
   font: var(--text-body-sm);
 }
-.mem-search__input:focus-visible { outline: none; border-color: var(--nc-indigo-700); }
+.mem-search__input:focus-visible { outline: none; border-color: var(--nc-indigo-700); background: var(--color-surface); }
 
-.mem-list__rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
-/* `stretch` (not `center`) is load-bearing: .mem-row and the action
-   menu are two SEPARATE flex children of this <li> (a button can't
-   nest inside a button), so each one centers ITS OWN content
-   independently -- if they don't share the exact same box height,
-   two independently-centered boxes can still end up visually offset
-   from each other by a few px. Stretching both to the row's full
-   height first, then centering content inside each, is what actually
-   guarantees identical geometry regardless of which one's natural
-   content height is taller. */
-.mem-list__rows > li { display: flex; align-items: stretch; gap: var(--space-1); }
+.mem-toolbar__historical {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 0 0 auto;
+  color: var(--color-text-faint);
+  font: var(--text-caption);
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Column labels -- MEMBER / BALANCE, small caps, muted; the closest
+   thing to a table header this list has (Stitch's own recipe). */
+.mem-list__columns {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-1) var(--space-4);
+  color: var(--color-text-faint);
+  font: var(--text-label);
+  font-size: 10px;
+}
+
+.mem-list__rows { list-style: none; margin: 0; padding: var(--space-1) var(--space-2) var(--space-2); display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; overflow-y: auto; }
+/* `stretch` (not `center`): .mem-row and the ghost action-menu trigger
+   are two SEPARATE flex children of this <li> (a button can't nest
+   inside a button) -- stretching both to the row's full height first,
+   then centering content inside each, guarantees identical geometry
+   regardless of which one's natural content height is taller. */
+.mem-list__rows > li { display: flex; align-items: stretch; }
 .mem-list__empty { padding: var(--space-6) var(--space-4); text-align: center; color: var(--color-text-muted); }
 
-/* Row -- ~64px tall, physical press language identical to
-   .dash-sidebar__link: flat/transparent border at rest, hover presses
-   INWARD (translate + shadow shrink, never a lift), selected uses a
-   real surface + emphasized border + shadow, never shadow alone. */
+/* Row -- compact (~60px), minimal at rest (no border/shadow), a subtle
+   surface tint + inward press on hover, a real selected surface with
+   emphasis border. Never a bordered "card" per row -- Stitch's list is
+   a clean, dense stack of records, not a pile of mini-toolbars. */
 .mem-row {
   flex: 1 1 auto;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   min-width: 0;
-  min-height: 64px;
+  min-height: 60px;
   padding: var(--space-2) var(--space-3);
   border: var(--border-width) solid transparent;
   border-radius: var(--radius-sm);
@@ -151,41 +173,30 @@
   color: var(--color-text);
   text-align: start;
   cursor: pointer;
-  box-shadow: 0 0 0 0 var(--color-border);
-  transition: background-color 0.15s ease, border-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform var(--press-duration) ease;
 }
-.mem-row:hover {
-  background: var(--color-surface-alt);
-  border-color: var(--color-border);
-  box-shadow: var(--shadow-hard-sm-hover);
-  transform: var(--press-sm-hover);
-}
-.mem-row:active { box-shadow: 0 0 0 0 var(--color-border); transform: var(--press-sm-active); }
+.mem-row:hover { background: var(--color-surface-alt); }
+.mem-row:active { transform: var(--press-sm-active); }
 
 .mem-row--selected,
 .mem-row--selected:hover {
   background: var(--color-primary-soft);
-  border-color: var(--color-border);
-  border-width: var(--border-width-lg);
-  box-shadow: var(--shadow-hard-sm);
+  border-color: var(--nc-indigo-700);
   transform: none;
 }
 
-.mem-row__main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
-/* line-height: 1 on every text element inside the row is deliberate --
-   mixed font families (Work Sans name, JetBrains Mono badges/balance)
-   ship different default line-height metrics, so even a geometrically
-   correct align-items:center can still look like text sits 2-3px off
-   from its neighbor if each element's own line-box is a different
-   height. Pinning line-height removes that variable entirely instead
-   of compensating with per-element margin hacks. */
+.mem-row__main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
 .mem-row__name { font: var(--text-body); font-weight: 700; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mem-row__badges { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; line-height: 1; }
-.mem-row__balance { flex: 0 0 auto; font-size: 13px; line-height: 1; }
+.mem-row__meta { display: flex; align-items: center; gap: var(--space-1); line-height: 1; color: var(--color-text-muted); font: var(--text-caption); font-size: 11px; }
+.mem-row__joined { white-space: nowrap; }
+
+.mem-row__balance { flex: 0 0 auto; font-size: 13px; line-height: 1; font-weight: 600; color: var(--color-text-muted); }
+.mem-row__balance--positive { color: var(--color-success); }
+.mem-row__balance--negative { color: var(--color-danger); }
 
 @media (prefers-reduced-motion: reduce) {
   .mem-row { transition: background-color 0.15s ease, border-color 0.15s ease; }
-  .mem-row:hover, .mem-row:active { transform: none; }
+  .mem-row:active { transform: none; }
 }
 
 /* ------------------------------------------------------------------ */
@@ -219,13 +230,12 @@
 .mem-badge--inactive { background: transparent; border-style: dashed; color: var(--color-text-muted); }
 
 /* ------------------------------------------------------------------ */
-/* Three-dot action control -- same 40px square icon-button family as
-   .exp-utility-btn, vertically centered against the row it belongs to.
-   The wrapper itself stretches to the full row height (see the <li>
-   `align-items: stretch` comment above) and centers its 40px trigger
-   inside that -- so the trigger's visual center always lands on the
-   exact same line as .mem-row's internally-centered content, in the
-   list AND in the detail header (both reuse this same component). */
+/* Three-dot action control -- deliberately a GHOST icon button (no
+   border/shadow at rest) in both the list row and the detail header,
+   so it never dominates a record the way a fully-bordered/shadowed
+   control would. Identical component/class in both places -- there is
+   no separate list vs. detail sizing. */
+
 .member-actions-menu { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
 
 .member-actions-menu__trigger {
@@ -233,19 +243,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inline-size: 40px;
-  block-size: 40px;
-  border: var(--border-width) solid var(--color-border);
+  inline-size: 32px;
+  block-size: 32px;
+  border: var(--border-width) solid transparent;
   border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  background: transparent;
   color: var(--color-text-muted);
-  box-shadow: var(--shadow-hard-sm);
   cursor: pointer;
-  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
-.member-actions-menu__trigger:hover { background: var(--color-surface-alt); color: var(--color-text); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
-.member-actions-menu__trigger:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
-.member-actions-menu__trigger[aria-expanded="true"] { background: var(--nc-indigo-700); border-color: var(--nc-indigo-700); color: var(--nc-white); }
+.member-actions-menu__trigger:hover { background: var(--color-surface-alt); border-color: var(--color-border-subtle); color: var(--color-text); }
+.member-actions-menu__trigger[aria-expanded="true"] { background: var(--color-primary-soft); border-color: var(--nc-indigo-700); color: var(--nc-indigo-700); }
 
 .member-actions-menu__panel {
   z-index: var(--z-popover);
@@ -272,135 +280,137 @@
   color: var(--color-text);
   font: var(--text-body-sm);
   cursor: pointer;
-  transition: background-color 0.15s ease, transform var(--press-duration) ease;
+  transition: background-color 0.15s ease;
 }
-.member-actions-menu__panel button:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); }
-.member-actions-menu__panel button:active { transform: var(--press-sm-active); }
+.member-actions-menu__panel button:hover { background: var(--color-surface-alt); }
 .member-actions-menu__panel .member-actions-menu__danger { color: var(--color-danger); }
 
-@media (prefers-reduced-motion: reduce) {
-  .member-actions-menu__trigger { transition: background-color 0.15s ease; }
-  .member-actions-menu__trigger:hover, .member-actions-menu__trigger:active { transform: none; }
-}
-
 /* ------------------------------------------------------------------ */
-/* Detail (right column) -- the Stitch "Financial Record" bento card. */
+/* Detail stack -- two cards (profile, financial record), matching
+   Stitch's own two-card composition instead of one oversized card. */
 
-.mem-detail {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-5);
-  border: var(--border-width-lg) solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-hard-md);
-}
-.mem-detail--empty { align-items: center; justify-content: center; min-height: 280px; color: var(--color-text-muted); text-align: center; }
+.mem-detail-stack { display: flex; flex-direction: column; gap: var(--space-4); }
 
-.mem-detail__back {
-  display: none;
-  align-items: center;
-  gap: var(--space-1);
-  align-self: flex-start;
-  min-height: 36px;
-  padding-inline: var(--space-2);
-  margin-inline-start: calc(var(--space-2) * -1);
-  border: var(--border-width) solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  font: var(--text-label);
-  font-size: 11px;
-  cursor: pointer;
-  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
-}
-.mem-detail__back i { font-size: 0.9rem; }
-.mem-detail__back:hover { background: var(--color-surface-alt); border-color: var(--color-border); box-shadow: var(--shadow-hard-sm-hover); transform: var(--press-sm-hover); }
-.mem-detail__back:active { box-shadow: 0 0 0 0 var(--color-border); transform: var(--press-sm-active); }
-
+/* Back -- reuses the canonical .dash-btn secondary recipe (same
+   border/shadow/press physics as every other dashboard button) rather
+   than a one-off Members style; only mobile-visibility and a tighter
+   inline size are added on top. */
+.mem-back { display: none; align-self: flex-start; min-height: 32px; padding-inline: var(--space-3); }
 @media (max-width: 860px) {
-  .mem-detail__back { display: inline-flex; }
+  .mem-back { display: inline-flex; }
 }
 
-/* Name is the dominant element; role/identity secondary; joined date
-   and email lowest emphasis -- never four equal-weight plain lines. */
-.mem-detail__header { display: flex; align-items: flex-start; gap: var(--space-3); }
-.mem-detail__identity { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
-.mem-detail__name { margin: 0; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mem-detail__badges { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; }
-.mem-detail__meta { display: flex; flex-direction: column; gap: 2px; margin-block-start: 2px; }
-.mem-detail__meta-row { color: var(--color-text-muted); font: var(--text-caption); }
-.mem-detail__email { direction: ltr; unicode-bidi: isolate; }
-
-/* Balance card -- same recipe as .bal-net-card, so "your own balance"
-   and "a specific member's balance" read as the same visual object
-   across the two pages. */
-.mem-balance-card {
+/* Profile card -- compact, dense hierarchy: name strongest, email
+   secondary, role badge compact, three-dot cleanly at the opposite edge. */
+.mem-profile-card {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-5) var(--space-4);
-  border: var(--border-width-lg) solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-container);
-}
-.mem-balance-card--positive { background: var(--color-success-soft); }
-.mem-balance-card--negative { background: var(--color-danger-soft); }
-
-.mem-balance-card__label { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); }
-.mem-balance-card__value { font: var(--text-display); font-size: 32px; color: var(--color-text); }
-.mem-balance-card--positive .mem-balance-card__value { color: var(--color-success); }
-.mem-balance-card--negative .mem-balance-card__value { color: var(--color-danger); }
-.mem-balance-card__value-currency { font: var(--text-body); color: var(--color-text-muted); margin-inline-start: var(--space-1); }
-
-.mem-balance-card__hint { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
-.mem-balance-card--positive .mem-balance-card__hint i { color: var(--color-success); }
-.mem-balance-card--negative .mem-balance-card__hint i { color: var(--color-danger); }
-
-/* Bento metrics grid -- same recipe as .exp-cards/.exp-card: fixed
-   min-height so a wrapped label never makes one cell visibly taller
-   than its neighbors, same label/value baseline across every cell. */
-.mem-bento { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); margin: 0; }
-
-@media (min-width: 480px) {
-  .mem-bento { grid-template-columns: repeat(3, 1fr); }
-}
-
-.mem-bento > div {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: var(--space-1);
-  min-height: 80px;
-  padding: var(--space-3);
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
-  box-shadow: var(--shadow-hard-sm);
+  box-shadow: var(--shadow-hard-md);
 }
-.mem-bento dt { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); margin: 0; }
-.mem-bento dd { font: var(--text-headline); font-size: 20px; color: var(--color-text); margin: 0; }
+.mem-profile-card--empty { align-items: center; justify-content: center; min-height: 280px; color: var(--color-text-muted); text-align: center; }
 
-/* Fund Participation -- visually separate subsection, never mixed into
-   the personal balance card/bento above. A thin rule + its own label
-   is enough hierarchy; it doesn't need a second full card border
-   around it (Neo-classic borders establish hierarchy, not decorate
-   every region). */
+.mem-profile-card__identity { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mem-profile-card__name { margin: 0; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mem-profile-card__email { color: var(--color-text-muted); font: var(--text-body-sm); direction: ltr; unicode-bidi: isolate; overflow: hidden; text-overflow: ellipsis; }
+.mem-profile-card__badges { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; margin-block-start: var(--space-1); }
+.mem-profile-card__joined { color: var(--color-text-faint); font: var(--text-caption); font-size: 11px; margin-block-start: 2px; }
+
+/* Financial record card */
+.mem-financial-card {
+  display: flex;
+  flex-direction: column;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+  overflow: hidden;
+}
+
+.mem-financial-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-block-end: var(--border-width) solid var(--color-border-subtle);
+}
+.mem-financial-card__title { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text); }
+.mem-financial-card__title i { color: var(--nc-indigo-700); }
+.mem-financial-card__current-label { color: var(--color-text-faint); font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); }
+
+.mem-financial-card__body { display: flex; flex-direction: column; padding: var(--space-4); gap: var(--space-4); }
+
+/* Balance panel -- the strong focal area: soft-tinted by sign, big
+   value, state copy, and the Settle Up/View Balances action all live
+   INSIDE this one panel (matching Stitch), not scattered below it. */
+.mem-balance-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-container);
+  text-align: center;
+}
+.mem-balance-panel--positive { background: var(--color-success-soft); }
+.mem-balance-panel--negative { background: var(--color-danger-soft); }
+
+.mem-balance-panel__value { font: var(--text-display); font-size: 34px; color: var(--color-text); }
+.mem-balance-panel--positive .mem-balance-panel__value { color: var(--color-success); }
+.mem-balance-panel--negative .mem-balance-panel__value { color: var(--color-danger); }
+.mem-balance-panel__value-currency { font: var(--text-body); color: var(--color-text-muted); margin-inline-start: var(--space-1); }
+
+.mem-balance-panel__hint { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
+.mem-balance-panel--positive .mem-balance-panel__hint i { color: var(--color-success); }
+.mem-balance-panel--negative .mem-balance-panel__hint i { color: var(--color-danger); }
+
+.mem-balance-panel .dash-btn { margin-block-start: var(--space-2); background: var(--color-surface); }
+
+/* Integrated financial grid -- ONE bordered region with internal
+   dividers (a real ledger table), never separate floating mini-cards. */
+.mem-financial-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin: 0;
+}
+.mem-financial-grid > div {
+  padding: var(--space-3);
+  border-inline-end: var(--border-width) solid var(--color-border-subtle);
+  border-block-end: var(--border-width) solid var(--color-border-subtle);
+}
+.mem-financial-grid > div:nth-child(2n) { border-inline-end: none; }
+.mem-financial-grid > div:nth-last-child(-n+2) { border-block-end: none; }
+
+.mem-financial-grid dt { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); margin: 0 0 2px; }
+.mem-financial-grid dd { font: var(--text-financial); font-size: 15px; color: var(--color-text); margin: 0; }
+
+/* Fund Participation -- visually separate subsection (thin rule + its
+   own compact label), reusing the SAME integrated-grid recipe rather
+   than a second set of floating cards. */
 .mem-fund { display: flex; flex-direction: column; gap: var(--space-2); padding-block-start: var(--space-3); border-block-start: var(--border-width) solid var(--color-border-subtle); }
-.mem-fund__bento { grid-template-columns: repeat(2, 1fr); }
+.mem-fund__grid { grid-template-columns: 1fr 1fr; }
 
 /* ------------------------------------------------------------------ */
 /* Historical-members toggle -- same .acc-switch recipe already used in
    AccountNotifications/Governance's AccessSettingsCard, copied here for
-   the same "own lazy chunk" reason. */
+   the same "own lazy chunk" reason. Compact (28px) to match this
+   toolbar's smaller, de-emphasized scale. */
 
-.acc-switch { position: relative; display: inline-flex; flex: 0 0 auto; width: 36px; height: 20px; }
+.acc-switch { position: relative; display: inline-flex; flex: 0 0 auto; width: 30px; height: 17px; }
 .acc-switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
 .acc-switch__track {
   position: absolute;
   inset: 0;
-  border: var(--border-width) solid var(--color-border);
+  border: var(--border-width) solid var(--color-border-subtle);
   border-radius: 999px;
   background: var(--color-surface-alt);
   transition: background-color 0.15s ease;
@@ -410,22 +420,30 @@
   position: absolute;
   inset-inline-start: 2px;
   top: 2px;
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
-  background: var(--color-border);
+  background: var(--color-text-faint);
   transition: transform 0.15s ease;
 }
-.acc-switch input:checked ~ .acc-switch__track { background: var(--color-primary-soft); }
-.acc-switch input:checked ~ .acc-switch__track::before { transform: translateX(16px); background: var(--nc-indigo-700); }
-[dir="rtl"] .acc-switch input:checked ~ .acc-switch__track::before { transform: translateX(-16px); }
+.acc-switch input:checked ~ .acc-switch__track { background: var(--color-primary-soft); border-color: var(--nc-indigo-700); }
+.acc-switch input:checked ~ .acc-switch__track::before { transform: translateX(13px); background: var(--nc-indigo-700); }
+[dir="rtl"] .acc-switch input:checked ~ .acc-switch__track::before { transform: translateX(-13px); }
 .acc-switch input:focus-visible ~ .acc-switch__track { outline: 2px solid var(--nc-indigo-700); outline-offset: 2px; }
 
 /* ------------------------------------------------------------------ */
-/* Mobile-first adjustments -- 320-430px is the primary target. */
+/* Mobile-first adjustments -- 320-430px is the primary target. The
+   detail stack fills the mobile gutter naturally (no extra outer
+   frame/empty canvas); cards keep a single 1px border at this size
+   instead of the desktop's heavier 4px shadow, so it reads as content
+   on the same page rather than a distinct nested surface. */
 
 @media (max-width: 480px) {
-  .mem-detail { padding: var(--space-4); border-width: var(--border-width); box-shadow: var(--shadow-hard-sm); }
-  .mem-bento { grid-template-columns: repeat(2, 1fr); }
-  .mem-fund__bento { grid-template-columns: repeat(2, 1fr); }
+  .mem-profile-card,
+  .mem-financial-card,
+  .mem-list { box-shadow: var(--shadow-hard-sm); }
+  .mem-financial-grid,
+  .mem-fund__grid { grid-template-columns: 1fr 1fr; }
+  .mem-balance-panel { padding: var(--space-5) var(--space-3); }
+  .mem-balance-panel__value { font-size: 28px; }
 }

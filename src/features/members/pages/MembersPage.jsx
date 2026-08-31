@@ -16,11 +16,17 @@ import { getBalances } from '../../balances/api/balancesApi';
 /*
   Desktop master/detail (Stitch's own reference layout): the list on the
   left, the selected member's financial record on the right, both
-  visible together -- CSS alone (members.css) decides the column split
-  and collapses to a single column with the detail replacing the list
-  full-width below the mobile breakpoint (never a squeezed two-column
-  table). onBack clears the selection, which is what drives that
-  collapse back to the list on mobile.
+  visible together via members.css's column grid. Below the mobile
+  breakpoint, only ONE surface renders at a time -- but that swap is
+  driven by `detailOpen`, a SEPARATE piece of state from `selectedId`,
+  not by "a member happens to be selected." `selectedId` always
+  defaults to the current viewer once the list loads (desktop needs a
+  populated detail panel from the first paint) -- but that default
+  selection must never, by itself, force mobile into the detail view.
+  `detailOpen` starts false and only flips true from an explicit row
+  tap (onSelect), and back to false from Back -- CSS makes it a no-op
+  above the mobile breakpoint (.mem-detail-stack's base rule already
+  shows it unconditionally there), so desktop behavior is unaffected.
 
   Every destructive/high-impact mutation (promote, demote, remove,
   transfer, leave, ban) goes through a ConfirmDialog/BanMemberDialog
@@ -29,7 +35,7 @@ import { getBalances } from '../../balances/api/balancesApi';
   when the member still has an open balance (removal never clears it).
 */
 export default function MembersPage() {
-  const { trip, tripId, currentMember } = useOutletContext();
+  const { trip, tripId, currentMember, permissions } = useOutletContext();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [showHistorical, setShowHistorical] = useState(false);
@@ -39,6 +45,7 @@ export default function MembersPage() {
   );
   const balancesState = useRouteResource((signal) => getBalances(tripId, { signal }), [tripId]);
   const [selectedId, setSelectedId] = useState(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState(null);
   const [pending, setPending] = useState(null); // { kind, member, hasBalance } | null
@@ -49,7 +56,8 @@ export default function MembersPage() {
 
   // Default-select the current viewer (or the first member) once the
   // list is loaded, so the desktop detail panel never sits empty --
-  // never re-selects out from under an existing choice.
+  // never re-selects out from under an existing choice. Deliberately
+  // does NOT touch `detailOpen` -- see the comment above.
   useEffect(() => {
     if (selectedId || !members.length) return;
     setSelectedId(currentMember?.id && members.some((m) => m.id === currentMember.id) ? currentMember.id : members[0].id);
@@ -134,20 +142,20 @@ export default function MembersPage() {
   return (
     <div className="mem-page">
       <div className="mem-page__header">
-        <div className="mem-page__heading">
-          <h1 className="text-display mem-page__title">{t('members.title')}</h1>
-        </div>
+        <h1 className="text-display mem-page__title">{t('members.title')}</h1>
         <p className="text-copy-lg mem-page__subtitle">{t('members.subtitle')}</p>
       </div>
 
       {error && <ErrorState message={error.message} />}
-      <div className={`mem-layout${selectedId ? ' mem-layout--detail-open' : ''}`}>
+      <div className={`mem-layout${detailOpen ? ' mem-layout--detail-open' : ''}`}>
         <MembersPanel
           members={members}
           currentMember={currentMember}
           currency={trip.currency}
+          tripId={tripId}
+          canInvite={Boolean(permissions?.canManageMembers)}
           selectedId={selectedId}
-          onSelect={(member) => setSelectedId(member.id)}
+          onSelect={(member) => { setSelectedId(member.id); setDetailOpen(true); }}
           balancesByMemberId={balancesByMemberId}
           showHistorical={showHistorical}
           onToggleHistorical={setShowHistorical}
@@ -158,7 +166,7 @@ export default function MembersPage() {
           currency={trip.currency}
           tripId={tripId}
           currentMember={currentMember}
-          onBack={() => setSelectedId(null)}
+          onBack={() => setDetailOpen(false)}
           {...roleHandlers}
         />
       </div>

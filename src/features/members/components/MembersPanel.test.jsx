@@ -1,4 +1,5 @@
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import MembersPanel from './MembersPanel';
 
@@ -7,23 +8,53 @@ jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) 
 const noCaps = { can_promote: false, can_demote: false, can_remove: false, can_ban: false, can_transfer_ownership: false, can_settle_with: false };
 
 const renderPanel = (members, overrides = {}) => render(
-  <MembersPanel
-    members={members}
-    currentMember={{ id: 'self', role: 'member' }}
-    currency="SAR"
-    selectedId={null}
-    onSelect={jest.fn()}
-    balancesByMemberId={{}}
-    onRole={jest.fn()}
-    onRemove={jest.fn()}
-    onTransfer={jest.fn()}
-    onLeave={jest.fn()}
-    onBan={jest.fn()}
-    {...overrides}
-  />,
+  <MemoryRouter>
+    <MembersPanel
+      members={members}
+      currentMember={{ id: 'self', role: 'member' }}
+      currency="SAR"
+      tripId="t1"
+      selectedId={null}
+      onSelect={jest.fn()}
+      balancesByMemberId={{}}
+      onRole={jest.fn()}
+      onRemove={jest.fn()}
+      onTransfer={jest.fn()}
+      onLeave={jest.fn()}
+      onBan={jest.fn()}
+      {...overrides}
+    />
+  </MemoryRouter>,
 );
 
 const openMenuFor = (name) => fireEvent.click(screen.getByRole('button', { name: `members.details ${name}` }));
+
+test('the Add action only renders when the viewer has the capability, and links into Governance', () => {
+  const members = [{ id: 'm1', display_name: 'Fahad', role: 'member', identity_type: 'registered', avatar: {}, capabilities: noCaps }];
+  const { rerender } = renderPanel(members, { canInvite: false });
+  expect(screen.queryByText('members.addAction')).not.toBeInTheDocument();
+  rerender(
+    <MemoryRouter>
+      <MembersPanel
+        members={members}
+        currentMember={{ id: 'self', role: 'member' }}
+        currency="SAR"
+        tripId="t1"
+        canInvite
+        selectedId={null}
+        onSelect={jest.fn()}
+        balancesByMemberId={{}}
+        onRole={jest.fn()}
+        onRemove={jest.fn()}
+        onTransfer={jest.fn()}
+        onLeave={jest.fn()}
+        onBan={jest.fn()}
+      />
+    </MemoryRouter>,
+  );
+  const addLink = screen.getByText('members.addAction').closest('a');
+  expect(addLink).toHaveAttribute('href', '/trips/t1/governance');
+});
 
 test('search and the historical-members toggle share one toolbar, not a loose setting above search', () => {
   const members = [{ id: 'm1', display_name: 'Fahad', role: 'member', identity_type: 'registered', avatar: {}, capabilities: noCaps }];
@@ -70,8 +101,9 @@ describe('role carries more visual weight than identity', () => {
     expect(screen.getByText('role.owner')).toHaveClass('mem-badge--role-owner');
     expect(screen.getByText('role.admin')).toHaveClass('mem-badge--role-admin');
     expect(screen.getByText('role.member')).toHaveClass('mem-badge--role-member');
-    // Identity is always the plain neutral pill, regardless of role.
-    expect(screen.getAllByText('identity.registered')[0]).toHaveClass('mem-badge--identity');
+    // Identity is always plain muted text alongside the joined date --
+    // never its own badge box competing with the role badge's weight.
+    expect(screen.getAllByText(/identity\.registered/)[0]).not.toHaveClass('mem-badge');
   });
 
   test('an inactive (historical) row gets a distinct muted badge', () => {
