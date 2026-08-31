@@ -47,6 +47,13 @@ beforeEach(() => {
   getMemberDetail.mockResolvedValue({ member: { ...owner, capabilities: noCaps }, statistics: baseStatistics });
 });
 
+test('shows the canonical NeoLoading state while members are loading, never the old full-screen loader', () => {
+  getMembers.mockReturnValue(new Promise(() => {})); // never resolves -- stays in the loading state
+  renderPage();
+  expect(screen.getByRole('status')).toBeInTheDocument();
+  expect(screen.getByText('common.loading')).toBeInTheDocument();
+});
+
 test('mobile layout contract: the detail-open class only appears once a member is selected (CSS drives the single-surface swap below the breakpoint)', async () => {
   const { container } = renderPage();
   await screen.findByText('Regular');

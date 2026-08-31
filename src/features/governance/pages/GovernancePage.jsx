@@ -5,7 +5,7 @@ import '../styles/governance.css';
 import GovernancePanel from '../components/GovernancePanel';
 import BanMemberDialog from '../components/BanMemberDialog';
 import InviteMemberDialog from '../components/InviteMemberDialog';
-import Loading from '../../../components/Loading';
+import NeoLoading from '../../../shared/components/NeoLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
@@ -46,7 +46,7 @@ export default function GovernancePage() {
   };
 
   if (!permissions.canManageMembers) return <ErrorState message={t('governance.accessDenied')} />;
-  if (state.loading) return <Loading />;
+  if (state.loading) return <NeoLoading />;
   if (state.error) return <ErrorState message={state.error.message} onRetry={state.retry} />;
 
   const confirmPending = async () => {

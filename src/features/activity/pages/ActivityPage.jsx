@@ -2,7 +2,7 @@ import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ActivityPanel from '../components/ActivityPanel';
-import Loading from '../../../components/Loading';
+import NeoLoading from '../../../shared/components/NeoLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import EmptyState from '../../../shared/components/EmptyState';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
@@ -16,7 +16,7 @@ export default function ActivityPage() {
     [tripId],
   );
 
-  if (resource.loading) return <Loading />;
+  if (resource.loading) return <NeoLoading />;
   if (resource.error) return <ErrorState message={resource.error.message} onRetry={resource.retry} />;
 
   const events = resource.data?.results || [];

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import '../styles/members.css';
 import MembersPanel from '../components/MembersPanel';
 import MemberDetail from '../components/MemberDetail';
-import Loading from '../../../components/Loading';
+import NeoLoading from '../../../shared/components/NeoLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 import BanMemberDialog from '../../governance/components/BanMemberDialog';
@@ -102,7 +102,7 @@ export default function MembersPage() {
     }
   };
 
-  if (state.loading) return <Loading />;
+  if (state.loading) return <NeoLoading />;
   if (state.error) return <ErrorState message={state.error.message} onRetry={state.retry} />;
 
   const dialogFor = () => {
