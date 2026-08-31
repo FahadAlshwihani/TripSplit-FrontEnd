@@ -80,6 +80,7 @@
 .ct-section__icon { color: var(--color-text); }
 
 .ct-field { display: flex; flex-direction: column; gap: var(--space-1); }
+.ct-field__hint { margin: 0; color: var(--color-text-muted); }
 
 .ct-field-row {
   display: grid;

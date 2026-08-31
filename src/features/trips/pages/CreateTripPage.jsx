@@ -191,6 +191,7 @@ const CreateTripPage = () => {
                         placeholder="0.00"
                       />
                     </div>
+                    <p className="ct-field__hint text-copy-sm">{t('createTrip.budgetHint')}</p>
                   </div>
                 </div>
               </section>
