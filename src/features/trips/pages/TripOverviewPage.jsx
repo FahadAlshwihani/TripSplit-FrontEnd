@@ -43,7 +43,7 @@ export default function TripOverviewPage() {
         </div>
       </div>
 
-      <OverviewSummaryCards summary={summary} currency={trip.currency} />
+      <OverviewSummaryCards summary={summary} fund={fund} currency={trip.currency} />
 
       <FundSnapshot fund={fund} roundsSummary={roundsSummary} currency={trip.currency} tripId={tripId} />
 

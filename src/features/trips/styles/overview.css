@@ -4,7 +4,7 @@
   first: source order already matches the required mobile reading order
   (header -> summary cards -> category ledger -> spending split ->
   recent activity) except within the four summary cards themselves,
-  where My Balance/Remaining must lead on mobile even though desktop
+  where My Balance/Available must lead on mobile even though desktop
   visually groups Budget/Spent as the two large cards -- handled with
   `order`, not DOM reordering, so keyboard/reader order stays sane.
 */
@@ -49,7 +49,7 @@
 
 .ov-card--budget { order: 3; min-height: 108px; }
 .ov-card--spent { order: 4; min-height: 108px; background: var(--color-danger-soft); }
-.ov-card--remaining { order: 2; flex-direction: row; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-3); }
+.ov-card--available { order: 2; flex-direction: row; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-3); background: var(--color-primary-soft); }
 .ov-card--balance { order: 1; flex-direction: row; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-3); background: var(--color-success-soft); }
 
 .ov-card__head { display: flex; align-items: flex-start; justify-content: space-between; }
@@ -66,7 +66,7 @@
   font-size: 10px;
 }
 
-/* Remaining's label is plain caps text, no chip -- matches the approved
+/* Available's label is plain caps text, no chip -- matches the approved
    reference exactly (only Budget/Spent/My Balance get the bordered
    chip treatment). */
 .ov-card__label--plain { border: none; padding: 0; background: none; }
@@ -86,7 +86,7 @@
 .ov-card__value-currency { font: var(--text-headline-sm); color: var(--color-text-muted); margin-inline-start: var(--space-1); }
 
 .ov-card__muted { display: block; margin-block-start: auto; padding-block-start: var(--space-3); font: var(--text-body); color: var(--color-text-muted); }
-.ov-card--remaining .ov-card__muted, .ov-card--balance .ov-card__muted { margin-block-start: 0; padding-block-start: 0; }
+.ov-card--available .ov-card__muted, .ov-card--balance .ov-card__muted { margin-block-start: 0; padding-block-start: 0; }
 
 .ov-card__value-sm { font: var(--text-headline-lg); color: var(--color-text); font-variant-numeric: tabular-nums; }
 .ov-card__value-sm-currency { font: var(--text-body-sm); color: inherit; opacity: 0.8; }
@@ -102,16 +102,8 @@
   }
   .ov-card--budget { grid-column: 1; grid-row: 1 / span 2; order: 1; }
   .ov-card--spent { grid-column: 2; grid-row: 1 / span 2; order: 2; }
-  .ov-card--remaining { grid-column: 3; grid-row: 1; order: 3; }
+  .ov-card--available { grid-column: 3; grid-row: 1; order: 3; }
   .ov-card--balance { grid-column: 3; grid-row: 2; order: 4; }
-
-  /* Two-card variant (Total Spent + My Balance only -- budget/collection
-     figures live entirely in FundSnapshot now): a plain even 2-column
-     row, no row-splitting needed since there's nothing left to stack
-     beside either card. */
-  .ov-cards--compact { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; }
-  .ov-cards--compact .ov-card--spent { grid-column: auto; grid-row: auto; order: 1; }
-  .ov-cards--compact .ov-card--balance { grid-column: auto; grid-row: auto; order: 2; }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -166,16 +158,14 @@
 .ov-empty { color: var(--color-text-muted); margin: 0; padding: var(--space-4) var(--space-3); text-align: center; }
 
 /* ---------------------------------------------------------------------- */
-/* Fund snapshot -- collection progress, available cash, and a compact
-   funding-rounds list. Trip budget IS the Fund's target (see
-   docs/architecture/fund-accounting.md); this panel is what actually
-   surfaces that on Overview. */
+/* Fund snapshot -- a compact collection-progress summary (collected /
+   target, percent, a thin bar, and the funding-rounds list) below the
+   summary bento above, which already shows the budget and available-cash
+   figures -- this panel never repeats them, only explains how collection
+   is progressing toward the target already shown up top. */
 
 .ov-fund-empty { align-items: center; text-align: center; gap: var(--space-3); padding: var(--space-5) var(--space-3); }
 .ov-fund-empty p { margin: 0; color: var(--color-text-muted); }
-
-.ov-fund-target-value { display: block; font: var(--text-display); font-size: 28px; color: var(--color-text); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.ov-fund-target-value-currency { font: var(--text-headline-sm); color: var(--color-text-muted); margin-inline-start: var(--space-1); }
 
 .ov-fund-shortfall {
   display: flex;
@@ -196,12 +186,6 @@
 .ov-fund-progress__track { block-size: 8px; border-radius: var(--radius-pill); background: var(--color-surface-alt); border: var(--border-width) solid var(--color-border); overflow: hidden; }
 .ov-fund-progress__fill { block-size: 100%; background: var(--nc-indigo-700); border-radius: var(--radius-pill); }
 .ov-fund-progress__remaining { margin: 0; color: var(--color-text-muted); }
-
-.ov-fund-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
-@media (min-width: 560px) { .ov-fund-metrics { grid-template-columns: repeat(4, 1fr); } }
-.ov-fund-metric { display: flex; flex-direction: column; gap: 2px; }
-.ov-fund-metric .money { font: var(--text-financial); color: var(--color-text); }
-.ov-fund-metric__value--danger { color: var(--color-danger); }
 
 .ov-fund-rounds { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); padding-block-start: var(--space-2); border-block-start: var(--border-width) solid var(--color-border-subtle); }
 .ov-fund-rounds__row { display: flex; align-items: center; gap: var(--space-2); font: var(--text-body-sm); }

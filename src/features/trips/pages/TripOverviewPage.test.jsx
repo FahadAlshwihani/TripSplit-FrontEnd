@@ -8,9 +8,10 @@ jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (
 jest.mock('../api/tripsApi', () => ({ getTripOverview: jest.fn() }));
 
 // The Trip Fund IS the trip budget (see docs/architecture/
-// fund-accounting.md) -- Overview has no standalone Total Budget/
-// Remaining card any more; the `fund` block below is the ONE place
-// budget/collected/remaining-to-collect/available are shown.
+// fund-accounting.md) -- the summary bento's Budget and Available cards
+// both read canonical Fund figures off this same `fund`/`summary` block
+// rather than a separate Trip-level field; the compact FundSnapshot
+// panel below only adds collection progress, never repeating either.
 const baseOverview = {
   trip: { title: 'Georgia Winter Trip', currency: 'SAR' },
   summary: { budget: '12000.00', budget_set: true, total_spent: '7720.00', remaining: '4280.00', my_balance: '620.00', total_allocated: null, unallocated: null },
@@ -54,13 +55,35 @@ test('renders total spent and my balance from the authoritative overview payload
   expect(getMoney('620.00 SAR')).toBeInTheDocument();
 });
 
-test('a Fund-enabled trip renders the Fund snapshot panel with its own budget target -- the sole budget presentation on the page', async () => {
+test('the summary bento renders all four canonical metrics: budget, spent, available, and my balance', async () => {
+  getTripOverview.mockResolvedValue(baseOverview);
+  renderPage();
+  expect(await findMoney('7,720.00 SAR')).toBeInTheDocument(); // total spent
+  // 12,000.00 is the budget card's own value; it also reappears in the
+  // Fund snapshot's collected/target progress ratio below, so this
+  // asserts presence, not a single match.
+  expect(screen.getAllByText(moneyMatcher('12,000.00 SAR')).length).toBeGreaterThanOrEqual(1);
+  expect(document.querySelector('.ov-card--budget')).toHaveTextContent('12,000.00');
+  expect(getMoney('3,200.00 SAR')).toBeInTheDocument(); // available (fund.available, the canonical accounting() balance)
+  expect(getMoney('620.00 SAR')).toBeInTheDocument(); // my balance
+});
+
+test('never shows a "Budget Remaining" card -- replaced by Available in Fund', async () => {
+  getTripOverview.mockResolvedValue(baseOverview);
+  renderPage();
+  await findMoney('7,720.00 SAR');
+  expect(screen.queryByText('dashboard.overview.remaining')).not.toBeInTheDocument();
+  expect(document.querySelector('.ov-card--remaining')).not.toBeInTheDocument();
+  expect(document.querySelector('.ov-card--available')).toBeInTheDocument();
+});
+
+test('a Fund-enabled trip renders the compact Fund snapshot panel with collection progress, never repeating the budget/available figures already in the summary bento', async () => {
   getTripOverview.mockResolvedValue(baseOverview);
   renderPage();
   expect(await screen.findByText('fund.budgetTarget')).toBeInTheDocument();
-  expect(screen.getAllByText(moneyMatcher('12,000.00 SAR')).length).toBeGreaterThanOrEqual(1); // the target (shown both as headline and in the progress fraction)
-  expect(getMoney('9,500.00 SAR')).toBeInTheDocument(); // collected
-  expect(getMoney('3,200.00 SAR')).toBeInTheDocument(); // available
+  expect(screen.getByText(moneyMatcher('9,500.00 SAR'))).toBeInTheDocument(); // collected
+  // 3,200.00 (available) appears exactly once on the page -- in the summary card, not duplicated in the Fund snapshot below.
+  expect(screen.getAllByText(moneyMatcher('3,200.00 SAR')).length).toBe(1);
 });
 
 test('a trip with no Fund/target set yet shows the zero-state budget prompt, never a blank space', async () => {

@@ -39,16 +39,20 @@ test('never crashes when fund is entirely undefined -- shows the zero-state prom
   expect(screen.getByText('fund.budgetNotSetYet')).toBeInTheDocument();
 });
 
-test('shows the budget target prominently, and collection progress as collected / target, never available cash mislabeled as collected', () => {
+test('shows collection progress as collected / target, never available cash mislabeled as collected', () => {
   renderSnapshot();
-  expect(screen.getAllByText(moneyMatcher('12,000.00 SAR')).length).toBeGreaterThanOrEqual(1); // the target, shown both as the headline figure and in the progress fraction
+  expect(screen.getByText(moneyMatcher('12,000.00 SAR'))).toBeInTheDocument(); // the target, in the progress fraction
   expect(screen.getByText(moneyMatcher('9,500.00 SAR'))).toBeInTheDocument();
   expect(screen.getByText(/79%/)).toBeInTheDocument();
 });
 
-test('shows available Fund cash as its own distinct metric', () => {
+test('never repeats available Fund cash here -- that figure lives in the Overview summary bento above, not this compact panel', () => {
   renderSnapshot();
-  expect(screen.getByText(moneyMatcher('3,200.00 SAR'))).toBeInTheDocument();
+  expect(screen.queryByText(moneyMatcher('3,200.00 SAR'))).not.toBeInTheDocument();
+  expect(screen.queryByText('dashboard.overview.fundAvailable')).not.toBeInTheDocument();
+  expect(screen.queryByText('dashboard.overview.fundSpent')).not.toBeInTheDocument();
+  expect(screen.queryByText('dashboard.overview.fundReimbursed')).not.toBeInTheDocument();
+  expect(screen.queryByText('dashboard.overview.fundRefunded')).not.toBeInTheDocument();
 });
 
 test('no shortfall banner when the Fund balance is non-negative', () => {

@@ -6,14 +6,16 @@ import Money from '../../../../shared/components/Money';
 const ROUND_STATUS_TONE = { open: 'neutral', completed: 'success', cancelled: 'muted' };
 
 /*
-  Overview's SOLE budget presentation -- the Trip Fund IS the trip
-  budget (see docs/architecture/fund-accounting.md, "The Trip Fund is
-  the budget"); there is no separate Total Budget card elsewhere on this
-  page any more. Leads with the budget target itself, then collection
-  progress, available cash, and just enough of the spent/reimbursed/
-  refunded/shortfall breakdown to explain why available differs from
-  collected, plus a compact (non-cancelled) funding-rounds list as pure
-  history -- never implying a round defines the target.
+  A compact collection-progress summary -- the budget target and
+  available cash are already shown in the summary bento above (see
+  OverviewSummaryCards, both reading the same canonical Fund figures
+  per docs/architecture/fund-accounting.md, "The Trip Fund is the
+  budget"), so this panel never repeats them. It explains HOW collection
+  is progressing (collected / target, percent, a thin bar, and the
+  compact non-cancelled funding-rounds list as pure history -- never
+  implying a round defines the target), plus a shortfall alert when the
+  Fund balance has gone negative -- important enough to surface here
+  even though the detailed accounting breakdown lives on the Fund page.
 
   A trip with no Fund yet, or a Fund whose target hasn't been set (0,
   the same "not configured" sentinel Trip.budget used to carry), shows
@@ -47,8 +49,6 @@ const FundSnapshot = ({ fund, roundsSummary, currency, tripId }) => {
         <Link className="ov-link" to={`/trips/${tripId}/fund`}>{t('dashboard.overview.viewDetails')}</Link>
       </header>
       <div className="ov-panel__body">
-        <Money value={fund.total_target} currency={currency} className="ov-fund-target-value" currencyClassName="ov-fund-target-value-currency" />
-
         {shortfall && (
           <div className="ov-fund-shortfall" role="alert">
             <span><i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {t('dashboard.overview.fundShortfall')}</span>
@@ -75,25 +75,6 @@ const FundSnapshot = ({ fund, roundsSummary, currency, tripId }) => {
               {t('dashboard.overview.remainingToCollect')} <Money value={fund.collection_remaining} currency={currency} variant="tabular" />
             </p>
           )}
-        </div>
-
-        <div className="ov-fund-metrics">
-          <div className="ov-fund-metric">
-            <span className="text-label">{t('dashboard.overview.fundAvailable')}</span>
-            <Money value={fund.available} currency={currency} variant="tabular" className={Number(fund.available) < 0 ? 'ov-fund-metric__value--danger' : undefined} />
-          </div>
-          <div className="ov-fund-metric">
-            <span className="text-label">{t('dashboard.overview.fundSpent')}</span>
-            <Money value={fund.spent_from_fund} currency={currency} variant="tabular" />
-          </div>
-          <div className="ov-fund-metric">
-            <span className="text-label">{t('dashboard.overview.fundReimbursed')}</span>
-            <Money value={fund.reimbursed} currency={currency} variant="tabular" />
-          </div>
-          <div className="ov-fund-metric">
-            <span className="text-label">{t('dashboard.overview.fundRefunded')}</span>
-            <Money value={fund.refunded} currency={currency} variant="tabular" />
-          </div>
         </div>
 
         {roundsSummary.length > 0 && (
