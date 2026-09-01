@@ -37,13 +37,14 @@ test('renders the banned state on a still-pending request instead of a plain "wa
   expect(screen.queryByText('joinRequest.waiting')).not.toBeInTheDocument();
 });
 
-test('accepted status navigates directly into the trip overview', async () => {
-  getJoinRequestStatus.mockResolvedValue({ request_id: 'r1', status: 'accepted', trip: { public_id: 't1', title: 'Georgia' }, requested_at: '2026-08-19T12:00:00Z' });
+test('accepted status navigates directly into the trip overview, using the canonical short_code URL', async () => {
+  getJoinRequestStatus.mockResolvedValue({ request_id: 'r1', status: 'accepted', trip: { public_id: 't1', short_code: 'short-code-1', title: 'Georgia' }, requested_at: '2026-08-19T12:00:00Z' });
   render(
     <MemoryRouter initialEntries={['/join-request/r1']}>
       <Routes>
         <Route path="/join-request/:requestId" element={<JoinRequestPage />} />
-        <Route path="/trips/:id/overview" element={<p>trip workspace overview</p>} />
+        <Route path="/trips/short-code-1/overview" element={<p>trip workspace overview</p>} />
+        <Route path="/trips/:id/overview" element={<p>wrong identifier form used -- not the canonical short_code</p>} />
       </Routes>
     </MemoryRouter>
   );

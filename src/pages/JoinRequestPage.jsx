@@ -22,7 +22,7 @@ const JoinRequestPage = () => {
       try {
         const result = await getJoinRequestStatus(requestId, sessionStorage.getItem(requestTokenKey(requestId)), { signal: controller.signal });
         setRequest(result);
-        if (result.status === 'accepted') { sessionStorage.removeItem(requestTokenKey(requestId)); navigate(`/trips/${result.trip.public_id}/overview`); }
+        if (result.status === 'accepted') { sessionStorage.removeItem(requestTokenKey(requestId)); navigate(`/trips/${result.trip.short_code}/overview`); }
       } catch (err) { if (!isRequestCancelled(err)) setError(err.response?.data?.message || err.message || t('joinRequest.error')); }
     };
     poll();
