@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import MembersPage from './MembersPage';
 import { getAllMembers, getMemberDetail, getMembers, leaveTrip, removeMember, transferOwnership, updateMember } from '../api/membersApi';
@@ -47,11 +47,32 @@ beforeEach(() => {
   getMemberDetail.mockResolvedValue({ member: { ...owner, capabilities: noCaps }, statistics: baseStatistics });
 });
 
-test('shows the canonical NeoLoading state while members are loading, never the old full-screen loader', () => {
+test('while members are loading, a section-scoped placeholder shows in place of the list/detail layout -- the title still renders immediately, never the app-wide NeoLoading', () => {
   getMembers.mockReturnValue(new Promise(() => {})); // never resolves -- stays in the loading state
-  renderPage();
+  const { container } = renderPage();
+  expect(screen.getByText('members.title')).toBeInTheDocument();
   expect(screen.getByRole('status')).toBeInTheDocument();
-  expect(screen.getByText('common.loading')).toBeInTheDocument();
+  expect(container.querySelector('.section-loading')).toBeInTheDocument();
+  expect(container.querySelector('.neo-loading')).not.toBeInTheDocument();
+});
+
+test('a background refresh (e.g. after promoting a member) never blanks the already-rendered list -- stale data stays visible throughout', async () => {
+  updateMember.mockResolvedValue({});
+  renderPage();
+  await openRowMenu('Regular');
+  fireEvent.click(await screen.findByRole('menuitem', { name: 'members.promote' }));
+  const dialog = await screen.findByRole('alertdialog');
+  let resolveSecond;
+  getMembers.mockImplementationOnce(() => new Promise((resolve) => { resolveSecond = resolve; }));
+  fireEvent.click(within(dialog).getByRole('button', { name: 'members.promote' }));
+  await waitFor(() => expect(updateMember).toHaveBeenCalled());
+  // The background refetch triggered by the promotion is now in flight
+  // (unresolved) -- the already-rendered member list must still be
+  // present, not replaced by a loading placeholder.
+  expect(screen.getByText('Regular')).toBeInTheDocument();
+  expect(screen.getAllByText('members.title').length).toBeGreaterThanOrEqual(1);
+  await waitFor(() => expect(resolveSecond).toBeDefined());
+  await act(async () => resolveSecond({ results: [owner, regular] }));
 });
 
 describe('mobile flow: selecting a default member must never, by itself, force the detail view open', () => {

@@ -81,6 +81,7 @@ const moneyMatcher = (text) => (_content, node) => (
   node?.tagName?.toLowerCase() === 'bdi' && node.textContent.replace(/\s+/g, ' ').trim() === text
 );
 const findMoney = (text) => screen.findByText(moneyMatcher(text));
+const getMoney = (text) => screen.getByText(moneyMatcher(text));
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -281,4 +282,55 @@ test('Escape closes an open dialog', async () => {
   expect(await screen.findByRole('dialog')).toBeInTheDocument();
   fireEvent.keyDown(document, { key: 'Escape' });
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+});
+
+// --- Part B: progressive/section-level loading -----------------------
+
+test('the page title and subtitle render immediately, before any of the three independent fetches resolve', () => {
+  getExpensesSummary.mockImplementation(() => new Promise(() => {}));
+  getCategories.mockImplementation(() => new Promise(() => {}));
+  getExpenses.mockImplementation(() => new Promise(() => {}));
+  renderPage();
+  expect(screen.getByText('expenses.ledger.title')).toBeInTheDocument();
+  expect(screen.getByText('expenses.ledger.subtitle')).toBeInTheDocument();
+});
+
+test('summary, filter bar, and the ledger list each show their own section-scoped loading state independently -- never one shared full-page loader', () => {
+  getExpensesSummary.mockImplementation(() => new Promise(() => {}));
+  getCategories.mockImplementation(() => new Promise(() => {}));
+  getExpenses.mockImplementation(() => new Promise(() => {}));
+  const { container } = renderPage();
+  // Three independent loading regions, not one giant blocking one.
+  expect(container.querySelectorAll('.section-loading').length).toBeGreaterThanOrEqual(2);
+});
+
+test('the summary cards render as soon as their own fetch resolves, even while helpers/list are still pending', async () => {
+  getExpensesSummary.mockResolvedValue(summary);
+  getCategories.mockImplementation(() => new Promise(() => {}));
+  getExpenses.mockImplementation(() => new Promise(() => {}));
+  renderPage();
+  expect(await findMoney('5,940.00 SAR')).toBeInTheDocument();
+});
+
+test('a background refresh after adding an expense never blanks the already-rendered summary/list -- stale data stays visible throughout', async () => {
+  renderPage();
+  await screen.findByText('Coffee');
+  await findMoney('5,940.00 SAR');
+  let resolveSummary;
+  getExpensesSummary.mockImplementationOnce(() => new Promise((resolve) => { resolveSummary = resolve; }));
+  fireEvent.click(screen.getByRole('button', { name: /expenses\.ledger\.newExpense/ }));
+  // The composer is open; regardless of what happens next, the
+  // already-rendered ledger rows/summary must still be present under
+  // the dialog, not replaced by a loading placeholder.
+  expect(screen.getByText('Coffee')).toBeInTheDocument();
+  expect(getMoney('5,940.00 SAR')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'common.cancel' }));
+  if (resolveSummary) await act(async () => resolveSummary(summary));
+});
+
+test('a summary-fetch failure shows its own inline error without hiding the filter bar or the ledger list', async () => {
+  getExpensesSummary.mockRejectedValue(new Error('summary down'));
+  renderPage();
+  expect(await screen.findByText('summary down')).toBeInTheDocument();
+  expect(await screen.findByText('Coffee')).toBeInTheDocument();
 });

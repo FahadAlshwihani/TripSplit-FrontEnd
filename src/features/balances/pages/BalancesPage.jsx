@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import NeoLoading from '../../../shared/components/NeoLoading';
+import SectionLoading from '../../../shared/components/SectionLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
@@ -62,11 +62,11 @@ export default function BalancesPage() {
   const [timelineTarget, setTimelineTarget] = useState(null);
   const [successResult, setSuccessResult] = useState(null); // the just-confirmed settlement | null
 
-  if (resource.loading) return <NeoLoading />;
-  if (resource.error) return <ErrorState message={resource.error.message} onRetry={resource.retry} />;
-
-  const { balances, members, settlements } = resource.data;
-  const currency = balances.currency || trip.currency;
+  const data = resource.data;
+  const balances = data?.balances;
+  const members = data?.members || [];
+  const settlements = data?.settlements || [];
+  const currency = balances?.currency || trip.currency;
 
   const setReminderState = (memberId, state) => {
     setReminderStates((current) => ({ ...current, [memberId]: state }));
@@ -157,14 +157,21 @@ export default function BalancesPage() {
     await resource.retry();
   };
 
-  const peopleWhoOweMe = balances.people_who_owe_me || [];
-  const peopleIOwe = balances.people_i_owe || [];
+  const peopleWhoOweMe = balances?.people_who_owe_me || [];
+  const peopleIOwe = balances?.people_i_owe || [];
   const isSettled = peopleWhoOweMe.length === 0 && peopleIOwe.length === 0;
   const otherActiveMembers = members.filter((member) => member.active && member.id !== currentMember?.id).length;
   const noOneToSettleWith = isSettled && otherActiveMembers === 0;
 
   return (
     <div className="bal-page">
+      {/* Title/subtitle/hints render immediately -- nothing here depends
+          on the network. Only the balance figures/lists below wait on
+          their own fetch, and show a section-scoped placeholder in
+          place rather than blanking the whole page; once loaded, they
+          keep showing that same data through any later background
+          refetch (useRouteResource's own default), so a reminder/
+          settlement action's own refresh never blanks the page either. */}
       <div className="bal-page__header">
         <h1 className="bal-page__title text-display">{t('balances.title')}</h1>
         <p className="bal-page__subtitle text-copy-lg">{t('balances.subtitle')}</p>
@@ -192,6 +199,10 @@ export default function BalancesPage() {
         </div>
       )}
 
+      {!data && resource.loading && <SectionLoading minHeight={240} />}
+      {!data && resource.error && <ErrorState message={resource.error.message} onRetry={resource.retry} />}
+      {data && (
+        <>
       <NetBalanceCard balance={balances.my_net_balance} currency={currency} />
 
       <div className="bal-page__actions">
@@ -336,6 +347,8 @@ export default function BalancesPage() {
 
       {timelineTarget && (
         <SettlementTimelineDrawer tripId={tripId} settlement={timelineTarget} currency={currency} onClose={() => setTimelineTarget(null)} />
+      )}
+        </>
       )}
     </div>
   );

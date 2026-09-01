@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import '../styles/members.css';
 import MembersPanel from '../components/MembersPanel';
 import MemberDetail from '../components/MemberDetail';
-import NeoLoading from '../../../shared/components/NeoLoading';
+import SectionLoading from '../../../shared/components/SectionLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 import BanMemberDialog from '../../governance/components/BanMemberDialog';
@@ -110,9 +110,6 @@ export default function MembersPage() {
     }
   };
 
-  if (state.loading) return <NeoLoading />;
-  if (state.error) return <ErrorState message={state.error.message} onRetry={state.retry} />;
-
   const dialogFor = () => {
     if (!pending) return null;
     const { kind, member, hasBalance } = pending;
@@ -147,29 +144,34 @@ export default function MembersPage() {
       </div>
 
       {error && <ErrorState message={error.message} />}
-      <div className={`mem-layout${detailOpen ? ' mem-layout--detail-open' : ''}`}>
-        <MembersPanel
-          members={members}
-          currentMember={currentMember}
-          currency={trip.currency}
-          tripId={tripId}
-          canInvite={Boolean(permissions?.canManageMembers)}
-          selectedId={selectedId}
-          onSelect={(member) => { setSelectedId(member.id); setDetailOpen(true); }}
-          balancesByMemberId={balancesByMemberId}
-          showHistorical={showHistorical}
-          onToggleHistorical={setShowHistorical}
-          {...roleHandlers}
-        />
-        <MemberDetail
-          detail={detail}
-          currency={trip.currency}
-          tripId={tripId}
-          currentMember={currentMember}
-          onBack={() => setDetailOpen(false)}
-          {...roleHandlers}
-        />
-      </div>
+
+      {state.loading && !state.data && <SectionLoading minHeight={320} />}
+      {state.error && !state.data && <ErrorState message={state.error.message} onRetry={state.retry} />}
+      {state.data && (
+        <div className={`mem-layout${detailOpen ? ' mem-layout--detail-open' : ''}`}>
+          <MembersPanel
+            members={members}
+            currentMember={currentMember}
+            currency={trip.currency}
+            tripId={tripId}
+            canInvite={Boolean(permissions?.canManageMembers)}
+            selectedId={selectedId}
+            onSelect={(member) => { setSelectedId(member.id); setDetailOpen(true); }}
+            balancesByMemberId={balancesByMemberId}
+            showHistorical={showHistorical}
+            onToggleHistorical={setShowHistorical}
+            {...roleHandlers}
+          />
+          <MemberDetail
+            detail={detail}
+            currency={trip.currency}
+            tripId={tripId}
+            currentMember={currentMember}
+            onBack={() => setDetailOpen(false)}
+            {...roleHandlers}
+          />
+        </div>
+      )}
       {banTarget && (
         <BanMemberDialog
           member={banTarget}

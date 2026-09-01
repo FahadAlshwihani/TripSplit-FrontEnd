@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ActivityToolbar from '../components/ActivityToolbar';
 import ActivityPanel from '../components/ActivityPanel';
-import NeoLoading from '../../../shared/components/NeoLoading';
+import SectionLoading from '../../../shared/components/SectionLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import EmptyState from '../../../shared/components/EmptyState';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
@@ -38,23 +38,25 @@ export default function ActivityPage() {
 
       <ActivityToolbar filters={filters} setFilters={setFilters} />
 
-      {resource.error ? (
+      {!resource.data && resource.loading && <SectionLoading minHeight={320} />}
+      {!resource.data && resource.error && (
         <ErrorState message={resource.error.message} onRetry={resource.retry} />
-      ) : resource.loading ? (
-        <NeoLoading />
-      ) : events.length ? (
-        <>
-          <ActivityPanel events={events} />
-          {resource.data.next && (
-            <div className="act-load-more">
-              <button type="button" className="dash-btn dash-btn--secondary" onClick={loadMore} disabled={resource.loadingMore}>
-                {t('common.loadMore')}
-              </button>
-            </div>
-          )}
-        </>
-      ) : (
-        <EmptyState>{t('activity.empty')}</EmptyState>
+      )}
+      {resource.data && (
+        events.length ? (
+          <>
+            <ActivityPanel events={events} />
+            {resource.data.next && (
+              <div className="act-load-more">
+                <button type="button" className="dash-btn dash-btn--secondary" onClick={loadMore} disabled={resource.loadingMore}>
+                  {t('common.loadMore')}
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <EmptyState>{t('activity.empty')}</EmptyState>
+        )
       )}
     </div>
   );

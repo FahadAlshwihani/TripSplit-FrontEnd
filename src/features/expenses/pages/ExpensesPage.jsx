@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import NeoLoading from '../../../shared/components/NeoLoading';
+import SectionLoading from '../../../shared/components/SectionLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
 import useExpenseFilters from '../hooks/useExpenseFilters';
@@ -112,46 +112,66 @@ export default function ExpensesPage() {
   const setCategoryBudgetAction = (payload) => runCategoryAction(() => setCategoryBudget(tripId, payload));
   const resetCategoryBudgetAction = (categoryId) => runCategoryAction(() => resetCategoryBudget(tripId, categoryId));
 
-  if (summaryResource.loading || helpersResource.loading) return <NeoLoading />;
-  if (summaryResource.error || helpersResource.error) {
-    return <ErrorState title={t('expenses.ledger.errorLoad')} onRetry={() => { summaryResource.retry(); helpersResource.retry(); }} />;
-  }
-
-  const { categories, budgets, members, fund, helperError } = helpersResource.data;
-  const categoriesByCode = Object.fromEntries(categories.map((category) => [category.code, category]));
-  const membersLookup = buildMembersById(members);
-  const rows = listResource.data?.results || [];
   const loadMore = () => listResource.loadMore(
     (signal) => getPage(listResource.data.next, tripId, { signal }),
     (current, page) => ({ ...page, results: [...current.results, ...page.results] }),
   );
 
+  const helpers = helpersResource.data;
+  const categories = helpers?.categories || [];
+  const budgets = helpers?.budgets || [];
+  const members = helpers?.members || [];
+  const fund = helpers?.fund || null;
+  const categoriesByCode = Object.fromEntries(categories.map((category) => [category.code, category]));
+  const membersLookup = buildMembersById(members);
+  const rows = listResource.data?.results || [];
+
   return (
     <div className="exp-page">
+      {/* Title/subtitle and the filter bar's own capability-gated buttons
+          need nothing from the network -- they render on the very first
+          paint. Only the summary figures, the filter categories, and the
+          ledger rows below wait on their own (independent, parallel)
+          fetches -- each shows its own section-scoped placeholder rather
+          than blanking the whole page, and each keeps its last-good data
+          visible through any later background refetch (useRouteResource's
+          own default). */}
       <div className="exp-page__header">
         <h1 className="exp-page__title text-display">{t('expenses.ledger.title')}</h1>
         <p className="exp-page__subtitle text-copy-lg">{t('expenses.ledger.subtitle')}</p>
       </div>
 
       {actionError && <ErrorState message={actionError.message} />}
-      {helperError && <ErrorState message={t('common.partialDataError')} onRetry={helpersResource.retry} />}
+      {helpers?.helperError && <ErrorState message={t('common.partialDataError')} onRetry={helpersResource.retry} />}
 
-      <ExpenseSummaryCards summary={summaryResource.data} currency={trip.currency} />
+      {summaryResource.data ? (
+        <ExpenseSummaryCards summary={summaryResource.data} currency={trip.currency} />
+      ) : summaryResource.error ? (
+        <ErrorState title={t('expenses.ledger.errorLoad')} message={summaryResource.error.message} onRetry={summaryResource.retry} />
+      ) : (
+        <SectionLoading minHeight={110} />
+      )}
 
-      <ExpenseFilterBar
-        filters={filters}
-        setFilters={setFilters}
-        hasActiveFilters={hasActiveFilters}
-        categories={categories}
-        canCreateExpense={permissions.canCreateExpense}
-        onNewExpense={() => setDialog({ mode: 'create' })}
-        onManageCategories={() => setCategoryManagerOpen(true)}
-      />
+      {helpers ? (
+        <ExpenseFilterBar
+          filters={filters}
+          setFilters={setFilters}
+          hasActiveFilters={hasActiveFilters}
+          categories={categories}
+          canCreateExpense={permissions.canCreateExpense}
+          onNewExpense={() => setDialog({ mode: 'create' })}
+          onManageCategories={() => setCategoryManagerOpen(true)}
+        />
+      ) : helpersResource.error ? (
+        <ErrorState title={t('expenses.ledger.errorLoad')} message={helpersResource.error.message} onRetry={helpersResource.retry} />
+      ) : (
+        <SectionLoading minHeight={56} compact />
+      )}
 
       {listResource.error ? (
         <ErrorState title={t('expenses.ledger.errorLoad')} onRetry={listResource.retry} />
-      ) : listResource.loading ? (
-        <NeoLoading />
+      ) : !listResource.data ? (
+        <SectionLoading minHeight={220} />
       ) : (
         <>
           <ExpenseLedgerList
@@ -173,7 +193,7 @@ export default function ExpensesPage() {
         </>
       )}
 
-      {dialog && (
+      {dialog && helpers && (
         <NewExpenseDialog
           members={members}
           categories={categories}
@@ -187,7 +207,7 @@ export default function ExpensesPage() {
         />
       )}
 
-      {detailsExpense && (
+      {detailsExpense && helpers && (
         <ExpenseDetailsDrawer
           expense={detailsExpense}
           category={categoriesByCode[detailsExpense.category]}
@@ -213,7 +233,7 @@ export default function ExpensesPage() {
         />
       )}
 
-      {categoryManagerOpen && (
+      {categoryManagerOpen && helpers && (
         <CategoryManagerDialog
           categories={categories}
           budgets={budgets}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import BalancesPage from './BalancesPage';
 import { getBalances, remindAllDebtors, remindDebtor } from '../api/balancesApi';
@@ -108,8 +108,11 @@ test('a single-member trip shows the no-data empty state, not the settled state'
 test('an archived/closed trip renders the read-only banner and disables reminders, I Paid, and admin record', async () => {
   getBalances.mockResolvedValue({ ...baseBalances, people_i_owe: [{ member: mohammedPreview, amount: '10.00' }] });
   renderPage({ permissions: { canRecordSettlement: false } });
-  expect(await screen.findByText('balances.readOnlyArchived')).toBeInTheDocument();
-  screen.getAllByRole('button', { name: 'balances.sendReminder' }).forEach((button) => expect(button).toBeDisabled());
+  // The read-only banner is part of the static header and renders
+  // immediately, independent of the balances fetch (Part B) -- wait on
+  // the data-dependent buttons themselves before asserting on them.
+  expect(screen.getByText('balances.readOnlyArchived')).toBeInTheDocument();
+  (await screen.findAllByRole('button', { name: 'balances.sendReminder' })).forEach((button) => expect(button).toBeDisabled());
   expect(screen.queryByRole('button', { name: 'settlements.recordReceived' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'settlements.iPaid' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'settlements.recordExternal' })).not.toBeInTheDocument();
@@ -366,4 +369,36 @@ test('a debtor reporting a payment (still pending, not completed) never shows th
   fireEvent.click(within(dialog).getByRole('button', { name: 'settlements.iPaid' }));
   await waitFor(() => expect(reportPayment).toHaveBeenCalled());
   expect(screen.queryByText('settlements.successTitle')).not.toBeInTheDocument();
+});
+
+// --- Part B: progressive/section-level loading -----------------------
+
+test('the page title, subtitle, and fund hint render immediately, before the balances/members/settlements fetch resolves', () => {
+  getBalances.mockImplementation(() => new Promise(() => {}));
+  renderPage();
+  expect(screen.getByText('balances.title')).toBeInTheDocument();
+  expect(screen.getByText('balances.fundHint')).toBeInTheDocument();
+});
+
+test('while balances are pending, a section-scoped loading indicator shows in place of the balance lists -- never the app-wide NeoLoading', () => {
+  getBalances.mockImplementation(() => new Promise(() => {}));
+  const { container } = renderPage();
+  expect(container.querySelector('.section-loading')).toBeInTheDocument();
+  expect(container.querySelector('.neo-loading')).not.toBeInTheDocument();
+});
+
+test('a background refresh after sending a reminder never blanks the already-rendered balance rows -- stale data stays visible throughout', async () => {
+  remindDebtor.mockResolvedValue({ member_id: 'm2', amount: '400.00', notified: true });
+  renderPage();
+  const buttons = await screen.findAllByRole('button', { name: 'balances.sendReminder' });
+  let resolveSecond;
+  getBalances.mockImplementationOnce(() => new Promise((resolve) => { resolveSecond = resolve; }));
+  fireEvent.click(buttons[0]);
+  await waitFor(() => expect(remindDebtor).toHaveBeenCalled());
+  // The background refetch triggered by the reminder is now in flight
+  // (unresolved) -- the already-rendered net balance card must still
+  // be present, not replaced by a loading placeholder.
+  expect(screen.getByText('balances.title')).toBeInTheDocument();
+  expect(document.querySelector('.bal-page__actions')).toBeInTheDocument();
+  await act(async () => resolveSecond(baseBalances));
 });

@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import '../styles/governance.css';
 import GovernancePanel from '../components/GovernancePanel';
 import InviteMemberDialog from '../components/InviteMemberDialog';
-import NeoLoading from '../../../shared/components/NeoLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
@@ -30,20 +29,19 @@ export default function GovernancePage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const state = useRouteResource(async (signal) => {
-    const config = { signal };
-    const [requests, invitations, bans] = await Promise.all([
-      getJoinRequests(tripId, config),
-      getInvitations(tripId, config),
-      getBans(tripId, config),
-    ]);
-    return { requests: requests.results, invitations: invitations.results, bans: bans.results };
-  }, [tripId]);
+  // Three independent resources, one per data-dependent section --
+  // Join Requests / Invitations / Restricted(Bans) each get their own
+  // shell + independent load rather than one combined fetch blocking
+  // the whole page. Access Settings needs only `trip`/`capabilities`
+  // (already in outlet context) and never gates on any of these.
+  const requestsResource = useRouteResource((signal) => getJoinRequests(tripId, { signal }), [tripId]);
+  const invitationsResource = useRouteResource((signal) => getInvitations(tripId, { signal }), [tripId]);
+  const bansResource = useRouteResource((signal) => getBans(tripId, { signal }), [tripId]);
 
-  const run = async (action) => {
+  const run = async (action, resource) => {
     try {
       const result = await action();
-      await state.retry();
+      await resource.retry();
       return result;
     } catch (e) {
       setError(e);
@@ -56,15 +54,13 @@ export default function GovernancePage() {
   // returned alongside every GET /trips/{id}/ response.
   const capabilities = trip.governance_capabilities || {};
   if (!capabilities.can_view_governance) return <ErrorState message={t('governance.accessDenied')} />;
-  if (state.loading) return <NeoLoading />;
-  if (state.error) return <ErrorState message={state.error.message} onRetry={state.retry} />;
 
   const confirmPending = async () => {
     if (!pending || busy) return;
     setBusy(true);
     try {
       await revokeBan(tripId, pending.ban.id);
-      await state.retry();
+      await bansResource.retry();
       setPending(null);
     } catch (e) {
       setError(e);
@@ -84,11 +80,13 @@ export default function GovernancePage() {
       <GovernancePanel
         trip={trip}
         capabilities={capabilities}
-        {...state.data}
-        onReview={(r, d) => run(() => reviewJoinRequest(tripId, r.id, d))}
+        requestsState={requestsResource}
+        invitationsState={invitationsResource}
+        bansState={bansResource}
+        onReview={(r, d) => run(() => reviewJoinRequest(tripId, r.id, d), requestsResource)}
         onOpenInvite={() => setInviteOpen(true)}
-        onResendInvite={(r) => run(() => resendInvitation(tripId, r.id))}
-        onRevokeInvite={(r) => run(() => revokeInvitation(tripId, r.id))}
+        onResendInvite={(r) => run(() => resendInvitation(tripId, r.id), invitationsResource)}
+        onRevokeInvite={(r) => run(() => revokeInvitation(tripId, r.id), invitationsResource)}
         onUnban={(ban) => setPending({ kind: 'unban', ban })}
         onUpdateSettings={async (payload) => { const updated = await updateTrip(tripId, payload); setTrip(updated); }}
         onRotateLink={async () => { const updated = await rotateJoinCode(tripId); setTrip(updated); }}
@@ -102,7 +100,7 @@ export default function GovernancePage() {
           // it into a page-level banner and resolve as if it succeeded.
           onInvite={async (payload) => {
             const result = await createInvitation(tripId, payload);
-            await state.retry();
+            await invitationsResource.retry();
             return result;
           }}
           onClose={() => setInviteOpen(false)}

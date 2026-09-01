@@ -131,3 +131,34 @@ test('a viewer without can_invite never sees the Invite action', async () => {
   await screen.findByText('governance.title');
   expect(screen.queryByText('governance.addMember')).not.toBeInTheDocument();
 });
+
+// Part B: the header and Access Settings (trip-context-only, no
+// fetch of its own) render immediately; Join Requests/Invitations/
+// Restricted each show their own section-scoped placeholder while
+// their own resource is still pending -- never full-page NeoLoading.
+test('the title and Access Settings card render immediately while the fetched sections are still loading', () => {
+  getJoinRequests.mockReturnValue(new Promise(() => {}));
+  getInvitations.mockReturnValue(new Promise(() => {}));
+  getBans.mockReturnValue(new Promise(() => {}));
+  const { container } = renderPage();
+  expect(screen.getByText('governance.title')).toBeInTheDocument();
+  expect(screen.getByLabelText('governance.requireApproval')).toBeInTheDocument();
+  expect(container.querySelectorAll('.section-loading').length).toBe(3);
+  expect(container.querySelector('.neo-loading')).not.toBeInTheDocument();
+});
+
+test('a slow Restricted (bans) fetch does not block Join Requests or Invitations from rendering once their own resources resolve', async () => {
+  getBans.mockReturnValue(new Promise(() => {}));
+  renderPage();
+  await screen.findByText('governance.requests');
+  expect(screen.getByText('governance.invitations')).toBeInTheDocument();
+  expect(screen.queryByText('governance.bans')).not.toBeInTheDocument();
+});
+
+test('a Join Requests fetch failure never takes down Invitations, Restricted, or Access Settings', async () => {
+  getJoinRequests.mockRejectedValue(new Error('requests down'));
+  renderPage();
+  expect(await screen.findByText('requests down')).toBeInTheDocument();
+  expect(screen.getByText('governance.invitations')).toBeInTheDocument();
+  expect(screen.getByLabelText('governance.requireApproval')).toBeInTheDocument();
+});

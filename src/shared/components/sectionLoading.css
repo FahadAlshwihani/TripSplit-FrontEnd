@@ -1,0 +1,55 @@
+/* Section/card-level loading -- same visual language as neoLoading.css
+   (the animated bar track) but scoped to sit INSIDE an already-visible
+   card/section body, not replace the page: no bordered outer card, no
+   large margin, centers vertically within whatever minHeight the
+   caller reserved. */
+
+.section-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-4, 1rem);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.section-loading__track {
+  width: min(100%, 12rem);
+  height: 4px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--color-surface-alt, #f1ede2);
+  border: var(--border-width, 1px) solid var(--color-border-subtle, rgba(26, 26, 26, 0.14));
+  overflow: hidden;
+}
+
+.section-loading__bar {
+  width: 40%;
+  height: 100%;
+  background: var(--color-primary, #384cca);
+  animation: section-loading-slide 1.1s ease-in-out infinite;
+}
+
+.section-loading__label {
+  margin: 0;
+  color: var(--color-text-muted, #6b6862);
+}
+
+/* Compact variant -- a small inline value placeholder (e.g. a single
+   money figure still loading inside an otherwise-rendered card), no
+   label, minimal footprint. */
+.section-loading--compact {
+  padding: var(--space-1, 0.25rem) 0;
+  gap: 0;
+}
+.section-loading--compact .section-loading__track { width: 4rem; }
+
+@keyframes section-loading-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-loading__bar { animation: none; }
+}

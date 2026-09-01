@@ -56,6 +56,51 @@ Shared HTTP infrastructure lives in `src/api`; domain endpoints live in `src/fea
 - The trip shell remains visible when a secondary feature request fails.
 - Every route retains meaningful loading, empty, error, and explicit retry states.
 
+## Loading model: bootstrap vs section loading
+
+Two distinct loading tiers exist, and they are never interchangeable:
+
+- **`NeoLoading`** (full-page/full-width) is reserved for genuinely
+  page-blocking states: app/auth bootstrap (`GatedRoute`,
+  `RequireOnboarding`), the root `<Suspense>` fallback for lazy route
+  chunks (`app/routes/index.jsx`), and `TripLayout`'s own first-ever
+  trip resolution (there is no shell to show yet — the trip itself,
+  including its title/nav, hasn't loaded). None of the pages routed
+  under `TripLayout` (Overview, Expenses, Balances, Fund, Members,
+  Governance, Categories, Settlements, Activity, Settings, Support) may
+  import it — `src/shared/components/legacyLoaderRemoval.test.js`
+  enforces this by walking the actual page files, plus a second guard
+  in the same file against any page-level `if (x.loading) return <...>`
+  early return that would gate the whole page behind one combined
+  fetch.
+- **`SectionLoading`** (`src/shared/components/SectionLoading.jsx`) is
+  for everything else. Every dashboard page renders its static shell —
+  title, subtitle, capability-gated buttons, section headers, card
+  containers — unconditionally and immediately, sourcing it from
+  already-available data (outlet-context `trip`/`permissions`/
+  `currentMember`) wherever possible rather than its own fetch. Only
+  the specific region that actually depends on a still-in-flight
+  request shows `<SectionLoading minHeight={…} />` (the `minHeight`
+  reserves layout space so the section doesn't collapse/jump). Once a
+  resource has ever resolved once, its stale data stays visible through
+  any later background refetch (`useRouteResource`'s default
+  `resetOnKeyChange: false` behavior) instead of being replaced by a
+  loading placeholder — a mutation's own refresh, a promote/ban/confirm
+  action, must never blank an already-rendered list or card.
+- **Independent per-section resources.** Settlements (Current Balances
+  / Suggested Settlements / Settlement Ledger) and Governance (Join
+  Requests / Invitations / Restricted / Access Settings) each fetch
+  their own `useRouteResource` and render their own
+  loading/error/content independently, so a slow or failed section
+  never blocks or takes down the others on the same page. Where two
+  cards read off one combined endpoint response (Current Balances and
+  Suggested Settlements both come from one `GET /balances/`), they
+  still each own their own `SectionLoading`/`ErrorState` presentation
+  rather than sharing one page-level gate — this is a presentational
+  split, not an extra round trip. Access Settings and Trip Settings
+  need only outlet-context `trip`/`permissions` and never gate on any
+  fetch at all.
+
 ## Primary redesign surfaces
 
 Public/Home, Auth, Profile, Trip shell/navigation, Overview, Expenses, Balances, Fund, Members, Governance, Categories/Budgets, Settlements, Activity, and Settings are the visual entry points. Fund workflows and governance workflows are already decomposed into focused components; redesign those components in place instead of recombining them into large panels.

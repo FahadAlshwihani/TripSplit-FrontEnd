@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import NeoLoading from '../../../shared/components/NeoLoading';
+import SectionLoading from '../../../shared/components/SectionLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
@@ -92,10 +92,13 @@ export default function FundPage() {
   const closeDialog = () => setFundDialog(null);
   const [busyKey, setBusyKey] = useState(null); // contribution/round id currently mid-action
 
-  if (resource.loading) return <NeoLoading />;
-  if (resource.error) return <ErrorState message={resource.error.message} onRetry={resource.retry} />;
-
-  const { fund, members, categories, budgets, recentExpenses, activity } = resource.data;
+  const data = resource.data;
+  const fund = data?.fund;
+  const members = data?.members || [];
+  const categories = data?.categories || [];
+  const budgets = data?.budgets || [];
+  const recentExpenses = data?.recentExpenses || [];
+  const activity = data?.activity || { results: [], next: null };
   const currency = trip.currency;
   const activeMembers = members.filter((member) => member.active);
   const categoriesByCode = Object.fromEntries(categories.map((category) => [category.code, category]));
@@ -211,9 +214,13 @@ export default function FundPage() {
 
       {actionError && <ErrorState message={actionError.message} />}
 
-      {!fund ? (
+      {!data && resource.loading && <SectionLoading minHeight={280} />}
+      {!data && resource.error && <ErrorState message={resource.error.message} onRetry={resource.retry} />}
+
+      {data && !fund && (
         <FundSetup canManage={canManage} activeMembers={activeMembers} currentMember={currentMember} onCreate={handleCreateFund} />
-      ) : (
+      )}
+      {data && fund && (
         <>
           {deficit > 0 && fund.status === 'active' && (
             <div className="fund-shortfall" role="alert">

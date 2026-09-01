@@ -12,6 +12,13 @@ jest.mock('../api/tripsApi', () => ({ getTripOverview: jest.fn() }));
 // both read canonical Fund figures off this same `fund`/`summary` block
 // rather than a separate Trip-level field; the compact FundSnapshot
 // panel below only adds collection progress, never repeating either.
+// The overview payload no longer carries its own `trip` sub-object for
+// title/currency purposes -- the page reads those from the outlet
+// context (TripLayout's own already-loaded fetch) instead, so the
+// header can render before this endpoint ever resolves. `trip` is kept
+// here only because other overview fields still reference it loosely
+// in a couple of older fixtures below; it's otherwise unused by the
+// page itself now.
 const baseOverview = {
   trip: { title: 'Georgia Winter Trip', currency: 'SAR' },
   summary: { budget: '12000.00', budget_set: true, total_spent: '7720.00', remaining: '4280.00', my_balance: '620.00', total_allocated: null, unallocated: null },
@@ -26,10 +33,12 @@ const baseOverview = {
   ],
 };
 
-const renderPage = () => render(
+const contextTrip = { short_code: 't1', title: 'Georgia Winter Trip', currency: 'SAR' };
+
+const renderPage = (ctxOverrides = {}) => render(
   <MemoryRouter initialEntries={['/trips/t1/overview']}>
     <Routes>
-      <Route path="/trips/:tripId" element={<Outlet context={{ tripId: 't1', trip: { short_code: 't1' } }} />}>
+      <Route path="/trips/:tripId" element={<Outlet context={{ tripId: 't1', trip: contextTrip, ...ctxOverrides }} />}>
         <Route path="overview" element={<TripOverviewPage />} />
       </Route>
     </Routes>
@@ -138,9 +147,9 @@ test('renders the recent activity row with actor, title, and amount', async () =
   expect(getMoney('1,200.00 SAR')).toBeInTheDocument();
 });
 
-test('uses the trip currency from the overview payload itself, not a guessed default', async () => {
-  getTripOverview.mockResolvedValue({ ...baseOverview, trip: { ...baseOverview.trip, currency: 'USD' } });
-  renderPage();
+test('uses the trip currency from the outlet context (TripLayout\'s own already-loaded trip), not the overview payload -- currency is available before this page\'s own fetch ever resolves', async () => {
+  getTripOverview.mockResolvedValue(baseOverview); // payload's own nested trip.currency stays 'SAR' throughout
+  renderPage({ trip: { ...contextTrip, currency: 'USD' } });
   expect(await findMoney('7,720.00 USD')).toBeInTheDocument();
 });
 
@@ -176,4 +185,42 @@ test('every money amount is isolated for correct bidi rendering regardless of pa
   const node = await findMoney('7,720.00 SAR');
   expect(node).toHaveAttribute('dir', 'ltr');
   expect(queryMoney('620.00 SAR')).toHaveAttribute('dir', 'ltr');
+});
+
+// --- Part B: progressive/section-level loading -----------------------
+
+test('the page title and subtitle render immediately, before the overview fetch ever resolves -- no full-page blocking loader', () => {
+  getTripOverview.mockImplementation(() => new Promise(() => {})); // never resolves
+  renderPage();
+  expect(screen.getByText('dashboard.overview.title')).toBeInTheDocument();
+  expect(screen.getByText(/dashboard\.overview\.subtitle/)).toBeInTheDocument();
+});
+
+test('while the data body is pending, a section-scoped loading indicator shows in its place -- never the app-wide NeoLoading label', () => {
+  getTripOverview.mockImplementation(() => new Promise(() => {}));
+  renderPage();
+  expect(screen.getByRole('status')).toBeInTheDocument();
+  expect(screen.queryByText('Ski Pass Rental')).not.toBeInTheDocument();
+});
+
+test('a background refresh (retry) never blanks the already-rendered page -- stale data stays visible throughout', async () => {
+  getTripOverview.mockResolvedValue(baseOverview);
+  renderPage();
+  await findMoney('7,720.00 SAR');
+  let resolveSecond;
+  getTripOverview.mockImplementationOnce(() => new Promise((resolve) => { resolveSecond = resolve; }));
+  const refreshBtn = screen.getByRole('button', { name: 'dashboard.overview.refresh' });
+  fireEvent.click(refreshBtn);
+  // The second fetch is now in flight -- the first response's data must
+  // still be fully rendered, not replaced by a loading placeholder.
+  expect(getMoney('7,720.00 SAR')).toBeInTheDocument();
+  expect(screen.getByText('dashboard.overview.title')).toBeInTheDocument();
+  await act(async () => { resolveSecond(baseOverview); });
+});
+
+test('a load failure (no prior data) shows the error inside the page body -- the header stays visible', async () => {
+  getTripOverview.mockRejectedValue(new Error('network down'));
+  renderPage();
+  expect(await screen.findByText('dashboard.overview.errorLoad')).toBeInTheDocument();
+  expect(screen.getByText('dashboard.overview.title')).toBeInTheDocument();
 });

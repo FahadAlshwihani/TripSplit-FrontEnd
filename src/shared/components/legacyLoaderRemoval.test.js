@@ -67,13 +67,48 @@ test('the onboarding bootstrap guard (RequireOnboarding) shows NeoLoading while 
   expect(content).toMatch(/authLoading[\s\S]{0,40}<NeoLoading/);
 });
 
-test('every page-level ".loading" early return renders NeoLoading, never a bespoke/second loader', () => {
-  const pageFiles = sourceFiles.filter((file) => /[\\/]pages[\\/].*\.jsx$/.test(file));
-  const offenders = pageFiles.filter((file) => {
-    const content = fs.readFileSync(file, 'utf8');
-    const hasLoadingReturn = /\.loading\s*\)\s*return\s*</.test(content) || /if\s*\(\s*\w+\.loading\s*\)\s*return\s*</.test(content);
-    if (!hasLoadingReturn) return false;
-    return !content.includes('NeoLoading');
-  });
+/*
+  Part B (progressive dashboard loading): the trip workspace's own
+  data-viewing pages -- everything routed under TripLayout in
+  app/routes/tripRoutes.jsx -- must never gate their entire render
+  behind one combined loading/error early return, and must never pull
+  in NeoLoading at all. NeoLoading stays reserved for app/auth
+  bootstrap, the root Suspense route-chunk fallback, and TripLayout's
+  own first-ever trip resolution (asserted above/elsewhere); every
+  ordinary page data fetch instead renders its static shell
+  immediately and shows SectionLoading only for the specific
+  data-dependent region still in flight. This list is the literal set
+  of page components tripRoutes.jsx lazy-imports under TripLayout --
+  update it there first if a new dashboard page is added.
+*/
+const DASHBOARD_PAGE_FILES = [
+  'features/trips/pages/TripOverviewPage.jsx',
+  'features/expenses/pages/ExpensesPage.jsx',
+  'features/balances/pages/BalancesPage.jsx',
+  'features/funds/pages/FundPage.jsx',
+  'features/members/pages/MembersPage.jsx',
+  'features/governance/pages/GovernancePage.jsx',
+  'features/categories/pages/CategoriesPage.jsx',
+  'features/settlements/pages/SettlementsPage.jsx',
+  'features/activity/pages/ActivityPage.jsx',
+  'features/trips/pages/TripSettingsPage.jsx',
+  'features/trips/pages/TripSupportPage.jsx',
+].map((rel) => path.join(SRC_ROOT, rel));
+
+test('no dashboard (trip workspace) page imports NeoLoading -- ordinary data fetches use the section-scoped SectionLoading placeholder instead', () => {
+  const offenders = DASHBOARD_PAGE_FILES.filter((file) => fs.readFileSync(file, 'utf8').includes('NeoLoading'));
+  expect(offenders).toEqual([]);
+});
+
+test('no dashboard (trip workspace) page gates its entire render behind a single "if (x.loading) return <...>" early return', () => {
+  // Matches `if (foo.loading) return <` / `if (a || b.loading) return <`
+  // regardless of exact spacing/variable name -- the shape this guards
+  // against is a page-level early return keyed off a loading flag,
+  // never an inline conditional expression scoped to one section
+  // (e.g. `{!data && loading && <SectionLoading/>}`), which this
+  // pattern does not match since it requires a `return` immediately
+  // after the condition.
+  const wholePageLoadingGate = /if\s*\([^)]*\bloading\b[^)]*\)\s*return\s*</;
+  const offenders = DASHBOARD_PAGE_FILES.filter((file) => wholePageLoadingGate.test(fs.readFileSync(file, 'utf8')));
   expect(offenders).toEqual([]);
 });

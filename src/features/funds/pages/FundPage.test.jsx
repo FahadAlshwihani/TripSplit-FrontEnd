@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import FundPage from './FundPage';
 import {
@@ -86,10 +86,13 @@ beforeEach(() => {
 
 test('renders the summary, holder, and open round from the server-authoritative Fund object', async () => {
   renderPage();
-  expect(await screen.findByText('fund.title')).toBeInTheDocument();
+  // The title is part of the static header and renders immediately,
+  // independent of the Fund fetch (Part B) -- wait on the data-
+  // dependent content itself before asserting on it.
+  expect(screen.getByText('fund.title')).toBeInTheDocument();
   // "Fahad" legitimately appears twice: the holder card and the round's
   // own member row -- both real, both correct.
-  expect(screen.getAllByText('Fahad').length).toBeGreaterThanOrEqual(2);
+  expect((await screen.findAllByText('Fahad')).length).toBeGreaterThanOrEqual(2);
   expect(screen.getByText('Initial Collection')).toBeInTheDocument();
 });
 
@@ -147,10 +150,11 @@ test('a shortfall renders the alert and pre-fills the top-up round composer', as
 
 test('a round is a collection mechanism, not a budget-defining transaction: New Round pre-fills the TARGET from what is still outstanding, never the title, never the raw budget', async () => {
   renderPage();
-  await screen.findByText('fund.title');
   // Both the header's and the empty-state's "New Round" buttons open the
-  // same pre-filled composer -- either is a valid entry point.
-  fireEvent.click(screen.getAllByText('fund.newRound')[0]);
+  // same pre-filled composer -- either is a valid entry point. They only
+  // render once the Fund itself has loaded (Part B: the title above
+  // renders immediately, independent of this fetch).
+  fireEvent.click((await screen.findAllByText('fund.newRound'))[0]);
   expect(await screen.findByLabelText('fund.roundTitle')).toHaveValue(''); // never pre-filled
   expect(screen.getByLabelText('fund.target')).toHaveValue(9000); // collection_remaining, not total_target (10000)
 });
@@ -158,16 +162,14 @@ test('a round is a collection mechanism, not a budget-defining transaction: New 
 test('a trip with nothing left to collect opens a fully blank composer -- no meaningless zero pre-fill', async () => {
   getFund.mockResolvedValue({ ...baseFund, total_target: '1000.00', collection_remaining: '0.00' });
   renderPage();
-  await screen.findByText('fund.title');
-  fireEvent.click(screen.getAllByText('fund.newRound')[0]);
+  fireEvent.click((await screen.findAllByText('fund.newRound'))[0]);
   expect(await screen.findByLabelText('fund.target')).toHaveValue(null);
 });
 
 test('creating an equal-split round submits the expected payload', async () => {
   createFundingRound.mockResolvedValue({ ...round1, id: 'r2' });
   renderPage();
-  await screen.findByText('fund.title');
-  fireEvent.click(screen.getByText('fund.newRound'));
+  fireEvent.click(await screen.findByText('fund.newRound'));
   fireEvent.change(await screen.findByLabelText('fund.roundTitle'), { target: { value: 'Activities' } });
   fireEvent.change(screen.getByLabelText('fund.target'), { target: { value: '200' } });
   const participantCheckboxes = screen.getAllByRole('checkbox');
@@ -390,4 +392,40 @@ test('Fund history "load more" fetches the next page and merges it in, without d
   await waitFor(() => expect(getActivityPage).toHaveBeenCalledWith('https://api/next-page', 't1', expect.anything()));
   expect(await within(dialog).findByText(/activity\.fund_created/)).toBeInTheDocument();
   expect(within(dialog).queryByText('common.loadMore')).not.toBeInTheDocument();
+});
+
+// --- Part B: progressive/section-level loading -----------------------
+
+test('the page title, subtitle, and hint render immediately, before the Fund fetch resolves', () => {
+  getFund.mockImplementation(() => new Promise(() => {}));
+  renderPage();
+  expect(screen.getByText('fund.title')).toBeInTheDocument();
+  expect(screen.getByText('fund.pageSubtitle')).toBeInTheDocument();
+  expect(screen.getByText('fund.explanation')).toBeInTheDocument();
+});
+
+test('while the Fund is pending, a section-scoped loading indicator shows in its place -- never the app-wide NeoLoading', () => {
+  getFund.mockImplementation(() => new Promise(() => {}));
+  const { container } = renderPage();
+  expect(container.querySelector('.section-loading')).toBeInTheDocument();
+  expect(container.querySelector('.neo-loading')).not.toBeInTheDocument();
+});
+
+test('a background refresh after confirming a contribution never blanks the already-rendered Fund body -- stale data stays visible throughout', async () => {
+  const fundWithPending = { ...baseFund, contributions: [{ id: 'c1', round_id: 'r1', round_title: 'Initial Collection', member_id: 'm2', display_name: 'Saud', amount: '200.00', contribution_date: '2026-01-05', note: '', voided: false, status: 'pending', origin: 'member_reported', recorded_by: 'Saud', reviewed_by: null, reviewed_at: null, review_note: '', retry_cooldown_active: false, corrections: [] }] };
+  getFund.mockResolvedValue(fundWithPending);
+  confirmFundContribution.mockResolvedValue({ id: 'c1', status: 'confirmed' });
+  renderPage();
+  await screen.findByText('fund.pendingReviewTitle');
+  let resolveSecond;
+  getFund.mockImplementationOnce(() => new Promise((resolve) => { resolveSecond = resolve; }));
+  fireEvent.click(screen.getByRole('button', { name: 'fund.confirmContribution' }));
+  await waitFor(() => expect(confirmFundContribution).toHaveBeenCalled());
+  // The background refetch triggered by the confirmation is now in
+  // flight (unresolved) -- the already-rendered Fund body (holder
+  // card, rounds) must still be present, not replaced by a loading
+  // placeholder.
+  expect(screen.getAllByText('Fahad').length).toBeGreaterThanOrEqual(1);
+  expect(screen.getByText('Initial Collection')).toBeInTheDocument();
+  await act(async () => resolveSecond(fundWithPending));
 });

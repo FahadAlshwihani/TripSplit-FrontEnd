@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import NeoLoading from '../../../shared/components/NeoLoading';
+import SectionLoading from '../../../shared/components/SectionLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
 import { getMembers } from '../../members/api/membersApi';
@@ -56,33 +56,32 @@ export default function SettlementsPage() {
   // null | { type: 'timeline', id } | { type: 'action', mode, counterpart?, debt?, initialFromId?, initialToId? }
   const [overlay, setOverlay] = useState(null);
 
-  const resource = useRouteResource(async (signal) => {
-    const config = { signal };
-    const [balances, settlementPage, members] = await Promise.all([
-      getBalances(tripId, config),
-      getSettlements(tripId, { ...config, params: { page_size: 25 } }),
-      getMembers(tripId, config),
-    ]);
-    return { balances, settlementPage, members: members.results };
-  }, [tripId]);
+  // Three independent resources, one per card -- each has its own
+  // shell/SectionLoading/error state rather than one combined fetch
+  // blocking the whole workspace. Current Balances and Suggested
+  // Settlements both read off the same GET /balances/ payload (they
+  // are two views of one server response, not two round trips), so
+  // they share balancesResource but each still renders its own
+  // section-scoped loading/error independently of the other cards.
+  const balancesResource = useRouteResource((signal) => getBalances(tripId, { signal }), [tripId]);
+  const membersResource = useRouteResource((signal) => getMembers(tripId, { signal }), [tripId]);
+  const settlementsResource = useRouteResource(
+    (signal) => getSettlements(tripId, { signal, params: { page_size: 25 } }),
+    [tripId],
+  );
 
-  if (resource.loading) return <NeoLoading />;
-  if (resource.error) return <ErrorState message={resource.error.message} onRetry={resource.retry} />;
-
-  const { balances, settlementPage, members } = resource.data;
-  const settlements = settlementPage.results;
+  const balances = balancesResource.data;
+  const members = membersResource.data?.results || [];
+  const settlements = settlementsResource.data?.results || [];
   const currency = trip.currency;
   const readOnly = !permissions.canRecordSettlement;
   const isManager = ['owner', 'admin'].includes(currentMember?.role);
   const canRecordAdmin = !readOnly && isManager;
   const membersById = Object.fromEntries(members.map((member) => [member.id, member]));
 
-  const loadMore = () => resource.loadMore(
-    (signal) => getSettlementPage(settlementPage.next, tripId, { signal }),
-    (current, page) => ({
-      ...current,
-      settlementPage: { ...page, results: [...current.settlementPage.results, ...page.results] },
-    }),
+  const loadMore = () => settlementsResource.loadMore(
+    (signal) => getSettlementPage(settlementsResource.data.next, tripId, { signal }),
+    (current, page) => ({ ...page, results: [...current.results, ...page.results] }),
   );
 
   const runReview = async (settlement, decision) => {
@@ -90,7 +89,7 @@ export default function SettlementsPage() {
     try {
       await reviewSettlement(tripId, settlement.id, decision);
       setActionError(null);
-      await resource.retry();
+      await settlementsResource.retry();
       setOverlay(null);
     } catch (error) {
       setActionError(error);
@@ -106,7 +105,7 @@ export default function SettlementsPage() {
   // BalancesPage already does for its own Remind/I-Paid/Record-Received
   // buttons.
   const resolveSuggestionAction = (suggestion) => {
-    if (readOnly) return null;
+    if (readOnly || !membersResource.data) return null;
     if (currentMember?.id === suggestion.from_member) return { mode: 'report', counterpart: membersById[suggestion.to_member], debt: suggestion.amount };
     if (currentMember?.id === suggestion.to_member) return { mode: 'received', counterpart: membersById[suggestion.from_member], debt: suggestion.amount };
     if (isManager) return { mode: 'admin', initialFromId: suggestion.from_member, initialToId: suggestion.to_member, debt: suggestion.amount };
@@ -124,7 +123,7 @@ export default function SettlementsPage() {
     else await recordAdminSettlement(tripId, payload);
     setOverlay(null);
     setActionError(null);
-    await resource.retry();
+    await Promise.all([balancesResource.retry(), settlementsResource.retry()]);
   };
 
   const timelineSettlement = overlay?.type === 'timeline' && settlements.find((row) => row.id === overlay.id);
@@ -147,7 +146,11 @@ export default function SettlementsPage() {
           <p className="settle-page__subtitle text-copy">{t('settlements.pageSubtitle')}</p>
         </div>
         {canRecordAdmin && (
-          <button type="button" className="dash-btn dash-btn--secondary settle-page__record-external" onClick={() => setOverlay({ type: 'action', mode: 'admin' })}>
+          <button
+            type="button"
+            className="dash-btn dash-btn--secondary settle-page__record-external"
+            onClick={() => setOverlay({ type: 'action', mode: 'admin' })}
+          >
             <span className="material-symbols-outlined settle-icon-inline" aria-hidden="true">fact_check</span> {t('settlements.recordExternal')}
           </button>
         )}
@@ -157,27 +160,38 @@ export default function SettlementsPage() {
 
       <div className="settle-workspace">
         <div className="settle-workspace__left">
-          <CurrentBalancesCard members={balances.members} currency={currency} />
-          <SuggestedSettlementsCard
-            suggestions={balances.suggested_settlements}
-            currency={currency}
-            canRecord={(suggestion) => resolveSuggestionAction(suggestion) !== null}
-            recordLabel={suggestionRecordLabel}
-            onRecord={(suggestion) => {
-              const action = resolveSuggestionAction(suggestion);
-              if (action) setOverlay({ type: 'action', ...action });
-            }}
-          />
+          {!balances && balancesResource.loading && <SectionLoading minHeight={180} />}
+          {!balances && balancesResource.error && <ErrorState message={balancesResource.error.message} onRetry={balancesResource.retry} />}
+          {balances && <CurrentBalancesCard members={balances.members} currency={currency} />}
+
+          {!balances && balancesResource.loading && <SectionLoading minHeight={180} />}
+          {!balances && balancesResource.error && <ErrorState message={balancesResource.error.message} onRetry={balancesResource.retry} />}
+          {balances && (
+            <SuggestedSettlementsCard
+              suggestions={balances.suggested_settlements}
+              currency={currency}
+              canRecord={(suggestion) => resolveSuggestionAction(suggestion) !== null}
+              recordLabel={suggestionRecordLabel}
+              onRecord={(suggestion) => {
+                const action = resolveSuggestionAction(suggestion);
+                if (action) setOverlay({ type: 'action', ...action });
+              }}
+            />
+          )}
         </div>
         <div className="settle-workspace__right">
-          <SettlementLedgerCard
-            settlements={settlements}
-            currency={currency}
-            onOpen={(settlement) => setOverlay({ type: 'timeline', id: settlement.id })}
-            hasMore={Boolean(settlementPage.next)}
-            onLoadMore={loadMore}
-            loadingMore={resource.loadingMore}
-          />
+          {!settlementsResource.data && settlementsResource.loading && <SectionLoading minHeight={320} />}
+          {!settlementsResource.data && settlementsResource.error && <ErrorState message={settlementsResource.error.message} onRetry={settlementsResource.retry} />}
+          {settlementsResource.data && (
+            <SettlementLedgerCard
+              settlements={settlements}
+              currency={currency}
+              onOpen={(settlement) => setOverlay({ type: 'timeline', id: settlement.id })}
+              hasMore={Boolean(settlementsResource.data.next)}
+              onLoadMore={loadMore}
+              loadingMore={settlementsResource.loadingMore}
+            />
+          )}
         </div>
       </div>
 

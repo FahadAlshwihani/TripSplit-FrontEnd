@@ -69,3 +69,12 @@ test('a failed load surfaces ErrorState with retry, not a silent blank page', as
   renderPage();
   expect(await screen.findByRole('alert')).toHaveTextContent('boom');
 });
+
+test('the title and toolbar render immediately, before the activity list resolves -- with a section-scoped placeholder, not full-page NeoLoading', () => {
+  getActivity.mockReturnValue(new Promise(() => {}));
+  const { container } = renderPage();
+  expect(screen.getByText('activity.title')).toBeInTheDocument();
+  expect(screen.getByPlaceholderText('activity.searchPlaceholder')).toBeInTheDocument();
+  expect(container.querySelector('.section-loading')).toBeInTheDocument();
+  expect(container.querySelector('.neo-loading')).not.toBeInTheDocument();
+});

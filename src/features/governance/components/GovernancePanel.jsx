@@ -4,6 +4,15 @@ import JoinRequestsSection from './JoinRequestsSection';
 import InvitationsSection from './InvitationsSection';
 import BansSection from './BansSection';
 import AccessSettingsCard from './AccessSettingsCard';
+import SectionLoading from '../../../shared/components/SectionLoading';
+import ErrorState from '../../../shared/components/ErrorState';
+
+const SectionBody = ({ state, minHeight, children }) => {
+  if (!state.data && state.loading) return <SectionLoading minHeight={minHeight} />;
+  if (!state.data && state.error) return <ErrorState message={state.error.message} onRetry={state.retry} />;
+  if (!state.data) return null;
+  return children(state.data.results);
+};
 
 /*
   A literal port of the supplied Stitch Access Control source's page
@@ -23,7 +32,7 @@ import AccessSettingsCard from './AccessSettingsCard';
   not circular) and position (still beside the identity text) -- see
   JoinRequestsSection.jsx's own comment.
 */
-export default function GovernancePanel({ trip, capabilities, requests, invitations, bans, onReview, onOpenInvite, onRevokeInvite, onResendInvite, onUnban, onUpdateSettings, onRotateLink }) {
+export default function GovernancePanel({ trip, capabilities, requestsState, invitationsState, bansState, onReview, onOpenInvite, onRevokeInvite, onResendInvite, onUnban, onUpdateSettings, onRotateLink }) {
   const { t } = useTranslation();
   return (
     <div className="gov-page">
@@ -33,21 +42,31 @@ export default function GovernancePanel({ trip, capabilities, requests, invitati
       </div>
       <div className="gov-grid">
         <div className="gov-grid__main">
-          <div className="gov-section"><JoinRequestsSection requests={requests} onReview={onReview} canReview={capabilities?.can_review_join_requests} /></div>
           <div className="gov-section">
-            <InvitationsSection
-              invitations={invitations}
-              onOpenInvite={onOpenInvite}
-              onResend={onResendInvite}
-              onRevoke={onRevokeInvite}
-              canInvite={capabilities?.can_invite}
-              canResend={capabilities?.can_resend_invite}
-              canRevoke={capabilities?.can_revoke_invite}
-            />
+            <SectionBody state={requestsState} minHeight={160}>
+              {(requests) => <JoinRequestsSection requests={requests} onReview={onReview} canReview={capabilities?.can_review_join_requests} />}
+            </SectionBody>
+          </div>
+          <div className="gov-section">
+            <SectionBody state={invitationsState} minHeight={160}>
+              {(invitations) => (
+                <InvitationsSection
+                  invitations={invitations}
+                  onOpenInvite={onOpenInvite}
+                  onResend={onResendInvite}
+                  onRevoke={onRevokeInvite}
+                  canInvite={capabilities?.can_invite}
+                  canResend={capabilities?.can_resend_invite}
+                  canRevoke={capabilities?.can_revoke_invite}
+                />
+              )}
+            </SectionBody>
           </div>
         </div>
         <div className="gov-grid__side">
-          <BansSection bans={bans} onUnban={onUnban} canUnban={capabilities?.can_unban} />
+          <SectionBody state={bansState} minHeight={120}>
+            {(bans) => <BansSection bans={bans} onUnban={onUnban} canUnban={capabilities?.can_unban} />}
+          </SectionBody>
           <AccessSettingsCard trip={trip} onUpdateSettings={onUpdateSettings} onRotateLink={onRotateLink} capabilities={capabilities} />
         </div>
       </div>

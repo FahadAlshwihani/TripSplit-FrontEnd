@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import SettlementsPage from './SettlementsPage';
 import { getSettlementPage, getSettlements, getSettlementTimeline, recordAdminSettlement, reportPayment, recordReceivedPayment, reviewSettlement } from '../api/settlementsApi';
@@ -500,4 +500,58 @@ test('29.7/29.12: mobile -- the DOM is identical to desktop (same node+card stru
     expect(entry.querySelector('.settle-timeline-entry__node')).toBeInTheDocument();
     expect(entry.querySelector('.settle-timeline-entry__card')).toBeInTheDocument();
   });
+});
+
+// Part B: independent per-card loading -- the page title/header render
+// immediately, and each of the three cards (Current Balances /
+// Suggested Settlements / Settlement Ledger) shows its own
+// section-scoped placeholder rather than one gate blocking the whole
+// workspace.
+test('the page title renders immediately and each card shows its own section-scoped placeholder while its own resource is still loading -- never full-page NeoLoading', () => {
+  getBalances.mockReturnValue(new Promise(() => {}));
+  getSettlements.mockReturnValue(new Promise(() => {}));
+  const { container } = renderPage();
+  expect(screen.getByText('settlements.pageTitle')).toBeInTheDocument();
+  expect(container.querySelectorAll('.section-loading').length).toBeGreaterThanOrEqual(2);
+  expect(container.querySelector('.neo-loading')).not.toBeInTheDocument();
+});
+
+test('a slow Settlement Ledger fetch does not block the Current Balances / Suggested Settlements cards from rendering as soon as balances resolve', async () => {
+  getSettlements.mockReturnValue(new Promise(() => {}));
+  const { container } = renderPage();
+  await screen.findByText('settlements.currentBalances');
+  expect(screen.getByText('settlements.suggestedSettlements')).toBeInTheDocument();
+  // The ledger card's own resource is still pending -- its section stays
+  // a placeholder while the already-resolved cards show real content.
+  expect(screen.queryByText('settlements.settlementLedger')).not.toBeInTheDocument();
+  expect(container.querySelector('.section-loading')).toBeInTheDocument();
+});
+
+test('a Current Balances / Suggested Settlements fetch failure does not take down the Settlement Ledger card', async () => {
+  getBalances.mockRejectedValue(new Error('balances down'));
+  renderPage();
+  await screen.findByText('settlements.settlementLedger');
+  expect(screen.getAllByText('balances down').length).toBeGreaterThan(0);
+});
+
+test('recording an admin settlement refreshes balances and the ledger in the background -- the already-rendered cards never blank out', async () => {
+  recordAdminSettlement.mockResolvedValue({});
+  renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: /settlements\.recordExternal/ }));
+  const dialog = await screen.findByRole('dialog');
+  fireEvent.change(within(dialog).getByLabelText('settlements.payer'), { target: { value: 'm2' } });
+  fireEvent.change(within(dialog).getByLabelText('settlements.recipient'), { target: { value: 'm1' } });
+  fireEvent.change(within(dialog).getByLabelText('expense.amount'), { target: { value: '15' } });
+  fireEvent.click(within(dialog).getByRole('checkbox'));
+  let resolveBalances;
+  getBalances.mockImplementationOnce(() => new Promise((resolve) => { resolveBalances = resolve; }));
+  fireEvent.click(within(dialog).getByRole('button', { name: /settlements\.recordExternal/ }));
+  await waitFor(() => expect(recordAdminSettlement).toHaveBeenCalled());
+  // Balances refetch is now in flight (unresolved) -- the previously
+  // rendered card content must still be visible, not replaced by a
+  // loading placeholder.
+  expect(screen.getByText('settlements.currentBalances')).toBeInTheDocument();
+  expect(screen.getByText('settlements.settlementLedger')).toBeInTheDocument();
+  await waitFor(() => expect(resolveBalances).toBeDefined());
+  await act(async () => resolveBalances(baseBalances));
 });
