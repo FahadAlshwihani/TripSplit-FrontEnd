@@ -75,3 +75,21 @@ test('never shows IP, device fingerprints, or raw guest identifiers as request c
   expect(screen.queryByText(/ip address/i)).not.toBeInTheDocument();
   expect(screen.queryByText(/device/i)).not.toBeInTheDocument();
 });
+
+test('the avatar renders in its own dedicated end-cap block, never nested inside the identity/text group', () => {
+  const { container } = render(<JoinRequestsSection requests={[guestRequest]} onReview={jest.fn()} canReview />);
+  const row = container.querySelector('.gov-row');
+  const avatarBlock = row.querySelector('.gov-row__avatar');
+  const identity = row.querySelector('.gov-row__identity');
+  expect(avatarBlock).toBeInTheDocument();
+  expect(avatarBlock.querySelector('.pf-avatar--md')).toBeInTheDocument();
+  expect(identity.querySelector('.pf-avatar--md')).toBeNull(); // moved out of identity
+  expect(avatarBlock.parentElement).toBe(row); // sibling of identity/actions, not nested
+});
+
+test('the avatar block is the trailing element in the row -- approve/reject tab order is unaffected by the restructure', () => {
+  const { container } = render(<JoinRequestsSection requests={[guestRequest]} onReview={jest.fn()} canReview />);
+  const row = container.querySelector('.gov-row');
+  const children = Array.from(row.children);
+  expect(children[children.length - 1]).toHaveClass('gov-row__avatar');
+});

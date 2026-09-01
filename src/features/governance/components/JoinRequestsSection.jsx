@@ -30,6 +30,15 @@ import { formatRelativeTime } from '../../../shared/utils/format';
   create_join_request) -- there is no other route that produces one --
   so "via invite link" is a real, honest fact about every row, not an
   invented per-row source label the backend can't actually tell apart.
+
+  The avatar renders as a dedicated rectangular end-cap block
+  (.gov-row__avatar), NOT the small circular badge Stitch's own mock
+  showed -- deliberately departed from that literal port on request:
+  square/small-radius (this app's own brand identity everywhere else,
+  e.g. Members), sized to its own slot and stretched to the row's full
+  height at >=640px (see governance.css's own comment on
+  .gov-row__avatar). Trailing in DOM order (after identity/actions) so
+  the existing approve/reject tab order is completely unaffected.
 */
 export default function JoinRequestsSection({ requests, onReview, canReview }) {
   const { t, i18n } = useTranslation();
@@ -46,7 +55,6 @@ export default function JoinRequestsSection({ requests, onReview, canReview }) {
             {requests.map((row) => (
               <li className="gov-row" key={row.id}>
                 <div className="gov-row__identity">
-                  <Avatar avatarKey={avatarKeyFromAvatar(row.avatar)} displayName={row.display_name} size="md" />
                   <div className="gov-row__text">
                     <div className="gov-row__name-line">
                       <span className="gov-row__name">{row.display_name}</span>
@@ -61,6 +69,9 @@ export default function JoinRequestsSection({ requests, onReview, canReview }) {
                     <button type="button" className="gov-btn gov-btn--primary" onClick={() => onReview(row, 'approve')}>{t('governance.approve')}</button>
                   </div>
                 )}
+                <div className="gov-row__avatar">
+                  <Avatar avatarKey={avatarKeyFromAvatar(row.avatar)} displayName={row.display_name} size="md" />
+                </div>
               </li>
             ))}
           </ul>
