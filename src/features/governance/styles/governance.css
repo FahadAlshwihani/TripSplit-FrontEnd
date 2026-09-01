@@ -180,16 +180,40 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 /* Grid -- row-level pairing (requested departure from Stitch's literal
    column composition, see GovernancePanel.jsx's own comment): Join
    Requests + Restricted read as row 1, Invitations + Access Settings
-   as row 2, each pair sharing the same grid-row so they align on the
-   same top baseline. Each item keeps Stitch's own 8/12 (wide/"main")
-   or 4/12 (narrow/"side") span -- literal, not a percentage/minmax
+   as row 2. Each item keeps Stitch's own 8/12 (wide/"main") or 4/12
+   (narrow/"side") span -- literal, not a percentage/minmax
    approximation -- at Tailwind's unmodified `lg` breakpoint (1024px).
    Below that, every item stacks full-width in DOM order (request,
    restricted, invitations, access) -- the same pairing order as the
    desktop rows, so mobile reads as a natural continuation of it rather
-   than an unrelated shuffle. CSS Grid's own default (align-items:
-   stretch) makes each row's shorter card match its sibling's height
-   for free -- no extra flex bookkeeping needed. */
+   than an unrelated shuffle.
+
+   CARD height alignment (not wrapper height alignment): Join
+   Requests/Invitations are [heading, then bordered card] -- two
+   stacked pieces -- while Restricted/Access Settings are ONE
+   self-contained card with no separate heading above it. A plain
+   grid-row stretch of the whole wide-side wrapper (heading+card
+   together) against the narrow side's single card was tried first and
+   was wrong: it bottom-aligns the two cards but NOT their top edges,
+   since the wide side's card starts lower (below its own heading)
+   while the stretched narrow-side card starts at the very top of the
+   row. The actual requirement is CARD-to-CARD alignment (both edges),
+   with the heading sitting above that aligned pair, uninvolved.
+
+   Each row-pair is split into two shared row-tracks -- a heading track
+   (auto, sized to whichever item actually has a heading) and a card
+   track (1fr, shared by both cards). Every item in a row-pair spans
+   BOTH tracks as a CSS subgrid, so its own internal heading/card
+   placement uses the exact same track sizes as its sibling: the wide
+   side places its heading in the heading track and its card in the
+   card track (this falls out of plain DOM order + grid auto-flow --
+   .gov-section-head then .gov-section-body, no explicit grid-row
+   needed); the narrow side has nothing to put in the heading track at
+   all, so it's explicitly placed straight into the card track,
+   leaving the heading track empty above it -- which is exactly what
+   pushes the narrow card down to start at the same y-position as the
+   wide side's card, without moving the narrow side up to the
+   heading's own top edge. */
 
 .gov-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--gs-lg); }
 .gov-grid__requests,
@@ -200,10 +224,39 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 }
 
 @media (min-width: 1024px) {
-  .gov-grid__requests { grid-column: span 8 / span 8; grid-row: 1; }
-  .gov-grid__restricted { grid-column: span 4 / span 4; grid-row: 1; }
-  .gov-grid__invitations { grid-column: span 8 / span 8; grid-row: 2; }
-  .gov-grid__access { grid-column: span 4 / span 4; grid-row: 2; }
+  .gov-grid { grid-template-rows: auto 1fr auto 1fr; }
+
+  .gov-grid__requests,
+  .gov-grid__restricted,
+  .gov-grid__invitations,
+  .gov-grid__access {
+    display: grid;
+    grid-template-rows: subgrid;
+  }
+  .gov-grid__requests { grid-column: span 8 / span 8; grid-row: 1 / 3; }
+  .gov-grid__restricted { grid-column: span 4 / span 4; grid-row: 1 / 3; }
+  .gov-grid__invitations { grid-column: span 8 / span 8; grid-row: 3 / 5; }
+  .gov-grid__access { grid-column: span 4 / span 4; grid-row: 3 / 5; }
+
+  /* .gov-section already carries display:flex (its own mobile-first
+     base rule) -- a matching-specificity override here would lose to
+     source order, so this is deliberately a double-class selector
+     (higher specificity) rather than relying on where it sits in the
+     file. */
+  .gov-grid__requests.gov-section,
+  .gov-grid__invitations.gov-section {
+    display: grid;
+    grid-template-rows: subgrid;
+  }
+
+  /* The narrow side's single card has nothing for the heading track --
+     explicit placement into the (local) card track keeps the heading
+     track above it empty, rather than grid auto-flow defaulting a
+     single child into the first available (heading) track. */
+  .gov-grid__restricted > .gov-restricted,
+  .gov-grid__access > .gov-settings {
+    grid-row: 2;
+  }
 }
 
 /* -------------------------------------------------------------- */
@@ -292,9 +345,16 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 .gov-row:last-child { border-block-end: none; }
 
 @media (min-width: 640px) {
-  .gov-row { flex-direction: row; align-items: stretch; justify-content: space-between; }
+  .gov-row { flex-direction: row; align-items: center; justify-content: space-between; }
 }
 
+/* Avatar sits directly beside the identity text again (restored --
+   the end-cap-block treatment tried previously was a misread of the
+   request: the only intended change was shape, circle -> square,
+   never a separate full-height slot). The shared Avatar component's
+   own default is already exactly what's wanted here (small-radius
+   square, size="md" = 40x40) -- no governance-specific override
+   needed at all now that the old circular-only override is gone. */
 .gov-row__identity { display: flex; align-items: flex-start; gap: var(--gs-md); flex: 1 1 auto; min-width: 0; }
 .gov-row__text { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .gov-row__name-line { display: flex; align-items: center; gap: var(--gs-sm); }
@@ -302,33 +362,6 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 .gov-row__meta { margin: 4px 0 0; color: var(--color-text-muted); font: var(--text-body-sm); }
 
 .gov-row__actions { display: flex; align-items: center; gap: var(--gs-sm); flex: 0 0 auto; }
-
-/* Avatar end-cap -- deliberately departed from Stitch's literal 40x40
-   circular badge on request: a dedicated rectangular block (this app's
-   own small-radius square identity everywhere else, e.g. Members --
-   never rounded-full), sized to its own slot rather than floating
-   inline with the text. At >=640px, where .gov-row is actually a
-   horizontal row, align-items:stretch above makes this block match the
-   row's own full height for free; block-size:auto here lets it grow to
-   that stretched height instead of being capped at a fixed value.
-   Below 640px (.gov-row is a column stack, so there's no "row height"
-   to match) it falls back to a fixed square. The self-doubled-selector
-   trick (typography.css's own documented pattern) overrides the shared
-   Avatar's fixed 40x40 sizing so it fills this slot completely, and
-   drops its own border/radius since the wrapper already supplies both
-   (avoids a double border). */
-.gov-row__avatar {
-  flex: 0 0 auto;
-  inline-size: 56px;
-  block-size: 56px;
-  border: var(--border-width) solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-@media (min-width: 640px) {
-  .gov-row__avatar { align-self: stretch; block-size: auto; min-block-size: 56px; }
-}
-.gov-row__avatar .pf-avatar--md.pf-avatar--md { inline-size: 100%; block-size: 100%; border-radius: 0; border: 0; }
 
 /* Guest identity badge -- font-label-caps (EXACT match to .text-label:
    700 12px/16px, uppercase, tracked) bg-surface-container-high px-2
