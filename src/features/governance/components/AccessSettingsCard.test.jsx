@@ -75,6 +75,12 @@ test('without can_manage_invite_link the link toggle is disabled and copy/rotate
 
 test('the invite link uses the compact secondary layout, not the full-size field-control input', () => {
   const { container } = renderCard({ join_code: 'ABC12345', join_policy: 'open' });
-  expect(container.querySelector('.governance-settings__link-input')).toBeInTheDocument();
-  expect(container.querySelector('.governance-settings__link-row .field-control')).toBeNull();
+  expect(container.querySelector('.gov-settings__link-code')).toBeInTheDocument();
+  expect(container.querySelector('.gov-settings__link-row .field-control')).toBeNull();
+});
+
+test('the switch is 40x24 per the Stitch source, not the app-wide 40x22 acc-switch', () => {
+  const { container } = renderCard({ join_code: 'ABC', join_policy: 'open' });
+  expect(container.querySelector('.gov-switch')).toBeInTheDocument();
+  expect(container.querySelector('.acc-switch')).toBeNull();
 });

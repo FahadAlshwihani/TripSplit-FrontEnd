@@ -17,7 +17,7 @@ test('shows identity type, permanent label, banned-by, and reason for an authori
   render(<BansSection bans={bans} onUnban={jest.fn()} canUnban />);
   expect(screen.getByText('identity.guest', { exact: false })).toBeInTheDocument();
   expect(screen.getByText('governance.permanent', { exact: false })).toBeInTheDocument();
-  expect(screen.getByText('governance.bannedBy:{"name":"Owner"}')).toBeInTheDocument();
+  expect(screen.getByText(/governance\.bannedBy:\{"name":"Owner"\}/)).toBeInTheDocument();
   expect(screen.getByText('Spamming the chat')).toBeInTheDocument();
 });
 
@@ -49,12 +49,30 @@ test('the Unban action is hidden without the can_unban capability -- never a rol
   expect(screen.queryByText('governance.unban')).not.toBeInTheDocument();
 });
 
-test('an empty Restricted body carries the centering modifier class', () => {
-  const { container } = render(<BansSection bans={[]} onUnban={jest.fn()} canUnban />);
-  expect(container.querySelector('.gov-section-body--empty')).toBeInTheDocument();
-});
-
 test('the section icon uses the danger/error treatment, matching Stitch\'s Restricted warning accent', () => {
   const { container } = render(<BansSection bans={[]} onUnban={jest.fn()} canUnban />);
-  expect(container.querySelector('.gov-section-head__title--danger')).toBeInTheDocument();
+  expect(container.querySelector('.gov-section-head__icon--danger')).toBeInTheDocument();
+});
+
+test('renders the exact Stitch icon name (block) via Material Symbols, not a substitute glyph', () => {
+  const { container } = render(<BansSection bans={[]} onUnban={jest.fn()} canUnban />);
+  const icon = container.querySelector('.material-symbols-outlined');
+  expect(icon).toBeInTheDocument();
+  expect(icon.textContent).toBe('block');
+  expect(container.querySelector('.bi')).toBeNull();
+});
+
+test('the outer card ports Stitch\'s single bordered composition (header + body together), with the corner decoration behind it', () => {
+  const { container } = render(<BansSection bans={[]} onUnban={jest.fn()} canUnban />);
+  const card = container.querySelector('.gov-restricted');
+  expect(card).toBeInTheDocument();
+  expect(card.querySelector('.gov-restricted__corner')).toBeInTheDocument();
+  expect(card.querySelector('.gov-section-head')).toBeInTheDocument();
+});
+
+test('the Unban action uses the Stitch-ported .gov-btn, not the app-wide .dash-btn', () => {
+  const bans = [{ id: 'b1', active: true, member: { display_name: 'Banned Guy', identity_type: 'guest', avatar: {} }, banned_by: null, expires_at: null, reason: '' }];
+  const { container } = render(<BansSection bans={bans} onUnban={jest.fn()} canUnban />);
+  expect(container.querySelector('.gov-btn')).toBeInTheDocument();
+  expect(container.querySelector('.dash-btn')).toBeNull();
 });

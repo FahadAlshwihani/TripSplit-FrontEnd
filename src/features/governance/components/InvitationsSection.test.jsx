@@ -44,18 +44,37 @@ test('without capabilities, Invite/Resend/Revoke never render -- never a role gu
   expect(screen.queryByText('governance.revoke')).not.toBeInTheDocument();
 });
 
-test('the section icon uses the neutral (not primary-blue) treatment, distinct from Join Requests', () => {
+test('the section icon uses the neutral (secondary) treatment, distinct from Join Requests\' primary icon', () => {
   const { container } = render(<InvitationsSection invitations={[]} onOpenInvite={jest.fn()} onResend={jest.fn()} onRevoke={jest.fn()} canInvite canResend canRevoke />);
-  expect(container.querySelector('.gov-section-head__title--neutral')).toBeInTheDocument();
+  expect(container.querySelector('.gov-section-head__icon--neutral')).toBeInTheDocument();
 });
 
-test('empty state shows a real message when there are no pending invitations', () => {
-  render(<InvitationsSection invitations={[]} onOpenInvite={jest.fn()} onResend={jest.fn()} onRevoke={jest.fn()} canInvite canResend canRevoke />);
+test('renders the exact Stitch icon names (mail, add) via Material Symbols, not substitute glyphs', () => {
+  const { container } = render(<InvitationsSection invitations={[]} onOpenInvite={jest.fn()} onResend={jest.fn()} onRevoke={jest.fn()} canInvite canResend canRevoke />);
+  const icons = Array.from(container.querySelectorAll('.material-symbols-outlined')).map((el) => el.textContent);
+  expect(icons).toEqual(expect.arrayContaining(['mail', 'add']));
+  expect(container.querySelector('.bi')).toBeNull();
+});
+
+test('the resend icon is the exact Stitch "send" glyph', () => {
+  const { container } = render(<InvitationsSection invitations={[{ id: 'i1', email: 'a@b.com', invited_by: { display_name: 'You' }, created_at: '2026-08-28T00:00:00Z', accepted_at: null, revoked_at: null }]} onOpenInvite={jest.fn()} onResend={jest.fn()} onRevoke={jest.fn()} canInvite canResend canRevoke />);
+  const icons = Array.from(container.querySelectorAll('.material-symbols-outlined')).map((el) => el.textContent);
+  expect(icons).toContain('send');
+});
+
+test('invitation row actions use the Stitch-ported .gov-btn, not the app-wide .dash-btn', () => {
+  const { container } = render(<InvitationsSection invitations={[emailInvite]} onOpenInvite={jest.fn()} onResend={jest.fn()} onRevoke={jest.fn()} canInvite canResend canRevoke />);
+  expect(container.querySelectorAll('.gov-btn').length).toBe(2);
+  expect(container.querySelector('.dash-btn')).toBeNull();
+});
+
+test('empty state shows a real message inside the same bordered box a populated list would use', () => {
+  const { container } = render(<InvitationsSection invitations={[]} onOpenInvite={jest.fn()} onResend={jest.fn()} onRevoke={jest.fn()} canInvite canResend canRevoke />);
   expect(screen.getByText('governance.noInvitations')).toBeInTheDocument();
+  expect(container.querySelector('.gov-list--empty')).toBeInTheDocument();
 });
 
-test('an empty body carries the centering modifier class, and the Invite action stays visible in the header regardless', () => {
-  const { container } = render(<InvitationsSection invitations={[]} onOpenInvite={jest.fn()} onResend={jest.fn()} onRevoke={jest.fn()} canInvite canResend canRevoke />);
-  expect(container.querySelector('.gov-section-body--empty')).toBeInTheDocument();
+test('the Invite action stays visible in the header even when the list is empty', () => {
+  render(<InvitationsSection invitations={[]} onOpenInvite={jest.fn()} onResend={jest.fn()} onRevoke={jest.fn()} canInvite canResend canRevoke />);
   expect(screen.getByText('governance.addMember')).toBeInTheDocument();
 });

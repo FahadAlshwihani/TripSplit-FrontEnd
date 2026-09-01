@@ -5,44 +5,60 @@ import { avatarKeyFromAvatar } from '../../profile/utils/avatarKey';
 import { formatRelativeTime } from '../../../shared/utils/format';
 
 /*
+  Stitch source (JOIN REQUESTS section):
+    <div class="flex items-center gap-sm mb-md">
+      <span class="material-symbols-outlined text-primary">person_add</span>
+      <h2 class="font-headline-sm text-headline-sm text-on-background">JOIN REQUESTS</h2>
+      <span class="bg-surface-variant ... rounded-full text-xs">2</span>
+    </div>
+    <div class="border border-on-background bg-surface rounded-DEFAULT overflow-hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between p-md border-b ... gap-md">
+        <div class="flex items-start gap-md">
+          <div class="w-10 h-10 rounded-full ...">A</div>
+          <div>
+            <div class="flex items-center gap-sm"><name/><badge/></div>
+            <p class="... text-body-sm ...">Requested 8 minutes ago via invite link.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-sm shrink-0 sm:ml-auto"><Reject/><Approve/></div>
+      </div>
+      ...
+    </div>
+
   Every TripJoinRequest in this codebase is created through the same
   approval-required join-code path (apps.trips.governance.
   create_join_request) -- there is no other route that produces one --
-  so "via invite link" below is a real, honest fact about every row,
-  not an invented per-row source label the backend can't actually tell
-  apart (see the brief's "safe source context" rule). Relative time
-  ("8 minutes ago"), not a raw formatted timestamp -- matches the
-  density of a compact administrative row.
+  so "via invite link" is a real, honest fact about every row, not an
+  invented per-row source label the backend can't actually tell apart.
 */
 export default function JoinRequestsSection({ requests, onReview, canReview }) {
   const { t, i18n } = useTranslation();
   return (
     <>
       <div className="gov-section-head">
-        <h2 className="gov-section-head__title">
-          <i className="bi bi-person-plus-fill" aria-hidden="true" /> {t('governance.requests')}
-          {requests.length > 0 && <span className="gov-count-badge">{requests.length}</span>}
-        </h2>
+        <span className="material-symbols-outlined gov-section-head__icon" aria-hidden="true">person_add</span>
+        <h2 className="gov-section-head__title">{t('governance.requests')}</h2>
+        {requests.length > 0 && <span className="gov-count-badge">{requests.length}</span>}
       </div>
-      <div className={`gov-section-body${requests.length > 0 ? '' : ' gov-section-body--empty'}`}>
+      <div className="gov-section-body">
         {requests.length > 0 ? (
           <ul className="gov-list">
             {requests.map((row) => (
               <li className="gov-row" key={row.id}>
                 <div className="gov-row__identity">
-                  <Avatar avatarKey={avatarKeyFromAvatar(row.avatar)} displayName={row.display_name} size="sm" />
+                  <Avatar avatarKey={avatarKeyFromAvatar(row.avatar)} displayName={row.display_name} size="md" />
                   <div className="gov-row__text">
-                    <span className="gov-row__name">
-                      {row.display_name}
-                      {row.identity_type === 'guest' && <span className="gov-badge">{t('identity.guest')}</span>}
-                    </span>
-                    <span className="gov-row__meta">{t('governance.requestedMeta', { date: formatRelativeTime(row.requested_at, i18n.language) })}</span>
+                    <div className="gov-row__name-line">
+                      <span className="gov-row__name">{row.display_name}</span>
+                      {row.identity_type === 'guest' && <span className="gov-row__guest-badge">{t('identity.guest')}</span>}
+                    </div>
+                    <p className="gov-row__meta">{t('governance.requestedMeta', { date: formatRelativeTime(row.requested_at, i18n.language) })}</p>
                   </div>
                 </div>
                 {canReview && (
                   <div className="gov-row__actions">
-                    <button type="button" className="dash-btn dash-btn--secondary" onClick={() => onReview(row, 'reject')}>{t('governance.reject')}</button>
-                    <button type="button" className="dash-btn dash-btn--primary" onClick={() => onReview(row, 'approve')}>{t('governance.approve')}</button>
+                    <button type="button" className="gov-btn" onClick={() => onReview(row, 'reject')}>{t('governance.reject')}</button>
+                    <button type="button" className="gov-btn gov-btn--primary" onClick={() => onReview(row, 'approve')}>{t('governance.approve')}</button>
                   </div>
                 )}
               </li>
@@ -50,7 +66,7 @@ export default function JoinRequestsSection({ requests, onReview, canReview }) {
           </ul>
         ) : (
           <div className="gov-list gov-list--empty">
-            <p className="gov-empty text-copy-sm">{t('governance.noRequests')}</p>
+            <p className="gov-empty">{t('governance.noRequests')}</p>
           </div>
         )}
       </div>

@@ -35,17 +35,10 @@ test('without can_review_join_requests, Approve/Reject never render -- never a r
   expect(screen.queryByText('governance.reject')).not.toBeInTheDocument();
 });
 
-test('empty state shows a real message, not a blank bordered box', () => {
-  render(<JoinRequestsSection requests={[]} onReview={jest.fn()} canReview />);
+test('empty state shows a real message inside the same bordered box a populated list would use', () => {
+  const { container } = render(<JoinRequestsSection requests={[]} onReview={jest.fn()} canReview />);
   expect(screen.getByText('governance.noRequests')).toBeInTheDocument();
-});
-
-test('an empty body carries the centering modifier class; a populated body does not', () => {
-  const { container, rerender } = render(<JoinRequestsSection requests={[]} onReview={jest.fn()} canReview />);
-  expect(container.querySelector('.gov-section-body--empty')).toBeInTheDocument();
-  rerender(<JoinRequestsSection requests={[guestRequest]} onReview={jest.fn()} canReview />);
-  expect(container.querySelector('.gov-section-body--empty')).not.toBeInTheDocument();
-  expect(container.querySelector('.gov-section-body')).toBeInTheDocument();
+  expect(container.querySelector('.gov-list--empty')).toBeInTheDocument();
 });
 
 test('the section header and body are structurally separate elements, not one blob', () => {
@@ -57,10 +50,24 @@ test('the section header and body are structurally separate elements, not one bl
   expect(head.contains(body)).toBe(false);
 });
 
-test('the heading never relies on the sitewide-undefined .text-headline-sm class -- a real compact administrative label instead', () => {
+test('renders the exact Stitch icon name (person_add) via Material Symbols, not a substitute glyph', () => {
   const { container } = render(<JoinRequestsSection requests={[]} onReview={jest.fn()} canReview />);
-  const heading = container.querySelector('.gov-section-head__title');
-  expect(heading.className).not.toMatch(/text-headline-sm/);
+  const icon = container.querySelector('.material-symbols-outlined');
+  expect(icon).toBeInTheDocument();
+  expect(icon.textContent).toBe('person_add');
+  expect(container.querySelector('.bi')).toBeNull();
+});
+
+test('the request avatar carries the 40px (size="md") contract Stitch specifies (w-10 h-10)', () => {
+  const { container } = render(<JoinRequestsSection requests={[guestRequest]} onReview={jest.fn()} canReview />);
+  expect(container.querySelector('.pf-avatar--md')).toBeInTheDocument();
+  expect(container.querySelector('.pf-avatar--sm')).toBeNull();
+});
+
+test('request actions use the Stitch-ported .gov-btn, not the app-wide .dash-btn', () => {
+  const { container } = render(<JoinRequestsSection requests={[guestRequest]} onReview={jest.fn()} canReview />);
+  expect(container.querySelectorAll('.gov-btn').length).toBe(2);
+  expect(container.querySelector('.dash-btn')).toBeNull();
 });
 
 test('never shows IP, device fingerprints, or raw guest identifiers as request context', () => {

@@ -15,20 +15,29 @@ test('renders pending request and calls approval action', () => {
   expect(onReview).toHaveBeenCalledWith(expect.objectContaining({ id: 'r1' }), 'approve');
 });
 
-test('the desktop grid uses distinct main/side column classes, and each section carries its own sizing modifier', () => {
+test('the desktop grid uses the literal Stitch 8/12 + 4/12 column spans, not a percentage/minmax approximation', () => {
   const { container } = render(<GovernancePanel trip={trip} capabilities={fullCapabilities} requests={[]} invitations={[]} bans={[]} onReview={jest.fn()} onInvite={jest.fn()} onUpdateSettings={jest.fn()} onRotateLink={jest.fn()} />);
-  const main = container.querySelector('.governance-layout__main');
-  const side = container.querySelector('.governance-layout__side');
+  const grid = container.querySelector('.gov-grid');
+  const main = container.querySelector('.gov-grid__main');
+  const side = container.querySelector('.gov-grid__side');
+  expect(grid).toBeInTheDocument();
   expect(main).toBeInTheDocument();
   expect(side).toBeInTheDocument();
-  expect(main.querySelector('.gov-section--requests')).toBeInTheDocument();
-  expect(main.querySelector('.gov-section--invitations')).toBeInTheDocument();
-  expect(side.querySelector('.gov-panel--restricted')).toBeInTheDocument();
+  expect(main.querySelector('.gov-section')).toBeInTheDocument();
+  expect(side.querySelector('.gov-restricted')).toBeInTheDocument();
+  expect(side.querySelector('.gov-settings')).toBeInTheDocument();
 });
 
 test('Join Requests and Invitations float their heading outside the bordered list -- Stitch\'s composition, not a card wrapping both', () => {
   const { container } = render(<GovernancePanel trip={trip} capabilities={fullCapabilities} requests={[]} invitations={[]} bans={[]} onReview={jest.fn()} onInvite={jest.fn()} onUpdateSettings={jest.fn()} onRotateLink={jest.fn()} />);
-  const requestsSection = container.querySelector('.gov-section--requests');
-  expect(requestsSection.classList.contains('gov-panel')).toBe(false);
-  expect(requestsSection.querySelector('.gov-section-head').closest('.gov-list')).toBeNull();
+  const sections = container.querySelectorAll('.gov-grid__main > .gov-section');
+  expect(sections.length).toBe(2);
+  sections.forEach((section) => {
+    expect(section.querySelector('.gov-section-head').closest('.gov-list')).toBeNull();
+  });
+});
+
+test('the page header title carries a visible border, matching Stitch\'s border-b-2', () => {
+  const { container } = render(<GovernancePanel trip={trip} capabilities={fullCapabilities} requests={[]} invitations={[]} bans={[]} onReview={jest.fn()} onInvite={jest.fn()} onUpdateSettings={jest.fn()} onRotateLink={jest.fn()} />);
+  expect(container.querySelector('.gov-header__title')).toBeInTheDocument();
 });

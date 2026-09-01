@@ -67,43 +67,39 @@ const AccessSettingsCard = ({ trip, onUpdateSettings, onRotateLink, capabilities
   };
 
   return (
-    <section className="governance-settings gov-panel">
-      <h3 className="text-label governance-settings__title">{t('governance.accessSettings')}</h3>
+    <section className="gov-settings">
+      <h3 className="gov-settings__title">{t('governance.accessSettings')}</h3>
 
-      <div className="governance-settings__row">
-        <div>
-          <span className="governance-settings__label">{t('governance.requireApproval')}</span>
-          <p className="text-copy-sm governance-settings__hint">{t('governance.requireApprovalHint')}</p>
+      <div className="gov-settings__rows">
+        <div className="gov-settings__row">
+          <span className="gov-settings__row-label">{t('governance.requireApproval')}</span>
+          <label className="gov-switch">
+            <input type="checkbox" checked={requireApproval} disabled={busy || !inviteLinkActive || !canManageApproval} onChange={toggleRequireApproval} aria-label={t('governance.requireApproval')} />
+            <span className="gov-switch__track" aria-hidden="true" />
+          </label>
         </div>
-        <label className="acc-switch">
-          <input type="checkbox" checked={requireApproval} disabled={busy || !inviteLinkActive || !canManageApproval} onChange={toggleRequireApproval} aria-label={t('governance.requireApproval')} />
-          <span className="acc-switch__track" aria-hidden="true" />
-        </label>
-      </div>
 
-      <div className="governance-settings__row">
-        <div>
-          <span className="governance-settings__label">{t('governance.inviteLinkActive')}</span>
-          <p className="text-copy-sm governance-settings__hint">{t('governance.inviteLinkActiveHint')}</p>
+        <div className="gov-settings__row">
+          <span className="gov-settings__row-label">{t('governance.inviteLinkActive')}</span>
+          <label className="gov-switch">
+            <input type="checkbox" checked={inviteLinkActive} disabled={busy || !canManageLink} onChange={toggleLinkActive} aria-label={t('governance.inviteLinkActive')} />
+            <span className="gov-switch__track" aria-hidden="true" />
+          </label>
         </div>
-        <label className="acc-switch">
-          <input type="checkbox" checked={inviteLinkActive} disabled={busy || !canManageLink} onChange={toggleLinkActive} aria-label={t('governance.inviteLinkActive')} />
-          <span className="acc-switch__track" aria-hidden="true" />
-        </label>
       </div>
 
       {inviteLinkActive && (
-        <div className="governance-settings__link">
-          <span className="governance-settings__link-label text-caption">{t('governance.inviteLinkUrl')}</span>
-          <div className="governance-settings__link-row">
+        <div className="gov-settings__link">
+          <span className="gov-settings__link-label">{t('governance.inviteLinkUrl')}</span>
+          <div className="gov-settings__link-row">
             <label className="dash-visually-hidden" htmlFor="governance-invite-link">{t('governance.inviteLinkUrl')}</label>
-            <input id="governance-invite-link" className="governance-settings__link-input" readOnly value={inviteLink} onFocus={(event) => event.target.select()} dir="ltr" />
+            <input id="governance-invite-link" className="gov-settings__link-code" readOnly value={inviteLink} onFocus={(event) => event.target.select()} dir="ltr" title={inviteLink} />
             {canManageLink && (
-              <div className="governance-settings__link-actions">
-                <button type="button" className="dash-btn dash-btn--secondary" onClick={copyLink}>
+              <div className="gov-settings__link-actions">
+                <button type="button" className="gov-btn" onClick={copyLink}>
                   {copied ? t('governance.copied') : t('governance.copyLink')}
                 </button>
-                <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setRotateConfirmOpen(true)} disabled={busy}>
+                <button type="button" className="gov-btn" onClick={() => setRotateConfirmOpen(true)} disabled={busy}>
                   {t('governance.rotateLink')}
                 </button>
               </div>
