@@ -24,7 +24,7 @@ Trip Split is functionally complete through Phase 4.2. The next pass may change 
 - If the URL segment wasn't already the canonical `short_code`, it replaces the address bar with the canonical form (`navigate(..., { replace: true })`, never a new history entry), preserving the rest of the path/query/hash.
 - **DashboardShell's own navigation** (sidebar/topbar/mobile-nav — everything that *builds* in-app links) receives `short_code`, so clicking around the app stays on canonical short URLs.
 - **Every trip-scoped page's own API calls** (via `useOutletContext().tripId`) keep receiving the UUID `id`, completely unchanged from before short_code existed — this is deliberate: it means no feature page had to change at all, only `TripLayout` and `DashboardShell`'s own nav-link construction.
-- Guest tokens (`localStorage`, per-trip) are mirrored across both identifier forms the moment a trip loads, regardless of which form authenticated the request — an existing guest member is never forced through a join flow just because a link used a different identifier form than the one their token happened to be saved under.
+- Guest tokens (`localStorage`, per-trip) are mirrored across both identifier forms the moment a trip loads, regardless of which form authenticated the request. This alone isn't sufficient for a guest's *first-ever* visit through a URL-identifier form they've never used before (there's nothing to mirror yet) — `getTrip()` also sends the durable, cross-trip `X-Guest-Device-Token` (see `src/api/credentials.js`) on every bootstrap request; if the backend recognizes the device and reissues a fresh per-trip token (`response.guest_token`), `getTrip()` saves it under both forms immediately. Together these guarantee an existing guest member is never forced through a join flow just because a link used a different identifier form than the one their token happened to be saved under — see `docs/api/trips.md`'s "Identifier model" (backend repo) for the full mechanism.
 
 ## Behavioral boundaries
 
@@ -100,6 +100,17 @@ Two distinct loading tiers exist, and they are never interchangeable:
   split, not an extra round trip. Access Settings and Trip Settings
   need only outlet-context `trip`/`permissions` and never gate on any
   fetch at all.
+
+## Deep links and sharing
+
+`src/shared/utils/shareLinks.js` (`tripUrl(shortCode, path, params)`) is the one place a full, shareable trip URL is built — `short_code` only, from `window.location.origin` (never a hardcoded host), with only non-secret object-focus params (an already-public `FundingRound`/`Settlement` UUID, never a guest/auth/invite token). `src/shared/components/CopyLinkButton.jsx` is the reusable copy/share action built on top of it (`navigator.share` where available, clipboard copy as the universal fallback, transient "Link copied" feedback).
+
+Two pages currently expose deep-link focus targets, both following the same shape: the page shell/data renders exactly as it always does (no fetch is ever gated on the query param), and once the already-loaded, trip-scoped data contains a match, a `useEffect` focuses it — scrolls it into view and/or opens its detail drawer — exactly once per mount. An unmatched id (wrong id, or one belonging to another trip) is silently ignored; there is no separate "fetch by id" endpoint for an invalid id to probe, since the match is always against data the page already fetched for the current trip.
+
+- **Fund**: `?round=<FundingRound id>` scrolls to and force-expands that round (`FundPage.jsx`'s `focusRoundId`). A "Copy Fund Link" action lives in the page header; each round card gets its own compact copy action for the round-scoped link.
+- **Settlements**: `?settlement=<Settlement id>` opens `SettlementTimelineDrawer` for that row (`SettlementsPage.jsx`'s `focusSettlementId`). The drawer itself — shared with `BalancesPage`, which also passes `shortCode` — carries the copy-link action, so the same settlement gets the same shareable link regardless of which page opened its drawer.
+
+A deep link only ever focuses/opens existing UI; it never triggers a mutation (confirming a settlement, recording a contribution, etc.) by itself.
 
 ## Settings ownership
 
