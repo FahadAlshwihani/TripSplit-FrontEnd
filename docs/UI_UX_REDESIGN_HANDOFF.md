@@ -101,6 +101,17 @@ Two distinct loading tiers exist, and they are never interchangeable:
   need only outlet-context `trip`/`permissions` and never gate on any
   fetch at all.
 
+## Settings ownership
+
+`TripSettingsPage` never fetches its own data — `trip` is already loaded once by `TripLayout` and shared via outlet context, so the page has no loading state of its own at all (only individual mutations carry local busy state). It reuses the exact same `PATCH /trips/{id}/` mutation Governance/Fund already share — no separate settings endpoint.
+
+- **No `budget` field, anywhere.** The Trip Fund is the one canonical budget (`TripFund.target_amount`, edited only from the Fund page — see `docs/architecture/fund-accounting.md`). Settings never re-exposes it.
+- **`join_policy` is the single source of truth Governance and Settings both read/write** — a change in either place shows up in the other on its next fetch. No duplicate boolean.
+- **Currency locks read-only once `trip.currency_locked` is true** (server-derived — see `docs/api/trips.md`'s "Update trip"). Never attempt a client-side conversion of historical amounts.
+- **The join/room password is a real feature** (hashed, rate-limited, gates *joining* the trip — not, as a since-corrected mock implied, viewing balances). Leaving the field blank always means "no change"; removing password protection is its own explicitly-confirmed action, never a side effect of a blank Save.
+- **Simplify Debts** is shown locked/checked (informational) — there is no backend toggle, `simplify_debts()` runs unconditionally. **Require Receipts for Settlements** is Coming Soon — no receipt/attachment model exists yet; the control is disabled and excluded from every save payload.
+- Archive/Restore reuse the existing owner-only endpoints and the same `permissionsFor()` capability flags every other page already reads from outlet context — no new backend capability set was added.
+
 ## Primary redesign surfaces
 
 Public/Home, Auth, Profile, Trip shell/navigation, Overview, Expenses, Balances, Fund, Members, Governance, Categories/Budgets, Settlements, Activity, and Settings are the visual entry points. Fund workflows and governance workflows are already decomposed into focused components; redesign those components in place instead of recombining them into large panels.
