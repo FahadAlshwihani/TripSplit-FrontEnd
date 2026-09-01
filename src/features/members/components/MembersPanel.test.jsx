@@ -4,6 +4,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import MembersPanel from './MembersPanel';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
+// MembersPanel builds its own navigation link from trip.short_code
+// (via useOutletContext) rather than a tripId prop -- see TripLayout's
+// own comment on why.
+jest.mock('react-router-dom', () => ({ ...jest.requireActual('react-router-dom'), useOutletContext: () => ({ trip: { short_code: 't1' } }) }));
 
 const noCaps = { can_promote: false, can_demote: false, can_remove: false, can_ban: false, can_transfer_ownership: false, can_settle_with: false };
 

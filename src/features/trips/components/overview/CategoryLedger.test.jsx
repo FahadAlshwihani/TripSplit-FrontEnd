@@ -4,6 +4,10 @@ import { MemoryRouter } from 'react-router-dom';
 import CategoryLedger from './CategoryLedger';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
+// CategoryLedger builds its own navigation link from trip.short_code
+// (via useOutletContext) rather than a tripId prop -- see TripLayout's
+// own comment on why.
+jest.mock('react-router-dom', () => ({ ...jest.requireActual('react-router-dom'), useOutletContext: () => ({ trip: { short_code: 't1' } }) }));
 
 const renderLedger = (categories, extra = {}) => render(
   <MemoryRouter>

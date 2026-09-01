@@ -5,6 +5,10 @@ import CategoryManager from '../components/CategoryManager';
 import MemberDetail from '../../members/components/MemberDetail';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: 'en' } }) }));
+// MemberDetail builds its own navigation links from trip.short_code
+// (via useOutletContext) rather than a tripId prop -- see TripLayout's
+// own comment on why.
+jest.mock('react-router-dom', () => ({ ...jest.requireActual('react-router-dom'), useOutletContext: () => ({ trip: { short_code: 'trip-1' } }) }));
 const categories = [{ id: 'food-id', code: 'food', name: 'Food', icon_key: 'food', is_default: true }];
 
 test('category manager renders over-budget usage and edit controls', () => {

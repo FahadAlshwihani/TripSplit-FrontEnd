@@ -4,6 +4,11 @@ import { render, screen } from '@testing-library/react';
 import FundSnapshot from './FundSnapshot';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
+// FundSnapshot builds its own navigation links from trip.short_code
+// (via useOutletContext) rather than a tripId prop -- see TripLayout's
+// own comment on why (short_code is the canonical browser-URL form;
+// tripId stays the UUID everywhere, for API calls only).
+jest.mock('react-router-dom', () => ({ ...jest.requireActual('react-router-dom'), useOutletContext: () => ({ trip: { short_code: 't1' } }) }));
 
 const baseFund = {
   has_fund: true, total_target: '12000.00', collected: '9500.00', collection_remaining: '2500.00', collection_percent: 79,

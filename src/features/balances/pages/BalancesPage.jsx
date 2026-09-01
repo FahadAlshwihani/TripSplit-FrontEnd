@@ -213,7 +213,10 @@ export default function BalancesPage() {
             actually lives. Plain <a>, matching the established cross-
             feature navigation pattern (see RecentFundExpenses' "View
             Ledger" link), not a dialog -- it's a real page. */}
-        <a className="dash-btn dash-btn--secondary" href={`/trips/${tripId}/settlements`}>
+        {/* Uses trip.short_code (the canonical browser-URL form), not
+            tripId (deliberately the UUID everywhere, for API calls only --
+            see TripLayout's own comment). */}
+        <a className="dash-btn dash-btn--secondary" href={`/trips/${trip.short_code}/settlements`}>
           <i className="bi bi-clock-history" aria-hidden="true" /> {t('settlements.title')}
         </a>
       </div>

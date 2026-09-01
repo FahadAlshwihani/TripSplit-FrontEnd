@@ -29,7 +29,7 @@ const baseOverview = {
 const renderPage = () => render(
   <MemoryRouter initialEntries={['/trips/t1/overview']}>
     <Routes>
-      <Route path="/trips/:tripId" element={<Outlet context={{ tripId: 't1' }} />}>
+      <Route path="/trips/:tripId" element={<Outlet context={{ tripId: 't1', trip: { short_code: 't1' } }} />}>
         <Route path="overview" element={<TripOverviewPage />} />
       </Route>
     </Routes>

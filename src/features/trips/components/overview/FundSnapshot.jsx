@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Money from '../../../../shared/components/Money';
 
@@ -22,8 +22,13 @@ const ROUND_STATUS_TONE = { open: 'neutral', completed: 'success', cancelled: 'm
   a compact zero-state prompt instead of the full breakdown -- never a
   blank space with no explanation of where the budget went.
 */
-const FundSnapshot = ({ fund, roundsSummary, currency, tripId }) => {
+const FundSnapshot = ({ fund, roundsSummary, currency }) => {
   const { t } = useTranslation();
+  // In-app navigation link -- uses the trip's own short_code (the
+  // canonical browser-URL form), never the outlet context's own
+  // `tripId` (deliberately the UUID everywhere, for API calls only --
+  // see TripLayout's own comment).
+  const { trip } = useOutletContext();
   const hasTarget = Boolean(fund?.has_fund) && Number(fund.total_target) > 0;
 
   if (!hasTarget) {
@@ -34,7 +39,7 @@ const FundSnapshot = ({ fund, roundsSummary, currency, tripId }) => {
         </header>
         <div className="ov-panel__body ov-fund-empty">
           <p className="text-copy-sm">{t('fund.budgetNotSetYet')}</p>
-          <Link className="dash-btn dash-btn--primary" to={`/trips/${tripId}/fund`}>{t('fund.editBudget')}</Link>
+          <Link className="dash-btn dash-btn--primary" to={`/trips/${trip.short_code}/fund`}>{t('fund.editBudget')}</Link>
         </div>
       </section>
     );
@@ -46,14 +51,14 @@ const FundSnapshot = ({ fund, roundsSummary, currency, tripId }) => {
     <section className="ov-panel ov-panel--fund">
       <header className="ov-panel__head">
         <h3 className="ov-panel__title text-headline-sm"><i className="bi bi-piggy-bank" aria-hidden="true" /> {t('fund.budgetTarget')}</h3>
-        <Link className="ov-link" to={`/trips/${tripId}/fund`}>{t('dashboard.overview.viewDetails')}</Link>
+        <Link className="ov-link" to={`/trips/${trip.short_code}/fund`}>{t('dashboard.overview.viewDetails')}</Link>
       </header>
       <div className="ov-panel__body">
         {shortfall && (
           <div className="ov-fund-shortfall" role="alert">
             <span><i className="bi bi-exclamation-triangle-fill" aria-hidden="true" /> {t('dashboard.overview.fundShortfall')}</span>
             <Money value={fund.shortfall} currency={currency} variant="tabular" className="ov-fund-shortfall__amount" />
-            <Link className="dash-btn dash-btn--danger" to={`/trips/${tripId}/fund`}>{t('dashboard.overview.coverShortfall')}</Link>
+            <Link className="dash-btn dash-btn--danger" to={`/trips/${trip.short_code}/fund`}>{t('dashboard.overview.coverShortfall')}</Link>
           </div>
         )}
 

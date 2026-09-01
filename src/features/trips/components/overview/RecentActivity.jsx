@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Avatar from '../../../profile/components/Avatar';
 import { avatarKeyFromAvatar } from '../../../profile/utils/avatarKey';
@@ -19,9 +19,14 @@ const rowContext = (event, t) => {
   return t('dashboard.overview.settlementContext', { from: event.summary.from_name, to: event.summary.to_name });
 };
 
-const RecentActivity = ({ events, currency, tripId }) => {
+const RecentActivity = ({ events, currency }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // In-app navigation link -- uses the trip's own short_code (the
+  // canonical browser-URL form), never the outlet context's own
+  // `tripId` (deliberately the UUID everywhere, for API calls only --
+  // see TripLayout's own comment).
+  const { trip } = useOutletContext();
 
   return (
     <section className="ov-panel ov-panel--activity">
@@ -29,7 +34,7 @@ const RecentActivity = ({ events, currency, tripId }) => {
         <h3 className="ov-panel__title text-headline-sm">
           <i className="bi bi-clock-history" aria-hidden="true" /> {t('dashboard.overview.recentActivity')}
         </h3>
-        <button type="button" className="dash-btn dash-btn--secondary ov-panel__view-all" onClick={() => navigate(`/trips/${tripId}/activity`)}>
+        <button type="button" className="dash-btn dash-btn--secondary ov-panel__view-all" onClick={() => navigate(`/trips/${trip.short_code}/activity`)}>
           {t('dashboard.overview.viewAll')}
         </button>
       </header>

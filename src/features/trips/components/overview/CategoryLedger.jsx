@@ -1,12 +1,17 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Money from '../../../../shared/components/Money';
 import { categoryColor, categoryIconClass, categoryLabel, categoryTileColor } from '../../../../shared/utils/categoryPresentation';
 
-const CategoryLedger = ({ categories, currency, tripId, totalAllocated, unallocated }) => {
+const CategoryLedger = ({ categories, currency, totalAllocated, unallocated }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // In-app navigation link -- uses the trip's own short_code (the
+  // canonical browser-URL form), never the outlet context's own
+  // `tripId` (deliberately the UUID everywhere, for API calls only --
+  // see TripLayout's own comment).
+  const { trip } = useOutletContext();
   // Category budgets are pure planning allocations of the trip's total
   // budget -- they never move Fund cash (see docs/architecture/
   // fund-accounting.md). Only shown once at least one category has a
@@ -17,7 +22,7 @@ const CategoryLedger = ({ categories, currency, tripId, totalAllocated, unalloca
     <section className="ov-panel ov-panel--categories">
       <header className="ov-panel__head">
         <h3 className="ov-panel__title text-headline-sm">{t('dashboard.overview.categoryLedger')}</h3>
-        <button type="button" className="ov-link" onClick={() => navigate(`/trips/${tripId}/expenses`)}>
+        <button type="button" className="ov-link" onClick={() => navigate(`/trips/${trip.short_code}/expenses`)}>
           {t('dashboard.overview.viewDetails')}
         </button>
       </header>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import Avatar from '../../profile/components/Avatar';
 import { avatarKeyFromAvatar } from '../../profile/utils/avatarKey';
 import Money from '../../../shared/components/Money';
@@ -31,8 +31,13 @@ import MemberActionsMenu from './MemberActionsMenu';
   grid recipe -- never mixed into current_balance, never a second set
   of floating mini-cards.
 */
-const MemberDetail = ({ detail, currency, tripId, onBack, onRole, onRemove, onTransfer, onLeave, onBan, currentMember }) => {
+const MemberDetail = ({ detail, currency, onBack, onRole, onRemove, onTransfer, onLeave, onBan, currentMember }) => {
   const { t, i18n } = useTranslation();
+  // In-app navigation link -- uses the trip's own short_code (the
+  // canonical browser-URL form), never the outlet context's own
+  // `tripId` (deliberately the UUID everywhere, for API calls only --
+  // see TripLayout's own comment).
+  const { trip } = useOutletContext();
 
   const back = onBack && (
     <button type="button" className="dash-btn dash-btn--secondary mem-back" onClick={onBack}>
@@ -102,10 +107,10 @@ const MemberDetail = ({ detail, currency, tripId, onBack, onRole, onRemove, onTr
               {t(`members.balanceHint.${balanceState}`)}
             </p>
             {canSettle && (
-              <Link to={`/trips/${tripId}/balances`} className="dash-btn dash-btn--secondary">{t('members.settleUp', { name: member.display_name })}</Link>
+              <Link to={`/trips/${trip.short_code}/balances`} className="dash-btn dash-btn--secondary">{t('members.settleUp', { name: member.display_name })}</Link>
             )}
             {!canSettle && balanceValue !== 0 && (
-              <Link to={`/trips/${tripId}/balances`} className="dash-btn dash-btn--secondary">{t('members.viewBalances')}</Link>
+              <Link to={`/trips/${trip.short_code}/balances`} className="dash-btn dash-btn--secondary">{t('members.viewBalances')}</Link>
             )}
           </div>
 

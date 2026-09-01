@@ -40,7 +40,7 @@ const baseBalances = {
 };
 
 const permissions = { canRecordSettlement: true };
-const trip = { currency: 'SAR', archived_at: null, lifecycle_status: 'active' };
+const trip = { currency: 'SAR', archived_at: null, lifecycle_status: 'active', short_code: 't1' };
 
 const renderPage = (ctxOverrides = {}) => render(
   <MemoryRouter initialEntries={['/trips/t1/balances']}>

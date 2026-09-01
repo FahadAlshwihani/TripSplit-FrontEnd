@@ -6,6 +6,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import MemberDetail from './MemberDetail';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts?.name ? `${key}:${opts.name}` : key), i18n: { language: 'en' } }) }));
+// MemberDetail builds its own navigation links from trip.short_code
+// (via useOutletContext) rather than a tripId prop -- see TripLayout's
+// own comment on why.
+jest.mock('react-router-dom', () => ({ ...jest.requireActual('react-router-dom'), useOutletContext: () => ({ trip: { short_code: 'trip-1' } }) }));
 
 const baseMember = { id: 'm1', display_name: 'Sara', role: 'member', identity_type: 'registered', avatar: { type: 'legacy', key: 'avatar_01' }, active: true, joined_at: '2026-01-01T00:00:00Z' };
 const baseStatistics = { total_paid: '10.00', total_expense_share: '5.00', total_personal_spending: '0.00', settlements_sent: '0.00', settlements_received: '0.00', current_balance: '5.00', expense_count: 2, last_activity_at: '2026-01-02T00:00:00Z', fund: { contributed: '0', reimbursed: '0' } };

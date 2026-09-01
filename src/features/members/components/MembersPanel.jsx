@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import Avatar from '../../profile/components/Avatar';
 import { avatarKeyFromAvatar } from '../../profile/utils/avatarKey';
 import Money from '../../../shared/components/Money';
@@ -27,8 +27,13 @@ import MemberActionsMenu from './MemberActionsMenu';
   not on Members -- see architecture/membership.md's page-split
   rationale) rather than duplicating an invite flow on this page.
 */
-const MembersPanel = ({ members, currentMember, currency, tripId, canInvite, selectedId, onSelect, balancesByMemberId, onRole, onRemove, onTransfer, onLeave, onBan, showHistorical, onToggleHistorical }) => {
+const MembersPanel = ({ members, currentMember, currency, canInvite, selectedId, onSelect, balancesByMemberId, onRole, onRemove, onTransfer, onLeave, onBan, showHistorical, onToggleHistorical }) => {
   const { t } = useTranslation();
+  // In-app navigation link -- uses the trip's own short_code (the
+  // canonical browser-URL form), never the outlet context's own
+  // `tripId` (deliberately the UUID everywhere, for API calls only --
+  // see TripLayout's own comment).
+  const { trip } = useOutletContext();
   const [search, setSearch] = useState('');
 
   // "Members (N)" is always the ACTIVE count, even while the historical
@@ -47,7 +52,7 @@ const MembersPanel = ({ members, currentMember, currency, tripId, canInvite, sel
     <section className="mem-list">
       <div className="mem-list__header">
         <h2 className="text-headline mem-list__title">{t('members.title')} <span className="mem-list__count">({activeCount})</span></h2>
-        {canInvite && <Link to={`/trips/${tripId}/governance`} className="mem-list__add"><i className="bi bi-person-plus" aria-hidden="true" /> {t('members.addAction')}</Link>}
+        {canInvite && <Link to={`/trips/${trip.short_code}/governance`} className="mem-list__add"><i className="bi bi-person-plus" aria-hidden="true" /> {t('members.addAction')}</Link>}
       </div>
 
       <div className="mem-toolbar">
