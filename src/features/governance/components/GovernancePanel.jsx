@@ -6,19 +6,22 @@ import BansSection from './BansSection';
 import AccessSettingsCard from './AccessSettingsCard';
 
 /*
-  Originally a literal port of the supplied Stitch Access Control
-  source's page canvas -- <div class="grid grid-cols-1 lg:grid-cols-12
-  gap-lg">{main lg:col-span-8, two cards stacked}{side lg:col-span-4,
-  two cards stacked}</div>. Deliberately departed from that column
-  composition on request: Join Requests and Restricted now sit as one
-  row-level pair (row 1), Invitations and Access Settings as another
-  (row 2), so each pair reads as sibling cards at the same visual
-  level rather than one column floating above the other. Each item
-  keeps Stitch's literal 8/12 (main/wide) or 4/12 (side/narrow) span --
-  only which row it's placed in changed, not the span ratio itself.
-  See governance.css's own .gov-grid comment for the grid-row mechanics.
-  DashboardShell/routing/data own everything outside this component
-  tree.
+  A literal port of the supplied Stitch Access Control source's page
+  canvas -- <div class="mb-xl">{header}</div><div class="grid
+  grid-cols-1 lg:grid-cols-12 gap-lg">{main lg:col-span-8}{side
+  lg:col-span-4}</div> -- see governance.css's own top-of-file mapping
+  comment for the full element-by-element translation. DashboardShell/
+  routing/data own everything outside this component tree.
+
+  A later pass tried restructuring this into row-level pairing (Join
+  Requests+Restricted as one row, Invitations+Access Settings as
+  another) plus a CSS-subgrid card-height-matching mechanism. Both were
+  reverted on request -- the original Stitch main/side column
+  composition was already correct, and matching Restricted's height to
+  Join Requests never actually required restructuring the page. The
+  only thing kept from those two passes is the avatar's shape (square,
+  not circular) and position (still beside the identity text) -- see
+  JoinRequestsSection.jsx's own comment.
 */
 export default function GovernancePanel({ trip, capabilities, requests, invitations, bans, onReview, onOpenInvite, onRevokeInvite, onResendInvite, onUnban, onUpdateSettings, onRotateLink }) {
   const { t } = useTranslation();
@@ -29,24 +32,22 @@ export default function GovernancePanel({ trip, capabilities, requests, invitati
         <p className="gov-header__subtitle">{t('governance.subtitle', { tripTitle: trip.title })}</p>
       </div>
       <div className="gov-grid">
-        <div className="gov-section gov-grid__requests">
-          <JoinRequestsSection requests={requests} onReview={onReview} canReview={capabilities?.can_review_join_requests} />
+        <div className="gov-grid__main">
+          <div className="gov-section"><JoinRequestsSection requests={requests} onReview={onReview} canReview={capabilities?.can_review_join_requests} /></div>
+          <div className="gov-section">
+            <InvitationsSection
+              invitations={invitations}
+              onOpenInvite={onOpenInvite}
+              onResend={onResendInvite}
+              onRevoke={onRevokeInvite}
+              canInvite={capabilities?.can_invite}
+              canResend={capabilities?.can_resend_invite}
+              canRevoke={capabilities?.can_revoke_invite}
+            />
+          </div>
         </div>
-        <div className="gov-grid__restricted">
+        <div className="gov-grid__side">
           <BansSection bans={bans} onUnban={onUnban} canUnban={capabilities?.can_unban} />
-        </div>
-        <div className="gov-section gov-grid__invitations">
-          <InvitationsSection
-            invitations={invitations}
-            onOpenInvite={onOpenInvite}
-            onResend={onResendInvite}
-            onRevoke={onRevokeInvite}
-            canInvite={capabilities?.can_invite}
-            canResend={capabilities?.can_resend_invite}
-            canRevoke={capabilities?.can_revoke_invite}
-          />
-        </div>
-        <div className="gov-grid__access">
           <AccessSettingsCard trip={trip} onUpdateSettings={onUpdateSettings} onRotateLink={onRotateLink} capabilities={capabilities} />
         </div>
       </div>

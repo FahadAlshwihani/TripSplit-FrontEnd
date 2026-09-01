@@ -15,41 +15,52 @@ test('renders pending request and calls approval action', () => {
   expect(onReview).toHaveBeenCalledWith(expect.objectContaining({ id: 'r1' }), 'approve');
 });
 
-test('the desktop grid places Join Requests + Restricted as one row-level pair and Invitations + Access Settings as the other, each keeping its literal 8/12 + 4/12 span', () => {
+test('the desktop grid uses the literal Stitch 8/12 + 4/12 column spans, not a percentage/minmax approximation', () => {
   const { container } = render(<GovernancePanel trip={trip} capabilities={fullCapabilities} requests={[]} invitations={[]} bans={[]} onReview={jest.fn()} onInvite={jest.fn()} onUpdateSettings={jest.fn()} onRotateLink={jest.fn()} />);
   const grid = container.querySelector('.gov-grid');
-  const requests = container.querySelector('.gov-grid__requests');
-  const restricted = container.querySelector('.gov-grid__restricted');
-  const invitations = container.querySelector('.gov-grid__invitations');
-  const access = container.querySelector('.gov-grid__access');
+  const main = container.querySelector('.gov-grid__main');
+  const side = container.querySelector('.gov-grid__side');
   expect(grid).toBeInTheDocument();
-  expect(requests).toBeInTheDocument();
-  expect(restricted).toBeInTheDocument();
-  expect(invitations).toBeInTheDocument();
-  expect(access).toBeInTheDocument();
-  expect(requests).toHaveClass('gov-section'); // gov-section IS the requests wrapper itself
-  expect(restricted.querySelector('.gov-restricted')).toBeInTheDocument();
-  expect(invitations).toHaveClass('gov-section');
-  expect(access.querySelector('.gov-settings')).toBeInTheDocument();
-  // Row 1: requests (wide) + restricted (narrow), same grid-row, all
-  // direct children of .gov-grid -- never nested inside an intermediate
-  // main/side column wrapper.
-  expect(requests.parentElement).toBe(grid);
-  expect(restricted.parentElement).toBe(grid);
-  expect(invitations.parentElement).toBe(grid);
-  expect(access.parentElement).toBe(grid);
+  expect(main).toBeInTheDocument();
+  expect(side).toBeInTheDocument();
+  expect(main.querySelector('.gov-section')).toBeInTheDocument();
+  expect(side.querySelector('.gov-restricted')).toBeInTheDocument();
+  expect(side.querySelector('.gov-settings')).toBeInTheDocument();
 });
 
-test('mobile/DOM order preserves the row-1-then-row-2 pairing: requests, restricted, invitations, access', () => {
+// The main column stacks Join Requests then Invitations naturally --
+// no shared grid-row/subgrid pairing with the side column's cards, and
+// no forced height equality between them (reverted -- see
+// GovernancePanel.jsx's own comment history).
+test('the main column contains both Join Requests and Invitations, stacked in that order', () => {
   const { container } = render(<GovernancePanel trip={trip} capabilities={fullCapabilities} requests={[]} invitations={[]} bans={[]} onReview={jest.fn()} onInvite={jest.fn()} onUpdateSettings={jest.fn()} onRotateLink={jest.fn()} />);
-  const children = Array.from(container.querySelector('.gov-grid').children);
-  const classOrder = children.map((el) => el.className.split(' ').find((c) => c.startsWith('gov-grid__')));
-  expect(classOrder).toEqual(['gov-grid__requests', 'gov-grid__restricted', 'gov-grid__invitations', 'gov-grid__access']);
+  const main = container.querySelector('.gov-grid__main');
+  const sections = main.querySelectorAll(':scope > .gov-section');
+  expect(sections.length).toBe(2);
+  expect(sections[0].textContent).toMatch(/governance\.requests/);
+  expect(sections[1].textContent).toMatch(/governance\.invitations/);
+});
+
+test('the side column contains both Restricted and Access Settings, stacked in that order', () => {
+  const { container } = render(<GovernancePanel trip={trip} capabilities={fullCapabilities} requests={[]} invitations={[]} bans={[]} onReview={jest.fn()} onInvite={jest.fn()} onUpdateSettings={jest.fn()} onRotateLink={jest.fn()} />);
+  const side = container.querySelector('.gov-grid__side');
+  const children = Array.from(side.children);
+  expect(children.length).toBe(2);
+  expect(children[0]).toHaveClass('gov-restricted');
+  expect(children[1]).toHaveClass('gov-settings');
+});
+
+test('no forced row-pairing/subgrid classes remain from the reverted restructuring pass', () => {
+  const { container } = render(<GovernancePanel trip={trip} capabilities={fullCapabilities} requests={[]} invitations={[]} bans={[]} onReview={jest.fn()} onInvite={jest.fn()} onUpdateSettings={jest.fn()} onRotateLink={jest.fn()} />);
+  expect(container.querySelector('.gov-grid__requests')).toBeNull();
+  expect(container.querySelector('.gov-grid__restricted')).toBeNull();
+  expect(container.querySelector('.gov-grid__invitations')).toBeNull();
+  expect(container.querySelector('.gov-grid__access')).toBeNull();
 });
 
 test('Join Requests and Invitations float their heading outside the bordered list -- Stitch\'s composition, not a card wrapping both', () => {
   const { container } = render(<GovernancePanel trip={trip} capabilities={fullCapabilities} requests={[]} invitations={[]} bans={[]} onReview={jest.fn()} onInvite={jest.fn()} onUpdateSettings={jest.fn()} onRotateLink={jest.fn()} />);
-  const sections = container.querySelectorAll('.gov-grid > .gov-section');
+  const sections = container.querySelectorAll('.gov-grid__main > .gov-section');
   expect(sections.length).toBe(2);
   sections.forEach((section) => {
     expect(section.querySelector('.gov-section-head').closest('.gov-list')).toBeNull();

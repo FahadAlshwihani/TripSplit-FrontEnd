@@ -177,86 +177,27 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 }
 
 /* -------------------------------------------------------------- */
-/* Grid -- row-level pairing (requested departure from Stitch's literal
-   column composition, see GovernancePanel.jsx's own comment): Join
-   Requests + Restricted read as row 1, Invitations + Access Settings
-   as row 2. Each item keeps Stitch's own 8/12 (wide/"main") or 4/12
-   (narrow/"side") span -- literal, not a percentage/minmax
-   approximation -- at Tailwind's unmodified `lg` breakpoint (1024px).
-   Below that, every item stacks full-width in DOM order (request,
-   restricted, invitations, access) -- the same pairing order as the
-   desktop rows, so mobile reads as a natural continuation of it rather
-   than an unrelated shuffle.
+/* Grid -- Stitch: grid grid-cols-1 lg:grid-cols-12 gap-lg; main
+   lg:col-span-8, side lg:col-span-4. Literal 8/12 + 4/12, not a
+   percentage/minmax approximation. Tailwind's own unmodified `lg`
+   breakpoint (1024px) -- Stitch's config never overrides it.
 
-   CARD height alignment (not wrapper height alignment): Join
-   Requests/Invitations are [heading, then bordered card] -- two
-   stacked pieces -- while Restricted/Access Settings are ONE
-   self-contained card with no separate heading above it. A plain
-   grid-row stretch of the whole wide-side wrapper (heading+card
-   together) against the narrow side's single card was tried first and
-   was wrong: it bottom-aligns the two cards but NOT their top edges,
-   since the wide side's card starts lower (below its own heading)
-   while the stretched narrow-side card starts at the very top of the
-   row. The actual requirement is CARD-to-CARD alignment (both edges),
-   with the heading sitting above that aligned pair, uninvolved.
-
-   Each row-pair is split into two shared row-tracks -- a heading track
-   (auto, sized to whichever item actually has a heading) and a card
-   track (1fr, shared by both cards). Every item in a row-pair spans
-   BOTH tracks as a CSS subgrid, so its own internal heading/card
-   placement uses the exact same track sizes as its sibling: the wide
-   side places its heading in the heading track and its card in the
-   card track (this falls out of plain DOM order + grid auto-flow --
-   .gov-section-head then .gov-section-body, no explicit grid-row
-   needed); the narrow side has nothing to put in the heading track at
-   all, so it's explicitly placed straight into the card track,
-   leaving the heading track empty above it -- which is exactly what
-   pushes the narrow card down to start at the same y-position as the
-   wide side's card, without moving the narrow side up to the
-   heading's own top edge. */
+   A later pass tried row-level pairing (Join Requests+Restricted as
+   one shared grid-row, Invitations+Access Settings as another) plus a
+   CSS-subgrid mechanism to force Restricted's card height to match
+   Join Requests' card height exactly. Both were reverted on request --
+   the original Stitch main/side column composition (each column
+   stacking its own two sections naturally, no forced height equality)
+   was already correct; matching Restricted's height never actually
+   required restructuring the page. */
 
 .gov-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--gs-lg); }
-.gov-grid__requests,
-.gov-grid__restricted,
-.gov-grid__invitations,
-.gov-grid__access {
-  grid-column: 1 / -1;
-}
+.gov-grid__main { grid-column: 1 / -1; display: flex; flex-direction: column; gap: var(--gs-xl); }
+.gov-grid__side { grid-column: 1 / -1; display: flex; flex-direction: column; gap: var(--gs-lg); }
 
 @media (min-width: 1024px) {
-  .gov-grid { grid-template-rows: auto 1fr auto 1fr; }
-
-  .gov-grid__requests,
-  .gov-grid__restricted,
-  .gov-grid__invitations,
-  .gov-grid__access {
-    display: grid;
-    grid-template-rows: subgrid;
-  }
-  .gov-grid__requests { grid-column: span 8 / span 8; grid-row: 1 / 3; }
-  .gov-grid__restricted { grid-column: span 4 / span 4; grid-row: 1 / 3; }
-  .gov-grid__invitations { grid-column: span 8 / span 8; grid-row: 3 / 5; }
-  .gov-grid__access { grid-column: span 4 / span 4; grid-row: 3 / 5; }
-
-  /* .gov-section already carries display:flex (its own mobile-first
-     base rule) -- a matching-specificity override here would lose to
-     source order, so this is deliberately a double-class selector
-     (higher specificity) rather than relying on where it sits in the
-     file. */
-  .gov-grid__requests.gov-section,
-  .gov-grid__invitations.gov-section {
-    display: grid;
-    grid-template-rows: subgrid;
-  }
-
-  /* The narrow side's single card has nothing for the heading track --
-     explicit placement into the (local) card track keeps the heading
-     track above it empty, rather than grid auto-flow defaulting a
-     single child into the first available (heading) track. */
-  .gov-grid__restricted > .gov-restricted,
-  .gov-grid__access > .gov-settings {
-    grid-row: 2;
-  }
+  .gov-grid__main { grid-column: span 8 / span 8; }
+  .gov-grid__side { grid-column: span 4 / span 4; }
 }
 
 /* -------------------------------------------------------------- */
