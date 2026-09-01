@@ -22,32 +22,34 @@ export default function JoinRequestsSection({ requests, onReview, canReview }) {
           {requests.length > 0 && <span className="gov-count-badge">{requests.length}</span>}
         </h2>
       </div>
-      {requests.length > 0 ? (
-        <ul className="gov-list">
-          {requests.map((row) => (
-            <li className="gov-row" key={row.id}>
-              <div className="gov-row__identity">
-                <Avatar avatarKey={avatarKeyFromAvatar(row.avatar)} displayName={row.display_name} size="sm" />
-                <div className="gov-row__text">
-                  <span className="gov-row__name">
-                    {row.display_name}
-                    {row.identity_type === 'guest' && <span className="gov-badge">{t('identity.guest')}</span>}
-                  </span>
-                  <span className="gov-row__meta">{t('governance.requestedMeta', { date: formatDateTime(row.requested_at, i18n.language) })}</span>
+      <div className={`gov-section-body${requests.length > 0 ? '' : ' gov-section-body--empty'}`}>
+        {requests.length > 0 ? (
+          <ul className="gov-list">
+            {requests.map((row) => (
+              <li className="gov-row" key={row.id}>
+                <div className="gov-row__identity">
+                  <Avatar avatarKey={avatarKeyFromAvatar(row.avatar)} displayName={row.display_name} size="sm" />
+                  <div className="gov-row__text">
+                    <span className="gov-row__name">
+                      {row.display_name}
+                      {row.identity_type === 'guest' && <span className="gov-badge">{t('identity.guest')}</span>}
+                    </span>
+                    <span className="gov-row__meta">{t('governance.requestedMeta', { date: formatDateTime(row.requested_at, i18n.language) })}</span>
+                  </div>
                 </div>
-              </div>
-              {canReview && (
-                <div className="gov-row__actions">
-                  <button type="button" className="dash-btn dash-btn--secondary" onClick={() => onReview(row, 'reject')}>{t('governance.reject')}</button>
-                  <button type="button" className="dash-btn dash-btn--primary" onClick={() => onReview(row, 'approve')}>{t('governance.approve')}</button>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="gov-empty text-copy-sm">{t('governance.noRequests')}</p>
-      )}
+                {canReview && (
+                  <div className="gov-row__actions">
+                    <button type="button" className="dash-btn dash-btn--secondary" onClick={() => onReview(row, 'reject')}>{t('governance.reject')}</button>
+                    <button type="button" className="dash-btn dash-btn--primary" onClick={() => onReview(row, 'approve')}>{t('governance.approve')}</button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="gov-empty text-copy-sm">{t('governance.noRequests')}</p>
+        )}
+      </div>
     </>
   );
 }

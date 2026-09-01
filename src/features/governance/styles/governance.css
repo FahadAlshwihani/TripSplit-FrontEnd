@@ -116,11 +116,35 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
   background: var(--color-surface);
   box-shadow: var(--shadow-hard-sm);
   padding: var(--space-3) var(--space-3) var(--space-4);
+  position: relative;
+  overflow: hidden;
 }
 
-.gov-section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
-.gov-section-head__title { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text); }
-.gov-section-head__title .bi { color: var(--nc-indigo-700); }
+/* Header stays pinned to its own content height; the body (list or
+   empty-state) claims whatever height the panel's min-height (below)
+   leaves over -- an empty section reads as a deliberately composed
+   card, not one sentence floating near the top of a collapsed box. */
+.gov-section-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.gov-section-head__title { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text); line-height: 1.2; }
+.gov-section-head__title .bi { color: var(--nc-indigo-700); font-size: 1em; line-height: 1; }
+
+.gov-section-body { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.gov-section-body--empty { align-items: center; justify-content: center; }
+.gov-section-body .gov-list, .gov-section-body .gov-list--restricted { flex: 1 1 auto; }
+
+/* Desktop/tablet target heights (per-section, matching the Stitch
+   reference's balance at this width) -- mobile stays content-driven,
+   see the empty-body min-height further down instead. */
+@media (min-width: 640px) {
+  .gov-panel--requests { min-height: 160px; }
+  .gov-panel--invitations { min-height: 140px; }
+  .gov-panel--restricted { min-height: 200px; }
+}
+@media (min-width: 960px) {
+  .gov-panel--requests { min-height: 200px; }
+  .gov-panel--invitations { min-height: 170px; }
+  .gov-panel--restricted { min-height: 250px; }
+}
 
 .gov-count-badge {
   display: inline-flex;
@@ -192,12 +216,38 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
   font-size: 10px;
 }
 
-.gov-empty { color: var(--color-text-muted); margin: 0; padding: var(--space-5) var(--space-3); text-align: center; }
+.gov-empty { color: var(--color-text-muted); margin: 0; padding: var(--space-3); text-align: center; }
+
+/* Mobile keeps a small but real minimum so the empty message never
+   sits flush against the header -- not the desktop/tablet card
+   min-heights above, which would force giant blank boxes at narrow
+   widths. */
+.gov-section-body--empty { min-height: 110px; }
+@media (min-width: 480px) { .gov-section-body--empty { min-height: 130px; } }
 
 /* Restricted list -- reuses .governance-ban-row (defined below) inside
    the same .gov-list rhythm, just without the hairline divider since
    each row already carries its own accent border. */
 .gov-list--restricted { border: none; border-radius: 0; display: flex; flex-direction: column; gap: var(--space-2); overflow: visible; }
+
+/* A small, contained echo of Stitch's decorative corner shape on the
+   Restricted card -- a subtle warning presence even when the section
+   is empty, never a loud red banner. Clipped by .gov-panel's own
+   overflow:hidden, and logical (inset-inline-end) so it sits correctly
+   in RTL too. */
+.gov-panel--restricted::before {
+  content: '';
+  position: absolute;
+  top: -18px;
+  inset-inline-end: -18px;
+  width: 64px;
+  height: 64px;
+  background: var(--color-danger-soft);
+  border: var(--border-width) solid var(--color-border);
+  transform: rotate(12deg);
+  z-index: 0;
+}
+.gov-panel--restricted > * { position: relative; z-index: 1; }
 
 .governance-settings__title { margin: 0; color: var(--color-text-muted); text-transform: uppercase; }
 

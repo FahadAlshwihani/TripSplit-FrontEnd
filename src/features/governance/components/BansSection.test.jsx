@@ -48,3 +48,8 @@ test('the Unban action is hidden without the can_unban capability -- never a rol
   render(<BansSection bans={bans} onUnban={jest.fn()} canUnban={false} />);
   expect(screen.queryByText('governance.unban')).not.toBeInTheDocument();
 });
+
+test('an empty Restricted body carries the centering modifier class', () => {
+  const { container } = render(<BansSection bans={[]} onUnban={jest.fn()} canUnban />);
+  expect(container.querySelector('.gov-section-body--empty')).toBeInTheDocument();
+});

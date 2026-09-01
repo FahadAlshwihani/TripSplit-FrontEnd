@@ -48,3 +48,9 @@ test('empty state shows a real message when there are no pending invitations', (
   render(<InvitationsSection invitations={[]} onOpenInvite={jest.fn()} onResend={jest.fn()} onRevoke={jest.fn()} canInvite canResend canRevoke />);
   expect(screen.getByText('governance.noInvitations')).toBeInTheDocument();
 });
+
+test('an empty body carries the centering modifier class, and the Invite action stays visible in the header regardless', () => {
+  const { container } = render(<InvitationsSection invitations={[]} onOpenInvite={jest.fn()} onResend={jest.fn()} onRevoke={jest.fn()} canInvite canResend canRevoke />);
+  expect(container.querySelector('.gov-section-body--empty')).toBeInTheDocument();
+  expect(screen.getByText('governance.addMember')).toBeInTheDocument();
+});

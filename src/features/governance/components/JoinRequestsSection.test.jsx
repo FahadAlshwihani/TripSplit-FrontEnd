@@ -40,6 +40,23 @@ test('empty state shows a real message, not a blank bordered box', () => {
   expect(screen.getByText('governance.noRequests')).toBeInTheDocument();
 });
 
+test('an empty body carries the centering modifier class; a populated body does not', () => {
+  const { container, rerender } = render(<JoinRequestsSection requests={[]} onReview={jest.fn()} canReview />);
+  expect(container.querySelector('.gov-section-body--empty')).toBeInTheDocument();
+  rerender(<JoinRequestsSection requests={[guestRequest]} onReview={jest.fn()} canReview />);
+  expect(container.querySelector('.gov-section-body--empty')).not.toBeInTheDocument();
+  expect(container.querySelector('.gov-section-body')).toBeInTheDocument();
+});
+
+test('the section header and body are structurally separate elements, not one blob', () => {
+  const { container } = render(<JoinRequestsSection requests={[]} onReview={jest.fn()} canReview />);
+  const head = container.querySelector('.gov-section-head');
+  const body = container.querySelector('.gov-section-body');
+  expect(head).toBeInTheDocument();
+  expect(body).toBeInTheDocument();
+  expect(head.contains(body)).toBe(false);
+});
+
 test('never shows IP, device fingerprints, or raw guest identifiers as request context', () => {
   render(<JoinRequestsSection requests={[guestRequest]} onReview={jest.fn()} canReview />);
   expect(screen.queryByText(/ip address/i)).not.toBeInTheDocument();

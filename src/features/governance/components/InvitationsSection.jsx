@@ -15,30 +15,32 @@ export default function InvitationsSection({ invitations, onOpenInvite, onResend
           </button>
         )}
       </div>
-      {live.length > 0 ? (
-        <ul className="gov-list">
-          {live.map((row) => (
-            <li className="gov-row" key={row.id}>
-              <div className="gov-row__text">
-                <span className="gov-row__name">
-                  {row.email ? <bdi dir="ltr">{row.email}</bdi> : t('governance.guestInvite')}
-                </span>
-                <span className="gov-row__meta">{t('governance.sentByOn', { name: row.invited_by?.display_name || t('activity.unknown'), date: formatDate(row.created_at) })}</span>
-              </div>
-              <div className="gov-row__actions">
-                {canRevoke && <button type="button" className="dash-btn dash-btn--secondary" onClick={() => onRevoke(row)}>{t('governance.revoke')}</button>}
-                {canResend && row.email && (
-                  <button type="button" className="dash-btn dash-btn--secondary" onClick={() => onResend(row)}>
-                    <i className="bi bi-send" aria-hidden="true" /> {t('governance.resend')}
-                  </button>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="gov-empty text-copy-sm">{t('governance.noInvitations')}</p>
-      )}
+      <div className={`gov-section-body${live.length > 0 ? '' : ' gov-section-body--empty'}`}>
+        {live.length > 0 ? (
+          <ul className="gov-list">
+            {live.map((row) => (
+              <li className="gov-row" key={row.id}>
+                <div className="gov-row__text">
+                  <span className="gov-row__name">
+                    {row.email ? <bdi dir="ltr">{row.email}</bdi> : t('governance.guestInvite')}
+                  </span>
+                  <span className="gov-row__meta">{t('governance.sentByOn', { name: row.invited_by?.display_name || t('activity.unknown'), date: formatDate(row.created_at) })}</span>
+                </div>
+                <div className="gov-row__actions">
+                  {canRevoke && <button type="button" className="dash-btn dash-btn--secondary" onClick={() => onRevoke(row)}>{t('governance.revoke')}</button>}
+                  {canResend && row.email && (
+                    <button type="button" className="dash-btn dash-btn--secondary" onClick={() => onResend(row)}>
+                      <i className="bi bi-send" aria-hidden="true" /> {t('governance.resend')}
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="gov-empty text-copy-sm">{t('governance.noInvitations')}</p>
+        )}
+      </div>
     </>
   );
 }
