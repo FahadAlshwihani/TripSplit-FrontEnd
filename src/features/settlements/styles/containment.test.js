@@ -27,6 +27,18 @@ const path = require('path');
      stylesheets. Landing directly on the Settlements route skipped
      that, so the portaled markup had zero structural CSS. Fixed by
      having each component import its required stylesheet explicitly.
+
+  C. Even after (A)'s min-width:0 containment fix, the timeline's status
+     icons still visually sat too close to the 7/5 column boundary in
+     real browser screenshots -- a shared center-line + alternating-
+     sides layout is inherently unstable at a narrow (5/12) column
+     width. Replaced entirely with a per-entry "icon tab attached to its
+     own card's top edge" composition: no shared center line, no
+     alternating sides, identical on desktop and mobile (no media-query
+     branching to regress at a breakpoint), and nothing RTL-specific to
+     mirror since every entry is a single self-contained centered
+     column. This section guards that the old construction never comes
+     back.
 */
 
 const read = (relativePath) => fs.readFileSync(path.join(__dirname, '..', '..', '..', relativePath), 'utf8');
@@ -110,4 +122,32 @@ test('SettlementActionDialog explicitly imports the stylesheets its modal shell 
 
 test('SettlementTimelineDrawer explicitly imports the stylesheet its drawer shell depends on -- never left to incidental route-load order', () => {
   expect(timelineDrawerSource).toMatch(/import ['"].*expenses\/styles\/expenses\.css['"]/);
+});
+
+// --- C. Timeline node repositioning (icon-above-card, no center line) --
+
+test('no shared center-line pseudo-element exists anywhere -- each entry owns its own icon, never a line shared across the whole ledger', () => {
+  expect(settlementsCss).not.toMatch(/\.settle-timeline::before/);
+});
+
+test('no alternating-sides selector exists -- desktop and mobile render the identical single-column layout', () => {
+  expect(settlementsCss).not.toMatch(/\.settle-timeline-entry:nth-child\(even\)/);
+  expect(settlementsCss).not.toMatch(/flex-direction:\s*row-reverse/);
+});
+
+test('the timeline entry node is a normal-flow "tab" (negative margin overlap), never absolutely/fixed positioned into a shared gap', () => {
+  const rule = ruleFor(settlementsCss, '.settle-timeline-entry__node');
+  expect(rule).not.toMatch(/position:\s*(absolute|fixed)/);
+  expect(rule).toMatch(/margin-block-end:\s*-\d/);
+});
+
+test('the entry card is always full-width and cannot be constrained to a 50% half-share again', () => {
+  const rule = ruleFor(settlementsCss, '.settle-timeline-entry__card');
+  expect(rule).toMatch(/width:\s*100%/);
+  expect(settlementsCss).not.toMatch(/max-width:\s*calc\(50%/);
+});
+
+test('a resolved-but-rejected row has a distinct secondary badge style and the drawer callout class both exist', () => {
+  expect(ruleFor(settlementsCss, '.settle-timeline-badge--resolved')).toBeTruthy();
+  expect(ruleFor(settlementsCss, '.settle-timeline__resolved-note')).toBeTruthy();
 });

@@ -6,16 +6,27 @@ import { formatDate } from '../../../shared/utils/format';
 const STATUS_ICON = { pending: 'schedule', confirmed: 'check_circle', rejected: 'cancel', cancelled: 'close' };
 
 /*
-  One entry in the Settlement Ledger's vertical timeline -- Stitch's
-  own compact card: date + status badge, "<payer> paid <recipient>",
-  amount. Presentation only -- clicking it opens the existing canonical
-  SettlementTimelineDrawer (owned by the parent page), never a new
-  details implementation. Real button semantics since it's genuinely
-  clickable; a real <button>, not a div with a synthetic click handler.
+  One entry in the Settlement Ledger -- a 40px status icon "tab"
+  attached to its own compact card (date + status badge, "<payer> paid
+  <recipient>", amount), rather than a shared alternating-sides/
+  center-line timeline (see settlements.css's own comment on
+  .settle-timeline for why). Presentation only -- clicking it opens the
+  existing canonical SettlementTimelineDrawer (owned by the parent
+  page), never a new details implementation. Real button semantics
+  since it's genuinely clickable; a real <button>, not a div with a
+  synthetic click handler.
+
+  A rejected row whose underlying debt has since been resolved by later
+  activity (settlement.is_resolved, server-derived -- see
+  apps.expenses.settlements.settlement_is_resolved) gets a secondary
+  "resolved" badge alongside the rejected one: the rejection itself
+  stays visible and true, but the row is no longer an open, actionable
+  claim.
 */
 export default function SettlementTimelineEntry({ settlement, currency, onOpen }) {
   const { t } = useTranslation();
-  const rowLabel = `${settlement.from_name} ${t('settlements.paidVerb')} ${settlement.to_name}, ${settlement.amount} ${currency}, ${t(`settlements.status.${settlement.status}`)}`;
+  const resolved = settlement.status === 'rejected' && settlement.is_resolved;
+  const rowLabel = `${settlement.from_name} ${t('settlements.paidVerb')} ${settlement.to_name}, ${settlement.amount} ${currency}, ${t(`settlements.status.${settlement.status}`)}${resolved ? `, ${t('settlements.resolvedBadge')}` : ''}`;
 
   return (
     <li className="settle-timeline-entry">
@@ -25,7 +36,12 @@ export default function SettlementTimelineEntry({ settlement, currency, onOpen }
       <button type="button" className="settle-timeline-entry__card" onClick={() => onOpen(settlement)} aria-label={rowLabel}>
         <div className="settle-timeline-entry__head">
           <span className="settle-timeline-entry__date">{formatDate(settlement.settlement_date)}</span>
-          <span className={`settle-timeline-badge settle-timeline-badge--${settlement.status}`}>{t(`settlements.status.${settlement.status}`)}</span>
+          <span className="settle-timeline-entry__badges">
+            <span className={`settle-timeline-badge settle-timeline-badge--${settlement.status}`}>{t(`settlements.status.${settlement.status}`)}</span>
+            {resolved && (
+              <span className="settle-timeline-badge settle-timeline-badge--resolved">{t('settlements.resolvedBadge')}</span>
+            )}
+          </span>
         </div>
         <p className="settle-timeline-entry__parties">
           <strong>{settlement.from_name}</strong> {t('settlements.paidVerb')} <strong>{settlement.to_name}</strong>

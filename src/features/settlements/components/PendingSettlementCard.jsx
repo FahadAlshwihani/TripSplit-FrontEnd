@@ -29,6 +29,16 @@ const PendingSettlementCard = ({ settlement, direction, otherName, currency, onC
   const busy = actionState?.status === 'sending';
   const busyAction = actionState?.action;
   const rejected = settlement.status === 'rejected';
+  // A rejected report whose pairwise debt has since been paid down to
+  // zero by later activity (a new confirmed settlement, an edited/
+  // refunded expense, ...) is historical only -- retrying it would
+  // reopen a dead settlement and re-notify the creditor about a debt
+  // that no longer exists. In practice this pair would already have
+  // dropped out of peopleIOwe/peopleWhoOweMe (and so out of this card
+  // entirely) once resolved, but this stays a real, server-derived
+  // guard rather than relying on that alone. See
+  // apps.expenses.settlements.settlement_is_resolved.
+  const resolved = rejected && settlement.is_resolved;
 
   return (
     <div className={`settle-pending-card${rejected ? ' settle-pending-card--rejected' : ''}`} role="status">
@@ -50,7 +60,12 @@ const PendingSettlementCard = ({ settlement, direction, otherName, currency, onC
         <span className="settle-pending-card__date">{settlement.settlement_date}</span>
       </p>
       {settlement.note && <p className="settle-pending-card__note">"{settlement.note}"</p>}
-      {rejected && direction === 'debtor' && <p className="settle-pending-card__helper">{t('settlements.rejectedHelper')}</p>}
+      {resolved && (
+        <p className="settle-pending-card__helper">
+          <span className="settle-timeline-badge settle-timeline-badge--resolved">{t('settlements.resolvedBadge')}</span>{' '}{t('settlements.resolvedNote')}
+        </p>
+      )}
+      {rejected && !resolved && direction === 'debtor' && <p className="settle-pending-card__helper">{t('settlements.rejectedHelper')}</p>}
       {rejected && direction === 'creditor' && <p className="settle-pending-card__helper">{t('settlements.creditorRejectedNotice')}</p>}
 
       {!readOnly && (
@@ -86,13 +101,17 @@ const PendingSettlementCard = ({ settlement, direction, otherName, currency, onC
 
           {rejected && direction === 'debtor' && (
             <div className="settle-pending-card__buttons">
-              <button type="button" className="dash-btn dash-btn--primary" disabled={busy || settlement.retry_cooldown_active} onClick={onRetry} title={settlement.retry_cooldown_active ? t('settlements.retryCooldown') : undefined}>
-                {busy && busyAction === 'retry' && <span className="dash-btn__spinner" aria-hidden="true" />}
-                {t('settlements.retryAction')}
-              </button>
-              <button type="button" className="dash-btn dash-btn--secondary" disabled={busy} onClick={onNewPayment}>
-                {t('settlements.newPaymentAction')}
-              </button>
+              {!resolved && (
+                <>
+                  <button type="button" className="dash-btn dash-btn--primary" disabled={busy || settlement.retry_cooldown_active} onClick={onRetry} title={settlement.retry_cooldown_active ? t('settlements.retryCooldown') : undefined}>
+                    {busy && busyAction === 'retry' && <span className="dash-btn__spinner" aria-hidden="true" />}
+                    {t('settlements.retryAction')}
+                  </button>
+                  <button type="button" className="dash-btn dash-btn--secondary" disabled={busy} onClick={onNewPayment}>
+                    {t('settlements.newPaymentAction')}
+                  </button>
+                </>
+              )}
               <button type="button" className="dash-btn dash-btn--secondary" disabled={busy} onClick={onViewHistory}>
                 {t('settlements.viewHistoryAction')}
               </button>

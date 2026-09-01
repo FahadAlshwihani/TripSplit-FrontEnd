@@ -25,8 +25,13 @@ const ali = { id: 'm3', display_name: 'Ali', role: 'member', active: true, avata
 
 const pendingRow = { id: 's1', from_member_id: 'm2', from_name: 'Saud', to_member_id: 'm1', to_name: 'Fahad', amount: '75.00', currency: 'SAR', status: 'pending', settlement_date: '2026-08-20', note: '', created_by: 'm2' };
 const confirmedRow = { id: 's2', from_member_id: 'm1', from_name: 'Fahad', to_member_id: 'm2', to_name: 'Saud', amount: '30.00', currency: 'SAR', status: 'confirmed', settlement_date: '2026-08-10', reviewed_at: '2026-08-10T22:42:00Z', reviewed_by: 'm2', reviewed_by_name: 'Saud', note: '', created_by: 'm1' };
-const rejectedRow = { id: 's3', from_member_id: 'm2', from_name: 'Saud', to_member_id: 'm1', to_name: 'Fahad', amount: '20.00', currency: 'SAR', status: 'rejected', settlement_date: '2026-08-05', note: '', created_by: 'm2' };
+const rejectedRow = { id: 's3', from_member_id: 'm2', from_name: 'Saud', to_member_id: 'm1', to_name: 'Fahad', amount: '20.00', currency: 'SAR', status: 'rejected', settlement_date: '2026-08-05', note: '', created_by: 'm2', is_resolved: false };
 const cancelledRow = { id: 's4', from_member_id: 'm1', from_name: 'Fahad', to_member_id: 'm3', to_name: 'Ali', amount: '10.00', currency: 'SAR', status: 'cancelled', settlement_date: '2026-08-01', note: '', created_by: 'm1' };
+// A rejected row whose underlying debt was later paid off by a
+// SEPARATE settlement -- server-derived is_resolved: true (see
+// apps.expenses.settlements.settlement_is_resolved). The rejection
+// itself stays visible; only its recovery actions must disappear.
+const resolvedRejectedRow = { id: 's5', from_member_id: 'm2', from_name: 'Saud', to_member_id: 'm1', to_name: 'Fahad', amount: '148.00', currency: 'SAR', status: 'rejected', settlement_date: '2026-08-03', note: '', created_by: 'm2', is_resolved: true };
 
 const baseBalances = {
   currency: 'SAR',
@@ -399,4 +404,96 @@ test('the admin dialog opened from Settlements uses canonical field-control clas
   expect(within(dialog).getByLabelText('settlements.payer')).toHaveClass('field-control');
   expect(within(dialog).getByLabelText('expense.amount')).toHaveClass('field-control');
   expect(dialog.querySelector('.exp-modal__close')).toBeInTheDocument();
+});
+
+// 29.1-29.14: resolution-aware history + safe timeline layout
+
+test('29.1: an unresolved rejected settlement shows its recovery action (Ask to Check Again) in the drawer', async () => {
+  getSettlements.mockResolvedValue({ results: [rejectedRow] });
+  renderPage({ currentMember: saud }); // Saud reported it
+  fireEvent.click(await screen.findByRole('button', { name: /Saud.*paid.*Fahad.*20\.00/ }));
+  const dialog = await screen.findByRole('dialog');
+  expect(within(dialog).getByRole('button', { name: 'settlements.retryAction' })).toBeInTheDocument();
+});
+
+test('29.2/29.7: a resolved rejected settlement hides its recovery action -- no stale "check again" control', async () => {
+  getSettlements.mockResolvedValue({ results: [resolvedRejectedRow] });
+  renderPage({ currentMember: saud });
+  fireEvent.click(await screen.findByRole('button', { name: /Saud.*paid.*Fahad.*148\.00/ }));
+  const dialog = await screen.findByRole('dialog');
+  expect(within(dialog).queryByRole('button', { name: 'settlements.retryAction' })).not.toBeInTheDocument();
+});
+
+test('29.3/29.6: a resolved rejected settlement shows the historical resolved indicator, both in the ledger row and the drawer', async () => {
+  getSettlements.mockResolvedValue({ results: [resolvedRejectedRow] });
+  const { container } = renderPage({ currentMember: saud });
+  await screen.findByText('settlements.settlementLedger');
+  expect(container.querySelectorAll('.settle-timeline-badge--resolved').length).toBe(1);
+  fireEvent.click(screen.getByRole('button', { name: /Saud.*paid.*Fahad.*148\.00/ }));
+  const dialog = await screen.findByRole('dialog');
+  expect(within(dialog).getByText('settlements.resolvedNote')).toBeInTheDocument();
+  expect(within(dialog).getByText('settlements.resolvedBadge')).toBeInTheDocument();
+});
+
+test('29.4/29.13/29.14: a rejected-and-resolved row and its resolving confirmed row both render as separate, un-merged ledger entries', async () => {
+  const resolvingConfirmedRow = { id: 's6', from_member_id: 'm2', from_name: 'Saud', to_member_id: 'm1', to_name: 'Fahad', amount: '148.00', currency: 'SAR', status: 'confirmed', settlement_date: '2026-08-04', reviewed_at: '2026-08-04T10:00:00Z', reviewed_by: 'm1', reviewed_by_name: 'Fahad', note: '', created_by: 'm1' };
+  getSettlements.mockResolvedValue({ results: [resolvingConfirmedRow, resolvedRejectedRow] });
+  const { container } = renderPage({ currentMember: saud });
+  await screen.findByText('settlements.settlementLedger');
+  const entries = container.querySelectorAll('.settle-timeline-entry');
+  expect(entries.length).toBe(2); // never collapsed into one card
+  expect(screen.getByText('settlements.status.rejected')).toBeInTheDocument();
+  expect(screen.getByText('settlements.status.confirmed')).toBeInTheDocument();
+});
+
+test('29.5: clicking a resolved rejected row still opens its full details drawer', async () => {
+  getSettlements.mockResolvedValue({ results: [resolvedRejectedRow] });
+  renderPage({ currentMember: saud });
+  fireEvent.click(await screen.findByRole('button', { name: /Saud.*paid.*Fahad.*148\.00/ }));
+  expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  await waitFor(() => expect(getSettlementTimeline).toHaveBeenCalled());
+});
+
+test('29.8: the timeline node renders as a card-attached tab (icon before its own card in DOM order), never a shared center-line node', async () => {
+  getSettlements.mockResolvedValue({ results: [rejectedRow, confirmedRow] });
+  const { container } = renderPage();
+  await screen.findByText('settlements.settlementLedger');
+  const entry = container.querySelector('.settle-timeline-entry');
+  // Node precedes the card in DOM order within its own entry -- "icon
+  // above card", never positioned in a shared center gap.
+  const node = entry.querySelector('.settle-timeline-entry__node');
+  const card = entry.querySelector('.settle-timeline-entry__card');
+  expect(node).toBeInTheDocument();
+  expect(card).toBeInTheDocument();
+  const children = Array.from(entry.children);
+  expect(children.indexOf(node)).toBeLessThan(children.indexOf(card));
+});
+
+test('29.11: RTL -- the resolved indicator and recovery-action gating render identically under dir="rtl"', async () => {
+  getSettlements.mockResolvedValue({ results: [resolvedRejectedRow] });
+  const { container } = render(
+    <div dir="rtl">
+      <MemoryRouter initialEntries={['/trips/t1/settlements']}>
+        <Routes>
+          <Route path="/trips/:tripId" element={<Outlet context={{ trip, tripId: 't1', currentMember: saud, permissions }} />}>
+            <Route path="settlements" element={<SettlementsPage />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    </div>,
+  );
+  await screen.findByText('settlements.settlementLedger');
+  expect(container.querySelector('.settle-timeline-badge--resolved')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /Saud.*paid.*Fahad.*148\.00/ }));
+  const dialog = await screen.findByRole('dialog');
+  expect(within(dialog).queryByRole('button', { name: 'settlements.retryAction' })).not.toBeInTheDocument();
+});
+
+test('29.12: mobile -- the timeline layout carries no viewport-conditional alternating classes to regress at a breakpoint (structural: same DOM regardless of viewport)', async () => {
+  getSettlements.mockResolvedValue({ results: [pendingRow, confirmedRow, rejectedRow, cancelledRow] });
+  const { container } = renderPage();
+  await screen.findByText('settlements.settlementLedger');
+  const entries = container.querySelectorAll('.settle-timeline-entry');
+  expect(entries.length).toBe(4);
+  entries.forEach((entry) => expect(entry.querySelector('.settle-timeline-entry__node')).toBeInTheDocument());
 });

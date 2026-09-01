@@ -131,7 +131,12 @@ export default function SettlementsPage() {
   const timelineCaps = timelineSettlement ? {
     canReview: !readOnly && timelineSettlement.status === 'pending' && (timelineSettlement.to_member_id === currentMember?.id || isManager),
     canCancel: !readOnly && timelineSettlement.status === 'pending' && (timelineSettlement.created_by === currentMember?.id || isManager),
-    canRetry: !readOnly && timelineSettlement.status === 'rejected' && (timelineSettlement.created_by === currentMember?.id || isManager),
+    // A rejected settlement whose pairwise debt has since been resolved
+    // (is_resolved, server-derived off the live balance engine -- see
+    // apps.expenses.settlements.settlement_is_resolved) is historical
+    // only: retrying it would reopen a dead settlement and re-notify the
+    // creditor about a debt that no longer exists.
+    canRetry: !readOnly && timelineSettlement.status === 'rejected' && !timelineSettlement.is_resolved && (timelineSettlement.created_by === currentMember?.id || isManager),
   } : null;
 
   return (

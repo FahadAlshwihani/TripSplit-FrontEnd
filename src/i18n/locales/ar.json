@@ -398,5 +398,6 @@
   "settlements.paymentDetails": "تفاصيل الدفعة",
   "settlements.successTitle": "تمت التسوية بنجاح", "settlements.successBodyConfirmed": "تم تسجيل استلامك {{amount}} {{currency}} من {{name}}، وتم تحديث الأرصدة.",
   "settlements.viewSettlementHistory": "عرض سجل التسوية", "settlements.done": "تم",
-  "settlements.paymentDateLabel": "تاريخ الدفع", "settlements.confirmedAtLabel": "تم التأكيد", "settlements.viewDetailsAction": "عرض التفاصيل", "settlements.recordedByLabel": "سجّلها"
+  "settlements.paymentDateLabel": "تاريخ الدفع", "settlements.confirmedAtLabel": "تم التأكيد", "settlements.viewDetailsAction": "عرض التفاصيل", "settlements.recordedByLabel": "سجّلها",
+  "settlements.resolvedBadge": "تمت المعالجة لاحقًا", "settlements.resolvedNote": "تمت تسوية هذا الدين بدفعة لاحقة. لا حاجة لأي إجراء إضافي هنا."
 }

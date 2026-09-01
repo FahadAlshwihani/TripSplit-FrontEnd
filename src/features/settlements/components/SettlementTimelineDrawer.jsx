@@ -65,6 +65,13 @@ const SettlementTimelineDrawer = ({ tripId, settlement, currency, onClose, canRe
             <Money value={settlement.amount} currency={currency} />
           </div>
 
+          {settlement.status === 'rejected' && settlement.is_resolved && (
+            <p className="settle-timeline__resolved-note" role="status">
+              <span className="settle-timeline-badge settle-timeline-badge--resolved">{t('settlements.resolvedBadge')}</span>
+              {' '}{t('settlements.resolvedNote')}
+            </p>
+          )}
+
           {state.loading && <p className="text-copy-sm">…</p>}
           {state.error && <p className="field-error" role="alert">{state.error.message || t('error.action')}</p>}
           {!state.loading && !state.error && state.events.length === 0 && <p className="text-copy-sm">{t('settlements.timelineEmpty')}</p>}
@@ -101,7 +108,7 @@ const SettlementTimelineDrawer = ({ tripId, settlement, currency, onClose, canRe
             )}
           </div>
         )}
-        {settlement.status === 'rejected' && canRetry && (
+        {settlement.status === 'rejected' && canRetry && !settlement.is_resolved && (
           <div className="exp-drawer__footer">
             <div className="exp-drawer__footer-row">
               <button type="button" className="dash-btn dash-btn--primary" disabled={busy || settlement.retry_cooldown_active} title={settlement.retry_cooldown_active ? t('settlements.retryCooldown') : undefined} onClick={() => onRetry(settlement)}>{t('settlements.retryAction')}</button>

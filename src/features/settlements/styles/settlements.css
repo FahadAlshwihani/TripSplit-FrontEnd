@@ -339,34 +339,24 @@
 .settle-record-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* -------------------------------------------------------------- */
-/* Settlement Ledger -- vertical timeline, alternating sides on
-   desktop, one-sided on mobile. Center line + 40px nodes (Stitch's own
-   contract), cards ~50% minus the center gap. Logical properties
-   throughout so RTL mirrors the whole composition naturally rather
-   than hardcoding left/right. */
+/* Settlement Ledger -- vertical list of entries, each a 40px status
+   icon "tab" attached to its own card's top edge (never a shared
+   center line/alternating-sides layout -- that construction kept
+   forcing nodes into the narrow gap between the Ledger card and the
+   7/12 workspace column, which is exactly the instability this
+   composition exists to avoid). Identical on desktop and mobile: no
+   media-query branching, so there is no layout to regress at a
+   breakpoint, and nothing here ever needs RTL-specific mirroring since
+   every entry is a single self-contained, centered column. */
 
-/* Timeline root -- the ::before center line and every entry position
-   relative to THIS element (the Ledger card's own content region),
-   never the workspace grid or the page. width:100%/min-width:0 keep it
-   from ever contributing to the ancestor grid item's content-based
-   size (see .settle-workspace__right above). */
-.settle-timeline { position: relative; width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 0; }
-.settle-timeline::before {
-  content: '';
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 19px;
-  width: var(--border-width);
-  background: var(--color-border-subtle);
-}
-@media (min-width: 768px) {
-  .settle-timeline::before { inset-inline-start: 50%; margin-inline-start: calc(var(--border-width) / -2); }
-}
+.settle-timeline { position: relative; width: 100%; min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); }
 
-.settle-timeline-entry { position: relative; display: flex; align-items: flex-start; gap: var(--space-3); padding-block: var(--space-2); }
-@media (min-width: 768px) {
-  .settle-timeline-entry { justify-content: flex-start; }
-  .settle-timeline-entry:nth-child(even) { flex-direction: row-reverse; }
+.settle-timeline-entry {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
 }
 
 .settle-timeline-entry__node {
@@ -378,6 +368,7 @@
   justify-content: center;
   inline-size: 40px;
   block-size: 40px;
+  margin-block-end: -20px;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface-alt);
@@ -389,9 +380,10 @@
 .settle-timeline-entry__node--cancelled { background: var(--color-surface-alt); color: var(--color-text-faint); }
 
 .settle-timeline-entry__card {
-  flex: 1 1 auto;
+  position: relative;
+  width: 100%;
   min-width: 0;
-  max-width: calc(100% - 52px);
+  max-width: 100%;
   display: block;
   text-align: start;
   font: inherit;
@@ -401,17 +393,17 @@
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   box-shadow: var(--shadow-hard-sm);
-  padding: var(--space-3);
+  padding: calc(var(--space-3) + 20px) var(--space-3) var(--space-3);
   cursor: pointer;
   transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
 .settle-timeline-entry__card:hover { transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
 .settle-timeline-entry__card:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 transparent; }
 .settle-timeline-entry__card:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: 2px; }
-@media (min-width: 768px) { .settle-timeline-entry__card { max-width: calc(50% - 2.5rem); } }
 
 .settle-timeline-entry__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-block-end: 4px; }
 .settle-timeline-entry__date { color: var(--color-text-muted); font: var(--text-body-sm); }
+.settle-timeline-entry__badges { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; justify-content: flex-end; }
 .settle-timeline-entry__parties { margin: 0; color: var(--color-text); font: var(--text-body-sm); }
 .settle-timeline-entry__amount { margin: 4px 0 0; font: 700 16px/24px var(--font-financial); color: var(--color-text); }
 
@@ -420,5 +412,13 @@
 .settle-timeline-badge--confirmed { color: var(--nc-indigo-700); border-color: var(--nc-indigo-700); background: var(--color-primary-soft); }
 .settle-timeline-badge--rejected { color: var(--color-danger); border-color: var(--color-danger); background: var(--color-danger-soft); }
 .settle-timeline-badge--cancelled { color: var(--color-text-muted); border-color: var(--color-border); background: var(--color-surface-alt); }
+/* Secondary badge on an old rejected row whose debt has since been
+   settled by later activity -- deliberately a distinct, calmer tone
+   from --rejected (never claims the rejection itself is undone, only
+   that it's no longer an open, actionable claim). */
+.settle-timeline-badge--resolved { color: var(--color-text-muted); border-color: var(--color-border); background: var(--color-surface-alt); }
+
+/* SettlementTimelineDrawer's own resolved-history callout. */
+.settle-timeline__resolved-note { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-2) 0 0; color: var(--color-text-muted); font: var(--text-body-sm); }
 
 .settle-ledger-loadmore { display: flex; justify-content: center; padding-block-start: var(--space-3); }

@@ -397,5 +397,6 @@
   "settlements.paymentDetails": "Payment details",
   "settlements.successTitle": "Settlement completed", "settlements.successBodyConfirmed": "Your receipt of {{amount}} {{currency}} from {{name}} was recorded and balances were updated.",
   "settlements.viewSettlementHistory": "View settlement history", "settlements.done": "Done",
-  "settlements.paymentDateLabel": "Payment date", "settlements.confirmedAtLabel": "Confirmed", "settlements.viewDetailsAction": "View details", "settlements.recordedByLabel": "Recorded by"
+  "settlements.paymentDateLabel": "Payment date", "settlements.confirmedAtLabel": "Confirmed", "settlements.viewDetailsAction": "View details", "settlements.recordedByLabel": "Recorded by",
+  "settlements.resolvedBadge": "Resolved later", "settlements.resolvedNote": "This debt was settled by a later payment. No further action is needed here."
 }
