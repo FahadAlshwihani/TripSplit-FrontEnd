@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import Avatar from '../../profile/components/Avatar';
 import { avatarKeyFromAvatar } from '../../profile/utils/avatarKey';
 import Money from '../../../shared/components/Money';
+import CopyLinkButton from '../../../shared/components/CopyLinkButton';
+import { tripUrl } from '../../../shared/utils/shareLinks';
 import { formatDate } from '../../../shared/utils/format';
 import { loadCheckedLater, markCheckedLater } from '../utils/checkLaterStore';
 
@@ -16,11 +18,11 @@ const STATUS_ICON = { open: 'bi-hourglass-split', completed: 'bi-check-circle', 
   stacks under one breakpoint, never a real <table>.
 */
 const FundingRoundLedgerCard = ({
-  round, contributions, currency, currentMember, canManage, collapsedByDefault, busyKey,
+  round, contributions, currency, currentMember, canManage, collapsedByDefault, busyKey, shortCode, forceExpanded,
   onReport, onRecord, onRemind, onConfirm, onReject, onRetry, onComplete, onCancel,
 }) => {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(!collapsedByDefault);
+  const [expanded, setExpanded] = useState(!collapsedByDefault || Boolean(forceExpanded));
   const [remindStates, setRemindStates] = useState({});
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -60,12 +62,15 @@ const FundingRoundLedgerCard = ({
   };
 
   return (
-    <article className={`fund-round-card fund-round-card--${round.status}`}>
+    <article id={`fund-round-${round.id}`} className={`fund-round-card fund-round-card--${round.status}`}>
       <header className="fund-round-card__header" onClick={() => collapsedByDefault && setExpanded((value) => !value)} role={collapsedByDefault ? 'button' : undefined} tabIndex={collapsedByDefault ? 0 : undefined}>
         <div>
           <div className="fund-round-card__badges">
             <span className="fund-round-card__seq">{t('fund.roundBadge', { number: round.sequence_number })}</span>
             <span className={`fund-round-card__status fund-round-card__status--${round.status}`}><i className={`bi ${STATUS_ICON[round.status]}`} aria-hidden="true" /> {t(`fund.status.${round.status}`)}</span>
+            {shortCode && (
+              <CopyLinkButton url={tripUrl(shortCode, '/fund', { round: round.id })} label={t('fund.copyRoundLink')} compact />
+            )}
           </div>
           <h3 className="fund-round-card__title text-headline-sm">{round.title}</h3>
           {round.reason && <p className="fund-round-card__reason text-copy-sm">{round.reason}</p>}

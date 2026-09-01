@@ -284,7 +284,7 @@
   border-block-end: var(--border-width) solid var(--color-border-subtle);
   background: var(--color-surface-alt);
 }
-.fund-round-card__badges { display: flex; align-items: center; gap: var(--space-2); margin-block-end: var(--space-1); }
+.fund-round-card__badges { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-block-end: var(--space-1); }
 .fund-round-card__seq { font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); padding: 2px var(--space-2); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-container); color: var(--color-text-muted); text-transform: uppercase; }
 .fund-round-card__status { display: inline-flex; align-items: center; gap: 4px; font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
 .fund-round-card__status--completed { color: var(--color-success); }

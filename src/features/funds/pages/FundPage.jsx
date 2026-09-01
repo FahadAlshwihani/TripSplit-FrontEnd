@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SectionLoading from '../../../shared/components/SectionLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
+import CopyLinkButton from '../../../shared/components/CopyLinkButton';
+import { tripUrl } from '../../../shared/utils/shareLinks';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
 import { getMembers } from '../../members/api/membersApi';
 import { getCategories, getCategoryBudgets } from '../../categories/api/categoriesApi';
@@ -65,6 +67,16 @@ export default function FundPage() {
   const { trip, tripId, currentMember, permissions } = useOutletContext();
   const { t } = useTranslation();
   const canManage = Boolean(permissions.canManageMembers);
+  const [searchParams] = useSearchParams();
+  // The optional deep-link focus target (?round=<public round id>) --
+  // never anything beyond "which already-loaded round to scroll to and
+  // expand". A round from another trip, or one that no longer exists,
+  // simply never matches anything in `fund.rounds` below (that array is
+  // already trip-scoped server-side) -- see the render below, which
+  // silently ignores an unmatched target rather than erroring or
+  // leaking cross-trip existence.
+  const focusRoundId = searchParams.get('round');
+  const hasScrolledToFocusRound = useRef(false);
 
   const resource = useRouteResource(async (signal) => {
     const config = { signal };
@@ -189,6 +201,20 @@ export default function FundPage() {
   const completedRounds = fund ? fund.rounds.filter((round) => round.status !== 'open') : [];
   const deficit = fund ? Number(fund.accounting.deficit) : 0;
 
+  // Scrolls to the deep-link target ONLY after the Fund shell has
+  // already rendered with real round data -- never blocks the page
+  // waiting for it (brief item 36). Runs once per mount/target so a
+  // later background refetch (a mutation's own resource.retry()) never
+  // re-yanks the viewport back to a round the member has since
+  // scrolled away from.
+  useEffect(() => {
+    if (!focusRoundId || hasScrolledToFocusRound.current || !fund) return;
+    const matches = fund.rounds.some((round) => round.id === focusRoundId);
+    if (!matches) return;
+    hasScrolledToFocusRound.current = true;
+    document.getElementById(`fund-round-${focusRoundId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [focusRoundId, fund]);
+
   return (
     <div className="fund-page">
       <header className="fund-page__header">
@@ -198,6 +224,7 @@ export default function FundPage() {
         </div>
         {fund && (
           <div className="fund-page__header-actions">
+            <CopyLinkButton url={tripUrl(trip.short_code, '/fund')} label={t('fund.copyLink')} />
             <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setFundDialog({ type: 'history' })}>
               <i className="bi bi-clock-history" aria-hidden="true" /> {t('fund.historyTitle')}
             </button>
@@ -268,6 +295,7 @@ export default function FundPage() {
                     currentMember={currentMember}
                     canManage={canManage}
                     busyKey={busyKey}
+                    shortCode={trip.short_code}
                     onReport={() => setFundDialog({ type: 'report-contribution', round })}
                     onRecord={() => setFundDialog({ type: 'record-contribution', round })}
                     onRemind={(memberId) => handleRemind(round, memberId)}
@@ -287,7 +315,9 @@ export default function FundPage() {
                     currentMember={currentMember}
                     canManage={canManage}
                     collapsedByDefault
+                    forceExpanded={round.id === focusRoundId}
                     busyKey={busyKey}
+                    shortCode={trip.short_code}
                   />
                 ))}
               </div>

@@ -97,7 +97,13 @@ test('renders the default copy-link label when none is given, and a custom label
   expect(screen.getByText('common.copyLink')).toBeInTheDocument();
 });
 
-test('the compact variant omits the visible text label', () => {
+test('the compact variant omits the visible text label but stays accessible via aria-label', () => {
   render(<CopyLinkButton url="https://example.com/trips/abc/fund" compact />);
   expect(screen.queryByText('common.copyLink')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'common.copyLink' })).toBeInTheDocument();
+});
+
+test('a custom label is used for both the accessible name and the visible text', () => {
+  render(<CopyLinkButton url="https://example.com/trips/abc/fund" label="fund.copyRoundLink" />);
+  expect(screen.getByRole('button', { name: 'fund.copyRoundLink' })).toBeInTheDocument();
 });

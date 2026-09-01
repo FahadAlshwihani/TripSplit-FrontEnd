@@ -46,9 +46,10 @@ export default function CopyLinkButton({ url, label, compact = false, className 
         type="button"
         className={className || `dash-btn dash-btn--secondary${compact ? ' copy-link-action__btn--compact' : ''}`}
         onClick={handleClick}
+        aria-label={label || t('common.copyLink')}
       >
         <i className="bi bi-link-45deg" aria-hidden="true" />
-        {!compact && <span>{label || t('common.copyLink')}</span>}
+        {!compact && <span aria-hidden="true">{label || t('common.copyLink')}</span>}
       </button>
       {feedback && <span className="copy-link-action__feedback" role="status" aria-live="polite">{t('common.linkCopied')}</span>}
     </span>

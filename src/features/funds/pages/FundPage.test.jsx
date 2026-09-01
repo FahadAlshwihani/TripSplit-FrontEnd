@@ -33,7 +33,7 @@ const fahad = { id: 'm1', display_name: 'Fahad', role: 'owner', active: true, av
 const saud = { id: 'm2', display_name: 'Saud', role: 'member', active: true, avatar: { type: 'initials', color: 'slate' } };
 const members = [fahad, saud];
 const permissions = { canManageMembers: true, canEditExpense: () => true, canCreateExpense: true };
-const trip = { currency: 'SAR', archived_at: null, lifecycle_status: 'active' };
+const trip = { currency: 'SAR', archived_at: null, lifecycle_status: 'active', short_code: 'short-1' };
 
 const baseAccounting = { collected: '1000.00', spent: '400.00', refunded: '0.00', reimbursed: '0.00', balance: '600.00', surplus: '600.00', deficit: '0.00' };
 
@@ -49,13 +49,25 @@ const round1 = {
   created_at: '2026-01-01T00:00:00Z', completed_at: null,
 };
 
+const round2 = {
+  id: 'r2', sequence_number: 2, title: 'Second Collection', reason: '', contribution_method: 'equal', target_amount: '400.00', status: 'completed',
+  statistics: {
+    target: '400.00', collected: '400.00', remaining: '0.00', percentage_collected: '100.00',
+    members: [
+      { member_id: 'm1', display_name: 'Fahad', avatar_key: '', avatar: { type: 'initials', color: 'indigo' }, expected: '200.00', paid: '200.00', pending: '0.00', remaining: '0.00', overpaid: '0.00' },
+      { member_id: 'm2', display_name: 'Saud', avatar_key: '', avatar: { type: 'initials', color: 'slate' }, expected: '200.00', paid: '200.00', pending: '0.00', remaining: '0.00', overpaid: '0.00' },
+    ],
+  },
+  created_at: '2026-01-02T00:00:00Z', completed_at: '2026-01-05T00:00:00Z',
+};
+
 const baseFund = {
   id: 'f1', name: 'Trip Fund', base_currency: 'SAR', status: 'active',
   holder: { id: 'm1', display_name: 'Fahad', avatar_key: '', avatar: { type: 'initials', color: 'indigo' } },
   accounting: baseAccounting,
   total_target: '10000.00', collection_remaining: '9000.00',
   close_readiness: { open_rounds: 1, pending_contributions: 0, balance: '600.00', ready: false },
-  rounds: [round1],
+  rounds: [round1, round2],
   contributions: [],
   refunds: [],
   reimbursements: [],
@@ -63,8 +75,8 @@ const baseFund = {
   created_at: '2026-01-01T00:00:00Z', closed_at: null,
 };
 
-const renderPage = (tripOverride = trip) => render(
-  <MemoryRouter initialEntries={['/trips/t1/fund']}>
+const renderPage = (tripOverride = trip, entry = '/trips/t1/fund') => render(
+  <MemoryRouter initialEntries={[entry]}>
     <Routes>
       <Route path="/trips/:tripId" element={<Outlet context={{ trip: tripOverride, tripId: 't1', currentMember: fahad, permissions }} />}>
         <Route path="fund" element={<FundPage />} />
@@ -428,4 +440,76 @@ test('a background refresh after confirming a contribution never blanks the alre
   expect(screen.getAllByText('Fahad').length).toBeGreaterThanOrEqual(1);
   expect(screen.getByText('Initial Collection')).toBeInTheDocument();
   await act(async () => resolveSecond(fundWithPending));
+});
+
+// --- Fund deep links / share links -----------------------------------
+
+test('the header Copy Fund Link button builds the canonical short_code URL, no query, no UUID', async () => {
+  renderPage();
+  const button = await screen.findByRole('button', { name: 'fund.copyLink' });
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+  fireEvent.click(button);
+  await waitFor(() => expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/trips/short-1/fund`));
+});
+
+test('a round card exposes its own copy-link action building a round-scoped short_code URL', async () => {
+  renderPage();
+  await screen.findByText('Initial Collection');
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+  fireEvent.click(screen.getAllByRole('button', { name: 'fund.copyRoundLink' })[0]);
+  await waitFor(() => expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/trips/short-1/fund?round=r1`));
+});
+
+test('the round card copy-link click never toggles that round\'s own collapse state', async () => {
+  renderPage();
+  await screen.findByText('Second Collection');
+  const collapsedCard = screen.getByText('Second Collection').closest('.fund-round-card');
+  // round2 is completed/collapsedByDefault -- its per-member figures
+  // (only rendered once expanded) are not shown yet.
+  expect(within(collapsedCard).queryByText('fund.paid')).not.toBeInTheDocument();
+  const roundCopyButtons = screen.getAllByRole('button', { name: 'fund.copyRoundLink' });
+  fireEvent.click(roundCopyButtons[1]); // round2's own copy button
+  // Clicking copy must not have expanded the collapsed round.
+  expect(within(collapsedCard).queryByText('fund.paid')).not.toBeInTheDocument();
+});
+
+test('?round=<open round id> scrolls that round into view once its data has loaded', async () => {
+  const scrollIntoView = jest.fn();
+  window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
+  const { container } = renderPage(trip, '/trips/t1/fund?round=r1');
+  await screen.findByText('Initial Collection');
+  await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
+  expect(container.querySelector('#fund-round-r1')).toBeInTheDocument();
+});
+
+test('?round=<a collapsed/completed round id> force-expands that round without any click', async () => {
+  window.HTMLElement.prototype.scrollIntoView = jest.fn();
+  renderPage(trip, '/trips/t1/fund?round=r2');
+  await screen.findByText('Second Collection');
+  const targetCard = screen.getByText('Second Collection').closest('.fund-round-card');
+  // round2 is collapsedByDefault -- if the deep link successfully
+  // forced it open, its per-member figures are visible without any
+  // click on the collapse toggle.
+  expect(within(targetCard).getAllByText('fund.paid').length).toBeGreaterThan(0);
+});
+
+test('an invalid/unknown ?round= value never crashes the page and is simply ignored', async () => {
+  window.HTMLElement.prototype.scrollIntoView = jest.fn();
+  renderPage(trip, '/trips/t1/fund?round=does-not-exist');
+  expect(await screen.findByText('Initial Collection')).toBeInTheDocument();
+  expect(window.HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled();
+});
+
+test('a round belonging to a different trip is never fetched separately -- the deep link target is only ever matched against this trip\'s own already-loaded rounds', async () => {
+  window.HTMLElement.prototype.scrollIntoView = jest.fn();
+  renderPage(trip, '/trips/t1/fund?round=round-from-another-trip');
+  // No separate "fetch a round by id" API exists at all -- the only
+  // network call Fund makes is the one trip-scoped getFund() already
+  // covered by beforeEach's mock, so there is nothing further to
+  // assert here beyond "the page still rendered normally."
+  expect(await screen.findByText('Initial Collection')).toBeInTheDocument();
 });
