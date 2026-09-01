@@ -35,6 +35,72 @@ test('Tab is contained within the drawer, never escaping to the page behind it',
   expect(closeBtn).toHaveFocus();
 });
 
+test('without action props (BalancesPage\'s own usage), no action footer renders even for a pending settlement', async () => {
+  render(<SettlementTimelineDrawer tripId="t1" settlement={{ id: 's1', from_name: 'A', to_name: 'B', amount: '10.00', status: 'pending' }} currency="SAR" onClose={jest.fn()} />);
+  await screen.findByRole('dialog');
+  expect(screen.queryByText('settlements.yesReceived')).not.toBeInTheDocument();
+});
+
+test('with canReview, the recipient recovery actions render and dispatch the right decision', async () => {
+  const onConfirm = jest.fn();
+  const onNotReceived = jest.fn();
+  const onCheckLater = jest.fn();
+  render(
+    <SettlementTimelineDrawer
+      tripId="t1"
+      settlement={{ id: 's1', from_name: 'A', to_name: 'B', amount: '10.00', status: 'pending' }}
+      currency="SAR"
+      onClose={jest.fn()}
+      canReview
+      onConfirm={onConfirm}
+      onNotReceived={onNotReceived}
+      onCheckLater={onCheckLater}
+    />,
+  );
+  await screen.findByRole('dialog');
+  fireEvent.click(screen.getByText('settlements.yesReceived'));
+  expect(onConfirm).toHaveBeenCalledWith(expect.objectContaining({ id: 's1' }));
+  fireEvent.click(screen.getByText('settlements.notReceivedAction'));
+  expect(onNotReceived).toHaveBeenCalled();
+  fireEvent.click(screen.getByText('settlements.checkLaterAction'));
+  expect(onCheckLater).toHaveBeenCalled();
+});
+
+test('with canCancel only (the reporter, not the recipient), only Withdraw renders', async () => {
+  const onCancel = jest.fn();
+  render(
+    <SettlementTimelineDrawer
+      tripId="t1"
+      settlement={{ id: 's1', from_name: 'A', to_name: 'B', amount: '10.00', status: 'pending' }}
+      currency="SAR"
+      onClose={jest.fn()}
+      canCancel
+      onCancel={onCancel}
+    />,
+  );
+  await screen.findByRole('dialog');
+  expect(screen.queryByText('settlements.yesReceived')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByText('settlements.withdrawReport'));
+  expect(onCancel).toHaveBeenCalled();
+});
+
+test('with canRetry on a rejected settlement, Ask to Check Again renders and dispatches', async () => {
+  const onRetry = jest.fn();
+  render(
+    <SettlementTimelineDrawer
+      tripId="t1"
+      settlement={{ id: 's1', from_name: 'A', to_name: 'B', amount: '10.00', status: 'rejected' }}
+      currency="SAR"
+      onClose={jest.fn()}
+      canRetry
+      onRetry={onRetry}
+    />,
+  );
+  await screen.findByRole('dialog');
+  fireEvent.click(screen.getByText('settlements.retryAction'));
+  expect(onRetry).toHaveBeenCalled();
+});
+
 test('closing returns focus to whatever triggered the drawer', async () => {
   const Wrapper = () => {
     const [open, setOpen] = React.useState(false);

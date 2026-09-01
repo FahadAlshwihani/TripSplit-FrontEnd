@@ -58,3 +58,16 @@ test('a negative value keeps its sign', () => {
   render(<Money value="-142.5" currency="SAR" />);
   expect(getMoney('-142.50 SAR')).toBeInTheDocument();
 });
+
+test('signDisplay="exceptZero" adds a leading "+" on a positive value, and still shows "-" on a negative one', () => {
+  const { rerender } = render(<Money value="850" currency="SAR" signDisplay="exceptZero" />);
+  expect(getMoney('+850.00 SAR')).toBeInTheDocument();
+  rerender(<Money value="-850" currency="SAR" signDisplay="exceptZero" />);
+  expect(getMoney('-850.00 SAR')).toBeInTheDocument();
+});
+
+test('signDisplay defaults to "auto" -- no "+" prefix on a positive value unless explicitly requested', () => {
+  render(<Money value="850" currency="SAR" />);
+  expect(getMoney('850.00 SAR')).toBeInTheDocument();
+  expect(screen.queryByText(moneyMatcher('+850.00 SAR'))).not.toBeInTheDocument();
+});

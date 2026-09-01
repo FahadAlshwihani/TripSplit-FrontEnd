@@ -34,6 +34,18 @@ test('Amount and Date are both real <input> elements sharing the canonical field
   expect(dateInput.type).toBe('date');
 });
 
+test('admin mode pre-fills its two pickers from initialFromId/initialToId when given (Suggested Settlements\' Record button)', () => {
+  render(<SettlementActionDialog mode="admin" members={members} currentMember={fahad} currency="SAR" initialFromId="m2" initialToId="m1" onSave={jest.fn()} onClose={jest.fn()} />);
+  expect(screen.getByLabelText('settlements.payer')).toHaveValue('m2');
+  expect(screen.getByLabelText('settlements.recipient')).toHaveValue('m1');
+});
+
+test('admin mode still defaults to blank pickers when initialFromId/initialToId are omitted -- every existing caller keeps its current behavior', () => {
+  render(<SettlementActionDialog mode="admin" members={members} currentMember={fahad} currency="SAR" onSave={jest.fn()} onClose={jest.fn()} />);
+  expect(screen.getByLabelText('settlements.payer')).toHaveValue('');
+  expect(screen.getByLabelText('settlements.recipient')).toHaveValue('');
+});
+
 test('the admin mode\'s member pickers are real <select> elements sharing the same field-control base class as Amount/Date', () => {
   render(<SettlementActionDialog mode="admin" members={members} currentMember={fahad} currency="SAR" onSave={jest.fn()} onClose={jest.fn()} />);
   const fromSelect = screen.getByLabelText('settlements.payer');

@@ -11,6 +11,16 @@ import useModalDialog from '../../../shared/hooks/useModalDialog';
   it, who reviewed it and how, in order. Follows the same portal/overlay/
   Escape+focus-restore pattern as ExpenseDetailsDrawer (the one existing
   drawer in this app), rather than inventing a new one.
+
+  Action props (canReview/canCancel/canRetry + onConfirm/onNotReceived/
+  onCheckLater/onCancel/onRetry) are all optional -- BalancesPage's own
+  usage never passes them (it already has its own PendingSettlementCard
+  for inline action, so a second copy of the same buttons in its drawer
+  would be redundant) and gets the exact same read-only drawer as
+  before. SettlementsPage's ledger, where this drawer is now the ONLY
+  place a pending/rejected settlement can be acted on (the compact
+  timeline card itself is presentation-only), passes them so the
+  recipient/reporter/manager recovery actions stay fully reachable.
 */
 const timelineCopyKey = (event) => {
   if (event.event_type === 'settlement_created') {
@@ -20,7 +30,7 @@ const timelineCopyKey = (event) => {
   return `settlementTimeline.${event.event_type.replace('settlement_', '')}`;
 };
 
-const SettlementTimelineDrawer = ({ tripId, settlement, currency, onClose }) => {
+const SettlementTimelineDrawer = ({ tripId, settlement, currency, onClose, canReview, canCancel, canRetry, onConfirm, onNotReceived, onCheckLater, onCancel, onRetry, busy }) => {
   const { t, i18n } = useTranslation();
   const drawerRef = useModalDialog(onClose);
   const [state, setState] = useState({ loading: true, error: null, events: [] });
@@ -70,6 +80,29 @@ const SettlementTimelineDrawer = ({ tripId, settlement, currency, onClose }) => 
             </ol>
           )}
         </div>
+        {settlement.status === 'pending' && (canReview || canCancel) && (
+          <div className="exp-drawer__footer">
+            {canReview && (
+              <div className="exp-drawer__footer-row">
+                <button type="button" className="dash-btn dash-btn--secondary" disabled={busy} onClick={() => onCheckLater(settlement)}>{t('settlements.checkLaterAction')}</button>
+                <button type="button" className="dash-btn dash-btn--secondary" disabled={busy} onClick={() => onNotReceived(settlement)}>{t('settlements.notReceivedAction')}</button>
+                <button type="button" className="dash-btn dash-btn--primary" disabled={busy} onClick={() => onConfirm(settlement)}>{t('settlements.yesReceived')}</button>
+              </div>
+            )}
+            {canCancel && !canReview && (
+              <div className="exp-drawer__footer-row">
+                <button type="button" className="dash-btn dash-btn--secondary" disabled={busy} onClick={() => onCancel(settlement)}>{t('settlements.withdrawReport')}</button>
+              </div>
+            )}
+          </div>
+        )}
+        {settlement.status === 'rejected' && canRetry && (
+          <div className="exp-drawer__footer">
+            <div className="exp-drawer__footer-row">
+              <button type="button" className="dash-btn dash-btn--primary" disabled={busy || settlement.retry_cooldown_active} title={settlement.retry_cooldown_active ? t('settlements.retryCooldown') : undefined} onClick={() => onRetry(settlement)}>{t('settlements.retryAction')}</button>
+            </div>
+          </div>
+        )}
       </div>
     </ModalPortal>
   );

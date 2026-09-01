@@ -3,72 +3,80 @@ import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import NeoLoading from '../../../shared/components/NeoLoading';
 import ErrorState from '../../../shared/components/ErrorState';
-import SegmentedControl from '../../../shared/components/SegmentedControl';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
 import { getMembers } from '../../members/api/membersApi';
-import { getSettlementPage, getSettlements, recordAdminSettlement, reviewSettlement } from '../api/settlementsApi';
+import { getBalances } from '../../balances/api/balancesApi';
+import { getSettlementPage, getSettlements, recordAdminSettlement, reportPayment, recordReceivedPayment, reviewSettlement } from '../api/settlementsApi';
 import SettlementActionDialog from '../components/SettlementActionDialog';
-import SettlementLedgerRow from '../components/SettlementLedgerRow';
 import SettlementTimelineDrawer from '../components/SettlementTimelineDrawer';
+import CurrentBalancesCard from '../components/CurrentBalancesCard';
+import SuggestedSettlementsCard from '../components/SuggestedSettlementsCard';
+import SettlementLedgerCard from '../components/SettlementLedgerCard';
 import '../styles/settlements.css';
 
 /*
-  The canonical full settlement ledger/history -- who owed whom, how
-  much, who reported/recorded/reviewed it, when. This is deliberately
-  NOT the action-focused current-debt view (that's BalancesPage); this
-  page never duplicates that UI, it's the historical record you click
-  into for the full timeline. See docs/api/settlements.md.
+  A literal port of the supplied Stitch "Settle Up" source's page
+  canvas: header, then a 7/12+5/12 workspace -- Current Balances +
+  Suggested Settlements on the left, the permanent Settlement Ledger
+  timeline on the right (see settlements.css's own mapping comment).
+  Domain logic is entirely untouched -- this is a presentational
+  rebuild over the same GET /balances/, GET /settlements/, and
+  reportPayment/recordReceivedPayment/recordAdminSettlement/
+  reviewSettlement calls the previous flat-list page already used.
 
-  Status filtering is client-side over the pages loaded so far (server-
-  side filtering isn't offered by GET /settlements/ today). Load More
-  preserves the already-loaded ledger while appending older history.
+  Current Balances and Suggested Settlements read straight off
+  GET /trips/{id}/balances/'s own `members`/`suggested_settlements`
+  fields (apps.expenses.balances.calculate_balances()/simplify_debts()'s
+  own output) -- never recomputed here. The Settlement Ledger is the
+  separate historical record (GET /trips/{id}/settlements/, all
+  statuses, newest first) -- a Fund reimbursement that zeroes a
+  personal balance is reflected in Current Balances/Suggested
+  Settlements (both balance-derived) but never appears here, since it
+  never creates a Settlement row (see apps.funds.services.
+  record_reimbursement's own docstring).
+
+  Per-settlement action capability is still client-derived
+  (canReview/canCancel/canRetry below) -- audited against the real
+  backend authorization in apps.expenses.settlements.py
+  (review_settlement/cancel_settlement/retry_settlement) and confirmed
+  to encode the identical rule (recipient-or-manager / reporter-or-
+  manager); this is a known duplication, not a gap, so no new
+  capabilities field was added for this pass.
 */
-const FILTERS = [
-  { value: 'all', key: 'all' },
-  { value: 'pending', key: 'pending' },
-  { value: 'confirmed', key: 'confirmed' },
-  { value: 'rejected', key: 'needsAttention' },
-  { value: 'cancelled', key: 'cancelled' },
-];
-
 export default function SettlementsPage() {
   const { trip, tripId, currentMember, permissions } = useOutletContext();
   const { t } = useTranslation();
-  const [filter, setFilter] = useState('all');
   const [actionError, setActionError] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [timelineTarget, setTimelineTarget] = useState(null);
-  const [adminDialogOpen, setAdminDialogOpen] = useState(false);
+  const [actionDialog, setActionDialog] = useState(null); // { mode, counterpart?, debt?, initialFromId?, initialToId? } | null
 
   const resource = useRouteResource(async (signal) => {
     const config = { signal };
-    const [settlementPage, members] = await Promise.all([
-      getSettlements(tripId, { ...config, params: { page_size: 100 } }),
+    const [balances, settlementPage, members] = await Promise.all([
+      getBalances(tripId, config),
+      getSettlements(tripId, { ...config, params: { page_size: 25 } }),
       getMembers(tripId, config),
     ]);
-    return { settlementPage, members: members.results };
+    return { balances, settlementPage, members: members.results };
   }, [tripId]);
 
   if (resource.loading) return <NeoLoading />;
   if (resource.error) return <ErrorState message={resource.error.message} onRetry={resource.retry} />;
 
-  const { settlementPage, members } = resource.data;
+  const { balances, settlementPage, members } = resource.data;
   const settlements = settlementPage.results;
   const currency = trip.currency;
   const readOnly = !permissions.canRecordSettlement;
-  const canRecordAdmin = !readOnly && ['owner', 'admin'].includes(currentMember?.role);
   const isManager = ['owner', 'admin'].includes(currentMember?.role);
+  const canRecordAdmin = !readOnly && isManager;
   const membersById = Object.fromEntries(members.map((member) => [member.id, member]));
 
-  const rows = filter === 'all' ? settlements : settlements.filter((row) => row.status === filter);
   const loadMore = () => resource.loadMore(
     (signal) => getSettlementPage(settlementPage.next, tripId, { signal }),
     (current, page) => ({
       ...current,
-      settlementPage: {
-        ...page,
-        results: [...current.settlementPage.results, ...page.results],
-      },
+      settlementPage: { ...page, results: [...current.settlementPage.results, ...page.results] },
     }),
   );
 
@@ -78,6 +86,7 @@ export default function SettlementsPage() {
       await reviewSettlement(tripId, settlement.id, decision);
       setActionError(null);
       await resource.retry();
+      setTimelineTarget(null);
     } catch (error) {
       setActionError(error);
     } finally {
@@ -85,83 +94,108 @@ export default function SettlementsPage() {
     }
   };
 
-  const handleAdminSave = async (payload) => {
-    await recordAdminSettlement(tripId, payload);
-    setAdminDialogOpen(false);
+  // Resolves which of the three existing settlement flows a suggestion's
+  // Record action should open, from the current viewer's own
+  // relationship to that specific debtor/creditor pair -- never a new
+  // workflow, just routing into report/received/admin exactly as
+  // BalancesPage already does for its own Remind/I-Paid/Record-Received
+  // buttons.
+  const resolveSuggestionAction = (suggestion) => {
+    if (readOnly) return null;
+    if (currentMember?.id === suggestion.from_member) return { mode: 'report', counterpart: membersById[suggestion.to_member], debt: suggestion.amount };
+    if (currentMember?.id === suggestion.to_member) return { mode: 'received', counterpart: membersById[suggestion.from_member], debt: suggestion.amount };
+    if (isManager) return { mode: 'admin', initialFromId: suggestion.from_member, initialToId: suggestion.to_member, debt: suggestion.amount };
+    return null;
+  };
+  const suggestionRecordLabel = (suggestion) => {
+    if (currentMember?.id === suggestion.from_member) return t('settlements.recordActionPay');
+    if (currentMember?.id === suggestion.to_member) return t('settlements.recordActionReceive');
+    return t('settlements.record');
+  };
+
+  const handleDialogSave = async (payload) => {
+    if (actionDialog.mode === 'report') await reportPayment(tripId, payload);
+    else if (actionDialog.mode === 'received') await recordReceivedPayment(tripId, payload);
+    else await recordAdminSettlement(tripId, payload);
+    setActionDialog(null);
     setActionError(null);
     await resource.retry();
   };
 
+  const timelineSettlement = timelineTarget && settlements.find((row) => row.id === timelineTarget.id);
+  const timelineCaps = timelineSettlement ? {
+    canReview: !readOnly && timelineSettlement.status === 'pending' && (timelineSettlement.to_member_id === currentMember?.id || isManager),
+    canCancel: !readOnly && timelineSettlement.status === 'pending' && (timelineSettlement.created_by === currentMember?.id || isManager),
+    canRetry: !readOnly && timelineSettlement.status === 'rejected' && (timelineSettlement.created_by === currentMember?.id || isManager),
+  } : null;
+
   return (
     <div className="settle-page">
       <div className="settle-page__header">
-        <h1 className="settle-page__title text-display">{t('settlements.title')}</h1>
-        <p className="settle-page__subtitle text-copy-lg">{t('settlements.history')}</p>
-      </div>
-
-      {actionError && <ErrorState message={actionError.message} />}
-
-      <div className="settle-page__toolbar">
-        <SegmentedControl
-          ariaLabel={t('settlements.title')}
-          options={FILTERS.map((option) => ({ value: option.value, label: t(`settlements.filter.${option.key}`) }))}
-          value={filter}
-          onChange={setFilter}
-        />
+        <div>
+          <h1 className="settle-page__title text-display">{t('settlements.pageTitle')}</h1>
+          <p className="settle-page__subtitle text-copy">{t('settlements.pageSubtitle')}</p>
+        </div>
         {canRecordAdmin && (
-          <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setAdminDialogOpen(true)}>
-            <i className="bi bi-person-check" aria-hidden="true" /> {t('settlements.recordExternal')}
+          <button type="button" className="dash-btn dash-btn--secondary settle-page__record-external" onClick={() => setActionDialog({ mode: 'admin' })}>
+            <span className="material-symbols-outlined settle-icon-inline" aria-hidden="true">fact_check</span> {t('settlements.recordExternal')}
           </button>
         )}
       </div>
 
-      {rows.length === 0 ? (
-        <div className="bal-empty">
-          <i className="bi bi-receipt bal-empty__icon" aria-hidden="true" />
-          <p className="bal-empty__body">{t('settlements.empty')}</p>
+      {actionError && <ErrorState message={actionError.message} />}
+
+      <div className="settle-workspace">
+        <div className="settle-workspace__left">
+          <CurrentBalancesCard members={balances.members} currency={currency} />
+          <SuggestedSettlementsCard
+            suggestions={balances.suggested_settlements}
+            currency={currency}
+            canRecord={(suggestion) => resolveSuggestionAction(suggestion) !== null}
+            recordLabel={suggestionRecordLabel}
+            onRecord={(suggestion) => setActionDialog(resolveSuggestionAction(suggestion))}
+          />
         </div>
-      ) : (
-        <div className="settle-ledger">
-          {rows.map((settlement) => (
-            <SettlementLedgerRow
-              key={settlement.id}
-              settlement={settlement}
-              currency={currency}
-              fromMember={membersById[settlement.from_member_id]}
-              toMember={membersById[settlement.to_member_id]}
-              busy={busyId === settlement.id}
-              canReview={!readOnly && settlement.status === 'pending' && (settlement.to_member_id === currentMember?.id || isManager)}
-              canCancel={!readOnly && settlement.status === 'pending' && (settlement.created_by === currentMember?.id || isManager)}
-              canRetry={!readOnly && settlement.status === 'rejected' && (settlement.created_by === currentMember?.id || isManager)}
-              onOpen={setTimelineTarget}
-              onConfirm={(row) => runReview(row, 'confirm')}
-              onNotReceived={(row) => runReview(row, 'not-received')}
-              onCheckLater={(row) => runReview(row, 'check-later')}
-              onCancel={(row) => runReview(row, 'cancel')}
-              onRetry={(row) => runReview(row, 'retry')}
-            />
-          ))}
+        <div className="settle-workspace__right">
+          <SettlementLedgerCard
+            settlements={settlements}
+            currency={currency}
+            onOpen={setTimelineTarget}
+            hasMore={Boolean(settlementPage.next)}
+            onLoadMore={loadMore}
+            loadingMore={resource.loadingMore}
+          />
         </div>
+      </div>
+
+      {timelineTarget && timelineSettlement && (
+        <SettlementTimelineDrawer
+          tripId={tripId}
+          settlement={timelineSettlement}
+          currency={currency}
+          onClose={() => setTimelineTarget(null)}
+          busy={busyId === timelineSettlement.id}
+          {...timelineCaps}
+          onConfirm={(row) => runReview(row, 'confirm')}
+          onNotReceived={(row) => runReview(row, 'not-received')}
+          onCheckLater={(row) => runReview(row, 'check-later')}
+          onCancel={(row) => runReview(row, 'cancel')}
+          onRetry={(row) => runReview(row, 'retry')}
+        />
       )}
 
-      {settlementPage.next && (
-        <button type="button" className="dash-btn dash-btn--secondary" onClick={loadMore} disabled={resource.loadingMore}>
-          {t('common.loadMore')}
-        </button>
-      )}
-
-      {timelineTarget && (
-        <SettlementTimelineDrawer tripId={tripId} settlement={timelineTarget} currency={currency} onClose={() => setTimelineTarget(null)} />
-      )}
-
-      {adminDialogOpen && (
+      {actionDialog && (
         <SettlementActionDialog
-          mode="admin"
+          mode={actionDialog.mode}
           members={members}
           currentMember={currentMember}
           currency={currency}
-          onSave={handleAdminSave}
-          onClose={() => setAdminDialogOpen(false)}
+          counterpart={actionDialog.counterpart}
+          debt={actionDialog.debt}
+          initialFromId={actionDialog.initialFromId}
+          initialToId={actionDialog.initialToId}
+          onSave={handleDialogSave}
+          onClose={() => setActionDialog(null)}
         />
       )}
     </div>

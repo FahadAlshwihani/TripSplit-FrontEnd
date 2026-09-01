@@ -21,7 +21,7 @@ import Money from '../../../shared/components/Money';
   says so explicitly and never claims the balance updates immediately;
   "received"/"admin" do update immediately, and say so.
 */
-const SettlementActionDialog = ({ mode, members, currentMember, currency, counterpart, debt, onSave, onClose }) => {
+const SettlementActionDialog = ({ mode, members, currentMember, currency, counterpart, debt, initialFromId, initialToId, onSave, onClose }) => {
   const { t } = useTranslation();
   const dialogRef = useRef(null);
   const [submitting, setSubmitting] = useState(false);
@@ -29,8 +29,12 @@ const SettlementActionDialog = ({ mode, members, currentMember, currency, counte
   const [amount, setAmount] = useState(debt || '');
   const [settlementDate, setSettlementDate] = useState(new Date().toISOString().slice(0, 10));
   const [note, setNote] = useState('');
-  const [fromId, setFromId] = useState(mode === 'admin' ? '' : mode === 'report' ? currentMember.id : (counterpart?.member_id || counterpart?.id || ''));
-  const [toId, setToId] = useState(mode === 'admin' ? '' : mode === 'received' ? currentMember.id : (counterpart?.member_id || counterpart?.id || ''));
+  // initialFromId/initialToId let a caller (the Suggested Settlements
+  // card) pre-select admin mode's two pickers from a known debtor/
+  // creditor pair -- optional, so every existing caller (which never
+  // passes them) keeps the exact same blank-picker behavior as before.
+  const [fromId, setFromId] = useState(mode === 'admin' ? (initialFromId || '') : mode === 'report' ? currentMember.id : (counterpart?.member_id || counterpart?.id || ''));
+  const [toId, setToId] = useState(mode === 'admin' ? (initialToId || '') : mode === 'received' ? currentMember.id : (counterpart?.member_id || counterpart?.id || ''));
   const [acknowledged, setAcknowledged] = useState(false);
 
   useEffect(() => {
