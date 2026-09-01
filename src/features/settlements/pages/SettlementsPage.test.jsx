@@ -454,17 +454,18 @@ test('29.5: clicking a resolved rejected row still opens its full details drawer
   await waitFor(() => expect(getSettlementTimeline).toHaveBeenCalled());
 });
 
-test('29.8: the timeline node renders as a card-attached tab (icon before its own card in DOM order), never a shared center-line node', async () => {
+test('29.8/29.9: each entry contains its node before its card, and the node is a SIBLING of the card, never nested inside it', async () => {
   getSettlements.mockResolvedValue({ results: [rejectedRow, confirmedRow] });
   const { container } = renderPage();
   await screen.findByText('settlements.settlementLedger');
   const entry = container.querySelector('.settle-timeline-entry');
-  // Node precedes the card in DOM order within its own entry -- "icon
-  // above card", never positioned in a shared center gap.
   const node = entry.querySelector('.settle-timeline-entry__node');
   const card = entry.querySelector('.settle-timeline-entry__card');
   expect(node).toBeInTheDocument();
   expect(card).toBeInTheDocument();
+  expect(card.contains(node)).toBe(false); // never nested inside the card
+  expect(node.parentElement).toBe(entry); // both are direct children of the entry
+  expect(card.parentElement).toBe(entry);
   const children = Array.from(entry.children);
   expect(children.indexOf(node)).toBeLessThan(children.indexOf(card));
 });
@@ -489,11 +490,14 @@ test('29.11: RTL -- the resolved indicator and recovery-action gating render ide
   expect(within(dialog).queryByRole('button', { name: 'settlements.retryAction' })).not.toBeInTheDocument();
 });
 
-test('29.12: mobile -- the timeline layout carries no viewport-conditional alternating classes to regress at a breakpoint (structural: same DOM regardless of viewport)', async () => {
+test('29.7/29.12: mobile -- the DOM is identical to desktop (same node+card structure for every entry); alternation/centering is applied entirely by the desktop media query, never by JS branching', async () => {
   getSettlements.mockResolvedValue({ results: [pendingRow, confirmedRow, rejectedRow, cancelledRow] });
   const { container } = renderPage();
   await screen.findByText('settlements.settlementLedger');
   const entries = container.querySelectorAll('.settle-timeline-entry');
   expect(entries.length).toBe(4);
-  entries.forEach((entry) => expect(entry.querySelector('.settle-timeline-entry__node')).toBeInTheDocument());
+  entries.forEach((entry) => {
+    expect(entry.querySelector('.settle-timeline-entry__node')).toBeInTheDocument();
+    expect(entry.querySelector('.settle-timeline-entry__card')).toBeInTheDocument();
+  });
 });

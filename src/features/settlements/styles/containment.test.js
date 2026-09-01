@@ -28,17 +28,22 @@ const path = require('path');
      that, so the portaled markup had zero structural CSS. Fixed by
      having each component import its required stylesheet explicitly.
 
-  C. Even after (A)'s min-width:0 containment fix, the timeline's status
-     icons still visually sat too close to the 7/5 column boundary in
-     real browser screenshots -- a shared center-line + alternating-
-     sides layout is inherently unstable at a narrow (5/12) column
-     width. Replaced entirely with a per-entry "icon tab attached to its
-     own card's top edge" composition: no shared center line, no
-     alternating sides, identical on desktop and mobile (no media-query
-     branching to regress at a breakpoint), and nothing RTL-specific to
-     mirror since every entry is a single self-contained centered
-     column. This section guards that the old construction never comes
-     back.
+  C. The timeline's status icons sat beside their card in a horizontal
+     row, which -- combined with the card's own 50%-minus-node-width
+     share on the alternating desktop layout -- read as colliding with
+     the 7/5 workspace boundary. An intermediate fix removed the shared
+     center line and alternation entirely; that traded away the desired
+     chronological read (a continuous line connecting distinct events)
+     for containment safety. The actual fix needed was narrower: keep
+     the shared center line and desktop alternation, but move each
+     node from BESIDE its card to ABOVE it (absolutely positioned,
+     centered on the shared axis, independent of which side the card
+     alternates to) -- the node no longer consumes horizontal row space
+     at all, so the card can use its full half-share without a node
+     eating into it, and the axis itself never depends on which side any
+     given card is on. This section guards that shape specifically: the
+     line and alternation must both be present, and the node's axis
+     position must never be conditioned on nth-child.
 */
 
 const read = (relativePath) => fs.readFileSync(path.join(__dirname, '..', '..', '..', relativePath), 'utf8');
@@ -124,27 +129,46 @@ test('SettlementTimelineDrawer explicitly imports the stylesheet its drawer shel
   expect(timelineDrawerSource).toMatch(/import ['"].*expenses\/styles\/expenses\.css['"]/);
 });
 
-// --- C. Timeline node repositioning (icon-above-card, no center line) --
+// --- C. Timeline: shared line + desktop alternation, node above card ---
 
-test('no shared center-line pseudo-element exists anywhere -- each entry owns its own icon, never a line shared across the whole ledger', () => {
-  expect(settlementsCss).not.toMatch(/\.settle-timeline::before/);
+test('a continuous chronology line exists, scoped to .settle-timeline itself (never the workspace/page)', () => {
+  expect(settlementsCss).toMatch(/\.settle-timeline::before/);
+  const rule = ruleFor(settlementsCss, '.settle-timeline::before');
+  expect(rule).toMatch(/position:\s*absolute/);
+  expect(rule).toMatch(/inset-block:\s*0/);
 });
 
-test('no alternating-sides selector exists -- desktop and mobile render the identical single-column layout', () => {
-  expect(settlementsCss).not.toMatch(/\.settle-timeline-entry:nth-child\(even\)/);
-  expect(settlementsCss).not.toMatch(/flex-direction:\s*row-reverse/);
+test('desktop alternation exists for the CARD -- odd/even entries push their card to opposite sides', () => {
+  expect(settlementsCss).toMatch(/\.settle-timeline-entry:nth-child\(odd\)\s+\.settle-timeline-entry__card/);
+  expect(settlementsCss).toMatch(/\.settle-timeline-entry:nth-child\(even\)\s+\.settle-timeline-entry__card/);
 });
 
-test('the timeline entry node is a normal-flow "tab" (negative margin overlap), never absolutely/fixed positioned into a shared gap', () => {
-  const rule = ruleFor(settlementsCss, '.settle-timeline-entry__node');
-  expect(rule).not.toMatch(/position:\s*(absolute|fixed)/);
-  expect(rule).toMatch(/margin-block-end:\s*-\d/);
+test('the node itself is never targeted by an nth-child rule -- its axis position can never depend on which side the card alternates to', () => {
+  const nodeAndNthChild = settlementsCss.split('\n').some((line) => line.includes('nth-child') && line.includes('__node'));
+  expect(nodeAndNthChild).toBe(false);
 });
 
-test('the entry card is always full-width and cannot be constrained to a 50% half-share again', () => {
-  const rule = ruleFor(settlementsCss, '.settle-timeline-entry__card');
-  expect(rule).toMatch(/width:\s*100%/);
-  expect(settlementsCss).not.toMatch(/max-width:\s*calc\(50%/);
+test('the node is absolutely positioned and sits above the card (never inline beside it) -- the entry reserves top space for it', () => {
+  const nodeRule = ruleFor(settlementsCss, '.settle-timeline-entry__node');
+  expect(nodeRule).toMatch(/position:\s*absolute/);
+  expect(nodeRule).toMatch(/inset-block-start:\s*0/);
+  const entryRule = ruleFor(settlementsCss, '.settle-timeline-entry');
+  expect(entryRule).toMatch(/padding-block-start:\s*48px/);
+});
+
+test('at the desktop breakpoint the node centers on the shared 50% axis, independent of the media query that alternates the card', () => {
+  expect(settlementsCss).toMatch(/\.settle-timeline-entry__node\s*\{\s*inset-inline-start:\s*50%;\s*transform:\s*translateX\(-50%\);\s*\}/);
+});
+
+test('the desktop card is a fixed half-width (not flex-grow-able), so it can never be pushed past its share by content -- and never reverts to a full-width single column', () => {
+  expect(settlementsCss).toMatch(/\.settle-timeline-entry__card\s*\{\s*width:\s*calc\(50%\s*-\s*2\.5rem\);\s*\}/);
+});
+
+test('RTL: every positioning/alternation rule uses logical properties, never physical left/right -- the axis (50%) is direction-agnostic by construction, so only the card side needs to flip, and it flips for free', () => {
+  expect(settlementsCss).not.toMatch(/\.settle-timeline-entry__node[^}]*\b(left|right)\s*:/);
+  expect(settlementsCss).not.toMatch(/\.settle-timeline-entry__card[^}]*\bmargin-(left|right)\s*:/);
+  expect(settlementsCss).toMatch(/margin-inline-end:\s*auto/);
+  expect(settlementsCss).toMatch(/margin-inline-start:\s*auto/);
 });
 
 test('a resolved-but-rejected row has a distinct secondary badge style and the drawer callout class both exist', () => {

@@ -6,14 +6,15 @@ import SettlementTimelineEntry from './SettlementTimelineEntry';
   Stitch source (SETTLEMENT LEDGER section): the permanent history --
   every status (pending/confirmed/rejected/cancelled), newest first,
   exactly as GET /trips/{id}/settlements/ already returns it (no
-  status filter applied here -- every status stays visible). Each entry
-  is a single self-contained column (40px status icon "tab" attached to
-  its own card's top edge) -- identical on desktop and mobile, no
-  alternating-sides/center-line layout, since that construction kept
-  destabilizing against the 7/12 workspace column boundary (see
-  settlements.css's own comment on .settle-timeline). Load More follows
-  the same DRF page-URL pagination the page already used before this
-  rebuild -- never silently stuck on page one.
+  status filter applied here -- every status stays visible). A
+  continuous chronology line runs down the Ledger card's own content
+  region, each entry's 40px status node sits on that line ABOVE its own
+  card (never beside it), and the card itself alternates sides on
+  desktop, collapsing to one-sided on mobile -- see settlements.css's
+  own comment on .settle-timeline for why the node stays independent of
+  which side the card is on. Load More follows the same DRF page-URL
+  pagination the page already used before this rebuild -- never
+  silently stuck on page one.
 */
 export default function SettlementLedgerCard({ settlements, currency, onOpen, hasMore, onLoadMore, loadingMore }) {
   const { t } = useTranslation();
