@@ -57,6 +57,12 @@ test('the section header and body are structurally separate elements, not one bl
   expect(head.contains(body)).toBe(false);
 });
 
+test('the heading never relies on the sitewide-undefined .text-headline-sm class -- a real compact administrative label instead', () => {
+  const { container } = render(<JoinRequestsSection requests={[]} onReview={jest.fn()} canReview />);
+  const heading = container.querySelector('.gov-section-head__title');
+  expect(heading.className).not.toMatch(/text-headline-sm/);
+});
+
 test('never shows IP, device fingerprints, or raw guest identifiers as request context', () => {
   render(<JoinRequestsSection requests={[guestRequest]} onReview={jest.fn()} canReview />);
   expect(screen.queryByText(/ip address/i)).not.toBeInTheDocument();

@@ -1,14 +1,14 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatDate } from '../../../shared/utils/format';
+import { formatRelativeTime } from '../../../shared/utils/format';
 
 export default function InvitationsSection({ invitations, onOpenInvite, onResend, onRevoke, canInvite, canResend, canRevoke }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const live = invitations.filter((row) => !row.accepted_at && !row.revoked_at);
   return (
     <>
       <div className="gov-section-head">
-        <h2 className="gov-section-head__title text-headline-sm"><i className="bi bi-envelope-fill" aria-hidden="true" /> {t('governance.invitations')}</h2>
+        <h2 className="gov-section-head__title gov-section-head__title--neutral"><i className="bi bi-envelope-fill" aria-hidden="true" /> {t('governance.invitations')}</h2>
         {canInvite && (
           <button type="button" className="gov-text-action" onClick={onOpenInvite}>
             <i className="bi bi-plus-lg" aria-hidden="true" /> {t('governance.addMember')}
@@ -24,7 +24,7 @@ export default function InvitationsSection({ invitations, onOpenInvite, onResend
                   <span className="gov-row__name">
                     {row.email ? <bdi dir="ltr">{row.email}</bdi> : t('governance.guestInvite')}
                   </span>
-                  <span className="gov-row__meta">{t('governance.sentByOn', { name: row.invited_by?.display_name || t('activity.unknown'), date: formatDate(row.created_at) })}</span>
+                  <span className="gov-row__meta">{t('governance.sentByOn', { name: row.invited_by?.display_name || t('activity.unknown'), date: formatRelativeTime(row.created_at, i18n.language) })}</span>
                 </div>
                 <div className="gov-row__actions">
                   {canRevoke && <button type="button" className="dash-btn dash-btn--secondary" onClick={() => onRevoke(row)}>{t('governance.revoke')}</button>}
@@ -38,7 +38,9 @@ export default function InvitationsSection({ invitations, onOpenInvite, onResend
             ))}
           </ul>
         ) : (
-          <p className="gov-empty text-copy-sm">{t('governance.noInvitations')}</p>
+          <div className="gov-list gov-list--empty">
+            <p className="gov-empty text-copy-sm">{t('governance.noInvitations')}</p>
+          </div>
         )}
       </div>
     </>

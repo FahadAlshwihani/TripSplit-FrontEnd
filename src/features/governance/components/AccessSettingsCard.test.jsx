@@ -72,3 +72,9 @@ test('without can_manage_invite_link the link toggle is disabled and copy/rotate
   expect(screen.queryByText('governance.copyLink')).not.toBeInTheDocument();
   expect(screen.queryByText('governance.rotateLink')).not.toBeInTheDocument();
 });
+
+test('the invite link uses the compact secondary layout, not the full-size field-control input', () => {
+  const { container } = renderCard({ join_code: 'ABC12345', join_policy: 'open' });
+  expect(container.querySelector('.governance-settings__link-input')).toBeInTheDocument();
+  expect(container.querySelector('.governance-settings__link-row .field-control')).toBeNull();
+});

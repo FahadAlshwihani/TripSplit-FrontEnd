@@ -45,9 +45,6 @@
 .governance-dialog__divider { display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: var(--tracking-label); }
 .governance-dialog__error { color: var(--color-danger); margin: 0; }
 
-.governance-section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
-.governance-section-head h3 { margin: 0; }
-
 .field-group { display: flex; flex-direction: column; gap: var(--space-1); }
 .field-label { display: inline-flex; align-items: center; gap: var(--space-1); font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
 
@@ -80,85 +77,102 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 /* Page layout -- Stitch's Access Control structure: MAIN (Join
    Requests, Pending Invitations) + SIDE (Restricted/Banned, Access
    Settings) on desktop. Below the breakpoint every section simply
-   stacks in document order -- never a cramped side column. */
+   stacks in document order -- never a cramped side column. Gaps are
+   deliberately tight (space-3, not space-4/5) -- an administrative
+   utility page, not a spacious dashboard-card layout. */
 
 .governance-layout {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-areas: "title" "main" "side";
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
-.governance-layout__title { grid-area: title; display: flex; flex-direction: column; gap: var(--space-1); }
+.governance-layout__title { grid-area: title; display: flex; flex-direction: column; gap: 2px; }
 .governance-layout__title h1 { margin: 0; color: var(--color-text); }
 .governance-layout__subtitle { margin: 0; color: var(--color-text-muted); max-width: 48rem; }
-.governance-layout__main { grid-area: main; display: flex; flex-direction: column; gap: var(--space-4); }
-.governance-layout__side { grid-area: side; display: flex; flex-direction: column; gap: var(--space-4); }
+.governance-layout__main { grid-area: main; display: flex; flex-direction: column; gap: var(--space-3); }
+.governance-layout__side { grid-area: side; display: flex; flex-direction: column; gap: var(--space-3); }
 
 @media (min-width: 960px) {
   .governance-layout {
-    grid-template-columns: 1fr minmax(300px, 34%);
+    grid-template-columns: 1fr minmax(280px, 32%);
     grid-template-areas: "title title" "main side";
   }
 }
 
 /* ------------------------------------------------------------------ */
-/* Panel shell -- same bordered/hard-shadow chrome as every other
-   feature's card (Members' .mem-list, Overview's .ov-panel), replacing
-   this feature's old dark-rgba .card-pc leftover from before the
-   Neo-classic system existed. */
+/* Section header -- a compact administrative label, deliberately NOT
+   the same scale as a Dashboard content heading (Members' "Financial
+   Record", Fund's "Funding History"): Space Grotesk at 15px/700, not
+   the app's much larger headline tokens (several of which, including
+   the sitewide-undefined .text-headline-sm, were rendering these as
+   oversized browser-default <h2> text). Icons are pinned small (16px)
+   rather than inheriting -- a support glyph next to the label, never a
+   competing visual element. */
 
-.gov-panel {
+.gov-section-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; margin-block-end: var(--space-2); }
+.gov-section-head__title {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-hard-sm);
-  padding: var(--space-3) var(--space-3) var(--space-4);
-  position: relative;
-  overflow: hidden;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--color-text);
+  font: 700 15px/20px var(--font-display);
 }
+.gov-section-head__title .bi { color: var(--nc-indigo-700); font-size: 16px; line-height: 1; }
+.gov-section-head__title--neutral .bi { color: var(--color-text-muted); }
+.gov-section-head__title--danger .bi { color: var(--color-danger); }
 
-/* Header stays pinned to its own content height; the body (list or
-   empty-state) claims whatever height the panel's min-height (below)
-   leaves over -- an empty section reads as a deliberately composed
-   card, not one sentence floating near the top of a collapsed box. */
-.gov-section-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
-.gov-section-head__title { display: flex; align-items: center; gap: var(--space-2); margin: 0; color: var(--color-text); line-height: 1.2; }
-.gov-section-head__title .bi { color: var(--nc-indigo-700); font-size: 1em; line-height: 1; }
+/* Join Requests / Invitations sit as a floating label ABOVE a
+   separately-bordered list body (Stitch's own composition -- the
+   <section> itself carries no border/shadow, only the list group
+   does). Restricted keeps the older single-card treatment further
+   below, since Stitch's own Restricted/Settings cards genuinely do
+   wrap header+body together. */
+.gov-section { display: flex; flex-direction: column; }
 
 .gov-section-body { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
-.gov-section-body--empty { align-items: center; justify-content: center; }
-.gov-section-body .gov-list, .gov-section-body .gov-list--restricted { flex: 1 1 auto; }
+/* Vertical centering only -- cross-axis stays the flex default
+   (stretch), so the empty box (.gov-list--empty, which does its own
+   internal text-centering) spans the full row width instead of
+   shrinking to its text's content width. */
+.gov-section-body--empty { justify-content: center; }
+.gov-section-body > .gov-list { flex: 1 1 auto; }
 
-/* Desktop/tablet target heights (per-section, matching the Stitch
-   reference's balance at this width) -- mobile stays content-driven,
-   see the empty-body min-height further down instead. */
+/* Target heights are the list/empty BOX itself now (not the whole
+   section, since the header floats outside it) -- modest values
+   reproducing Stitch's actual footprint at this width, not a generic
+   "fill the viewport" target. Mobile stays content-driven; only the
+   empty box gets a small floor so the message never sits flush
+   against the header. */
+.gov-section--requests .gov-section-body--empty,
+.gov-section--invitations .gov-section-body--empty { min-height: 90px; }
+@media (min-width: 480px) {
+  .gov-section--requests .gov-section-body--empty,
+  .gov-section--invitations .gov-section-body--empty { min-height: 100px; }
+}
 @media (min-width: 640px) {
-  .gov-panel--requests { min-height: 160px; }
-  .gov-panel--invitations { min-height: 140px; }
-  .gov-panel--restricted { min-height: 200px; }
+  .gov-section--requests .gov-section-body { min-height: 130px; }
+  .gov-section--invitations .gov-section-body { min-height: 110px; }
 }
 @media (min-width: 960px) {
-  .gov-panel--requests { min-height: 200px; }
-  .gov-panel--invitations { min-height: 170px; }
-  .gov-panel--restricted { min-height: 250px; }
+  .gov-section--requests .gov-section-body { min-height: 150px; }
+  .gov-section--invitations .gov-section-body { min-height: 130px; }
 }
 
 .gov-count-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding-inline: 6px;
+  min-width: 18px;
+  height: 18px;
+  padding-inline: 5px;
   border-radius: var(--radius-pill);
   background: var(--color-surface-alt);
   border: var(--border-width) solid var(--color-border);
   color: var(--color-text-muted);
   font: var(--text-label);
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .gov-text-action {
@@ -170,6 +184,7 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
   padding: 0;
   color: var(--nc-indigo-700);
   font: var(--text-label);
+  font-size: 11px;
   letter-spacing: var(--tracking-label);
   cursor: pointer;
 }
@@ -177,15 +192,31 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 
 /* Join Requests / Invitations -- one bordered group, rows stacked with
    a hairline divider between them (Stitch's own recipe), not a
-   bordered "card" per row. */
+   bordered "card" per row. This is the ONLY border/shadow for these
+   two sections -- the header above carries none. */
 
-.gov-list { list-style: none; margin: 0; padding: 0; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; }
+.gov-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+  overflow: hidden;
+  flex: 1 1 auto;
+}
+/* Reused as a plain box (not a <ul>) for the empty-state message on
+   Requests/Invitations, so the empty state keeps the exact same
+   bordered footprint a populated list would have. */
+.gov-list--empty { display: flex; align-items: center; justify-content: center; padding: var(--space-3); }
+
 .gov-row {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-2);
-  padding: var(--space-3);
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
   border-block-end: var(--border-width) solid var(--color-border-subtle);
 }
 .gov-row:last-child { border-block-end: none; }
@@ -194,10 +225,10 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
   .gov-row { flex-direction: row; align-items: center; justify-content: space-between; }
 }
 
-.gov-row__identity { display: flex; align-items: flex-start; gap: var(--space-2); min-width: 0; }
-.gov-row__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.gov-row__name { display: flex; align-items: center; gap: var(--space-2); font: var(--text-body); font-weight: 700; color: var(--color-text); }
-.gov-row__meta { color: var(--color-text-muted); font: var(--text-body-sm); }
+.gov-row__identity { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.gov-row__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.gov-row__name { display: flex; align-items: center; gap: var(--space-2); font: var(--text-body-sm); font-weight: 700; color: var(--color-text); }
+.gov-row__meta { color: var(--color-text-muted); font: var(--text-caption); font-size: 12px; }
 
 .gov-row__actions { display: flex; gap: var(--space-2); flex: 0 0 auto; align-self: stretch; }
 @media (min-width: 560px) { .gov-row__actions { align-self: auto; } }
@@ -207,28 +238,45 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 .gov-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px var(--space-2);
+  padding: 1px var(--space-2);
   border: var(--border-width) solid var(--color-border-subtle);
   border-radius: var(--radius-pill);
   background: var(--color-surface-alt);
   color: var(--color-text-muted);
   font: var(--text-label);
-  font-size: 10px;
+  font-size: 9px;
 }
 
-.gov-empty { color: var(--color-text-muted); margin: 0; padding: var(--space-3); text-align: center; }
-
-/* Mobile keeps a small but real minimum so the empty message never
-   sits flush against the header -- not the desktop/tablet card
-   min-heights above, which would force giant blank boxes at narrow
-   widths. */
-.gov-section-body--empty { min-height: 110px; }
-@media (min-width: 480px) { .gov-section-body--empty { min-height: 130px; } }
+.gov-empty { color: var(--color-text-muted); margin: 0; text-align: center; }
 
 /* Restricted list -- reuses .governance-ban-row (defined below) inside
    the same .gov-list rhythm, just without the hairline divider since
-   each row already carries its own accent border. */
-.gov-list--restricted { border: none; border-radius: 0; display: flex; flex-direction: column; gap: var(--space-2); overflow: visible; }
+   each row already carries its own accent border. Overrides the base
+   .gov-list box treatment entirely -- it's already inside Restricted's
+   own single outer card, so it never gets a second nested border. */
+.gov-list--restricted { border: none; border-radius: 0; box-shadow: none; background: none; display: flex; flex-direction: column; gap: var(--space-2); overflow: visible; }
+
+/* ------------------------------------------------------------------ */
+/* Restricted -- kept as ONE bordered card (header + body together),
+   matching Stitch's own Restricted composition exactly (unlike
+   Requests/Invitations above). Panel padding/gap tightened to match
+   the same compact administrative density. */
+
+.gov-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+  padding: var(--space-3);
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) { .gov-panel--restricted { min-height: 170px; } }
+@media (min-width: 960px) { .gov-panel--restricted { min-height: 200px; } }
 
 /* A small, contained echo of Stitch's decorative corner shape on the
    Restricted card -- a subtle warning presence even when the section
@@ -240,8 +288,8 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
   position: absolute;
   top: -18px;
   inset-inline-end: -18px;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   background: var(--color-danger-soft);
   border: var(--border-width) solid var(--color-border);
   transform: rotate(12deg);
@@ -254,14 +302,31 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 /* ------------------------------------------------------------------ */
 /* Access Settings card -- same .acc-switch recipe AccountNotifications
    already uses (see account.css), copied here for the same "own lazy
-   chunk" reason as the rest of this file. */
+   chunk" reason as the rest of this file. Compact: a single-line
+   helper per row, and the invite link/code kept visually secondary to
+   the two switches, never the largest object in the card. */
 
-.governance-settings { display: flex; flex-direction: column; gap: var(--space-3); }
-.governance-settings__row { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
-.governance-settings__label { font-weight: 600; }
-.governance-settings__hint { margin: 2px 0 0; color: var(--color-text-muted); }
-.governance-settings__link { display: flex; flex-direction: column; gap: var(--space-2); }
-.governance-settings__link-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.governance-settings { display: flex; flex-direction: column; gap: var(--space-2); }
+.governance-settings__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.governance-settings__label { display: block; font: var(--text-body-sm); font-weight: 600; }
+.governance-settings__hint { margin: 1px 0 0; color: var(--color-text-muted); font-size: 12px; }
+.governance-settings__link { display: flex; flex-direction: column; gap: var(--space-1); padding-block-start: var(--space-1); border-block-start: var(--border-width) solid var(--color-border-subtle); }
+.governance-settings__link-label { color: var(--color-text-muted); }
+.governance-settings__link-row { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.governance-settings__link-input {
+  flex: 1 1 160px;
+  min-width: 0;
+  height: 36px;
+  padding-inline: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font: var(--text-caption);
+  font-size: 12px;
+}
+.governance-settings__link-actions { display: flex; gap: var(--space-2); flex: 0 0 auto; flex-wrap: wrap; }
+.governance-settings__link-actions .dash-btn { min-height: 36px; padding-inline: var(--space-3); }
 
 .acc-switch { position: relative; display: inline-flex; flex: 0 0 auto; width: 40px; height: 22px; }
 .acc-switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }

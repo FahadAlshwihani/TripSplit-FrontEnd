@@ -21,8 +21,8 @@ export default function GovernancePanel({ trip, capabilities, requests, invitati
         <p className="text-copy-lg governance-layout__subtitle">{t('governance.subtitle', { tripTitle: trip.title })}</p>
       </div>
       <div className="governance-layout__main">
-        <section className="gov-panel gov-panel--requests"><JoinRequestsSection requests={requests} onReview={onReview} canReview={capabilities?.can_review_join_requests} /></section>
-        <section className="gov-panel gov-panel--invitations">
+        <div className="gov-section gov-section--requests"><JoinRequestsSection requests={requests} onReview={onReview} canReview={capabilities?.can_review_join_requests} /></div>
+        <div className="gov-section gov-section--invitations">
           <InvitationsSection
             invitations={invitations}
             onOpenInvite={onOpenInvite}
@@ -32,7 +32,7 @@ export default function GovernancePanel({ trip, capabilities, requests, invitati
             canResend={capabilities?.can_resend_invite}
             canRevoke={capabilities?.can_revoke_invite}
           />
-        </section>
+        </div>
       </div>
       <div className="governance-layout__side">
         <section className="gov-panel gov-panel--restricted"><BansSection bans={bans} onUnban={onUnban} canUnban={capabilities?.can_unban} /></section>

@@ -53,3 +53,8 @@ test('an empty Restricted body carries the centering modifier class', () => {
   const { container } = render(<BansSection bans={[]} onUnban={jest.fn()} canUnban />);
   expect(container.querySelector('.gov-section-body--empty')).toBeInTheDocument();
 });
+
+test('the section icon uses the danger/error treatment, matching Stitch\'s Restricted warning accent', () => {
+  const { container } = render(<BansSection bans={[]} onUnban={jest.fn()} canUnban />);
+  expect(container.querySelector('.gov-section-head__title--danger')).toBeInTheDocument();
+});

@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Avatar from '../../profile/components/Avatar';
 import { avatarKeyFromAvatar } from '../../profile/utils/avatarKey';
-import { formatDateTime } from '../../../shared/utils/format';
+import { formatRelativeTime } from '../../../shared/utils/format';
 
 /*
   Every TripJoinRequest in this codebase is created through the same
@@ -10,14 +10,16 @@ import { formatDateTime } from '../../../shared/utils/format';
   create_join_request) -- there is no other route that produces one --
   so "via invite link" below is a real, honest fact about every row,
   not an invented per-row source label the backend can't actually tell
-  apart (see the brief's "safe source context" rule).
+  apart (see the brief's "safe source context" rule). Relative time
+  ("8 minutes ago"), not a raw formatted timestamp -- matches the
+  density of a compact administrative row.
 */
 export default function JoinRequestsSection({ requests, onReview, canReview }) {
   const { t, i18n } = useTranslation();
   return (
     <>
       <div className="gov-section-head">
-        <h2 className="gov-section-head__title text-headline-sm">
+        <h2 className="gov-section-head__title">
           <i className="bi bi-person-plus-fill" aria-hidden="true" /> {t('governance.requests')}
           {requests.length > 0 && <span className="gov-count-badge">{requests.length}</span>}
         </h2>
@@ -34,7 +36,7 @@ export default function JoinRequestsSection({ requests, onReview, canReview }) {
                       {row.display_name}
                       {row.identity_type === 'guest' && <span className="gov-badge">{t('identity.guest')}</span>}
                     </span>
-                    <span className="gov-row__meta">{t('governance.requestedMeta', { date: formatDateTime(row.requested_at, i18n.language) })}</span>
+                    <span className="gov-row__meta">{t('governance.requestedMeta', { date: formatRelativeTime(row.requested_at, i18n.language) })}</span>
                   </div>
                 </div>
                 {canReview && (
@@ -47,7 +49,9 @@ export default function JoinRequestsSection({ requests, onReview, canReview }) {
             ))}
           </ul>
         ) : (
-          <p className="gov-empty text-copy-sm">{t('governance.noRequests')}</p>
+          <div className="gov-list gov-list--empty">
+            <p className="gov-empty text-copy-sm">{t('governance.noRequests')}</p>
+          </div>
         )}
       </div>
     </>

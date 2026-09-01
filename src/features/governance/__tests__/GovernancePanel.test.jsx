@@ -21,7 +21,14 @@ test('the desktop grid uses distinct main/side column classes, and each section 
   const side = container.querySelector('.governance-layout__side');
   expect(main).toBeInTheDocument();
   expect(side).toBeInTheDocument();
-  expect(main.querySelector('.gov-panel--requests')).toBeInTheDocument();
-  expect(main.querySelector('.gov-panel--invitations')).toBeInTheDocument();
+  expect(main.querySelector('.gov-section--requests')).toBeInTheDocument();
+  expect(main.querySelector('.gov-section--invitations')).toBeInTheDocument();
   expect(side.querySelector('.gov-panel--restricted')).toBeInTheDocument();
+});
+
+test('Join Requests and Invitations float their heading outside the bordered list -- Stitch\'s composition, not a card wrapping both', () => {
+  const { container } = render(<GovernancePanel trip={trip} capabilities={fullCapabilities} requests={[]} invitations={[]} bans={[]} onReview={jest.fn()} onInvite={jest.fn()} onUpdateSettings={jest.fn()} onRotateLink={jest.fn()} />);
+  const requestsSection = container.querySelector('.gov-section--requests');
+  expect(requestsSection.classList.contains('gov-panel')).toBe(false);
+  expect(requestsSection.querySelector('.gov-section-head').closest('.gov-list')).toBeNull();
 });

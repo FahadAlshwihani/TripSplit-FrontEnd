@@ -94,18 +94,21 @@ const AccessSettingsCard = ({ trip, onUpdateSettings, onRotateLink, capabilities
 
       {inviteLinkActive && (
         <div className="governance-settings__link">
-          <label className="dash-visually-hidden" htmlFor="governance-invite-link">{t('governance.inviteLinkUrl')}</label>
-          <input id="governance-invite-link" className="field-control" readOnly value={inviteLink} onFocus={(event) => event.target.select()} dir="ltr" />
-          {canManageLink && (
-            <div className="governance-settings__link-actions">
-              <button type="button" className="dash-btn dash-btn--secondary" onClick={copyLink}>
-                {copied ? t('governance.copied') : t('governance.copyLink')}
-              </button>
-              <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setRotateConfirmOpen(true)} disabled={busy}>
-                {t('governance.rotateLink')}
-              </button>
-            </div>
-          )}
+          <span className="governance-settings__link-label text-caption">{t('governance.inviteLinkUrl')}</span>
+          <div className="governance-settings__link-row">
+            <label className="dash-visually-hidden" htmlFor="governance-invite-link">{t('governance.inviteLinkUrl')}</label>
+            <input id="governance-invite-link" className="governance-settings__link-input" readOnly value={inviteLink} onFocus={(event) => event.target.select()} dir="ltr" />
+            {canManageLink && (
+              <div className="governance-settings__link-actions">
+                <button type="button" className="dash-btn dash-btn--secondary" onClick={copyLink}>
+                  {copied ? t('governance.copied') : t('governance.copyLink')}
+                </button>
+                <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setRotateConfirmOpen(true)} disabled={busy}>
+                  {t('governance.rotateLink')}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import InvitationsSection from './InvitationsSection';
 
-jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key) }) }));
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key), i18n: { language: 'en' } }) }));
 
 const emailInvite = { id: 'i1', email: 'ahmed@example.com', invited_by: { display_name: 'You' }, created_at: '2026-08-28T00:00:00Z', accepted_at: null, revoked_at: null };
 const guestInvite = { id: 'i2', email: null, invited_by: { display_name: 'Saud' }, created_at: '2026-08-25T00:00:00Z', accepted_at: null, revoked_at: null };
@@ -42,6 +42,11 @@ test('without capabilities, Invite/Resend/Revoke never render -- never a role gu
   expect(screen.queryByText('governance.addMember')).not.toBeInTheDocument();
   expect(screen.queryByText(/governance.resend/)).not.toBeInTheDocument();
   expect(screen.queryByText('governance.revoke')).not.toBeInTheDocument();
+});
+
+test('the section icon uses the neutral (not primary-blue) treatment, distinct from Join Requests', () => {
+  const { container } = render(<InvitationsSection invitations={[]} onOpenInvite={jest.fn()} onResend={jest.fn()} onRevoke={jest.fn()} canInvite canResend canRevoke />);
+  expect(container.querySelector('.gov-section-head__title--neutral')).toBeInTheDocument();
 });
 
 test('empty state shows a real message when there are no pending invitations', () => {

@@ -23,7 +23,7 @@ export default function BansSection({ bans, onUnban, canUnban }) {
   return (
     <>
       <div className="gov-section-head">
-        <h2 className="gov-section-head__title text-headline-sm"><i className="bi bi-slash-circle-fill" aria-hidden="true" /> {t('governance.bans')}</h2>
+        <h2 className="gov-section-head__title gov-section-head__title--danger"><i className="bi bi-slash-circle-fill" aria-hidden="true" /> {t('governance.bans')}</h2>
       </div>
       <div className={`gov-section-body${activeBans.length > 0 ? '' : ' gov-section-body--empty'}`}>
         {activeBans.length > 0 ? (
