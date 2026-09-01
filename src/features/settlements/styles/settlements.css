@@ -344,19 +344,24 @@
    own content region only (never the workspace/page -- see
    .settle-timeline's own min-width:0/width:100% below, which keeps it
    from ever contributing to the ancestor grid item's content-based
-   size). Each entry's 40px status node sits ON that line, ABOVE its
-   own card (never beside it -- a horizontal node+card pairing is what
-   originally ate into the narrow 5/12 column's spare width and read as
-   colliding with the workspace boundary). The card itself still
-   alternates sides on desktop (classic timeline convention), but the
-   node's horizontal position is independent of which side the card is
-   on -- it always centers on the shared axis, so alternation can never
-   drag it toward either edge. Because every offset here is a logical
-   (inline-start/inline-end) property and the axis position itself
-   (50%) doesn't change with direction, RTL only flips which side the
-   CARD sits on -- the node never needs a direction-specific override. */
+   size). Each entry OWNS its node: node and card are both normal-flow
+   children of the SAME per-entry box (.settle-timeline-entry), node
+   centered above the card via flex, never absolutely positioned onto a
+   shared axis -- so the node always visually belongs to its own card,
+   never a separate left/center rail. On desktop that per-entry box
+   itself alternates sides (fixed half-width, fixed margin -- never
+   flex-grow-able, so there is no min-content-override risk), which
+   carries the node along with its card automatically. The right/end
+   side gets a deliberately larger gap from the center line than the
+   left/start side (2rem vs 1.5rem) -- extra breathing room so the
+   card's small hover/press shadow (--shadow-hard-sm-hover /
+   --press-sm-hover, the same shared token every other card in this
+   app already presses with -- never forked here) never reads as
+   colliding with the line. Every offset is a logical property and the
+   line itself stays at a direction-agnostic 50%, so RTL only flips
+   which side each entry (and therefore its node) sits on. */
 
-.settle-timeline { position: relative; width: 100%; min-width: 0; display: flex; flex-direction: column; gap: var(--space-5); }
+.settle-timeline { position: relative; width: 100%; min-width: 0; padding-inline: 4px; display: flex; flex-direction: column; gap: var(--space-5); box-sizing: border-box; }
 .settle-timeline::before {
   content: '';
   position: absolute;
@@ -372,20 +377,16 @@
 .settle-timeline-entry {
   position: relative;
   min-width: 0;
-  /* Reserves room above the card for the absolutely-positioned node
-     (40px) plus a real gap -- never an overlap/attached-tab look. */
-  padding-block-start: 48px;
-  padding-inline-start: 44px;
-}
-@media (min-width: 768px) {
-  .settle-timeline-entry { padding-inline-start: 0; }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .settle-timeline-entry__node {
-  position: absolute;
+  position: relative;
   z-index: 1;
-  inset-block-start: 0;
-  inset-inline-start: 0;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -396,9 +397,6 @@
   background: var(--color-surface-alt);
   color: var(--color-text-muted);
   box-shadow: var(--shadow-hard-sm);
-}
-@media (min-width: 768px) {
-  .settle-timeline-entry__node { inset-inline-start: 50%; transform: translateX(-50%); }
 }
 .settle-timeline-entry__node--confirmed { background: var(--color-surface); color: var(--nc-indigo-700); }
 .settle-timeline-entry__node--rejected { background: var(--color-danger-soft); color: var(--color-danger); }
@@ -423,12 +421,13 @@
   transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
 }
 @media (min-width: 768px) {
-  /* Alternating sides -- a fixed (not flex-grow-able) width, so there
-     is no min-content override risk: the card can never be forced
-     wider than its own half share regardless of its text content. */
-  .settle-timeline-entry__card { width: calc(50% - 2.5rem); }
-  .settle-timeline-entry:nth-child(odd) .settle-timeline-entry__card { margin-inline-end: auto; }
-  .settle-timeline-entry:nth-child(even) .settle-timeline-entry__card { margin-inline-start: auto; }
+  /* The whole entry (node + card together) alternates sides -- a fixed
+     width, never flex-grow-able, so content can never force it wider
+     than its own share. The end/right side keeps a bigger gap from the
+     center line (2rem) than the start/left side (1.5rem) -- see this
+     section's own comment above for why. */
+  .settle-timeline-entry:nth-child(odd) { width: calc(50% - 1.5rem); margin-inline-end: auto; }
+  .settle-timeline-entry:nth-child(even) { width: calc(50% - 2rem); margin-inline-start: auto; }
 }
 .settle-timeline-entry__card:hover { transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
 .settle-timeline-entry__card:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 transparent; }

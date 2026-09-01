@@ -31,19 +31,24 @@ const path = require('path');
   C. The timeline's status icons sat beside their card in a horizontal
      row, which -- combined with the card's own 50%-minus-node-width
      share on the alternating desktop layout -- read as colliding with
-     the 7/5 workspace boundary. An intermediate fix removed the shared
-     center line and alternation entirely; that traded away the desired
-     chronological read (a continuous line connecting distinct events)
-     for containment safety. The actual fix needed was narrower: keep
-     the shared center line and desktop alternation, but move each
-     node from BESIDE its card to ABOVE it (absolutely positioned,
-     centered on the shared axis, independent of which side the card
-     alternates to) -- the node no longer consumes horizontal row space
-     at all, so the card can use its full half-share without a node
-     eating into it, and the axis itself never depends on which side any
-     given card is on. This section guards that shape specifically: the
-     line and alternation must both be present, and the node's axis
-     position must never be conditioned on nth-child.
+     the 7/5 workspace boundary. Two intermediate fixes were tried and
+     both over/under-corrected: first removing the shared center line
+     and alternation entirely (broke the intended chronological read),
+     then centering every node on one shared axis independent of its
+     card's side (visually read as "one shared left/center column" or
+     "sitting on the divider," never belonging to any specific card).
+     The actual fix: node and card are both normal-flow children of the
+     SAME per-entry box, node centered above the card via flex -- so the
+     node always visually belongs to its own card. The whole entry
+     (node + card together) alternates sides on desktop, carrying the
+     node along with it automatically -- there is no separate axis for
+     the node to be pinned to at all. The end/right side also gets a
+     deliberately larger gap from the center line (2rem vs 1.5rem on
+     the start/left side) so the card's small hover/press shadow never
+     reads as colliding with it. This section guards that shape: the
+     line stays a subtle background guide, the ENTRY (not just the
+     card) alternates via nth-child, and the node has no axis/position
+     independent of its own entry.
 */
 
 const read = (relativePath) => fs.readFileSync(path.join(__dirname, '..', '..', '..', relativePath), 'utf8');
@@ -129,44 +134,54 @@ test('SettlementTimelineDrawer explicitly imports the stylesheet its drawer shel
   expect(timelineDrawerSource).toMatch(/import ['"].*expenses\/styles\/expenses\.css['"]/);
 });
 
-// --- C. Timeline: shared line + desktop alternation, node above card ---
+// --- C. Timeline: node belongs to its own entry, entry alternates -----
 
-test('a continuous chronology line exists, scoped to .settle-timeline itself (never the workspace/page)', () => {
+test('a continuous chronology line exists as a background guide, scoped to .settle-timeline itself (never the workspace/page)', () => {
   expect(settlementsCss).toMatch(/\.settle-timeline::before/);
   const rule = ruleFor(settlementsCss, '.settle-timeline::before');
   expect(rule).toMatch(/position:\s*absolute/);
   expect(rule).toMatch(/inset-block:\s*0/);
 });
 
-test('desktop alternation exists for the CARD -- odd/even entries push their card to opposite sides', () => {
-  expect(settlementsCss).toMatch(/\.settle-timeline-entry:nth-child\(odd\)\s+\.settle-timeline-entry__card/);
-  expect(settlementsCss).toMatch(/\.settle-timeline-entry:nth-child\(even\)\s+\.settle-timeline-entry__card/);
-});
-
-test('the node itself is never targeted by an nth-child rule -- its axis position can never depend on which side the card alternates to', () => {
-  const nodeAndNthChild = settlementsCss.split('\n').some((line) => line.includes('nth-child') && line.includes('__node'));
-  expect(nodeAndNthChild).toBe(false);
-});
-
-test('the node is absolutely positioned and sits above the card (never inline beside it) -- the entry reserves top space for it', () => {
+test('the node is a normal-flow child centered above its own card within the same entry box -- never absolutely positioned onto a separate shared axis', () => {
   const nodeRule = ruleFor(settlementsCss, '.settle-timeline-entry__node');
-  expect(nodeRule).toMatch(/position:\s*absolute/);
-  expect(nodeRule).toMatch(/inset-block-start:\s*0/);
+  expect(nodeRule).not.toMatch(/position:\s*(absolute|fixed)/);
   const entryRule = ruleFor(settlementsCss, '.settle-timeline-entry');
-  expect(entryRule).toMatch(/padding-block-start:\s*48px/);
+  expect(entryRule).toMatch(/display:\s*flex/);
+  expect(entryRule).toMatch(/flex-direction:\s*column/);
+  expect(entryRule).toMatch(/align-items:\s*center/);
 });
 
-test('at the desktop breakpoint the node centers on the shared 50% axis, independent of the media query that alternates the card', () => {
-  expect(settlementsCss).toMatch(/\.settle-timeline-entry__node\s*\{\s*inset-inline-start:\s*50%;\s*transform:\s*translateX\(-50%\);\s*\}/);
+test('desktop alternation applies to the whole ENTRY (node + card together), not just the card -- so the node is carried along with its own card, never left pinned to a shared axis', () => {
+  expect(settlementsCss).toMatch(/\.settle-timeline-entry:nth-child\(odd\)\s*\{[^}]*width:\s*calc\(50%/);
+  expect(settlementsCss).toMatch(/\.settle-timeline-entry:nth-child\(even\)\s*\{[^}]*width:\s*calc\(50%/);
+  // The node/card-specific selectors from earlier iterations must be
+  // gone -- alternation lives on .settle-timeline-entry itself now.
+  expect(settlementsCss).not.toMatch(/nth-child\([^)]*\)\s+\.settle-timeline-entry__card/);
+  expect(settlementsCss).not.toMatch(/nth-child\([^)]*\)\s+\.settle-timeline-entry__node/);
 });
 
-test('the desktop card is a fixed half-width (not flex-grow-able), so it can never be pushed past its share by content -- and never reverts to a full-width single column', () => {
-  expect(settlementsCss).toMatch(/\.settle-timeline-entry__card\s*\{\s*width:\s*calc\(50%\s*-\s*2\.5rem\);\s*\}/);
+test('the end/right side keeps a bigger gap from the center line than the start/left side, so hover/press shadow never reads as colliding with it', () => {
+  const oddWidth = settlementsCss.match(/\.settle-timeline-entry:nth-child\(odd\)\s*\{\s*width:\s*calc\(50%\s*-\s*([\d.]+)rem\)/);
+  const evenWidth = settlementsCss.match(/\.settle-timeline-entry:nth-child\(even\)\s*\{\s*width:\s*calc\(50%\s*-\s*([\d.]+)rem\)/);
+  expect(oddWidth).not.toBeNull();
+  expect(evenWidth).not.toBeNull();
+  expect(Number(evenWidth[1])).toBeGreaterThan(Number(oddWidth[1]));
 });
 
-test('RTL: every positioning/alternation rule uses logical properties, never physical left/right -- the axis (50%) is direction-agnostic by construction, so only the card side needs to flip, and it flips for free', () => {
-  expect(settlementsCss).not.toMatch(/\.settle-timeline-entry__node[^}]*\b(left|right)\s*:/);
-  expect(settlementsCss).not.toMatch(/\.settle-timeline-entry__card[^}]*\bmargin-(left|right)\s*:/);
+test('the card hover/press treatment reuses the shared app-wide press tokens -- never a forked, page-specific interaction language', () => {
+  const rule = ruleFor(settlementsCss, '.settle-timeline-entry__card:hover');
+  expect(rule).toMatch(/var\(--press-sm-hover\)/);
+  expect(rule).toMatch(/var\(--shadow-hard-sm-hover\)/);
+});
+
+test('the timeline root reserves a small horizontal buffer so a card at either edge has breathing room for its hover/press shadow', () => {
+  const rule = ruleFor(settlementsCss, '.settle-timeline');
+  expect(rule).toMatch(/padding-inline:\s*\d/);
+});
+
+test('RTL: every positioning/alternation rule uses logical properties, never physical left/right -- the line stays at a direction-agnostic 50%, so only which side the entry sits on needs to flip, and it flips for free', () => {
+  expect(settlementsCss).not.toMatch(/\.settle-timeline-entry[^}]*\b(left|right)\s*:/);
   expect(settlementsCss).toMatch(/margin-inline-end:\s*auto/);
   expect(settlementsCss).toMatch(/margin-inline-start:\s*auto/);
 });

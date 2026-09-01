@@ -6,11 +6,13 @@ import { formatDate } from '../../../shared/utils/format';
 const STATUS_ICON = { pending: 'schedule', confirmed: 'check_circle', rejected: 'cancel', cancelled: 'close' };
 
 /*
-  One entry in the Settlement Ledger -- a 40px status icon sits on the
-  shared chronology line ABOVE this entry's own compact card (date +
-  status badge, "<payer> paid <recipient>", amount); the card alternates
-  sides on desktop while the node stays centered on the line regardless
-  (see settlements.css's own comment on .settle-timeline). Presentation
+  One entry in the Settlement Ledger -- a 40px status icon centered
+  directly above this entry's own compact card (date + status badge,
+  "<payer> paid <recipient>", amount); node and card are both normal-
+  flow children of the same entry box, so the node always belongs to
+  its own card, never a shared left/center rail. The whole entry
+  alternates sides on desktop, carrying its node along with it (see
+  settlements.css's own comment on .settle-timeline). Presentation
   only -- clicking it opens the existing canonical
   SettlementTimelineDrawer (owned by the parent page), never a new
   details implementation. Real button semantics since it's genuinely

@@ -8,13 +8,13 @@ import SettlementTimelineEntry from './SettlementTimelineEntry';
   exactly as GET /trips/{id}/settlements/ already returns it (no
   status filter applied here -- every status stays visible). A
   continuous chronology line runs down the Ledger card's own content
-  region, each entry's 40px status node sits on that line ABOVE its own
-  card (never beside it), and the card itself alternates sides on
-  desktop, collapsing to one-sided on mobile -- see settlements.css's
-  own comment on .settle-timeline for why the node stays independent of
-  which side the card is on. Load More follows the same DRF page-URL
-  pagination the page already used before this rebuild -- never
-  silently stuck on page one.
+  region as a subtle background guide; each entry owns its own 40px
+  status node, centered directly above its own card (never a shared
+  left/center rail), and the whole entry (node + card together)
+  alternates sides on desktop, collapsing to one-sided on mobile -- see
+  settlements.css's own comment on .settle-timeline. Load More follows
+  the same DRF page-URL pagination the page already used before this
+  rebuild -- never silently stuck on page one.
 */
 export default function SettlementLedgerCard({ settlements, currency, onOpen, hasMore, onLoadMore, loadingMore }) {
   const { t } = useTranslation();
