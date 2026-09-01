@@ -21,7 +21,25 @@ export const getTrips = () => responseData(apiClient.get('/trips/'));
 // branch and apps.trips.selectors.account_trip_history_for_user().
 export const getAccountTrips = (filterValue, config) => responseData(apiClient.get('/trips/', { ...config, params: { scope: 'account', filter: filterValue, ...(config?.params || {}) } }));
 export const leaveTrip = (id) => responseData(apiClient.post(`/trips/${id}/leave/`, {}, tripRequest(id)));
-export const getTrip = (id, config) => responseData(apiClient.get(`/trips/${id}/`, tripRequest(id, config)));
+// The one endpoint TripLayout bootstraps a route through -- also sends
+// the durable guest-device credential (if this browser has one) so a
+// guest who already has a membership in this trip is recognized even
+// when the per-trip guest token wasn't saved under THIS particular
+// URL-identifier form (a freshly shared short_code link for a trip
+// they joined under the UUID form, or vice versa) or was simply lost.
+// The backend only ever includes `guest_token` in the response when
+// that recovery path actually ran (apps.trips.views.trip_detail_view) --
+// save it under both identifier forms so every subsequent request (all
+// of which use the plain per-trip token, never the device token) finds
+// it, exactly like createTrip/joinTrip's own token-saving above.
+export const getTrip = async (id, config) => {
+  const response = await responseData(apiClient.get(`/trips/${id}/`, guestDeviceRequest(tripRequest(id, config))));
+  if (response.guest_token) {
+    saveGuestToken(response.id, response.guest_token);
+    if (response.short_code) saveGuestToken(response.short_code, response.guest_token);
+  }
+  return response;
+};
 export const updateTrip = (id, payload) => responseData(apiClient.patch(`/trips/${id}/`, payload, tripRequest(id)));
 export const rotateJoinCode = (id) => responseData(apiClient.post(`/trips/${id}/rotate-join-code/`, {}, tripRequest(id)));
 export const archiveTrip = (id) => responseData(apiClient.delete(`/trips/${id}/`, tripRequest(id)));
