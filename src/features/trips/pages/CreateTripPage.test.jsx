@@ -22,7 +22,8 @@ const renderPage = async () => {
     <MemoryRouter initialEntries={['/create-trip']}>
       <Routes>
         <Route path="/create-trip" element={<CreateTripPage />} />
-        <Route path="/trips/:id/overview" element={<p>trip workspace overview</p>} />
+        <Route path="/trips/short-code-1/overview" element={<p>trip workspace overview</p>} />
+        <Route path="/trips/:id/overview" element={<p>wrong identifier form used -- not the canonical short_code</p>} />
         <Route path="/" element={<p>home page</p>} />
       </Routes>
     </MemoryRouter>
@@ -63,8 +64,8 @@ test('blocks submission when the end date is before the start date', async () =>
   expect(createTrip).not.toHaveBeenCalled();
 });
 
-test('submits the create-trip payload and navigates directly into the new trip overview', async () => {
-  createTrip.mockResolvedValue({ trip: { id: 'trip-1' } });
+test('submits the create-trip payload and navigates directly into the new trip overview, using the canonical short_code URL', async () => {
+  createTrip.mockResolvedValue({ trip: { id: 'trip-1', short_code: 'short-code-1' } });
   await renderPage();
   fireEvent.change(screen.getByPlaceholderText('createTrip.namePlaceholder'), { target: { value: 'Tokyo' } });
   fireEvent.change(screen.getByPlaceholderText('guest.displayNamePlaceholder'), { target: { value: 'Alex' } });

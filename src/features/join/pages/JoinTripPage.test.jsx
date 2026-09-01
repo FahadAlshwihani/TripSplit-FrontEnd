@@ -1,6 +1,6 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useParams } from 'react-router-dom';
 import JoinTripPage from './JoinTripPage';
 import { joinTrip } from '../../trips/api/tripsApi';
 import { getJoinCapability } from '../api/joinApi';
@@ -13,12 +13,17 @@ jest.mock('../api/joinApi', () => ({ getJoinCapability: jest.fn(), requestInvita
 
 const TRIP_PREVIEW = { title: 'Georgia Winter Trip', start_date: null, end_date: null, currency: 'SAR', member_count: 5, join_policy: 'open', password_required: false };
 
+const LandedTripIdSpy = () => {
+  const { id } = useParams();
+  return <p>trip workspace overview: <span data-testid="landed-trip-id">{id}</span></p>;
+};
+
 const renderPage = async (entry = '/trips/join') => {
   const utils = render(
     <MemoryRouter initialEntries={[entry]}>
       <Routes>
         <Route path="/trips/join" element={<JoinTripPage />} />
-        <Route path="/trips/:id/overview" element={<p>trip workspace overview</p>} />
+        <Route path="/trips/:id/overview" element={<LandedTripIdSpy />} />
         <Route path="/join-request/:id" element={<p>join request page</p>} />
         <Route path="/invite/:token" element={<p>invitation page</p>} />
         <Route path="/account" element={<p>account profile page</p>} />
@@ -97,7 +102,7 @@ test('already being a member shows an Open Trip action with no join form', async
   await lookup();
   expect(screen.getByText('joinTrip.states.alreadyMember')).toBeInTheDocument();
   fireEvent.click(screen.getByText('joinTrip.openTrip'));
-  expect(await screen.findByText('trip workspace overview')).toBeInTheDocument();
+  expect(await screen.findByText(/trip workspace overview/)).toBeInTheDocument();
 });
 
 test('an invite-only trip reached by code shows Invitation Required with no submit action', async () => {
@@ -124,15 +129,15 @@ test('an already-requested identity can deep-link to the pending join-request pa
   expect(await screen.findByText('join request page')).toBeInTheDocument();
 });
 
-test('submitting an open trip navigates directly into the trip overview', async () => {
+test('submitting an open trip navigates directly into the trip overview, using the canonical short_code URL', async () => {
   getJoinCapability.mockResolvedValue({ mode: 'code', trip: TRIP_PREVIEW, action: 'ready_open' });
-  joinTrip.mockResolvedValue({ trip: { id: 'trip-1' } });
+  joinTrip.mockResolvedValue({ trip: { id: 'trip-1', short_code: 'short-code-1' } });
   await renderPage();
   await lookup();
   fireEvent.change(screen.getByPlaceholderText('guest.displayNamePlaceholder'), { target: { value: 'Alex' } });
   fireEvent.click(screen.getByText('joinTrip.joinTripButton'));
   await waitFor(() => expect(joinTrip).toHaveBeenCalledWith(expect.objectContaining({ join_code: 'ABCD1234', guest_name: 'Alex' })));
-  expect(await screen.findByText('trip workspace overview')).toBeInTheDocument();
+  expect(await screen.findByTestId('landed-trip-id')).toHaveTextContent('short-code-1');
 });
 
 test('a pasted invitation token immediately hands off to the dedicated invitation flow', async () => {

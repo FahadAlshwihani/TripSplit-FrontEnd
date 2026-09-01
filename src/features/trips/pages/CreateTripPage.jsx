@@ -80,7 +80,7 @@ const CreateTripPage = () => {
         saveGuestProfile(profile);
       }
       const result = await createTrip(payload);
-      navigate(`/trips/${result.trip.id}/overview`);
+      navigate(`/trips/${result.trip.short_code}/overview`);
     } catch (err) {
       setServerError(err.response?.data?.message || t('set.Error'));
     } finally {

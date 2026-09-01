@@ -1,6 +1,6 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useParams } from 'react-router-dom';
 import AccountTrips from './AccountTrips';
 import { getAccountTrips, leaveTrip } from '../../trips/api/tripsApi';
 
@@ -14,7 +14,7 @@ jest.mock('../../trips/api/tripsApi', () => ({
 }));
 
 const activeOwnerTrip = {
-  id: 'trip-a', title: 'Georgia Winter Trip', currency: 'SAR', start_date: null, end_date: null,
+  id: 'trip-a', short_code: 'short-a', title: 'Georgia Winter Trip', currency: 'SAR', start_date: null, end_date: null,
   lifecycle_status: 'active', archived_at: null, join_code: 'ABCD1234',
   role: 'owner', membership_active: true, created_by_me: true,
   capabilities: { can_open: true, can_leave: false, can_rejoin: false, can_archive: true, can_restore: false, can_close: true, requires_transfer_before_leave: true },
@@ -35,13 +35,16 @@ const closedTrip = {
   capabilities: { can_open: true, can_leave: false, can_rejoin: false, can_archive: false, can_restore: false, can_close: false, requires_transfer_before_leave: true },
 };
 
+const OverviewSpy = () => { const { id } = useParams(); return <p>trip overview page: <span data-testid="landed-overview-id">{id}</span></p>; };
+const MembersSpy = () => { const { id } = useParams(); return <p>trip members page: <span data-testid="landed-members-id">{id}</span></p>; };
+
 const renderTrips = async () => {
   const utils = render(
     <MemoryRouter initialEntries={['/account']}>
       <Routes>
         <Route path="/account" element={<AccountTrips />} />
-        <Route path="/trips/:id/overview" element={<p>trip overview page</p>} />
-        <Route path="/trips/:id/members" element={<p>trip members page</p>} />
+        <Route path="/trips/:id/overview" element={<OverviewSpy />} />
+        <Route path="/trips/:id/members" element={<MembersSpy />} />
         <Route path="/trips/join" element={<p>join trip page</p>} />
       </Routes>
     </MemoryRouter>
@@ -175,7 +178,22 @@ test('an owner who cannot leave sees a Manage Ownership control (not just inform
   const manageAction = screen.getByText('account.trips.manageOwnership').closest('button');
   expect(manageAction).toHaveClass('acc-trip__more-action');
   fireEvent.click(manageAction);
-  expect(await screen.findByText('trip members page')).toBeInTheDocument();
+  expect(await screen.findByText(/trip members page/)).toBeInTheDocument();
+});
+
+test('Open Trip navigates using the canonical short_code, never the internal UUID', async () => {
+  getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [activeOwnerTrip] });
+  await renderTrips();
+  fireEvent.click(await screen.findByText('account.trips.openTrip'));
+  expect(await screen.findByTestId('landed-overview-id')).toHaveTextContent('short-a');
+});
+
+test('Manage Ownership (behind more-actions) also navigates using the canonical short_code', async () => {
+  getAccountTrips.mockResolvedValue({ count: 1, next: null, previous: null, results: [activeOwnerTrip] });
+  await renderTrips();
+  fireEvent.click(await screen.findByLabelText('account.trips.moreActions'));
+  fireEvent.click(screen.getByText('account.trips.manageOwnership'));
+  expect(await screen.findByTestId('landed-members-id')).toHaveTextContent('short-a');
 });
 
 test('badges, title, and date render in the same fixed DOM order regardless of dir (RTL uses only logical CSS, never a different element order)', async () => {

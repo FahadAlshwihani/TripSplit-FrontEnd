@@ -155,7 +155,7 @@ const JoinTripPage = () => {
         if (result.request_token) sessionStorage.setItem(requestTokenKey(result.join_request.id), result.request_token);
         navigate(`/join-request/${result.join_request.id}`);
       } else {
-        navigate(`/trips/${result.trip.id}/overview`);
+        navigate(`/trips/${result.trip.short_code}/overview`);
       }
     } catch (err) {
       setServerErrorKey(getJoinErrorKey(err));

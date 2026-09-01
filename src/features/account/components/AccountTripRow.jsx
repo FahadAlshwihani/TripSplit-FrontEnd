@@ -77,7 +77,7 @@ const AccountTripRow = ({ trip, onChanged }) => {
         <span className="acc-trip__currency-value text-copy">{trip.currency}</span>
         <div className="acc-trip__actions">
           {trip.capabilities.can_open && (
-            <button type="button" className="acc-btn acc-btn--primary acc-trip__primary-action" onClick={() => navigate(`/trips/${trip.id}/overview`)}>
+            <button type="button" className="acc-btn acc-btn--primary acc-trip__primary-action" onClick={() => navigate(`/trips/${trip.short_code}/overview`)}>
               {t('account.trips.openTrip')}
             </button>
           )}
@@ -115,7 +115,7 @@ const AccountTripRow = ({ trip, onChanged }) => {
               {({ close }) => (
                 <>
                   {trip.capabilities.requires_transfer_before_leave && (
-                    <button type="button" className="acc-trip__more-action" onClick={() => { close(); navigate(`/trips/${trip.id}/members`); }}>
+                    <button type="button" className="acc-trip__more-action" onClick={() => { close(); navigate(`/trips/${trip.short_code}/members`); }}>
                       <i className="bi bi-people acc-trip__more-action-icon" aria-hidden="true" />
                       {t('account.trips.manageOwnership')}
                     </button>
