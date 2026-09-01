@@ -5,6 +5,11 @@ import Money from '../../../shared/components/Money';
 import { getSettlementTimeline } from '../api/settlementsApi';
 import { formatDateTime } from '../../../shared/utils/format';
 import useModalDialog from '../../../shared/hooks/useModalDialog';
+// This drawer's own markup uses expenses.css's `.exp-drawer*`/
+// `.exp-modal__close` (fixed overlay/backdrop/z-index) -- imported
+// explicitly here so the drawer renders correctly regardless of which
+// page mounts it (Settlements or Balances) or what loaded before it.
+import '../../expenses/styles/expenses.css';
 
 /*
   Full chronological history for one settlement -- who reported/recorded

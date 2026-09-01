@@ -42,14 +42,19 @@ import '../styles/settlements.css';
   to encode the identical rule (recipient-or-manager / reporter-or-
   manager); this is a known duplication, not a gap, so no new
   capabilities field was added for this pass.
+
+  Exactly one settlement overlay can ever be mounted at a time -- both
+  the timeline drawer and the action dialog are driven off this single
+  discriminated `overlay` slot (never two independent booleans), so
+  there is no code path where both could mount simultaneously.
 */
 export default function SettlementsPage() {
   const { trip, tripId, currentMember, permissions } = useOutletContext();
   const { t } = useTranslation();
   const [actionError, setActionError] = useState(null);
   const [busyId, setBusyId] = useState(null);
-  const [timelineTarget, setTimelineTarget] = useState(null);
-  const [actionDialog, setActionDialog] = useState(null); // { mode, counterpart?, debt?, initialFromId?, initialToId? } | null
+  // null | { type: 'timeline', id } | { type: 'action', mode, counterpart?, debt?, initialFromId?, initialToId? }
+  const [overlay, setOverlay] = useState(null);
 
   const resource = useRouteResource(async (signal) => {
     const config = { signal };
@@ -86,7 +91,7 @@ export default function SettlementsPage() {
       await reviewSettlement(tripId, settlement.id, decision);
       setActionError(null);
       await resource.retry();
-      setTimelineTarget(null);
+      setOverlay(null);
     } catch (error) {
       setActionError(error);
     } finally {
@@ -114,15 +119,15 @@ export default function SettlementsPage() {
   };
 
   const handleDialogSave = async (payload) => {
-    if (actionDialog.mode === 'report') await reportPayment(tripId, payload);
-    else if (actionDialog.mode === 'received') await recordReceivedPayment(tripId, payload);
+    if (overlay.mode === 'report') await reportPayment(tripId, payload);
+    else if (overlay.mode === 'received') await recordReceivedPayment(tripId, payload);
     else await recordAdminSettlement(tripId, payload);
-    setActionDialog(null);
+    setOverlay(null);
     setActionError(null);
     await resource.retry();
   };
 
-  const timelineSettlement = timelineTarget && settlements.find((row) => row.id === timelineTarget.id);
+  const timelineSettlement = overlay?.type === 'timeline' && settlements.find((row) => row.id === overlay.id);
   const timelineCaps = timelineSettlement ? {
     canReview: !readOnly && timelineSettlement.status === 'pending' && (timelineSettlement.to_member_id === currentMember?.id || isManager),
     canCancel: !readOnly && timelineSettlement.status === 'pending' && (timelineSettlement.created_by === currentMember?.id || isManager),
@@ -137,7 +142,7 @@ export default function SettlementsPage() {
           <p className="settle-page__subtitle text-copy">{t('settlements.pageSubtitle')}</p>
         </div>
         {canRecordAdmin && (
-          <button type="button" className="dash-btn dash-btn--secondary settle-page__record-external" onClick={() => setActionDialog({ mode: 'admin' })}>
+          <button type="button" className="dash-btn dash-btn--secondary settle-page__record-external" onClick={() => setOverlay({ type: 'action', mode: 'admin' })}>
             <span className="material-symbols-outlined settle-icon-inline" aria-hidden="true">fact_check</span> {t('settlements.recordExternal')}
           </button>
         )}
@@ -153,14 +158,17 @@ export default function SettlementsPage() {
             currency={currency}
             canRecord={(suggestion) => resolveSuggestionAction(suggestion) !== null}
             recordLabel={suggestionRecordLabel}
-            onRecord={(suggestion) => setActionDialog(resolveSuggestionAction(suggestion))}
+            onRecord={(suggestion) => {
+              const action = resolveSuggestionAction(suggestion);
+              if (action) setOverlay({ type: 'action', ...action });
+            }}
           />
         </div>
         <div className="settle-workspace__right">
           <SettlementLedgerCard
             settlements={settlements}
             currency={currency}
-            onOpen={setTimelineTarget}
+            onOpen={(settlement) => setOverlay({ type: 'timeline', id: settlement.id })}
             hasMore={Boolean(settlementPage.next)}
             onLoadMore={loadMore}
             loadingMore={resource.loadingMore}
@@ -168,12 +176,12 @@ export default function SettlementsPage() {
         </div>
       </div>
 
-      {timelineTarget && timelineSettlement && (
+      {overlay?.type === 'timeline' && timelineSettlement && (
         <SettlementTimelineDrawer
           tripId={tripId}
           settlement={timelineSettlement}
           currency={currency}
-          onClose={() => setTimelineTarget(null)}
+          onClose={() => setOverlay(null)}
           busy={busyId === timelineSettlement.id}
           {...timelineCaps}
           onConfirm={(row) => runReview(row, 'confirm')}
@@ -184,18 +192,18 @@ export default function SettlementsPage() {
         />
       )}
 
-      {actionDialog && (
+      {overlay?.type === 'action' && (
         <SettlementActionDialog
-          mode={actionDialog.mode}
+          mode={overlay.mode}
           members={members}
           currentMember={currentMember}
           currency={currency}
-          counterpart={actionDialog.counterpart}
-          debt={actionDialog.debt}
-          initialFromId={actionDialog.initialFromId}
-          initialToId={actionDialog.initialToId}
+          counterpart={overlay.counterpart}
+          debt={overlay.debt}
+          initialFromId={overlay.initialFromId}
+          initialToId={overlay.initialToId}
           onSave={handleDialogSave}
-          onClose={() => setActionDialog(null)}
+          onClose={() => setOverlay(null)}
         />
       )}
     </div>

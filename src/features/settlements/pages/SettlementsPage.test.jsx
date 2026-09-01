@@ -353,3 +353,50 @@ test('a load failure shows a retry action', async () => {
   renderPage();
   expect(await screen.findByText('network down')).toBeInTheDocument();
 });
+
+// 25.1-25.5: modal/drawer portal containment (real regression: these
+// rendered as inline page content instead of real overlays because the
+// components didn't import their own required structural CSS)
+test('the timeline drawer renders through ModalPortal -- a body-level element outside the page container and the workspace grid, with a real backdrop and aria-modal', async () => {
+  const { container } = renderPage();
+  await screen.findByText('settlements.settlementLedger');
+  fireEvent.click(screen.getByRole('button', { name: /Saud.*paid.*Fahad.*75\.00/ }));
+  const dialog = await screen.findByRole('dialog');
+  expect(container.contains(dialog)).toBe(false);
+  expect(document.body.contains(dialog)).toBe(true);
+  expect(dialog).toHaveAttribute('aria-modal', 'true');
+  expect(document.body.querySelector('.exp-drawer-overlay')).toBeInTheDocument();
+});
+
+test('the action dialog renders through ModalPortal -- not an inline child of settle-workspace -- with a real backdrop and aria-modal', async () => {
+  const { container } = renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: /settlements\.recordExternal/ }));
+  const dialog = await screen.findByRole('dialog');
+  expect(container.querySelector('.settle-workspace').contains(dialog)).toBe(false);
+  expect(document.body.contains(dialog)).toBe(true);
+  expect(dialog).toHaveAttribute('aria-modal', 'true');
+  expect(document.body.querySelector('.bal-dialog-overlay')).toBeInTheDocument();
+});
+
+// 25.4: single-overlay-state contract -- opening a second overlay always
+// replaces the first, since both are driven off one discriminated state
+test('opening a second settlement overlay always replaces the first -- only one is ever mounted at a time', async () => {
+  renderPage();
+  await screen.findByText('settlements.settlementLedger');
+  fireEvent.click(screen.getByRole('button', { name: /Saud.*paid.*Fahad.*75\.00/ }));
+  await screen.findByRole('dialog');
+  expect(screen.getAllByRole('dialog')).toHaveLength(1);
+  fireEvent.click(screen.getByRole('button', { name: /settlements\.recordExternal/ }));
+  await waitFor(() => expect(screen.getAllByRole('dialog')).toHaveLength(1));
+  expect(within(screen.getByRole('dialog')).getByText('settlements.adminModalTitle')).toBeInTheDocument();
+});
+
+// 25.15-25.16: canonical control classes, no raw unstyled close button
+test('the admin dialog opened from Settlements uses canonical field-control classes and the canonical close button, not raw browser defaults', async () => {
+  renderPage();
+  fireEvent.click(await screen.findByRole('button', { name: /settlements\.recordExternal/ }));
+  const dialog = await screen.findByRole('dialog');
+  expect(within(dialog).getByLabelText('settlements.payer')).toHaveClass('field-control');
+  expect(within(dialog).getByLabelText('expense.amount')).toHaveClass('field-control');
+  expect(dialog.querySelector('.exp-modal__close')).toBeInTheDocument();
+});

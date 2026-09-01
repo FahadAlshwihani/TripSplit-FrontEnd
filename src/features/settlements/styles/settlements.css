@@ -217,8 +217,12 @@
    breakpoint (1024px). */
 
 .settle-workspace { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--space-4); align-items: start; }
-.settle-workspace__left { grid-column: 1 / -1; display: flex; flex-direction: column; gap: var(--space-4); }
-.settle-workspace__right { grid-column: 1 / -1; }
+/* min-width: 0 overrides the grid item's automatic (content-based)
+   minimum size -- without it, unbreakable timeline/row content inside
+   can force its 7fr/5fr track wider than its assigned share, shifting
+   the rendered column boundary instead of staying inside it. */
+.settle-workspace__left { grid-column: 1 / -1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); }
+.settle-workspace__right { grid-column: 1 / -1; min-width: 0; }
 
 @media (min-width: 1024px) {
   .settle-workspace__left { grid-column: span 7 / span 7; }
@@ -237,6 +241,7 @@
 
 .settle-card {
   position: relative;
+  min-width: 0;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--nc-white);
@@ -258,7 +263,7 @@
 .settle-card__helper { margin: var(--space-2) 0 var(--space-3); color: var(--color-text-muted); font: var(--text-body-sm); }
 
 .settle-workspace__right .settle-card { height: 100%; display: flex; flex-direction: column; }
-.settle-workspace__right .settle-card__body { flex: 1 1 auto; overflow-y: auto; }
+.settle-workspace__right .settle-card__body { flex: 1 1 auto; min-width: 0; overflow-y: auto; }
 
 /* -------------------------------------------------------------- */
 /* Current Balances -- avatar 40px (real Avatar size="md", already a
@@ -340,7 +345,12 @@
    throughout so RTL mirrors the whole composition naturally rather
    than hardcoding left/right. */
 
-.settle-timeline { position: relative; display: flex; flex-direction: column; gap: 0; }
+/* Timeline root -- the ::before center line and every entry position
+   relative to THIS element (the Ledger card's own content region),
+   never the workspace grid or the page. width:100%/min-width:0 keep it
+   from ever contributing to the ancestor grid item's content-based
+   size (see .settle-workspace__right above). */
+.settle-timeline { position: relative; width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 0; }
 .settle-timeline::before {
   content: '';
   position: absolute;

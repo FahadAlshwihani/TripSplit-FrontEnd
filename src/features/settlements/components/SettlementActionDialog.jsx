@@ -4,6 +4,14 @@ import ModalPortal from '../../../shared/components/ModalPortal';
 import Avatar from '../../profile/components/Avatar';
 import { avatarKeyFromAvatar } from '../../profile/utils/avatarKey';
 import Money from '../../../shared/components/Money';
+// This dialog's own markup uses balances.css's `.bal-dialog*` (overlay/
+// backdrop/z-index) and expenses.css's `.exp-modal__close`/`.field-*`/
+// `.exp-composer__*` -- imported explicitly here, not left to whichever
+// page happens to load first, so the modal renders correctly (fixed
+// overlay, not inline content) even when this component is reached
+// directly from the Settlements route.
+import '../../balances/styles/balances.css';
+import '../../expenses/styles/expenses.css';
 
 /*
   The one rebuilt settlement-recording surface, covering all three
