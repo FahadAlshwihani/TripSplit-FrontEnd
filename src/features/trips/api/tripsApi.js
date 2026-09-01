@@ -6,8 +6,14 @@ import { recordGuestTrip } from '../../../shared/guestTripsStore';
 // existing membership instead of creating a new one -- see
 // docs/architecture/guest-identity.md. guest_device_token in the response
 // is only ever present when a NEW device identity was minted this call.
-export const createTrip = async (payload) => { const response = await responseData(apiClient.post('/trips/', payload, guestDeviceRequest())); if (response.guest_token) { saveGuestToken(response.trip.id, response.guest_token); recordGuestTrip({ tripId: response.trip.id, title: response.trip.title, relationship: 'owner' }); } if (response.guest_device_token) saveGuestDeviceToken(response.guest_device_token); return response; };
-export const joinTrip = async (payload) => { const response = await responseData(apiClient.post('/trips/join/', payload, guestDeviceRequest())); if (response.guest_token && response.trip) { saveGuestToken(response.trip.id, response.guest_token); recordGuestTrip({ tripId: response.trip.id, title: response.trip.title, relationship: 'member' }); } if (response.guest_device_token) saveGuestDeviceToken(response.guest_device_token); return response; };
+// Guest tokens are saved under BOTH the trip's UUID (id) and its
+// short_code -- a guest may later land on either URL form (their own
+// bookmark keeps using whichever was current when they created/joined;
+// a freshly shared link uses short_code -- see TripLayout's own
+// mirroring for the reverse case, an existing guest returning via a
+// form their token wasn't originally saved under).
+export const createTrip = async (payload) => { const response = await responseData(apiClient.post('/trips/', payload, guestDeviceRequest())); if (response.guest_token) { saveGuestToken(response.trip.id, response.guest_token); if (response.trip.short_code) saveGuestToken(response.trip.short_code, response.guest_token); recordGuestTrip({ tripId: response.trip.id, title: response.trip.title, relationship: 'owner' }); } if (response.guest_device_token) saveGuestDeviceToken(response.guest_device_token); return response; };
+export const joinTrip = async (payload) => { const response = await responseData(apiClient.post('/trips/join/', payload, guestDeviceRequest())); if (response.guest_token && response.trip) { saveGuestToken(response.trip.id, response.guest_token); if (response.trip.short_code) saveGuestToken(response.trip.short_code, response.guest_token); recordGuestTrip({ tripId: response.trip.id, title: response.trip.title, relationship: 'member' }); } if (response.guest_device_token) saveGuestDeviceToken(response.guest_device_token); return response; };
 export const getTrips = () => responseData(apiClient.get('/trips/'));
 // The Account hub's Your Trips list -- a superset of getTrips() that also
 // includes left/removed memberships, with role/capability data, filtered

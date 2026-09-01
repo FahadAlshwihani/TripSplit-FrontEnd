@@ -20,6 +20,12 @@ Trip Split is functionally complete through Phase 4.2. The next pass may change 
 
 `TripLayout` owns only the common trip request, access/error handling, trip identity, current-member context, lifecycle/permission context, and nested navigation. Feature pages rendered through its React Router `Outlet` own their reads and mutations.
 
+**`:tripId` accepts either identifier form.** The trip's `short_code` (a short, opaque, share-friendly locator) or its `id` (UUID, every legacy/bookmarked link) both resolve the same trip — the backend's `resolve_trip()` disambiguates (see `docs/api/trips.md`'s "Identifier model" in the backend repo). `TripLayout` fetches once by whatever's in the URL, then:
+- If the URL segment wasn't already the canonical `short_code`, it replaces the address bar with the canonical form (`navigate(..., { replace: true })`, never a new history entry), preserving the rest of the path/query/hash.
+- **DashboardShell's own navigation** (sidebar/topbar/mobile-nav — everything that *builds* in-app links) receives `short_code`, so clicking around the app stays on canonical short URLs.
+- **Every trip-scoped page's own API calls** (via `useOutletContext().tripId`) keep receiving the UUID `id`, completely unchanged from before short_code existed — this is deliberate: it means no feature page had to change at all, only `TripLayout` and `DashboardShell`'s own nav-link construction.
+- Guest tokens (`localStorage`, per-trip) are mirrored across both identifier forms the moment a trip loads, regardless of which form authenticated the request — an existing guest member is never forced through a join flow just because a link used a different identifier form than the one their token happened to be saved under.
+
 ## Behavioral boundaries
 
 The redesign must not change these without an explicit product requirement:
