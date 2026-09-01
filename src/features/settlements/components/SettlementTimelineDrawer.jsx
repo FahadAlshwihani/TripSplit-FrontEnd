@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ModalPortal from '../../../shared/components/ModalPortal';
 import Money from '../../../shared/components/Money';
+import CopyLinkButton from '../../../shared/components/CopyLinkButton';
+import { tripUrl } from '../../../shared/utils/shareLinks';
 import { getSettlementTimeline } from '../api/settlementsApi';
 import { formatDateTime } from '../../../shared/utils/format';
 import useModalDialog from '../../../shared/hooks/useModalDialog';
@@ -35,7 +37,7 @@ const timelineCopyKey = (event) => {
   return `settlementTimeline.${event.event_type.replace('settlement_', '')}`;
 };
 
-const SettlementTimelineDrawer = ({ tripId, settlement, currency, onClose, canReview, canCancel, canRetry, onConfirm, onNotReceived, onCheckLater, onCancel, onRetry, busy }) => {
+const SettlementTimelineDrawer = ({ tripId, shortCode, settlement, currency, onClose, canReview, canCancel, canRetry, onConfirm, onNotReceived, onCheckLater, onCancel, onRetry, busy }) => {
   const { t, i18n } = useTranslation();
   const drawerRef = useModalDialog(onClose);
   const [state, setState] = useState({ loading: true, error: null, events: [] });
@@ -55,9 +57,14 @@ const SettlementTimelineDrawer = ({ tripId, settlement, currency, onClose, canRe
       <div ref={drawerRef} tabIndex={-1} className="exp-drawer" role="dialog" aria-modal="true" aria-labelledby="settle-timeline-title">
         <div className="exp-drawer__head">
           <h2 id="settle-timeline-title" className="exp-drawer__title text-headline">{t('settlements.timelineTitle')}</h2>
-          <button type="button" className="exp-modal__close" aria-label={t('common.close')} onClick={onClose}>
-            <i className="bi bi-x-lg" aria-hidden="true" />
-          </button>
+          <div className="settle-timeline__head-actions">
+            {shortCode && (
+              <CopyLinkButton url={tripUrl(shortCode, '/settlements', { settlement: settlement.id })} label={t('settlements.copyLink')} compact />
+            )}
+            <button type="button" className="exp-modal__close" aria-label={t('common.close')} onClick={onClose}>
+              <i className="bi bi-x-lg" aria-hidden="true" />
+            </button>
+          </div>
         </div>
         <div className="exp-drawer__body">
           <div className="settle-timeline__summary">

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SectionLoading from '../../../shared/components/SectionLoading';
 import ErrorState from '../../../shared/components/ErrorState';
@@ -55,6 +55,16 @@ export default function SettlementsPage() {
   const [busyId, setBusyId] = useState(null);
   // null | { type: 'timeline', id } | { type: 'action', mode, counterpart?, debt?, initialFromId?, initialToId? }
   const [overlay, setOverlay] = useState(null);
+  const [searchParams] = useSearchParams();
+  // ?settlement=<public settlement id> -- opens straight to that
+  // settlement's timeline drawer once the ledger has loaded. Never
+  // executes any mutation by itself (confirm/cancel/retry all still
+  // require the viewer's own explicit click inside the drawer); an id
+  // that doesn't match anything in this trip's own already-loaded
+  // settlements (wrong id, or one from another trip -- settlements is
+  // already trip-scoped server-side) is silently ignored.
+  const focusSettlementId = searchParams.get('settlement');
+  const hasOpenedFocusSettlement = useRef(false);
 
   // Three independent resources, one per card -- each has its own
   // shell/SectionLoading/error state rather than one combined fetch
@@ -83,6 +93,20 @@ export default function SettlementsPage() {
     (signal) => getSettlementPage(settlementsResource.data.next, tripId, { signal }),
     (current, page) => ({ ...page, results: [...current.results, ...page.results] }),
   );
+
+  // Opens the deep-link target ONLY after the ledger has already
+  // rendered with real data -- never blocks the page waiting for it
+  // (matches Fund's own ?round= handling). Runs once per mount/target
+  // so a later background refetch never re-yanks a drawer the viewer
+  // has since closed back open.
+  useEffect(() => {
+    if (!focusSettlementId || hasOpenedFocusSettlement.current || !settlementsResource.data) return;
+    const matches = settlements.some((row) => row.id === focusSettlementId);
+    if (!matches) return;
+    hasOpenedFocusSettlement.current = true;
+    setOverlay({ type: 'timeline', id: focusSettlementId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusSettlementId, settlementsResource.data]);
 
   const runReview = async (settlement, decision) => {
     setBusyId(settlement.id);
@@ -198,6 +222,7 @@ export default function SettlementsPage() {
       {overlay?.type === 'timeline' && timelineSettlement && (
         <SettlementTimelineDrawer
           tripId={tripId}
+          shortCode={trip.short_code}
           settlement={timelineSettlement}
           currency={currency}
           onClose={() => setOverlay(null)}

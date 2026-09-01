@@ -47,12 +47,12 @@ const baseBalances = {
 };
 
 const permissions = { canRecordSettlement: true };
-const trip = { currency: 'SAR' };
+const trip = { currency: 'SAR', short_code: 'short-1' };
 
 const moneyMatcher = (text) => (_content, node) => node?.tagName?.toLowerCase() === 'bdi' && node.textContent.replace(/\s+/g, ' ').trim() === text;
 
-const renderPage = (ctxOverrides = {}) => render(
-  <MemoryRouter initialEntries={['/trips/t1/settlements']}>
+const renderPage = (ctxOverrides = {}, entry = '/trips/t1/settlements') => render(
+  <MemoryRouter initialEntries={[entry]}>
     <Routes>
       <Route path="/trips/:tripId" element={<Outlet context={{ trip, tripId: 't1', currentMember: fahad, permissions, ...ctxOverrides }} />}>
         <Route path="settlements" element={<SettlementsPage />} />
@@ -554,4 +554,36 @@ test('recording an admin settlement refreshes balances and the ledger in the bac
   expect(screen.getByText('settlements.settlementLedger')).toBeInTheDocument();
   await waitFor(() => expect(resolveBalances).toBeDefined());
   await act(async () => resolveBalances(baseBalances));
+});
+
+// --- Settlement deep links ---------------------------------------
+
+test('?settlement=<id> opens that settlement\'s timeline drawer once the ledger has loaded, with no click needed', async () => {
+  renderPage({}, '/trips/t1/settlements?settlement=s1');
+  const dialog = await screen.findByRole('dialog');
+  expect(dialog).toBeInTheDocument();
+  await waitFor(() => expect(getSettlementTimeline).toHaveBeenCalledWith('t1', 's1', expect.anything()));
+});
+
+test('an unknown ?settlement= id never crashes the page and never opens a drawer', async () => {
+  renderPage({}, '/trips/t1/settlements?settlement=does-not-exist');
+  await screen.findByText('settlements.settlementLedger');
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(getSettlementTimeline).not.toHaveBeenCalled();
+});
+
+test('a settlement id belonging to another trip is never fetched separately -- it just never matches this trip\'s own already-loaded ledger', async () => {
+  renderPage({}, '/trips/t1/settlements?settlement=settlement-from-another-trip');
+  await screen.findByText('settlements.settlementLedger');
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
+
+test('the opened deep-link drawer exposes a copy-link action for that exact settlement', async () => {
+  renderPage({}, '/trips/t1/settlements?settlement=s1');
+  const dialog = await screen.findByRole('dialog');
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'settlements.copyLink' }));
+  await waitFor(() => expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/trips/short-1/settlements?settlement=s1`));
 });

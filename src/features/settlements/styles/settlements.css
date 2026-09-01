@@ -142,6 +142,8 @@
 
 .settle-timeline__summary { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); color: var(--color-text); font: var(--text-body); }
 
+.settle-timeline__head-actions { display: flex; align-items: center; gap: var(--space-2); flex: 0 0 auto; }
+
 .settle-timeline__list { display: flex; flex-direction: column; gap: 0; margin: var(--space-4) 0 0; padding: 0; list-style: none; }
 .settle-timeline__item { display: flex; gap: var(--space-3); padding-block-end: var(--space-4); position: relative; }
 .settle-timeline__item:last-child { padding-block-end: 0; }

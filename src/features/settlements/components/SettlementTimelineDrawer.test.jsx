@@ -35,6 +35,23 @@ test('Tab is contained within the drawer, never escaping to the page behind it',
   expect(closeBtn).toHaveFocus();
 });
 
+test('with a shortCode, the drawer exposes a copy-link action building the canonical settlement deep link', async () => {
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+  render(<SettlementTimelineDrawer tripId="t1" shortCode="short-1" settlement={{ id: 's1', from_name: 'A', to_name: 'B', amount: '10.00' }} currency="SAR" onClose={jest.fn()} />);
+  const button = await screen.findByRole('button', { name: 'settlements.copyLink' });
+  fireEvent.click(button);
+  await screen.findByText('common.linkCopied');
+  expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/trips/short-1/settlements?settlement=s1`);
+});
+
+test('without a shortCode, no copy-link action renders at all', async () => {
+  render(<SettlementTimelineDrawer tripId="t1" settlement={{ id: 's1', from_name: 'A', to_name: 'B', amount: '10.00' }} currency="SAR" onClose={jest.fn()} />);
+  await screen.findByRole('dialog');
+  expect(screen.queryByRole('button', { name: 'settlements.copyLink' })).not.toBeInTheDocument();
+});
+
 test('without action props (BalancesPage\'s own usage), no action footer renders even for a pending settlement', async () => {
   render(<SettlementTimelineDrawer tripId="t1" settlement={{ id: 's1', from_name: 'A', to_name: 'B', amount: '10.00', status: 'pending' }} currency="SAR" onClose={jest.fn()} />);
   await screen.findByRole('dialog');
