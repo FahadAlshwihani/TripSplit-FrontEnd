@@ -1,0 +1,246 @@
+/*
+  A literal port of the supplied Stitch Settings source's page canvas --
+  <header>{title/subtitle}</header><div class="grid grid-cols-1
+  lg:grid-cols-12 gap-lg"><div class="lg:col-span-4">{Quick Jump, Danger
+  Zone}</div><div class="lg:col-span-8">{General Ledger, Access &
+  Security, Settlement Rules, Save Changes}</div></div> -- same
+  translation approach as governance.css/settlements.css (Stitch's own
+  xs/sm/md/lg/xl spacing scale, Material Symbols Outlined, hard-shadow
+  press physics reusing this app's existing tokens where the numbers
+  already match). This is its own lazy-loaded route chunk, so
+  .field-group/.field-control are this feature's own copy of the same
+  recipe governance.css/expenses.css already each carry (see
+  governance.css's own comment for why duplication, not a shared
+  import, is the deliberate choice). Class prefix `set-`.
+*/
+
+.set-page { --gs-xs: 4px; --gs-sm: 8px; --gs-md: 16px; --gs-lg: 24px; --gs-xl: 32px; }
+
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+.set-page .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+.field-group { display: flex; flex-direction: column; gap: var(--space-1); }
+.field-label { display: inline-flex; align-items: center; gap: var(--space-1); font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
+
+.field-control {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--text-body);
+  box-shadow: var(--shadow-hard-sm);
+  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease, border-color var(--press-duration) ease;
+}
+.field-control:hover:not(:disabled) { box-shadow: var(--shadow-hard-sm-hover); transform: var(--press-sm-hover); }
+.field-control:focus, .field-control:focus-within {
+  outline: none;
+  box-shadow: var(--shadow-hard-sm-active);
+  transform: var(--press-sm-active);
+  border-color: var(--nc-indigo-700);
+}
+.field-control:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform: none; }
+select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 2 * var(--border-width)); }
+
+/* -------------------------------------------------------------- */
+/* Page header -- same recipe as gov-header/settle-page__header. */
+.set-page__header { margin-block-end: var(--gs-xl); }
+.set-page__title {
+  margin: 0;
+  padding-block-end: var(--gs-sm);
+  border-block-end: var(--border-width-lg) solid var(--color-border);
+  color: var(--color-text);
+  font: var(--text-display);
+  letter-spacing: var(--tracking-tight);
+}
+.set-page__subtitle { margin: var(--gs-sm) 0 0; max-width: 42rem; color: var(--color-text-muted); font: var(--text-body); }
+
+/* -------------------------------------------------------------- */
+/* Grid -- literal 4/12 left + 8/12 right (mirrors gov-grid's 8/4). */
+.set-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--gs-lg); }
+.set-grid__left { grid-column: 1 / -1; display: flex; flex-direction: column; gap: var(--gs-lg); }
+.set-grid__right { grid-column: 1 / -1; display: flex; flex-direction: column; gap: var(--gs-xl); }
+
+@media (min-width: 1024px) {
+  .set-grid__left { grid-column: span 4 / span 4; }
+  .set-grid__right { grid-column: span 8 / span 8; order: -1; }
+  .set-grid__left { order: 0; }
+}
+
+/* Mobile order: header, General, Access, Settlement, Danger Zone --
+   Quick Jump collapses to a horizontal strip rather than a full card,
+   so it doesn't eat mobile vertical space ahead of the real form. */
+.set-quick-jump { order: -1; }
+@media (min-width: 1024px) {
+  .set-quick-jump { order: 0; }
+}
+
+/* -------------------------------------------------------------- */
+/* Cards -- General/Access/Settlement each: bordered container, a
+   muted head strip (title + helper), then a padded body. */
+.set-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); }
+.set-card__head { padding: var(--gs-md); border-block-end: var(--border-width) solid var(--color-border); background: var(--color-surface-alt); }
+.set-card__title { margin: 0; color: var(--color-text); font: 700 20px/28px var(--font-display); }
+.set-card__subtitle { margin: 4px 0 0; color: var(--color-text-muted); font: var(--text-body-sm); }
+.set-card__body { padding: var(--gs-md); display: flex; flex-direction: column; gap: var(--gs-md); }
+
+.set-row { display: grid; grid-template-columns: 1fr; gap: var(--gs-md); }
+@media (min-width: 640px) {
+  .set-row--2 { grid-template-columns: 1fr 1fr; }
+}
+.set-divider { margin-block-start: var(--gs-xs); padding-block-start: var(--gs-md); border-block-start: var(--border-width) dashed var(--color-border); }
+
+.set-hint { margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
+
+/* -------------------------------------------------------------- */
+/* Read-only value display for a field the current viewer cannot edit
+   (brief item 19: values render, controls don't, when the viewer has
+   no edit capability). */
+.set-readonly-value { display: flex; align-items: center; min-height: 44px; padding: var(--space-2) var(--space-3); border: var(--border-width) solid var(--color-border-subtle); border-radius: var(--radius-sm); background: var(--color-surface-alt); color: var(--color-text); font: var(--text-body); }
+
+/* Join policy -- a bordered radio group, Stitch's own recipe (border
+   border-on-background p-sm, a dashed divider between options). */
+.set-join-policy { display: flex; flex-direction: column; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); padding: var(--gs-sm); }
+.set-join-policy__option { display: flex; align-items: flex-start; gap: var(--gs-sm); padding: var(--gs-sm); cursor: pointer; border-radius: var(--radius-sm); }
+.set-join-policy__option:hover { background: var(--color-surface-alt); }
+.set-join-policy__option input { margin-block-start: 3px; accent-color: var(--nc-indigo-700); width: 16px; height: 16px; flex: 0 0 auto; }
+.set-join-policy__option input:disabled { cursor: not-allowed; }
+.set-join-policy__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.set-join-policy__label { color: var(--color-text); font: 500 var(--text-body); }
+.set-join-policy__desc { margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
+.set-join-policy__divider { border-block-end: var(--border-width) dashed var(--color-border); margin-inline: var(--gs-sm); }
+
+.set-remove-password {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-danger);
+  font: var(--text-body-sm);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Settlement rule row -- bordered box, checkbox + label + helper. */
+.set-rule {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gs-md);
+  padding: var(--gs-md);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.set-rule input[type="checkbox"] { margin-block-start: 3px; width: 18px; height: 18px; accent-color: var(--nc-indigo-700); flex: 0 0 auto; }
+.set-rule input[type="checkbox"]:disabled { cursor: not-allowed; }
+.set-rule__text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.set-rule__label { display: flex; align-items: center; gap: var(--gs-sm); color: var(--color-text); font: var(--text-label); font-size: 11px; }
+.set-rule__desc { margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); }
+.set-rule--disabled { opacity: 0.75; }
+
+/* Coming Soon stamp -- compact, tilted editorial badge, per brief's
+   "not a giant banner" instruction. */
+.set-soon-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--gs-sm);
+  border: var(--border-width) solid var(--nc-indigo-700);
+  border-radius: var(--radius-sm);
+  color: var(--nc-indigo-700);
+  background: var(--color-surface);
+  font: var(--text-label);
+  font-size: 10px;
+  transform: rotate(-3deg);
+  flex: 0 0 auto;
+}
+[dir="rtl"] .set-soon-badge { transform: rotate(3deg); }
+
+/* -------------------------------------------------------------- */
+/* Quick Jump -- Stitch: bg-surface-container-lowest border p-lg, a
+   label-caps heading, then a link list. Anchor-scroll only, no route
+   change. */
+.set-quickjump-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); padding: var(--gs-md); }
+.set-quickjump-card__title { margin: 0 0 var(--gs-sm); color: var(--color-text-muted); font: var(--text-label); }
+.set-quickjump-card__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--gs-xs); }
+.set-quickjump-card__link {
+  display: flex;
+  align-items: center;
+  gap: var(--gs-sm);
+  background: none;
+  border: none;
+  padding: var(--gs-xs) 0;
+  color: var(--color-text);
+  font: var(--text-body);
+  cursor: pointer;
+  text-align: start;
+  width: 100%;
+}
+.set-quickjump-card__link:hover { color: var(--nc-indigo-700); }
+.set-quickjump-card__link .material-symbols-outlined { font-size: 16px; color: var(--color-text-muted); }
+
+/* Mobile: collapses to a horizontal scroll strip instead of a full
+   vertical card, so it never eats mobile vertical space ahead of the
+   real form (brief item 30). */
+@media (max-width: 1023.98px) {
+  .set-quickjump-card__list { flex-direction: row; overflow-x: auto; gap: var(--gs-md); padding-block-end: 2px; }
+  .set-quickjump-card__link { width: auto; white-space: nowrap; flex: 0 0 auto; }
+}
+
+/* -------------------------------------------------------------- */
+/* Danger Zone -- Stitch: bg-surface-container-low border p-lg, an
+   outlined danger-colored button (never filled/solid red). */
+.set-danger-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); padding: var(--gs-md); }
+.set-danger-card__title { margin: 0 0 var(--gs-sm); color: var(--color-text-muted); font: var(--text-label); }
+.set-danger-card .set-danger-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gs-xs);
+  padding: var(--gs-sm) var(--gs-md);
+  border: var(--border-width) solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-danger);
+  font: 700 12px/16px var(--font-financial);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: var(--shadow-hard-sm);
+  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease, background-color var(--press-duration) ease;
+}
+.set-danger-card .set-danger-btn:hover:not(:disabled) { background: var(--color-danger-soft); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.set-danger-card .set-danger-btn:active:not(:disabled) { transform: var(--press-sm-active); box-shadow: 0 0 0 0 transparent; }
+.set-danger-card .set-danger-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* -------------------------------------------------------------- */
+/* Save bar -- bottom/end of the main column, per brief item 23. */
+.set-save-bar { display: flex; align-items: center; justify-content: flex-end; gap: var(--gs-md); margin-block-start: var(--gs-md); flex-wrap: wrap; }
+.set-save-feedback { margin: 0; font: var(--text-body-sm); }
+.set-save-feedback--success { color: var(--color-success, var(--nc-indigo-700)); }
+.set-save-feedback--error { color: var(--color-danger); }
+
+@media (prefers-reduced-motion: reduce) {
+  .field-control, .set-danger-card .set-danger-btn { transition: box-shadow 0.15s ease; }
+  .field-control:hover, .field-control:focus,
+  .set-danger-card .set-danger-btn:hover, .set-danger-card .set-danger-btn:active { transform: none; }
+}

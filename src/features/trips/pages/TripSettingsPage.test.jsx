@@ -1,0 +1,261 @@
+import React from 'react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
+import TripSettingsPage from './TripSettingsPage';
+import { archiveTrip, restoreTrip, updateTrip } from '../api/tripsApi';
+
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key), i18n: { language: 'en' } }) }));
+jest.mock('../api/tripsApi', () => ({ updateTrip: jest.fn(), archiveTrip: jest.fn(), restoreTrip: jest.fn() }));
+jest.mock('../../../shared/components/CurrencyPicker', () => ({ id, value, onChange, label }) => (
+  <select id={id} aria-label={label} value={value} onChange={(e) => onChange(e.target.value)}>
+    <option value="SAR">SAR</option>
+    <option value="USD">USD</option>
+    <option value="EUR">EUR</option>
+  </select>
+));
+
+const editPermissions = { canEditTrip: true, canArchiveTrip: true, canRestoreTrip: false, canManageMembers: true };
+const readOnlyMemberPermissions = { canEditTrip: false, canArchiveTrip: false, canRestoreTrip: false };
+
+const baseTrip = {
+  title: 'Georgia Winter Trip',
+  currency: 'SAR',
+  currency_locked: false,
+  start_date: '2026-10-01',
+  end_date: '2026-10-10',
+  join_policy: 'open',
+  password_protected: false,
+  archived_at: null,
+  lifecycle_status: 'active',
+};
+
+const renderPage = (ctxOverrides = {}) => {
+  const setTrip = ctxOverrides.setTrip || jest.fn();
+  const utils = render(
+    <MemoryRouter initialEntries={['/trips/t1/settings']}>
+      <Routes>
+        <Route path="/trips/:tripId" element={<Outlet context={{ trip: baseTrip, setTrip, tripId: 't1', permissions: editPermissions, ...ctxOverrides }} />}>
+          <Route path="settings" element={<TripSettingsPage />} />
+        </Route>
+      </Routes>
+    </MemoryRouter>,
+  );
+  return { ...utils, setTrip };
+};
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
+test('the title and every section shell render immediately -- there is no data fetch, so no loading placeholder at all', () => {
+  const { container } = renderPage();
+  expect(screen.getByText('settings.title')).toBeInTheDocument();
+  expect(screen.getByText('settings.general.title')).toBeInTheDocument();
+  expect(screen.getByText('settings.access.title')).toBeInTheDocument();
+  expect(screen.getByText('settings.settlement.title')).toBeInTheDocument();
+  expect(container.querySelector('.section-loading')).not.toBeInTheDocument();
+  expect(container.querySelector('.neo-loading')).not.toBeInTheDocument();
+});
+
+test('no budget field appears anywhere on the page', () => {
+  renderPage();
+  expect(screen.queryByText('trip.budget')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/budget/i)).not.toBeInTheDocument();
+});
+
+test('Save Changes stays disabled until a field actually changes', () => {
+  renderPage();
+  const save = screen.getByRole('button', { name: 'common.saveChanges' });
+  expect(save).toBeDisabled();
+  fireEvent.change(screen.getByLabelText('settings.general.name'), { target: { value: 'Renamed Trip' } });
+  expect(save).not.toBeDisabled();
+});
+
+test('saving sends only the fields that actually changed, never a budget key', async () => {
+  updateTrip.mockResolvedValue({ ...baseTrip, title: 'Renamed Trip' });
+  renderPage();
+  fireEvent.change(screen.getByLabelText('settings.general.name'), { target: { value: 'Renamed Trip' } });
+  fireEvent.click(screen.getByRole('button', { name: 'common.saveChanges' }));
+  await waitFor(() => expect(updateTrip).toHaveBeenCalledWith('t1', { title: 'Renamed Trip' }));
+  const payload = updateTrip.mock.calls[0][1];
+  expect(payload).not.toHaveProperty('budget');
+  expect(payload).not.toHaveProperty('password');
+});
+
+test('an empty trip name is rejected client-side before any API call', () => {
+  renderPage();
+  fireEvent.change(screen.getByLabelText('settings.general.name'), { target: { value: '   ' } });
+  fireEvent.click(screen.getByRole('button', { name: 'common.saveChanges' }));
+  expect(screen.getByText('settings.errors.titleRequired')).toBeInTheDocument();
+  expect(updateTrip).not.toHaveBeenCalled();
+});
+
+test('an end date before the start date is rejected client-side', () => {
+  renderPage();
+  fireEvent.change(screen.getByLabelText('settings.general.endDate'), { target: { value: '2026-01-01' } });
+  fireEvent.click(screen.getByRole('button', { name: 'common.saveChanges' }));
+  expect(screen.getByText('settings.errors.endBeforeStart')).toBeInTheDocument();
+  expect(updateTrip).not.toHaveBeenCalled();
+});
+
+test('currency is locked read-only once the trip has financial activity, with an explanatory hint', () => {
+  renderPage({ trip: { ...baseTrip, currency_locked: true } });
+  expect(screen.queryByLabelText('settings.general.currency')).not.toBeInTheDocument();
+  expect(screen.getByText('settings.general.currencyLockedHint')).toBeInTheDocument();
+  expect(screen.getAllByText('SAR').length).toBeGreaterThan(0);
+});
+
+test('currency is editable when the trip has no financial activity yet', async () => {
+  updateTrip.mockResolvedValue({ ...baseTrip, currency: 'USD' });
+  renderPage();
+  fireEvent.change(screen.getByLabelText('settings.general.currency'), { target: { value: 'USD' } });
+  fireEvent.click(screen.getByRole('button', { name: 'common.saveChanges' }));
+  await waitFor(() => expect(updateTrip).toHaveBeenCalledWith('t1', { currency: 'USD' }));
+});
+
+test('join policy renders the three real backend states and persists a change', async () => {
+  updateTrip.mockResolvedValue({ ...baseTrip, join_policy: 'invite_only' });
+  renderPage();
+  expect(screen.getByLabelText(/^joinPolicy\.open/)).toBeChecked();
+  fireEvent.click(screen.getByLabelText(/^joinPolicy\.invite_only/));
+  fireEvent.click(screen.getByRole('button', { name: 'common.saveChanges' }));
+  await waitFor(() => expect(updateTrip).toHaveBeenCalledWith('t1', { join_policy: 'invite_only' }));
+});
+
+test('a rejected/invalid password is never sent unless the user actually typed a new one', async () => {
+  updateTrip.mockResolvedValue({ ...baseTrip, title: 'Renamed' });
+  renderPage();
+  fireEvent.change(screen.getByLabelText('settings.general.name'), { target: { value: 'Renamed' } });
+  fireEvent.click(screen.getByRole('button', { name: 'common.saveChanges' }));
+  await waitFor(() => expect(updateTrip).toHaveBeenCalled());
+  expect(updateTrip.mock.calls[0][1]).not.toHaveProperty('password');
+});
+
+test('typing a new password includes it in the save payload', async () => {
+  updateTrip.mockResolvedValue({ ...baseTrip, password_protected: true });
+  renderPage();
+  fireEvent.change(screen.getByLabelText('settings.access.password'), { target: { value: 'secret123' } });
+  fireEvent.click(screen.getByRole('button', { name: 'common.saveChanges' }));
+  await waitFor(() => expect(updateTrip).toHaveBeenCalledWith('t1', { password: 'secret123' }));
+});
+
+test('removing password protection is a separate, explicitly confirmed action -- not bundled into Save', async () => {
+  updateTrip.mockResolvedValue({ ...baseTrip, password_protected: false });
+  renderPage({ trip: { ...baseTrip, password_protected: true } });
+  fireEvent.click(screen.getByRole('button', { name: 'settings.access.removePassword' }));
+  expect(updateTrip).not.toHaveBeenCalled();
+  const dialog = await screen.findByRole('alertdialog');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'settings.access.removePassword' }));
+  await waitFor(() => expect(updateTrip).toHaveBeenCalledWith('t1', { password: '' }));
+});
+
+test('Simplify Debts is shown checked and locked, never a live toggle', () => {
+  renderPage();
+  const checkbox = screen.getByLabelText('settings.settlement.simplifyDebts');
+  expect(checkbox).toBeChecked();
+  expect(checkbox).toBeDisabled();
+});
+
+test('Require Receipts is Coming Soon -- disabled and never sent in the save payload', async () => {
+  updateTrip.mockResolvedValue({ ...baseTrip, title: 'Renamed' });
+  renderPage();
+  const checkbox = screen.getByLabelText('settings.settlement.requireReceipts');
+  expect(checkbox).toBeDisabled();
+  expect(screen.getByText('common.comingSoon')).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('settings.general.name'), { target: { value: 'Renamed' } });
+  fireEvent.click(screen.getByRole('button', { name: 'common.saveChanges' }));
+  await waitFor(() => expect(updateTrip).toHaveBeenCalled());
+  expect(updateTrip.mock.calls[0][1]).not.toHaveProperty('require_receipts');
+});
+
+test('a plain member without edit capability sees read-only values, no inputs, and no Save button', () => {
+  renderPage({ permissions: readOnlyMemberPermissions });
+  expect(screen.queryByLabelText('settings.general.name')).not.toBeInTheDocument();
+  expect(screen.getByText('Georgia Winter Trip')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'common.saveChanges' })).not.toBeInTheDocument();
+});
+
+test('Archive requires confirmation before calling the API', async () => {
+  archiveTrip.mockResolvedValue(undefined);
+  renderPage();
+  fireEvent.click(screen.getByRole('button', { name: 'trip.archive' }));
+  expect(archiveTrip).not.toHaveBeenCalled();
+  const dialog = await screen.findByRole('alertdialog');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'trip.archive' }));
+  await waitFor(() => expect(archiveTrip).toHaveBeenCalledWith('t1'));
+});
+
+test('a viewer without archive capability never sees the Archive button', () => {
+  renderPage({ permissions: { ...editPermissions, canArchiveTrip: false } });
+  expect(screen.queryByRole('button', { name: 'trip.archive' })).not.toBeInTheDocument();
+});
+
+test('an archived trip shows Restore instead of Archive, for a viewer with restore capability', () => {
+  renderPage({
+    trip: { ...baseTrip, archived_at: '2026-08-01T00:00:00Z' },
+    permissions: { canEditTrip: false, canArchiveTrip: false, canRestoreTrip: true },
+  });
+  expect(screen.getByRole('button', { name: 'trip.restore' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'trip.archive' })).not.toBeInTheDocument();
+});
+
+test('restoring calls the restore API and applies the returned trip', async () => {
+  const restored = { ...baseTrip, archived_at: null };
+  restoreTrip.mockResolvedValue(restored);
+  const { setTrip } = renderPage({
+    trip: { ...baseTrip, archived_at: '2026-08-01T00:00:00Z' },
+    permissions: { canEditTrip: false, canArchiveTrip: false, canRestoreTrip: true },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'trip.restore' }));
+  const dialog = await screen.findByRole('alertdialog');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'trip.restore' }));
+  await waitFor(() => expect(restoreTrip).toHaveBeenCalledWith('t1'));
+  await waitFor(() => expect(setTrip).toHaveBeenCalledWith(restored));
+});
+
+test('a save failure keeps the draft values intact instead of wiping the form', async () => {
+  updateTrip.mockRejectedValue(new Error('network down'));
+  renderPage();
+  fireEvent.change(screen.getByLabelText('settings.general.name'), { target: { value: 'Still Editing' } });
+  fireEvent.click(screen.getByRole('button', { name: 'common.saveChanges' }));
+  await waitFor(() => expect(screen.getByText('network down')).toBeInTheDocument());
+  expect(screen.getByLabelText('settings.general.name')).toHaveValue('Still Editing');
+});
+
+test('a successful save shows transient success feedback', async () => {
+  updateTrip.mockResolvedValue({ ...baseTrip, title: 'Renamed' });
+  renderPage();
+  fireEvent.change(screen.getByLabelText('settings.general.name'), { target: { value: 'Renamed' } });
+  fireEvent.click(screen.getByRole('button', { name: 'common.saveChanges' }));
+  expect(await screen.findByText('settings.saveSuccess')).toBeInTheDocument();
+});
+
+test('Quick Jump renders anchor links for General, Access, and Settlements', () => {
+  renderPage();
+  expect(screen.getByText('settings.quickJump.title')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /settings\.quickJump\.general/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /settings\.quickJump\.access/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /settings\.quickJump\.settlements/ })).toBeInTheDocument();
+});
+
+test('renders correctly under RTL', () => {
+  const { container } = render(
+    <div dir="rtl">
+      <MemoryRouter initialEntries={['/trips/t1/settings']}>
+        <Routes>
+          <Route path="/trips/:tripId" element={<Outlet context={{ trip: baseTrip, setTrip: jest.fn(), tripId: 't1', permissions: editPermissions }} />}>
+            <Route path="settings" element={<TripSettingsPage />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    </div>,
+  );
+  expect(screen.getByText('settings.title')).toBeInTheDocument();
+  expect(container.querySelector('.set-page')).toBeInTheDocument();
+});
+
+test('an unchanged save is never triggered -- the button stays disabled with no dirty fields', () => {
+  renderPage();
+  expect(screen.getByRole('button', { name: 'common.saveChanges' })).toBeDisabled();
+  expect(updateTrip).not.toHaveBeenCalled();
+});
