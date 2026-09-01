@@ -37,7 +37,9 @@ const BanMemberDialog = ({ member, onBan, onClose }) => {
         <form ref={dialogRef} tabIndex={-1} className="governance-dialog" role="dialog" aria-modal="true" aria-labelledby="ban-dialog-title" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
           <div className="governance-dialog__head">
             <h2 id="ban-dialog-title" className="text-headline">{t('governance.banTitle', { name: member.display_name })}</h2>
-            <button type="button" className="dialog-close" aria-label={t('common.close')} onClick={onClose} disabled={saving}>×</button>
+            <button type="button" className="governance-dialog__close" aria-label={t('common.close')} onClick={onClose} disabled={saving}>
+              <i className="bi bi-x-lg" aria-hidden="true" />
+            </button>
           </div>
           <div className="field-group">
             <label className="field-label" htmlFor="ban-duration">{t('governance.banDuration')}</label>

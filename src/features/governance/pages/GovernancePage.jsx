@@ -95,7 +95,16 @@ export default function GovernancePage() {
       />
       {inviteOpen && (
         <InviteMemberDialog
-          onInvite={(p) => run(() => createInvitation(tripId, p))}
+          // Deliberately bypasses run() -- unlike the one-click actions
+          // above, this dialog owns its own inline field-error handling
+          // (already-a-member, banned email, etc.) and needs the real
+          // rejection to reach its own try/catch, not have run() swallow
+          // it into a page-level banner and resolve as if it succeeded.
+          onInvite={async (payload) => {
+            const result = await createInvitation(tripId, payload);
+            await state.retry();
+            return result;
+          }}
           onClose={() => setInviteOpen(false)}
         />
       )}

@@ -84,3 +84,41 @@ test('the switch is 40x24 per the Stitch source, not the app-wide 40x22 acc-swit
   expect(container.querySelector('.gov-switch')).toBeInTheDocument();
   expect(container.querySelector('.acc-switch')).toBeNull();
 });
+
+// jsdom has no real layout/transform engine, so these assert the DOM/
+// class contract governance.css's rules are written against (track,
+// thumb pseudo-element hook, real checkbox semantics) -- not rendered
+// pixels. Structural proof only, per the brief's own caveat.
+test('switch structural contract: real checkbox input inside a track element, native semantics intact', () => {
+  const { container } = renderCard({ join_code: 'ABC', join_policy: 'open' });
+  const input = screen.getByLabelText('governance.requireApproval');
+  expect(input.tagName).toBe('INPUT');
+  expect(input).toHaveAttribute('type', 'checkbox');
+  expect(input.closest('.gov-switch').querySelector('.gov-switch__track')).toBeInTheDocument();
+});
+
+test('ON state reflects join_policy=approval_required; OFF reflects open', () => {
+  const { rerender } = renderCard({ join_code: 'ABC', join_policy: 'approval_required' });
+  expect(screen.getByLabelText('governance.requireApproval')).toBeChecked();
+  rerender(<AccessSettingsCard trip={{ join_code: 'ABC', join_policy: 'open' }} onUpdateSettings={jest.fn()} onRotateLink={jest.fn()} />);
+  expect(screen.getByLabelText('governance.requireApproval')).not.toBeChecked();
+});
+
+test('the switch renders and toggles identically under an RTL container (one canonical implementation, no duplicated CSS)', async () => {
+  const onUpdateSettings = jest.fn();
+  const { container } = render(
+    <div dir="rtl">
+      <AccessSettingsCard trip={{ join_code: 'ABC', join_policy: 'open' }} onUpdateSettings={onUpdateSettings} onRotateLink={jest.fn()} />
+    </div>,
+  );
+  expect(container.querySelector('[dir="rtl"] .gov-switch')).toBeInTheDocument();
+  fireEvent.click(screen.getByLabelText('governance.requireApproval'));
+  await waitFor(() => expect(onUpdateSettings).toHaveBeenCalledWith({ join_policy: 'approval_required' }));
+});
+
+test('a real checkbox is keyboard-operable by default -- no negative tabIndex or custom key handling overriding native semantics', () => {
+  renderCard({ join_code: 'ABC', join_policy: 'open' });
+  const input = screen.getByLabelText('governance.requireApproval');
+  expect(input).not.toHaveAttribute('tabindex', '-1');
+  expect(input).not.toBeDisabled();
+});

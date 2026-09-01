@@ -39,11 +39,41 @@
   .governance-dialog { max-width: none; width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border-width: 0; }
 }
 
-.governance-dialog__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.governance-dialog__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
 .governance-dialog__head h2 { margin: 0; color: var(--color-text); }
+.governance-dialog__subtitle { margin: 2px 0 0; color: var(--color-text-muted); }
+
+/* Canonical icon-button close control -- the exact recipe every other
+   TripSplit dialog already uses (Fund's .fund-dialog__close, Expense/
+   Settlement's .exp-modal__close): same size, border, shadow, hover,
+   active. Governance's own copy for the same "own lazy chunk" reason
+   as the rest of this file -- replaces the previous bare, unstyled
+   `×` text button, which never had any CSS backing it at all. */
+.governance-dialog__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  box-shadow: var(--shadow-hard-sm);
+  flex: 0 0 auto;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+.governance-dialog__close:hover:not(:disabled) { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.governance-dialog__close:active:not(:disabled) { transform: var(--press-sm-active); box-shadow: 0 0 0 0 var(--color-border); }
+.governance-dialog__close:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: 2px; }
+.governance-dialog__close:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .governance-dialog__footer { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); flex-wrap: wrap; }
 .governance-dialog__divider { display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: var(--tracking-label); }
 .governance-dialog__error { color: var(--color-danger); margin: 0; }
+.governance-dialog__field-error { color: var(--color-danger); margin: 0; }
+.governance-dialog__field-helper { color: var(--color-text-muted); margin: 0; }
 
 .field-group { display: flex; flex-direction: column; gap: var(--space-1); }
 .field-label { display: inline-flex; align-items: center; gap: var(--space-1); font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
@@ -403,33 +433,59 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
    ... relative flex items-center px-1; thumb w-4 h-4 ... absolute
    right-1. ON state fills the TRACK itself with bg-primary (not a soft
    tint) -- the inverse of this app's other .acc-switch, which the
-   brief explicitly says defers to Stitch's own explicit spec here. */
+   brief explicitly says defers to Stitch's own explicit spec here.
+
+   The thumb is centered via the track's own `display:flex;
+   align-items:center` (matching Stitch's `flex items-center` on the
+   track) rather than a hardcoded `top` offset -- a fixed `top:4px`
+   against a 24px track with a 1px border left an asymmetric 4px-top/
+   2px-bottom gap (position:absolute measures from the padding edge,
+   inside the border, so the math never lined up), which is exactly
+   the "unbalanced" bug this replaces. Horizontal travel is a single
+   translateX computed from the real inner width (40 - 2*border -
+   2*padding - thumb = 14px), landing the thumb flush against the
+   opposite 4px inset in both states -- logical (inset-inline-start +
+   a signed translateX flipped under [dir="rtl"]), never physical
+   left/right. */
 .gov-switch { position: relative; display: inline-flex; flex: 0 0 auto; width: 40px; height: 24px; }
-.gov-switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.gov-switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
 .gov-switch__track {
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding-inline: 4px;
   border: var(--border-width) solid var(--color-border);
   border-radius: 999px;
   background: var(--color-surface);
-  transition: background-color 0.15s ease;
+  box-shadow: 1px 1px 0 0 var(--shadow-hard-color);
+  transition: background-color 0.15s ease, box-shadow var(--press-duration) ease;
 }
 .gov-switch__track::before {
   content: '';
-  position: absolute;
-  inset-inline-start: 4px;
-  top: 4px;
+  flex: 0 0 auto;
   width: 16px;
   height: 16px;
   border-radius: 50%;
   background: var(--color-border);
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, background-color 0.15s ease;
 }
 .gov-switch input:checked ~ .gov-switch__track { background: var(--nc-indigo-700); }
-.gov-switch input:checked ~ .gov-switch__track::before { transform: translateX(16px); background: var(--nc-white); }
-[dir="rtl"] .gov-switch input:checked ~ .gov-switch__track::before { transform: translateX(-16px); }
+.gov-switch input:checked ~ .gov-switch__track::before { transform: translateX(14px); background: var(--nc-white); }
+[dir="rtl"] .gov-switch input:checked ~ .gov-switch__track::before { transform: translateX(-14px); }
+
+/* Hover/active -- a subtle shadow-depth response (this app's press
+   language), never a physical jump of the whole 40x24 control. */
+.gov-switch:hover .gov-switch__track { box-shadow: 0 0 0 0 transparent; }
+.gov-switch:active .gov-switch__track { box-shadow: 0 0 0 0 transparent; }
+
 .gov-switch input:focus-visible ~ .gov-switch__track { outline: 2px solid var(--nc-indigo-700); outline-offset: 2px; }
-.gov-switch input:disabled ~ .gov-switch__track { opacity: 0.5; cursor: not-allowed; }
+.gov-switch input:disabled ~ .gov-switch__track { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gov-switch__track, .gov-switch__track::before { transition: background-color 0.15s ease; }
+}
 
 /* Invite-link secondary utility -- real product functionality with no
    Stitch source of its own; kept compact and visually secondary to

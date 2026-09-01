@@ -113,6 +113,19 @@ test('Add member opens the invite dialog and sends a real email invitation', asy
   await waitFor(() => expect(screen.queryByRole('dialog', { name: 'governance.addMember' })).not.toBeInTheDocument());
 });
 
+test('a rejected invite reaches the dialog\'s own inline error handling instead of being swallowed into a page-level banner', async () => {
+  createInvitation.mockRejectedValue({ code: 'already_member', message: 'already a member' });
+  renderPage();
+  await screen.findByText('governance.addMember');
+  fireEvent.click(screen.getByText('governance.addMember'));
+  const dialog = await screen.findByRole('dialog', { name: 'governance.addMember' });
+  fireEvent.change(within(dialog).getByLabelText('governance.inviteEmail'), { target: { value: 'friend@example.com' } });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'governance.sendInvite' }));
+  expect(await within(dialog).findByText('governance.inviteErrorAlreadyMember')).toBeInTheDocument();
+  // The dialog stays open (this is what run()'s silent-swallow used to break).
+  expect(screen.getByRole('dialog', { name: 'governance.addMember' })).toBeInTheDocument();
+});
+
 test('a viewer without can_invite never sees the Invite action', async () => {
   renderPage({ trip: { ...baseTrip, governance_capabilities: { ...fullCapabilities, can_invite: false } } });
   await screen.findByText('governance.title');
