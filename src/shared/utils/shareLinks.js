@@ -12,3 +12,22 @@ export const tripUrl = (shortCode, path = '', params = {}) => {
   });
   return url.toString();
 };
+
+// The one canonical "join this trip" path/URL pair -- deliberately NOT
+// tripUrl() (which lands directly on /trips/{shortCode}, a route that
+// requires existing membership -- a genuine non-member hitting it gets
+// a plain 403, not a join flow). /trips/join?code={join_code} is the
+// real, already-working join entry point (JoinTripPage). join_code is
+// its own canonical identifier (rotatable, see rotateJoinCode) --
+// distinct from short_code, never interchangeable with it (see
+// docs/architecture/trip-access.md).
+//
+// `tripJoinPath` is the relative form, for React Router's own
+// navigate() (an in-app redirect straight into the join flow --
+// AccountTripRow's Rejoin, GuestTripsList's own rejoin action).
+// `tripJoinUrl` is the full origin-qualified form, for anything that
+// leaves the app (copy/share) -- Governance and Settings' own invite
+// actions. Every "/trips/join?code=" string in the app is built from
+// one of these two, never assembled inline a second time.
+export const tripJoinPath = (joinCode) => `/trips/join?code=${encodeURIComponent(joinCode)}`;
+export const tripJoinUrl = (joinCode) => new URL(tripJoinPath(joinCode), window.location.origin).toString();
