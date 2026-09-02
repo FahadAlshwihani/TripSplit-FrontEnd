@@ -97,7 +97,7 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 /* -------------------------------------------------------------- */
 /* Cards -- General/Access/Settlement each: bordered container, a
    muted head strip (title + helper), then a padded body. */
-.set-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); }
+.set-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); box-shadow: var(--shadow-hard-md); }
 .set-card__head { padding: var(--gs-md); border-block-end: var(--border-width) solid var(--color-border); background: var(--color-surface-alt); }
 .set-card__title { margin: 0; color: var(--color-text); font: 700 20px/28px var(--font-display); }
 .set-card__subtitle { margin: 4px 0 0; color: var(--color-text-muted); font: var(--text-body-sm); }
@@ -140,12 +140,27 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
   cursor: pointer;
 }
 
-/* Password input + visibility toggle -- the toggle sits flush inside
-   the field's inline-end edge (logical, so it's the LEFT edge under
-   RTL) regardless of direction. The input itself gets extra
-   inline-end padding so typed text never runs under the button. */
+/* Password input + leading icon + visibility toggle -- opposite
+   logical edges, never the same side. The decorative lock icon sits
+   flush at the field's inline-start edge (inset-inline-start); the
+   interactive eye toggle sits flush at the inline-end edge
+   (inset-inline-end). Under RTL these are physically mirrored
+   automatically (no separate RTL markup/rule needed) since both use
+   logical, not physical, offsets. The input gets matching
+   inline-start/inline-end padding so typed text never runs under
+   either. */
 .set-password-field { position: relative; display: flex; align-items: center; }
-.set-password-field .field-control { padding-inline-end: 40px; }
+.set-password-field .field-control { padding-inline-start: 40px; padding-inline-end: 40px; }
+.set-password-field__icon {
+  position: absolute;
+  inset-inline-start: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
 .set-password-field__toggle {
   position: absolute;
   inset-inline-end: 4px;
@@ -161,6 +176,7 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
   border-radius: var(--radius-sm);
   transition: color var(--press-duration) ease, background-color var(--press-duration) ease, transform var(--press-duration) ease;
 }
+.set-password-field__toggle .material-symbols-outlined { font-size: 18px; }
 .set-password-field__toggle:hover { color: var(--color-text); background: var(--color-surface-alt); transform: var(--press-sm-hover); }
 .set-password-field__toggle:active { transform: var(--press-sm-active); }
 .set-password-field__toggle:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: 1px; }
@@ -210,7 +226,7 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 /* Quick Jump -- Stitch: bg-surface-container-lowest border p-lg, a
    label-caps heading, then a link list. Anchor-scroll only, no route
    change. */
-.set-quickjump-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); padding: var(--gs-md); }
+.set-quickjump-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); padding: var(--gs-md); box-shadow: var(--shadow-hard-md); }
 .set-quickjump-card__title { margin: 0 0 var(--gs-sm); color: var(--color-text-muted); font: var(--text-label); }
 .set-quickjump-card__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--gs-xs); }
 .set-quickjump-card__link {
@@ -240,7 +256,7 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 /* -------------------------------------------------------------- */
 /* Danger Zone -- Stitch: bg-surface-container-low border p-lg, an
    outlined danger-colored button (never filled/solid red). */
-.set-danger-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); padding: var(--gs-md); }
+.set-danger-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-alt); padding: var(--gs-md); box-shadow: var(--shadow-hard-md); }
 .set-danger-card__title { margin: 0 0 var(--gs-sm); color: var(--color-text-muted); font: var(--text-label); }
 .set-danger-card .set-danger-btn {
   width: 100%;
@@ -268,7 +284,7 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 /* Account -- a compact shortcut card, same recipe as Quick Jump/
    Danger Zone (bordered, warm surface, restrained spacing) -- never a
    second profile editor. */
-.set-account-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); padding: var(--gs-md); display: flex; flex-direction: column; gap: var(--gs-sm); }
+.set-account-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); padding: var(--gs-md); display: flex; flex-direction: column; gap: var(--gs-sm); box-shadow: var(--shadow-hard-md); }
 .set-account-card__title { margin: 0; color: var(--color-text-muted); font: var(--text-label); }
 .set-account-card__row { display: flex; align-items: center; gap: var(--gs-sm); min-width: 0; }
 .set-account-card__meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -284,6 +300,30 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
   font: var(--text-label);
   font-size: 10px;
 }
+
+/* -------------------------------------------------------------- */
+/* Preferences -- Language + Theme only (account/UI territory, never
+   trip currency/join-policy/notifications). Same compact recipe as
+   Account right above it (bordered, warm surface, restrained
+   spacing, canonical card depth). */
+.set-preferences-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); padding: var(--gs-md); display: flex; flex-direction: column; gap: var(--gs-sm); box-shadow: var(--shadow-hard-md); }
+.set-preferences-card__title { margin: 0; color: var(--color-text-muted); font: var(--text-label); }
+.set-preferences-card__row { display: flex; align-items: center; justify-content: space-between; gap: var(--gs-sm); }
+.set-preferences-card__label { color: var(--color-text); font: var(--text-body-sm); }
+.set-preferences-card__select {
+  min-height: 36px;
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--text-body-sm);
+  box-shadow: var(--shadow-hard-sm);
+  cursor: pointer;
+  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+.set-preferences-card__select:hover:not(:disabled) { box-shadow: var(--shadow-hard-sm-hover); transform: var(--press-sm-hover); }
+.set-preferences-card__select:focus { outline: none; box-shadow: var(--shadow-hard-sm-active); transform: var(--press-sm-active); }
 
 /* -------------------------------------------------------------- */
 /* Save bar -- bottom/end of the main column, per brief item 23. */

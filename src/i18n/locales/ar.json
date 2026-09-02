@@ -149,6 +149,7 @@
   "settings.dangerZone.title": "منطقة خطرة", "settings.dangerZone.confirmArchiveTitle": "أرشفة الرحلة؟", "settings.dangerZone.confirmArchiveBody": "سيتم إيقاف التعديلات على الرحلة مع الاحتفاظ بالمصاريف والتسويات والسجل المالي.", "settings.dangerZone.confirmRestoreTitle": "استعادة الرحلة؟", "settings.dangerZone.confirmRestoreBody": "ستصبح الرحلة قابلة للتعديل مرة أخرى.",
   "settings.access.showPassword": "إظهار كلمة المرور", "settings.access.hidePassword": "إخفاء كلمة المرور", "settings.access.copyPassword": "نسخ كلمة المرور", "settings.access.passwordCopied": "تم نسخ كلمة المرور", "settings.access.copyInviteMessage": "نسخ رسالة الدعوة", "settings.access.setPasswordToShare": "حدد كلمة مرور أعلاه عشان تنضاف لرسالة الدعوة.",
   "settings.account.title": "الحساب", "settings.account.editProfile": "تعديل الملف الشخصي", "settings.account.guestBadge": "ضيف", "settings.account.guestHint": "أنت منضم كضيف. سجّل دخولك لربط هذه الرحلة بحسابك.", "settings.account.signIn": "تسجيل الدخول",
+  "settings.preferences.title": "التفضيلات", "settings.preferences.language": "اللغة", "settings.preferences.theme": "المظهر",
   "common.inviteMessageCopied": "تم نسخ رسالة الدعوة", "common.shareMessageCopied": "تم نسخ رسالة المشاركة",
   "share.join.open": "انضم معنا في رحلة \"{{tripName}}\" 👋\nهذا رابط الدخول:\n{{url}}\n\nادخل مباشرة وبتنضم للرحلة.",
   "share.join.openWithPassword": "انضم معنا في رحلة \"{{tripName}}\" 👋\nهذا رابط الدخول:\n{{url}}\n\nكلمة المرور: {{password}}\n\nادخل مباشرة وبتنضم للرحلة.",

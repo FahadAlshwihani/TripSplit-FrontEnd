@@ -148,6 +148,7 @@
   "settings.dangerZone.title": "Danger Zone", "settings.dangerZone.confirmArchiveTitle": "Archive this trip?", "settings.dangerZone.confirmArchiveBody": "Editing will be disabled, while expenses, settlements, and the financial record are preserved.", "settings.dangerZone.confirmRestoreTitle": "Restore this trip?", "settings.dangerZone.confirmRestoreBody": "The trip becomes editable again.",
   "settings.access.showPassword": "Show password", "settings.access.hidePassword": "Hide password", "settings.access.copyPassword": "Copy password", "settings.access.passwordCopied": "Password copied", "settings.access.copyInviteMessage": "Copy invite message", "settings.access.setPasswordToShare": "Set a password above to include it in the invite message.",
   "settings.account.title": "Account", "settings.account.editProfile": "Edit profile", "settings.account.guestBadge": "Guest", "settings.account.guestHint": "You're joining as a guest. Sign in to sync this trip to your account.", "settings.account.signIn": "Sign in",
+  "settings.preferences.title": "Preferences", "settings.preferences.language": "Language", "settings.preferences.theme": "Theme",
   "common.inviteMessageCopied": "Invite message copied", "common.shareMessageCopied": "Share message copied",
   "share.join.open": "Join us on \"{{tripName}}\" 👋\nHere's the trip link:\n{{url}}\n\nYou can jump straight in.",
   "share.join.openWithPassword": "Join us on \"{{tripName}}\" 👋\nHere's the trip link:\n{{url}}\n\nPassword: {{password}}\n\nYou can jump straight in.",

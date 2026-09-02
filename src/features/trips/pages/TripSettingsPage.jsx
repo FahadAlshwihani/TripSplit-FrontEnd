@@ -5,6 +5,7 @@ import '../styles/settings.css';
 import SettingsQuickJump from '../components/SettingsQuickJump';
 import SettingsDangerZone from '../components/SettingsDangerZone';
 import SettingsAccount from '../components/SettingsAccount';
+import SettingsPreferences from '../components/SettingsPreferences';
 import SettingsGeneralLedger from '../components/SettingsGeneralLedger';
 import SettingsAccessSecurity from '../components/SettingsAccessSecurity';
 import SettingsSettlementRules from '../components/SettingsSettlementRules';
@@ -128,6 +129,7 @@ export default function TripSettingsPage() {
             onRestore={() => setConfirmAction('restore')}
           />
           <SettingsAccount />
+          <SettingsPreferences />
         </div>
 
         <form className="set-grid__right" onSubmit={handleSave}>
