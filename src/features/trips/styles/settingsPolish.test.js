@@ -120,3 +120,36 @@ test('Language and Theme selects share the exact same control class (one shared 
   const matches = preferencesJsx.match(/className="set-preferences-card__select"/g) || [];
   expect(matches.length).toBe(2);
 });
+
+// --- Join Policy box: restored card depth ------------------------------
+
+test('the Join Policy container carries the canonical hard-shadow token', () => {
+  const rule = ruleFor(settingsCss, '.set-join-policy');
+  expect(rule).toMatch(/box-shadow:\s*var\(--shadow-hard-sm\)/);
+});
+
+test('no legacy override cancels the Join Policy container shadow', () => {
+  const rule = ruleFor(settingsCss, '.set-join-policy');
+  expect(rule).not.toMatch(/box-shadow:\s*none/);
+});
+
+// --- Base Currency (read-only/locked) control: restored card depth -----
+
+test('the read-only value display (used for the locked Base Currency control) carries the canonical hard-shadow token', () => {
+  const rule = ruleFor(settingsCss, '.set-readonly-value');
+  expect(rule).toMatch(/box-shadow:\s*var\(--shadow-hard-sm\)/);
+});
+
+test('no legacy override cancels the read-only value shadow', () => {
+  const rule = ruleFor(settingsCss, '.set-readonly-value');
+  expect(rule).not.toMatch(/box-shadow:\s*none/);
+});
+
+// --- Password field: lock icon stability (paint-order fix) -------------
+
+test('both the lock icon and the eye toggle carry an explicit z-index, so neither can be painted over by the input\'s own hover/focus stacking context', () => {
+  const iconRule = ruleFor(settingsCss, '.set-password-field__icon');
+  const toggleRule = ruleFor(settingsCss, '.set-password-field__toggle');
+  expect(iconRule).toMatch(/z-index:\s*\d/);
+  expect(toggleRule).toMatch(/z-index:\s*\d/);
+});

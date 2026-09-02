@@ -442,3 +442,47 @@ test('Language and Theme selects render with the exact same control class -- one
   expect(language.className).toBe('set-preferences-card__select');
   expect(theme.className).toBe(language.className);
 });
+
+// --- Join Policy container + locked Base Currency: restored depth ----
+
+test('the Join Policy radiogroup renders inside the canonical depth container', () => {
+  const { container } = renderPage();
+  const group = screen.getByRole('radiogroup');
+  expect(group).toHaveClass('set-join-policy');
+  expect(container.querySelector('.set-join-policy')).toBe(group);
+});
+
+test('a locked Base Currency renders through the canonical depth-carrying read-only class', () => {
+  const { container } = renderPage({ trip: { ...baseTrip, currency_locked: true } });
+  const currencyField = screen.getByText('settings.general.currency').closest('.field-group');
+  const readonly = currencyField.querySelector('.set-readonly-value');
+  expect(readonly).toBeInTheDocument();
+  expect(readonly).toHaveTextContent('SAR');
+  expect(container.querySelectorAll('.set-readonly-value')).toContain(readonly);
+});
+
+// --- Lock icon stability: always mounted, never conditionally removed -
+
+test('the lock icon stays mounted across empty, valued, focused, blurred, and visibility-toggled states', () => {
+  const { container } = renderPage();
+  const getIcon = () => container.querySelector('.set-password-field__icon .material-symbols-outlined');
+  const input = screen.getByLabelText('settings.access.password');
+
+  expect(getIcon()).toBeInTheDocument();
+  expect(getIcon()).toHaveTextContent('lock');
+
+  fireEvent.focus(input);
+  expect(getIcon()).toBeInTheDocument();
+
+  fireEvent.change(input, { target: { value: 'hunter2' } });
+  expect(getIcon()).toBeInTheDocument();
+
+  fireEvent.blur(input);
+  expect(getIcon()).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: 'settings.access.showPassword' }));
+  expect(getIcon()).toBeInTheDocument();
+
+  fireEvent.change(input, { target: { value: '' } });
+  expect(getIcon()).toBeInTheDocument();
+});
