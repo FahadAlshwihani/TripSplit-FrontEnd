@@ -353,3 +353,30 @@ test('a read-only viewer (no edit capability) sees neither the eye toggle nor an
   expect(screen.queryByRole('button', { name: 'settings.access.showPassword' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'settings.access.copyInviteMessage' })).not.toBeInTheDocument();
 });
+
+// --- Left column order + password icon geometry ---------------------
+
+test('left column order is Quick Jump, Danger Zone, Account, Preferences', () => {
+  const { container } = renderPage();
+  const left = container.querySelector('.set-grid__left');
+  const order = ['set-quick-jump', 'set-danger-card', 'set-account-card', 'set-preferences-card'].map(
+    (cls) => Array.from(left.querySelectorAll(`.${cls}`))[0],
+  );
+  order.forEach((el) => expect(el).toBeInTheDocument());
+  for (let i = 1; i < order.length; i += 1) {
+    // eslint-disable-next-line no-bitwise
+    expect(order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  }
+});
+
+test('password field renders exactly one leading (decorative) icon and one trailing (interactive) eye toggle, on different elements', () => {
+  const { container } = renderPage();
+  const field = container.querySelector('.set-password-field');
+  const icon = field.querySelector('.set-password-field__icon');
+  const toggle = field.querySelector('.set-password-field__toggle');
+  expect(icon).toBeInTheDocument();
+  expect(toggle).toBeInTheDocument();
+  expect(icon).not.toBe(toggle);
+  expect(icon.getAttribute('aria-hidden')).toBe('true');
+  expect(toggle.tagName).toBe('BUTTON');
+});
