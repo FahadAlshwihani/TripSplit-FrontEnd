@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getGuestSession } from '../api/guestSessionApi';
+import { tripJoinPath } from '../../../shared/utils/shareLinks';
 
 // States that can be acted on by routing through the canonical Join Trip
 // flow (never a direct trip-URL deep link -- see docs/architecture/
@@ -46,7 +47,7 @@ const GuestTripsList = () => {
                 <button
                   type="button"
                   className="auth-guest-trips__action text-label"
-                  onClick={() => navigate(`/trips/join?code=${encodeURIComponent(trip.join_code)}`)}
+                  onClick={() => navigate(tripJoinPath(trip.join_code))}
                 >
                   {t(`guest.trips.state.${trip.state}`)}
                 </button>

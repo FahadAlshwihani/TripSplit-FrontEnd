@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { archiveTrip, closeTrip, leaveTrip, restoreTrip } from '../../trips/api/tripsApi';
+import { tripJoinPath } from '../../../shared/utils/shareLinks';
 import LeaveTripDialog from './LeaveTripDialog';
 import TripMoreActionsMenu from './TripMoreActionsMenu';
 
@@ -82,7 +83,7 @@ const AccountTripRow = ({ trip, onChanged }) => {
             </button>
           )}
           {trip.capabilities.can_rejoin && (
-            <button type="button" className="acc-btn acc-btn--primary acc-trip__primary-action" onClick={() => navigate(`/trips/join?code=${trip.join_code}`)}>
+            <button type="button" className="acc-btn acc-btn--primary acc-trip__primary-action" onClick={() => navigate(tripJoinPath(trip.join_code))}>
               {t('account.trips.rejoin')}
             </button>
           )}
