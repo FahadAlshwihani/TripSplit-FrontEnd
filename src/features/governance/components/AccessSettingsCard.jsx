@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 import { buildTripShareMessage } from '../../../shared/utils/shareMessage';
+import { tripJoinUrl } from '../../../shared/utils/shareLinks';
+import { deriveTripAccessState, nextJoinPolicy } from '../../../shared/utils/tripAccess';
 
 /*
   Wires the two governance toggles the brief kept flagging as backend-
@@ -30,9 +32,8 @@ const AccessSettingsCard = ({ trip, onUpdateSettings, onRotateLink, capabilities
   const canManageApproval = capabilities ? Boolean(capabilities.can_manage_approval_setting) : true;
   const canManageLink = capabilities ? Boolean(capabilities.can_manage_invite_link) : true;
 
-  const inviteLinkActive = trip.join_policy !== 'invite_only';
-  const requireApproval = trip.join_policy === 'approval_required';
-  const inviteLink = `${window.location.origin}/trips/join?code=${trip.join_code}`;
+  const { inviteLinkEnabled: inviteLinkActive, approvalRequired: requireApproval } = deriveTripAccessState(trip);
+  const inviteLink = tripJoinUrl(trip.join_code);
 
   const setPolicy = async (join_policy) => {
     setBusy(true);
@@ -43,8 +44,8 @@ const AccessSettingsCard = ({ trip, onUpdateSettings, onRotateLink, capabilities
     }
   };
 
-  const toggleLinkActive = () => setPolicy(inviteLinkActive ? 'invite_only' : (requireApproval ? 'approval_required' : 'open'));
-  const toggleRequireApproval = () => setPolicy(requireApproval ? 'open' : 'approval_required');
+  const toggleLinkActive = () => setPolicy(nextJoinPolicy({ inviteLinkEnabled: !inviteLinkActive, approvalRequired: requireApproval }));
+  const toggleRequireApproval = () => setPolicy(nextJoinPolicy({ inviteLinkEnabled: inviteLinkActive, approvalRequired: !requireApproval }));
 
   // Governance never has access to a real trip password value -- the
   // backend hashes it (django.contrib.auth.hashers.make_password) and
