@@ -42,6 +42,14 @@ const POLICIES = ['open', 'approval_required', 'invite_only'];
   -- never a bare /trips/{short_code} link, which requires existing
   membership and would leave a genuine non-member at a plain access-
   denied error instead of the real join flow.
+
+  The password field's leading (decorative, non-interactive) lock
+  icon and trailing (interactive) eye toggle sit at opposite logical
+  edges -- inset-inline-start / inset-inline-end in settings.css --
+  so they never overlap and are automatically mirrored under RTL with
+  no separate RTL markup/rule. Both use Material Symbols Outlined
+  (the icon family the rest of this page already uses), not Bootstrap
+  Icons.
 */
 export default function SettingsAccessSecurity({ canEdit, tripName, joinCode, joinPolicy, onChangeJoinPolicy, passwordProtected, password, onPasswordChange, onRequestRemovePassword }) {
   const { t } = useTranslation();
@@ -87,6 +95,7 @@ export default function SettingsAccessSecurity({ canEdit, tripName, joinCode, jo
           <label className="field-label" htmlFor="set-password">{t('settings.access.password')}</label>
           {canEdit ? (
             <div className="set-password-field">
+              <span className="set-password-field__icon material-symbols-outlined" aria-hidden="true">lock</span>
               <input
                 id="set-password"
                 className="field-control set-password-value"
@@ -104,7 +113,7 @@ export default function SettingsAccessSecurity({ canEdit, tripName, joinCode, jo
                 aria-label={showPassword ? t('settings.access.hidePassword') : t('settings.access.showPassword')}
                 aria-pressed={showPassword}
               >
-                <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`} aria-hidden="true" />
+                <span className="material-symbols-outlined" aria-hidden="true">{showPassword ? 'visibility_off' : 'visibility'}</span>
               </button>
             </div>
           ) : (
