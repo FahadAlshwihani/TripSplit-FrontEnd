@@ -194,7 +194,13 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 
 .set-password-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gs-sm); margin-block-start: var(--gs-xs); }
 
-/* Settlement rule row -- bordered box, checkbox + label + helper. */
+/* Settlement rule row -- bordered box, checkbox + label + helper.
+   Neither row is clickable as a whole (both checkboxes are disabled,
+   no row-level handler), so this gets the same rest-only small-card
+   depth as other static, non-interactive containers in this app
+   (.mem-list, .fund-round-card) -- a shadow, no hover/active
+   transform on the row itself, so the checkbox never feels detached
+   from a parent that's moving. */
 .set-rule {
   display: flex;
   align-items: flex-start;
@@ -203,6 +209,7 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
 }
 .set-rule input[type="checkbox"] { margin-block-start: 3px; width: 18px; height: 18px; accent-color: var(--nc-indigo-700); flex: 0 0 auto; }
 .set-rule input[type="checkbox"]:disabled { cursor: not-allowed; }
