@@ -265,6 +265,27 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 .set-danger-card .set-danger-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* -------------------------------------------------------------- */
+/* Account -- a compact shortcut card, same recipe as Quick Jump/
+   Danger Zone (bordered, warm surface, restrained spacing) -- never a
+   second profile editor. */
+.set-account-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); padding: var(--gs-md); display: flex; flex-direction: column; gap: var(--gs-sm); }
+.set-account-card__title { margin: 0; color: var(--color-text-muted); font: var(--text-label); }
+.set-account-card__row { display: flex; align-items: center; gap: var(--gs-sm); min-width: 0; }
+.set-account-card__meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.set-account-card__name { margin: 0; color: var(--color-text); font: 700 var(--text-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.set-account-card__email { margin: 0; color: var(--color-text-muted); font: var(--text-body-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: isolate; }
+.set-account-card__guest-badge {
+  align-self: flex-start;
+  padding: 1px var(--gs-sm);
+  border: var(--border-width) solid var(--color-border-subtle);
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font: var(--text-label);
+  font-size: 10px;
+}
+
+/* -------------------------------------------------------------- */
 /* Save bar -- bottom/end of the main column, per brief item 23. */
 .set-save-bar { display: flex; align-items: center; justify-content: flex-end; gap: var(--gs-md); margin-block-start: var(--gs-md); flex-wrap: wrap; }
 .set-save-feedback { margin: 0; font: var(--text-body-sm); }
