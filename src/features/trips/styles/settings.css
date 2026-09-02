@@ -157,8 +157,21 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
    must resolve against the PAGE's direction, not the glyph's own
    forced-ltr direction, so it cannot live on the same element as the
    material-symbols-outlined class. */
+/* z-index: 1 on both -- .field-control (the input) gains its own
+   stacking context whenever it's hovered/focused (the shared
+   .field-control:hover/:focus rule applies `transform`, and any
+   transform != none creates a stacking context). Without an explicit
+   z-index here, painting order among same-level stacking contexts
+   falls back to DOM order: the icon (before the input in markup)
+   would then paint BEHIND the input's own opaque background once the
+   input starts stacking, making it disappear on hover/focus -- while
+   the toggle button (after the input in markup) stayed visible by
+   accident of DOM order alone. Explicit z-index makes both icons
+   paint above the input unconditionally, regardless of the input's
+   own transform/stacking state or DOM order. */
 .set-password-field__icon {
   position: absolute;
+  z-index: 1;
   inset-inline-start: 12px;
   display: inline-flex;
   align-items: center;
@@ -169,6 +182,7 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 .set-password-field__icon .material-symbols-outlined { font-size: 18px; }
 .set-password-field__toggle {
   position: absolute;
+  z-index: 1;
   inset-inline-end: 4px;
   display: inline-flex;
   align-items: center;

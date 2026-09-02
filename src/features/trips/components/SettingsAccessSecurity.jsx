@@ -63,6 +63,19 @@ const POLICIES = ['open', 'approval_required', 'invite_only'];
   fixes. The eye toggle doesn't need this split: inset-inline-end
   lives on the <button> itself, which the material-symbols-outlined
   span (its child) does not.
+
+  Both the lock icon and the eye toggle carry an explicit z-index (see
+  settings.css) -- without it, the icon would intermittently vanish
+  behind the password <input>'s own opaque background whenever the
+  input is hovered/focused: .field-control's shared :hover/:focus rule
+  applies a `transform`, and any transform creates a new stacking
+  context, at which point painting order among the field's absolutely-
+  positioned children falls back to DOM order. The icon sits BEFORE
+  the input in markup, so it would then paint underneath the input;
+  the toggle button sits AFTER the input, so it stayed visible by
+  accident of DOM order alone -- the actual cause of "the eye is
+  stable but the lock isn't." Explicit z-index makes both always paint
+  above the input, independent of the input's own hover/focus state.
 */
 export default function SettingsAccessSecurity({ canEdit, tripName, joinCode, joinPolicy, onChangeJoinPolicy, passwordProtected, password, onPasswordChange, onRequestRemovePassword }) {
   const { t } = useTranslation();
