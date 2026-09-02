@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
+import { buildTripShareMessage } from '../../../shared/utils/shareMessage';
 
 /*
   Wires the two governance toggles the brief kept flagging as backend-
@@ -45,9 +46,20 @@ const AccessSettingsCard = ({ trip, onUpdateSettings, onRotateLink, capabilities
   const toggleLinkActive = () => setPolicy(inviteLinkActive ? 'invite_only' : (requireApproval ? 'approval_required' : 'open'));
   const toggleRequireApproval = () => setPolicy(requireApproval ? 'open' : 'approval_required');
 
+  // Governance never has access to a real trip password value -- the
+  // backend hashes it (django.contrib.auth.hashers.make_password) and
+  // never returns it after save, and this card only ever sees
+  // `trip.password_protected` (a boolean), never the value itself. The
+  // shared message builder is always called with no password here, by
+  // construction, rather than faking one -- see shareMessage.js's own
+  // header comment and Settings' own password field, the one place in
+  // the app that legitimately can include a real value (the viewer's
+  // own current, in-memory, not-yet-saved draft).
+  const shareMessage = buildTripShareMessage({ t, tripName: trip.title, url: inviteLink, joinPolicy: trip.join_policy, linkType: 'join' });
+
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(inviteLink);
+      await navigator.clipboard.writeText(shareMessage);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

@@ -2,7 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import AccessSettingsCard from './AccessSettingsCard';
 
-jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key) }) }));
 
 Object.assign(navigator, { clipboard: { writeText: jest.fn().mockResolvedValue(undefined) } });
 
@@ -42,11 +42,22 @@ test('turning approval off while the link is active goes back to open', async ()
   await waitFor(() => expect(onUpdateSettings).toHaveBeenCalledWith({ join_policy: 'open' }));
 });
 
-test('copy link writes the shareable join URL to the clipboard', async () => {
-  renderCard({ join_code: 'ABC12345', join_policy: 'open' });
+test('copy link writes the full localized share message (including the join URL), not just the bare URL', async () => {
+  renderCard({ title: 'Georgia', join_code: 'ABC12345', join_policy: 'open' });
   fireEvent.click(screen.getByText('governance.copyLink'));
-  await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expect.stringContaining('/trips/join?code=ABC12345')));
+  await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalled());
+  const copied = navigator.clipboard.writeText.mock.calls[navigator.clipboard.writeText.mock.calls.length - 1][0];
+  expect(copied).toContain('/trips/join?code=ABC12345');
+  expect(copied).toContain('share.join.open');
   expect(await screen.findByText('governance.copied')).toBeInTheDocument();
+});
+
+test('the copied share message never includes a password -- Governance never has a real password value to share', async () => {
+  renderCard({ title: 'Georgia', join_code: 'ABC12345', join_policy: 'approval_required', password_protected: true });
+  fireEvent.click(screen.getByText('governance.copyLink'));
+  await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalled());
+  const copied = navigator.clipboard.writeText.mock.calls[navigator.clipboard.writeText.mock.calls.length - 1][0];
+  expect(copied).not.toContain('WithPassword');
 });
 
 test('rotate link requires confirmation before calling the API', async () => {
