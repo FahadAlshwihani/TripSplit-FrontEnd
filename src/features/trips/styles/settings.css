@@ -323,8 +323,14 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 .set-preferences-card__title { margin: 0; color: var(--color-text-muted); font: var(--text-label); }
 .set-preferences-card__row { display: flex; align-items: center; justify-content: space-between; gap: var(--gs-sm); }
 .set-preferences-card__label { color: var(--color-text); font: var(--text-body-sm); }
+/* Language and Theme share this one class -- deliberately fixed
+   inline-size/block-size (never min-height/content-based auto-sizing)
+   so a native <select> never renders wider or taller than its sibling
+   just because its currently-selected option text is longer
+   ("English"/"العربية" vs "Light"/"Dark"/"فاتح"/"داكن" all fit). */
 .set-preferences-card__select {
-  min-height: 36px;
+  inline-size: 120px;
+  block-size: 36px;
   padding: var(--space-1) var(--space-2);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
