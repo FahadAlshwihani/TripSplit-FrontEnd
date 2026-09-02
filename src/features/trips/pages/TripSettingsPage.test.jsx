@@ -380,3 +380,65 @@ test('password field renders exactly one leading (decorative) icon and one trail
   expect(icon.getAttribute('aria-hidden')).toBe('true');
   expect(toggle.tagName).toBe('BUTTON');
 });
+
+// --- Password field RTL/LTR geometry contract ------------------------
+// jsdom doesn't implement the [dir]->direction UA mapping, so computed
+// pixel positions can't be asserted here -- these test the underlying
+// contract that actually drives correct rendering in a real browser:
+// the wrapper never has a hardcoded dir (so it inherits page
+// direction either way), the value itself is always forced LTR, and
+// the lock icon's positioning wrapper is never the same element as
+// its Material-Symbols glyph (see settingsPolish.test.js for why that
+// split matters -- the glyph forces its own direction: ltr, which
+// would otherwise hijack inset-inline-start).
+const renderWithDir = (dir) => render(
+  <div dir={dir}>
+    <MemoryRouter initialEntries={['/trips/t1/settings']}>
+      <Routes>
+        <Route path="/trips/:tripId" element={<Outlet context={{ trip: baseTrip, setTrip: jest.fn(), tripId: 't1', permissions: editPermissions }} />}>
+          <Route path="settings" element={<TripSettingsPage />} />
+        </Route>
+      </Routes>
+    </MemoryRouter>
+  </div>,
+);
+
+test.each(['rtl', 'ltr'])('password field geometry contract holds identically under dir=%s (same markup, no per-locale branch)', (dir) => {
+  const { container } = renderWithDir(dir);
+  const field = container.querySelector('.set-password-field');
+  const icon = field.querySelector('.set-password-field__icon');
+  const iconGlyph = icon.querySelector('.material-symbols-outlined');
+  const toggle = field.querySelector('.set-password-field__toggle');
+  const input = field.querySelector('input');
+
+  // Wrapper and icon carry no hardcoded dir -- they inherit the page's.
+  expect(field.getAttribute('dir')).toBeNull();
+  expect(icon.getAttribute('dir')).toBeNull();
+  // The value itself is always forced LTR, regardless of page direction.
+  expect(input).toHaveAttribute('dir', 'ltr');
+  // The glyph (forced-ltr for correct ligature rendering) is a CHILD of
+  // the positioning wrapper, never the same element -- so
+  // inset-inline-start on the wrapper resolves against the page's
+  // direction, not the glyph's.
+  expect(iconGlyph).toBeInTheDocument();
+  expect(icon).not.toBe(iconGlyph);
+  expect(icon.className).not.toMatch(/material-symbols-outlined/);
+  // Icon and toggle are distinct elements at opposite logical edges
+  // (inset-inline-start / inset-inline-end -- see settings.css).
+  expect(icon).not.toBe(toggle);
+});
+
+// --- Settlement rule rows + Preferences control sizing ---------------
+
+test('both settlement rule rows carry the canonical option-row depth class', () => {
+  const { container } = renderPage();
+  expect(container.querySelectorAll('.set-rule').length).toBe(2);
+});
+
+test('Language and Theme selects render with the exact same control class -- one shared geometry', () => {
+  const { getByLabelText } = renderPage();
+  const language = getByLabelText('settings.preferences.language');
+  const theme = getByLabelText('settings.preferences.theme');
+  expect(language.className).toBe('set-preferences-card__select');
+  expect(theme.className).toBe(language.className);
+});

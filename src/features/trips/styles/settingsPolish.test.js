@@ -43,11 +43,16 @@ test('password field: the input keeps padding clear of both the leading icon and
 });
 
 test('password field markup renders exactly one leading icon and one eye toggle, both Material Symbols (never Bootstrap Icons)', () => {
-  expect(accessSecurityJsx).toMatch(/set-password-field__icon material-symbols-outlined/);
+  expect(accessSecurityJsx).toMatch(/set-password-field__icon/);
   expect(accessSecurityJsx).toMatch(/set-password-field__toggle/);
   expect(accessSecurityJsx).toMatch(/material-symbols-outlined.*visibility/);
   expect(accessSecurityJsx).not.toMatch(/bi bi-eye/);
   expect(accessSecurityJsx).not.toMatch(/\bbi-eye-slash\b/);
+});
+
+test('the lock icon\'s positioning wrapper and its Material-Symbols glyph are separate elements, so inset-inline-start never resolves against the glyph\'s own forced-ltr direction', () => {
+  expect(accessSecurityJsx).toMatch(/set-password-field__icon"[^>]*>\s*<span className="material-symbols-outlined">lock<\/span>/);
+  expect(accessSecurityJsx).not.toMatch(/set-password-field__icon material-symbols-outlined/);
 });
 
 const CARD_DEPTH_SELECTORS = [
@@ -74,4 +79,44 @@ test('no new physical left/right CSS was introduced -- logical properties only',
   expect(settingsCss).not.toMatch(/[^-](left|right):\s/);
   expect(settingsCss).not.toMatch(/margin-(left|right):/);
   expect(settingsCss).not.toMatch(/padding-(left|right):/);
+});
+
+// --- Settlement rule rows: restored card depth -----------------------
+
+test('the settlement rule row (Simplify Debts / Require Receipts) carries the canonical small hard-shadow token', () => {
+  const rule = ruleFor(settingsCss, '.set-rule');
+  expect(rule).toMatch(/box-shadow:\s*var\(--shadow-hard-sm\)/);
+});
+
+test('no legacy override cancels the settlement row shadow', () => {
+  const rule = ruleFor(settingsCss, '.set-rule');
+  expect(rule).not.toMatch(/box-shadow:\s*none/);
+});
+
+test('both settlement rule rows (Simplify Debts, Require Receipts) use the .set-rule class carrying the depth token', () => {
+  const settlementRulesJsx = fs.readFileSync(
+    path.join(__dirname, '..', 'components', 'SettingsSettlementRules.jsx'),
+    'utf8',
+  );
+  const matches = settlementRulesJsx.match(/className="set-rule(?:\s[^"]*)?"/g) || [];
+  expect(matches.length).toBe(2);
+});
+
+// --- Preferences controls: equal fixed geometry -----------------------
+
+test('the Language/Theme select is fixed-size (inline-size + block-size), never content-width auto-sizing', () => {
+  const rule = ruleFor(settingsCss, '.set-preferences-card__select');
+  expect(rule).toMatch(/inline-size:\s*\d/);
+  expect(rule).toMatch(/block-size:\s*\d/);
+  expect(rule).not.toMatch(/min-height/);
+  expect(rule).not.toMatch(/width:\s*auto/);
+});
+
+test('Language and Theme selects share the exact same control class (one shared geometry, not two)', () => {
+  const preferencesJsx = fs.readFileSync(
+    path.join(__dirname, '..', 'components', 'SettingsPreferences.jsx'),
+    'utf8',
+  );
+  const matches = preferencesJsx.match(/className="set-preferences-card__select"/g) || [];
+  expect(matches.length).toBe(2);
 });
