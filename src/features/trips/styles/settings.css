@@ -151,16 +151,22 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
    either. */
 .set-password-field { position: relative; display: flex; align-items: center; }
 .set-password-field .field-control { padding-inline-start: 40px; padding-inline-end: 40px; }
+/* The positioning wrapper (this element) and the glyph itself (its
+   .material-symbols-outlined child) are deliberately separate nodes --
+   see SettingsAccessSecurity.jsx's own comment. inset-inline-start
+   must resolve against the PAGE's direction, not the glyph's own
+   forced-ltr direction, so it cannot live on the same element as the
+   material-symbols-outlined class. */
 .set-password-field__icon {
   position: absolute;
   inset-inline-start: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
   color: var(--color-text-muted);
   pointer-events: none;
 }
+.set-password-field__icon .material-symbols-outlined { font-size: 18px; }
 .set-password-field__toggle {
   position: absolute;
   inset-inline-end: 4px;

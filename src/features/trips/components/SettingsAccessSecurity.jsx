@@ -50,6 +50,19 @@ const POLICIES = ['open', 'approval_required', 'invite_only'];
   no separate RTL markup/rule. Both use Material Symbols Outlined
   (the icon family the rest of this page already uses), not Bootstrap
   Icons.
+
+  The lock icon's POSITIONING (inset-inline-start, on
+  .set-password-field__icon) and its GLYPH RENDERING (Material
+  Symbols' own forced `direction: ltr`, needed for the "lock" ligature
+  to resolve to the right glyph regardless of page language, on the
+  inner .material-symbols-outlined span) are deliberately split across
+  two nested elements. Putting both on the SAME element would make
+  `inset-inline-start` resolve against THAT element's own (forced-ltr)
+  direction instead of the page's -- pinning the icon to the physical
+  left even under Arabic, which is the actual bug this structure
+  fixes. The eye toggle doesn't need this split: inset-inline-end
+  lives on the <button> itself, which the material-symbols-outlined
+  span (its child) does not.
 */
 export default function SettingsAccessSecurity({ canEdit, tripName, joinCode, joinPolicy, onChangeJoinPolicy, passwordProtected, password, onPasswordChange, onRequestRemovePassword }) {
   const { t } = useTranslation();
@@ -95,7 +108,9 @@ export default function SettingsAccessSecurity({ canEdit, tripName, joinCode, jo
           <label className="field-label" htmlFor="set-password">{t('settings.access.password')}</label>
           {canEdit ? (
             <div className="set-password-field">
-              <span className="set-password-field__icon material-symbols-outlined" aria-hidden="true">lock</span>
+              <span className="set-password-field__icon" aria-hidden="true">
+                <span className="material-symbols-outlined">lock</span>
+              </span>
               <input
                 id="set-password"
                 className="field-control set-password-value"
