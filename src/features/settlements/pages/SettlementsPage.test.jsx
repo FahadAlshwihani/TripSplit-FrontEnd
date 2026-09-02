@@ -578,12 +578,16 @@ test('a settlement id belonging to another trip is never fetched separately -- i
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
 
-test('the opened deep-link drawer exposes a copy-link action for that exact settlement', async () => {
+test('the opened deep-link drawer exposes a copy-link action for that exact settlement, as a share message', async () => {
   renderPage({}, '/trips/t1/settlements?settlement=s1');
   const dialog = await screen.findByRole('dialog');
   const writeText = jest.fn().mockResolvedValue(undefined);
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
   Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
   fireEvent.click(within(dialog).getByRole('button', { name: 'settlements.copyLink' }));
-  await waitFor(() => expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/trips/short-1/settlements?settlement=s1`));
+  await waitFor(() => expect(writeText).toHaveBeenCalled());
+  const copied = writeText.mock.calls[0][0];
+  expect(copied).toContain('share.settlement');
+  expect(copied).toContain(`${window.location.origin}/trips/short-1/settlements?settlement=s1`);
+  expect(copied).not.toContain('password');
 });

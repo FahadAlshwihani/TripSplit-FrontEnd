@@ -444,24 +444,42 @@ test('a background refresh after confirming a contribution never blanks the alre
 
 // --- Fund deep links / share links -----------------------------------
 
-test('the header Copy Fund Link button builds the canonical short_code URL, no query, no UUID', async () => {
+test('the header Copy Fund Link button copies a localized share message built around the canonical short_code URL, no UUID', async () => {
   renderPage();
   const button = await screen.findByRole('button', { name: 'fund.copyLink' });
   const writeText = jest.fn().mockResolvedValue(undefined);
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
   Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
   fireEvent.click(button);
-  await waitFor(() => expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/trips/short-1/fund`));
+  await waitFor(() => expect(writeText).toHaveBeenCalled());
+  const copied = writeText.mock.calls[0][0];
+  expect(copied).toContain('share.fund');
+  expect(copied).toContain(`${window.location.origin}/trips/short-1/fund`);
+  expect(copied).not.toContain('/fund?round=');
 });
 
-test('a round card exposes its own copy-link action building a round-scoped short_code URL', async () => {
+test('the Fund share message never includes a password, even when the trip has one configured', async () => {
+  renderPage({ ...trip, password_protected: true });
+  const button = await screen.findByRole('button', { name: 'fund.copyLink' });
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+  fireEvent.click(button);
+  await waitFor(() => expect(writeText).toHaveBeenCalled());
+  expect(writeText.mock.calls[0][0]).not.toContain('password');
+});
+
+test('a round card exposes its own copy-link action building a round-scoped short_code URL, as a share message', async () => {
   renderPage();
   await screen.findByText('Initial Collection');
   const writeText = jest.fn().mockResolvedValue(undefined);
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
   Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
   fireEvent.click(screen.getAllByRole('button', { name: 'fund.copyRoundLink' })[0]);
-  await waitFor(() => expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/trips/short-1/fund?round=r1`));
+  await waitFor(() => expect(writeText).toHaveBeenCalled());
+  const copied = writeText.mock.calls[0][0];
+  expect(copied).toContain('share.fund');
+  expect(copied).toContain(`${window.location.origin}/trips/short-1/fund?round=r1`);
 });
 
 test('the round card copy-link click never toggles that round\'s own collapse state', async () => {

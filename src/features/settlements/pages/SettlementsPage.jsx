@@ -223,6 +223,7 @@ export default function SettlementsPage() {
         <SettlementTimelineDrawer
           tripId={tripId}
           shortCode={trip.short_code}
+          tripName={trip.title}
           settlement={timelineSettlement}
           currency={currency}
           onClose={() => setOverlay(null)}

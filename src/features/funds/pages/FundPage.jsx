@@ -6,6 +6,7 @@ import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 import CopyLinkButton from '../../../shared/components/CopyLinkButton';
 import { tripUrl } from '../../../shared/utils/shareLinks';
+import { buildTripShareMessage } from '../../../shared/utils/shareMessage';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
 import { getMembers } from '../../members/api/membersApi';
 import { getCategories, getCategoryBudgets } from '../../categories/api/categoriesApi';
@@ -224,7 +225,11 @@ export default function FundPage() {
         </div>
         {fund && (
           <div className="fund-page__header-actions">
-            <CopyLinkButton url={tripUrl(trip.short_code, '/fund')} label={t('fund.copyLink')} />
+            <CopyLinkButton
+              text={buildTripShareMessage({ t, tripName: trip.title, url: tripUrl(trip.short_code, '/fund'), linkType: 'fund' })}
+              successMessage={t('common.shareMessageCopied')}
+              label={t('fund.copyLink')}
+            />
             <button type="button" className="dash-btn dash-btn--secondary" onClick={() => setFundDialog({ type: 'history' })}>
               <i className="bi bi-clock-history" aria-hidden="true" /> {t('fund.historyTitle')}
             </button>
@@ -296,6 +301,7 @@ export default function FundPage() {
                     canManage={canManage}
                     busyKey={busyKey}
                     shortCode={trip.short_code}
+                    tripName={trip.title}
                     onReport={() => setFundDialog({ type: 'report-contribution', round })}
                     onRecord={() => setFundDialog({ type: 'record-contribution', round })}
                     onRemind={(memberId) => handleRemind(round, memberId)}
@@ -318,6 +324,7 @@ export default function FundPage() {
                     forceExpanded={round.id === focusRoundId}
                     busyKey={busyKey}
                     shortCode={trip.short_code}
+                    tripName={trip.title}
                   />
                 ))}
               </div>

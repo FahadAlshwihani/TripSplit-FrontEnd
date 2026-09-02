@@ -4,6 +4,7 @@ import ModalPortal from '../../../shared/components/ModalPortal';
 import Money from '../../../shared/components/Money';
 import CopyLinkButton from '../../../shared/components/CopyLinkButton';
 import { tripUrl } from '../../../shared/utils/shareLinks';
+import { buildTripShareMessage } from '../../../shared/utils/shareMessage';
 import { getSettlementTimeline } from '../api/settlementsApi';
 import { formatDateTime } from '../../../shared/utils/format';
 import useModalDialog from '../../../shared/hooks/useModalDialog';
@@ -37,7 +38,7 @@ const timelineCopyKey = (event) => {
   return `settlementTimeline.${event.event_type.replace('settlement_', '')}`;
 };
 
-const SettlementTimelineDrawer = ({ tripId, shortCode, settlement, currency, onClose, canReview, canCancel, canRetry, onConfirm, onNotReceived, onCheckLater, onCancel, onRetry, busy }) => {
+const SettlementTimelineDrawer = ({ tripId, shortCode, tripName, settlement, currency, onClose, canReview, canCancel, canRetry, onConfirm, onNotReceived, onCheckLater, onCancel, onRetry, busy }) => {
   const { t, i18n } = useTranslation();
   const drawerRef = useModalDialog(onClose);
   const [state, setState] = useState({ loading: true, error: null, events: [] });
@@ -59,7 +60,12 @@ const SettlementTimelineDrawer = ({ tripId, shortCode, settlement, currency, onC
           <h2 id="settle-timeline-title" className="exp-drawer__title text-headline">{t('settlements.timelineTitle')}</h2>
           <div className="settle-timeline__head-actions">
             {shortCode && (
-              <CopyLinkButton url={tripUrl(shortCode, '/settlements', { settlement: settlement.id })} label={t('settlements.copyLink')} compact />
+              <CopyLinkButton
+                text={buildTripShareMessage({ t, tripName, url: tripUrl(shortCode, '/settlements', { settlement: settlement.id }), linkType: 'settlement' })}
+                successMessage={t('common.shareMessageCopied')}
+                label={t('settlements.copyLink')}
+                compact
+              />
             )}
             <button type="button" className="exp-modal__close" aria-label={t('common.close')} onClick={onClose}>
               <i className="bi bi-x-lg" aria-hidden="true" />

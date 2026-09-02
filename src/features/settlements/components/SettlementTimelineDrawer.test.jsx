@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import SettlementTimelineDrawer from './SettlementTimelineDrawer';
 import { getSettlementTimeline } from '../api/settlementsApi';
 
-jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key, i18n: { language: 'ar' } }) }));
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key), i18n: { language: 'ar' } }) }));
 jest.mock('../api/settlementsApi', () => ({ getSettlementTimeline: jest.fn() }));
 
 beforeEach(() => { getSettlementTimeline.mockResolvedValue([]); });
@@ -35,15 +35,18 @@ test('Tab is contained within the drawer, never escaping to the page behind it',
   expect(closeBtn).toHaveFocus();
 });
 
-test('with a shortCode, the drawer exposes a copy-link action building the canonical settlement deep link', async () => {
+test('with a shortCode, the drawer exposes a copy-link action building a share message around the canonical settlement deep link', async () => {
   const writeText = jest.fn().mockResolvedValue(undefined);
   Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
   Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
-  render(<SettlementTimelineDrawer tripId="t1" shortCode="short-1" settlement={{ id: 's1', from_name: 'A', to_name: 'B', amount: '10.00' }} currency="SAR" onClose={jest.fn()} />);
+  render(<SettlementTimelineDrawer tripId="t1" shortCode="short-1" tripName="Georgia" settlement={{ id: 's1', from_name: 'A', to_name: 'B', amount: '10.00' }} currency="SAR" onClose={jest.fn()} />);
   const button = await screen.findByRole('button', { name: 'settlements.copyLink' });
   fireEvent.click(button);
-  await screen.findByText('common.linkCopied');
-  expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/trips/short-1/settlements?settlement=s1`);
+  await screen.findByText('common.shareMessageCopied');
+  expect(writeText).toHaveBeenCalled();
+  const copied = writeText.mock.calls[0][0];
+  expect(copied).toContain('share.settlement');
+  expect(copied).toContain(`${window.location.origin}/trips/short-1/settlements?settlement=s1`);
 });
 
 test('without a shortCode, no copy-link action renders at all', async () => {

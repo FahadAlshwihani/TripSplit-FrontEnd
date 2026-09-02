@@ -346,7 +346,7 @@ export default function BalancesPage() {
       )}
 
       {timelineTarget && (
-        <SettlementTimelineDrawer tripId={tripId} shortCode={trip.short_code} settlement={timelineTarget} currency={currency} onClose={() => setTimelineTarget(null)} />
+        <SettlementTimelineDrawer tripId={tripId} shortCode={trip.short_code} tripName={trip.title} settlement={timelineTarget} currency={currency} onClose={() => setTimelineTarget(null)} />
       )}
         </>
       )}

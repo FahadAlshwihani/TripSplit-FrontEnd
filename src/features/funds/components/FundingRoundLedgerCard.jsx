@@ -5,6 +5,7 @@ import { avatarKeyFromAvatar } from '../../profile/utils/avatarKey';
 import Money from '../../../shared/components/Money';
 import CopyLinkButton from '../../../shared/components/CopyLinkButton';
 import { tripUrl } from '../../../shared/utils/shareLinks';
+import { buildTripShareMessage } from '../../../shared/utils/shareMessage';
 import { formatDate } from '../../../shared/utils/format';
 import { loadCheckedLater, markCheckedLater } from '../utils/checkLaterStore';
 
@@ -18,7 +19,7 @@ const STATUS_ICON = { open: 'bi-hourglass-split', completed: 'bi-check-circle', 
   stacks under one breakpoint, never a real <table>.
 */
 const FundingRoundLedgerCard = ({
-  round, contributions, currency, currentMember, canManage, collapsedByDefault, busyKey, shortCode, forceExpanded,
+  round, contributions, currency, currentMember, canManage, collapsedByDefault, busyKey, shortCode, tripName, forceExpanded,
   onReport, onRecord, onRemind, onConfirm, onReject, onRetry, onComplete, onCancel,
 }) => {
   const { t } = useTranslation();
@@ -69,7 +70,12 @@ const FundingRoundLedgerCard = ({
             <span className="fund-round-card__seq">{t('fund.roundBadge', { number: round.sequence_number })}</span>
             <span className={`fund-round-card__status fund-round-card__status--${round.status}`}><i className={`bi ${STATUS_ICON[round.status]}`} aria-hidden="true" /> {t(`fund.status.${round.status}`)}</span>
             {shortCode && (
-              <CopyLinkButton url={tripUrl(shortCode, '/fund', { round: round.id })} label={t('fund.copyRoundLink')} compact />
+              <CopyLinkButton
+                text={buildTripShareMessage({ t, tripName, url: tripUrl(shortCode, '/fund', { round: round.id }), linkType: 'fund' })}
+                successMessage={t('common.shareMessageCopied')}
+                label={t('fund.copyRoundLink')}
+                compact
+              />
             )}
           </div>
           <h3 className="fund-round-card__title text-headline-sm">{round.title}</h3>
