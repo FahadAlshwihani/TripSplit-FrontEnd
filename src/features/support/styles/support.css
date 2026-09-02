@@ -1,16 +1,32 @@
 /*
   Support Center -- ports the supplied Stitch source's page CONTENT
   only (never its sidebar/topbar shell, which stays the app's own
-  DashboardShell). Class prefix `sup-` for the page itself; the
-  contact form drawer below is its own local copy of the app's one
-  existing drawer recipe (expenses.css's `.exp-drawer*`), not a
-  cross-import -- same "each lazy-loaded route chunk carries its own
-  copy" convention settings.css/governance.css already each follow.
-  Material Symbols Outlined (already loaded by governance.css/
-  settings.css, but declared here too so this page renders correctly
-  standalone regardless of load order) and this app's own hard-shadow/
-  press tokens throughout -- never Stitch's outward "lift" hover.
+  DashboardShell). Class prefix `sup-` for the page itself, `support-`
+  for the shared contact-form pieces (SupportForm). Same "each
+  lazy-loaded route chunk carries its own local copy" convention
+  settings.css/governance.css/settlements.css already each follow --
+  including this @import, which is the actual thing that makes
+  Material Symbols render as glyphs instead of raw ligature text
+  ("chat_bubble", "rocket_launch", etc.) on THIS route: the
+  .material-symbols-outlined font-family rule below only works once
+  the font file itself has been requested somewhere. An earlier
+  version of this file had the font-family rule but never the @import
+  that actually loads the font -- it happened to look fine only when
+  the browser had already loaded Settings/Governance/Settlements
+  first in the same session (their own @import, run once, stays
+  registered for the rest of the page's lifetime); landing on /support
+  directly (the common case -- e.g. from Overview, which imports none
+  of this) left every icon rendering as literal text. Fixed by adding
+  the same @import these three pages already carry.
+
+  ONE unified Articles/Contact Us tab workspace, identical on desktop
+  and mobile (see TripSupportPage.jsx's own header comment) -- there
+  is no modal/drawer/overlay CSS anywhere in this file; both tabpanels
+  are always in the DOM and only ever toggled via the `hidden`
+  attribute, which the browser's own UA stylesheet already renders as
+  display:none.
 */
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 .sup-page .material-symbols-outlined {
   font-family: 'Material Symbols Outlined';
@@ -29,49 +45,98 @@
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
 }
 
+/* Directional glyphs (arrow_forward/arrow_right_alt) point a fixed
+   visual direction regardless of the forced `direction: ltr` above
+   (that's for correct ligature TEXT resolution, not layout) -- under
+   RTL, "forward" reads visually right-to-left, so these need an
+   explicit mirror. Every other icon (chat_bubble, report_problem,
+   library_books, rocket_launch, receipt_long, savings,
+   account_balance_wallet, check_circle) is non-directional and never
+   mirrored. */
+[dir="rtl"] .sup-kb-item__cta-arrow {
+  transform: scaleX(-1);
+}
+
 .sup-page__header { margin-block-end: var(--space-6); padding-block-end: var(--space-4); border-block-end: var(--border-width) solid var(--color-border); }
 .sup-page__title { margin: 0 0 var(--space-1); color: var(--color-text); font: var(--text-display); letter-spacing: var(--tracking-tight); }
 .sup-page__subtitle { margin: 0; color: var(--color-text-muted); font: var(--text-body); }
 
-.sup-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
+.sup-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-4); align-items: start; }
 @media (min-width: 1024px) {
-  .sup-grid { grid-template-columns: 4fr 8fr; align-items: start; }
+  .sup-grid { grid-template-columns: 4fr 8fr; }
 }
 
-/* Direct Assistance -- static card, canonical depth, no card-level
-   hover (matches Settings/Danger Zone precedent for a non-clickable
-   outer container); the two buttons inside keep their own full
-   pressable contract. */
-.sup-assist-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); padding: var(--space-4); box-shadow: var(--shadow-hard-md); }
-.sup-assist-card__title { margin: 0 0 var(--space-4); padding-block-end: var(--space-2); border-block-end: var(--border-width) solid var(--color-border); color: var(--color-text-muted); font: var(--text-label); text-transform: uppercase; }
-
-.sup-assist-btn {
-  width: 100%;
+/* ------------------------------------------------------------------ */
+/* Support navigation -- Articles / Contact Us, the ONE way to switch
+   panels. Always a horizontal, equal-width pair (satisfies the
+   compact mobile pill layout at 320px+ and reads clearly as a tab
+   pair on desktop too, so no breakpoint-conditional direction switch
+   is needed). Active/inactive reuse the exact same hard-shadow/press
+   button language as every other primary/secondary action pair in
+   this app (e.g. the previous Direct Assistance buttons) -- never an
+   underline-only or text-color-only active state. */
+.sup-nav-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); padding: var(--space-4); box-shadow: var(--shadow-hard-md); display: flex; flex-direction: column; gap: var(--space-3); }
+.sup-nav-tabs { display: flex; gap: var(--space-2); }
+.sup-nav-tab {
+  flex: 1 1 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: var(--space-2);
-  padding: var(--space-4);
+  padding: var(--space-3);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
   font: var(--text-label);
   cursor: pointer;
   box-shadow: var(--shadow-hard-sm);
-  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease, background-color var(--press-duration) ease;
+  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease, background-color var(--press-duration) ease, color var(--press-duration) ease;
 }
-.sup-assist-btn + .sup-assist-btn { margin-block-start: var(--space-3); }
-.sup-assist-btn:hover:not(:disabled) { transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
-.sup-assist-btn:active:not(:disabled) { transform: var(--press-sm-active); box-shadow: 0 0 0 0 transparent; }
-.sup-assist-btn__label { display: inline-flex; align-items: center; gap: var(--space-2); }
-.sup-assist-btn--primary { background: var(--nc-indigo-700); color: var(--nc-white); border-color: var(--color-border); }
-.sup-assist-btn--secondary { background: var(--color-surface); color: var(--color-text); }
-.sup-assist-btn--secondary .sup-assist-btn__icon-danger { color: var(--color-danger); }
+.sup-nav-tab:hover:not(.sup-nav-tab--active) { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.sup-nav-tab:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 transparent; }
+.sup-nav-tab--active { background: var(--nc-indigo-700); color: var(--nc-white); border-color: var(--color-border); }
 
-/* Knowledge Base */
+.sup-report-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: var(--text-label);
+  cursor: pointer;
+  box-shadow: var(--shadow-hard-sm);
+  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+.sup-report-btn:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.sup-report-btn:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 transparent; }
+.sup-report-btn__icon { color: var(--color-danger); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sup-nav-tab, .sup-report-btn { transition: box-shadow 0.15s ease; }
+  .sup-nav-tab:hover, .sup-nav-tab:active, .sup-report-btn:hover, .sup-report-btn:active { transform: none; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Right-column workspace -- both tabpanels live here, always mounted,
+   toggled via the `hidden` attribute only (see this file's own header
+   comment). min-width: 0 keeps a long, unbroken string (e.g. an email
+   in the identity block) from forcing the whole grid track wider than
+   its column. */
+.sup-workspace { min-width: 0; }
+
+/* Knowledge Base (Articles tabpanel) */
 .sup-kb-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); box-shadow: var(--shadow-hard-md); overflow: hidden; }
-.sup-kb-card__head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4); border-block-end: var(--border-width) solid var(--color-border); background: var(--color-surface-alt); }
-.sup-kb-card__title { margin: 0; color: var(--color-text); font: var(--text-label); text-transform: uppercase; }
+.sup-kb-card--form { overflow: visible; }
+.sup-kb-card__head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-4) 0; }
+.sup-kb-card__title { margin: 0; color: var(--color-text); font: 700 20px/28px var(--font-display); }
 .sup-kb-card__icon { color: var(--color-text-muted); }
+.sup-kb-card__subtitle { margin: var(--space-1) var(--space-4) 0; padding-block-end: var(--space-4); border-block-end: var(--border-width) solid var(--color-border); color: var(--color-text-muted); font: var(--text-body-sm); }
 
 .sup-kb-grid { display: grid; grid-template-columns: 1fr; }
 @media (min-width: 640px) {
@@ -96,62 +161,23 @@
 .sup-kb-item:hover { background: var(--color-surface-alt); }
 .sup-kb-item__head { display: flex; align-items: center; gap: var(--space-3); margin-block-end: var(--space-3); }
 .sup-kb-item__icon-tile { flex: 0 0 auto; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-primary-soft); }
-.sup-kb-item__title { margin: 0; color: var(--color-text); font: 700 20px/28px var(--font-display); }
+.sup-kb-item__title { margin: 0; min-width: 0; color: var(--color-text); font: 700 20px/28px var(--font-display); }
 .sup-kb-item__desc { margin: 0 0 var(--space-3); color: var(--color-text-muted); font: var(--text-body); }
 .sup-kb-item__cta { display: inline-flex; align-items: center; gap: 2px; color: var(--nc-indigo-700); font: var(--text-label); text-transform: uppercase; }
 .sup-kb-item__cta .material-symbols-outlined { font-size: 16px; }
 
-@media (prefers-reduced-motion: reduce) {
-  .sup-assist-btn { transition: box-shadow 0.15s ease; }
-  .sup-assist-btn:hover, .sup-assist-btn:active { transform: none; }
-}
-
 /* ------------------------------------------------------------------ */
-/* Contact form drawer -- own local copy of the app's one existing
-   drawer recipe (expenses.css's .exp-drawer*): fixed side panel
-   sliding from the logical inline-end, collapsing to a full-viewport
-   sheet under 480px -- this ONE responsive component is already both
-   the desktop "side panel, not a centered modal" and the mobile
-   "canonical modal shell" the brief separately asked for. */
-.support-drawer-overlay { position: fixed; inset: 0; background: rgba(27, 28, 25, 0.25); z-index: var(--z-modal-backdrop); pointer-events: auto; }
-.support-drawer {
-  position: fixed;
-  inset-block: 0;
-  inset-inline-end: 0;
-  width: min(460px, 100vw);
-  display: flex;
-  flex-direction: column;
-  background: var(--color-surface);
-  color: var(--color-text);
-  border-inline-start: var(--border-width-lg) solid var(--color-border);
-  box-shadow: var(--shadow-hard-md);
-  z-index: var(--z-modal);
-  pointer-events: auto;
-}
-@media (max-width: 480px) {
-  .support-drawer { width: 100vw; border-inline-start: none; }
-}
-.support-drawer__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-block-end: var(--border-width) solid var(--color-border); background: var(--color-surface-container); flex: 0 0 auto; }
-.support-drawer__title { margin: 0; color: var(--color-text); }
-.support-drawer__close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text);
-  cursor: pointer;
-  box-shadow: var(--shadow-hard-sm);
-  transition: transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
-}
-.support-drawer__close:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
-.support-drawer__close:active { transform: var(--press-sm-active); box-shadow: 0 0 0 0 transparent; }
-.support-drawer__body { flex: 1 1 auto; overflow-y: auto; padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
-.support-drawer__footer { display: flex; gap: var(--space-2); padding: var(--space-4); border-block-start: var(--border-width) solid var(--color-border); background: var(--color-surface-container); flex: 0 0 auto; }
-.support-drawer__footer .dash-btn { flex: 1 1 0; }
+/* SupportForm (Contact Us tabpanel) -- no header chrome of its own
+   (no close/back button; the persistent tab nav above is the only
+   navigation), just title/helper + fields + a single submit action. */
+.support-form { display: flex; flex-direction: column; }
+.support-form__head { padding: var(--space-4) var(--space-4) 0; }
+.support-form__title { margin: 0; color: var(--color-text); font: 700 20px/28px var(--font-display); }
+.support-form__helper { margin: 4px 0 0; color: var(--color-text-muted); font: var(--text-body-sm); }
+
+.support-form__body { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
+.support-form__footer { padding: 0 var(--space-4) var(--space-4); }
+.support-form__footer .dash-btn { width: 100%; }
 
 .field-group { display: flex; flex-direction: column; gap: var(--space-1); }
 .field-label { display: inline-flex; align-items: center; gap: var(--space-1); font: var(--text-label); font-size: 10px; letter-spacing: var(--tracking-label); color: var(--color-text-muted); text-transform: uppercase; }
@@ -176,6 +202,7 @@
   border-color: var(--nc-indigo-700);
 }
 .field-control:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform: none; }
+select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 2 * var(--border-width)); }
 .support-message { resize: vertical; min-height: 96px; font: var(--text-body); }
 .field-error { display: flex; align-items: center; gap: var(--space-1); color: var(--color-danger); font: var(--text-label); font-size: 11px; margin: 0; }
 
@@ -191,13 +218,16 @@
 /* ------------------------------------------------------------------ */
 /* Phone field -- one coherent bordered unit (select + input), not two
    unrelated fields. The internal divider sits at the logical
-   inline-end of the select, mirroring automatically under RTL. */
-.phone-field__group { display: flex; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); box-shadow: var(--shadow-hard-sm); overflow: hidden; }
+   inline-end of the select, mirroring automatically under RTL. Equal
+   shared height (44px, matching every other field-control on this
+   page) with borders that align flush -- no seam between the two
+   halves and the outer group border. */
+.phone-field__group { display: flex; align-items: stretch; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); box-shadow: var(--shadow-hard-sm); overflow: hidden; }
 .phone-field__group--error { border-color: var(--color-danger); }
 .phone-field__code {
   flex: 0 0 auto;
   min-height: 44px;
-  padding: var(--space-2) var(--space-1) var(--space-2) var(--space-2);
+  padding-inline: var(--space-2) var(--space-1);
   border: none;
   border-inline-end: var(--border-width) solid var(--color-border);
   background: var(--color-surface-alt);
