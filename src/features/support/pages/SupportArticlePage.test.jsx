@@ -64,3 +64,12 @@ test('an unknown category shows a not-found state instead of crashing', () => {
   renderArticle('not-a-real-category');
   expect(screen.getByText('support.article.notFound')).toBeInTheDocument();
 });
+
+test('the category icon renders through the working material-symbols-outlined primitive, never as leaked text', () => {
+  const { container } = renderArticle('fund');
+  const tile = container.querySelector('.article-head__icon-tile .material-symbols-outlined');
+  expect(tile).toHaveTextContent('savings');
+  const allSavingsText = screen.queryAllByText('savings');
+  const wrappedSavingsText = screen.queryAllByText('savings', { selector: '.material-symbols-outlined' });
+  expect(wrappedSavingsText.length).toBe(allSavingsText.length);
+});
