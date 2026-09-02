@@ -4,26 +4,35 @@ import './copyLinkButton.css';
 
 /*
   Compact dashboard-native copy/share action -- reused wherever sending
-  a direct link to another member is genuinely useful (Fund, a funding
-  round, a settlement), never a generic "Share" button bolted onto
-  every page. `url` must already be the full, canonical, short_code-
-  based address (built by the caller from window.location.origin) --
-  this component never constructs or guesses URLs itself.
+  a direct link (or a full human share message built around one) to
+  another member is genuinely useful, never a generic "Share" button
+  bolted onto every page.
+
+  `url` (a bare link) or `text` (a complete message, e.g. from
+  shareMessage.js's buildTripShareMessage -- already including the URL
+  inline) is the value actually copied/shared; this component never
+  constructs or guesses either itself. When `text` is given, Web Share
+  gets `{ text }` (never also `url`, which would duplicate the link a
+  second time in share sheets that render them separately).
 
   navigator.share is used opportunistically on the browsers that expose
   it (mainly mobile) -- clipboard copy is the universal fallback, never
-  a hard requirement. A cancelled native share sheet (AbortError) is
-  not a failure and shows no feedback at all.
+  a hard requirement. Set `enableShare={false}` to force clipboard-only
+  (used for copying a password: a native share sheet routes it through
+  other apps/OS activity logs, which is never appropriate for a
+  secret). A cancelled native share sheet (AbortError) is not a failure
+  and shows no feedback at all.
 */
-export default function CopyLinkButton({ url, label, compact = false, className }) {
+export default function CopyLinkButton({ url, text, label, compact = false, className, successMessage, enableShare = true }) {
   const { t } = useTranslation();
   const [feedback, setFeedback] = useState(false);
+  const value = text || url;
 
   const handleClick = async (event) => {
     event.stopPropagation();
-    if (navigator.share) {
+    if (enableShare && navigator.share) {
       try {
-        await navigator.share({ url });
+        await navigator.share(text ? { text } : { url });
         return;
       } catch (error) {
         if (error?.name === 'AbortError') return;
@@ -31,7 +40,7 @@ export default function CopyLinkButton({ url, label, compact = false, className 
       }
     }
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(value);
       setFeedback(true);
       window.setTimeout(() => setFeedback(false), 2500);
     } catch {
@@ -51,7 +60,7 @@ export default function CopyLinkButton({ url, label, compact = false, className 
         <i className="bi bi-link-45deg" aria-hidden="true" />
         {!compact && <span aria-hidden="true">{label || t('common.copyLink')}</span>}
       </button>
-      {feedback && <span className="copy-link-action__feedback" role="status" aria-live="polite">{t('common.linkCopied')}</span>}
+      {feedback && <span className="copy-link-action__feedback" role="status" aria-live="polite">{successMessage || t('common.linkCopied')}</span>}
     </span>
   );
 }

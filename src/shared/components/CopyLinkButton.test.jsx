@@ -107,3 +107,43 @@ test('a custom label is used for both the accessible name and the visible text',
   render(<CopyLinkButton url="https://example.com/trips/abc/fund" label="fund.copyRoundLink" />);
   expect(screen.getByRole('button', { name: 'fund.copyRoundLink' })).toBeInTheDocument();
 });
+
+test('a `text` value (a full message) is copied instead of `url` when both concepts could apply', async () => {
+  const message = 'Join us on "summer"\nhttps://example.com/trips/abc';
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+  render(<CopyLinkButton text={message} />);
+  fireEvent.click(screen.getByRole('button'));
+  await waitFor(() => expect(writeText).toHaveBeenCalledWith(message));
+});
+
+test('Web Share receives `{ text }`, never also `url`, when a full message is given', async () => {
+  const message = 'Join us on "summer"\nhttps://example.com/trips/abc';
+  const share = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'share', { value: share, configurable: true });
+  render(<CopyLinkButton url="https://example.com/trips/abc" text={message} />);
+  fireEvent.click(screen.getByRole('button'));
+  await waitFor(() => expect(share).toHaveBeenCalledWith({ text: message }));
+});
+
+test('enableShare=false always copies to the clipboard, even when navigator.share exists -- used for copying a password', async () => {
+  const share = jest.fn();
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'share', { value: share, configurable: true });
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  render(<CopyLinkButton text="hunter2" enableShare={false} />);
+  fireEvent.click(screen.getByRole('button'));
+  await waitFor(() => expect(writeText).toHaveBeenCalledWith('hunter2'));
+  expect(share).not.toHaveBeenCalled();
+});
+
+test('a custom successMessage overrides the default "link copied" feedback', async () => {
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+  render(<CopyLinkButton text="hunter2" enableShare={false} successMessage="settings.access.passwordCopied" />);
+  fireEvent.click(screen.getByRole('button'));
+  expect(await screen.findByText('settings.access.passwordCopied')).toBeInTheDocument();
+  expect(screen.queryByText('common.linkCopied')).not.toBeInTheDocument();
+});
