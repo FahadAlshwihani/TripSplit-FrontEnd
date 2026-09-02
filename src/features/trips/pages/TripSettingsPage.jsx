@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import '../styles/settings.css';
 import SettingsQuickJump from '../components/SettingsQuickJump';
 import SettingsDangerZone from '../components/SettingsDangerZone';
+import SettingsAccount from '../components/SettingsAccount';
 import SettingsGeneralLedger from '../components/SettingsGeneralLedger';
 import SettingsAccessSecurity from '../components/SettingsAccessSecurity';
 import SettingsSettlementRules from '../components/SettingsSettlementRules';
@@ -126,6 +127,7 @@ export default function TripSettingsPage() {
             onArchive={() => setConfirmAction('archive')}
             onRestore={() => setConfirmAction('restore')}
           />
+          <SettingsAccount />
         </div>
 
         <form className="set-grid__right" onSubmit={handleSave}>
@@ -142,7 +144,7 @@ export default function TripSettingsPage() {
           <SettingsAccessSecurity
             canEdit={permissions.canEditTrip}
             tripName={trip.title}
-            shortCode={trip.short_code}
+            joinCode={trip.join_code}
             joinPolicy={draft.join_policy}
             onChangeJoinPolicy={(value) => onChange('join_policy', value)}
             passwordProtected={Boolean(trip.password_protected)}

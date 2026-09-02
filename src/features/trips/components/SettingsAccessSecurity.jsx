@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import CopyLinkButton from '../../../shared/components/CopyLinkButton';
-import { tripUrl } from '../../../shared/utils/shareLinks';
+import { tripJoinUrl } from '../../../shared/utils/shareLinks';
 import { buildTripShareMessage } from '../../../shared/utils/shareMessage';
 
 const POLICIES = ['open', 'approval_required', 'invite_only'];
@@ -36,13 +36,19 @@ const POLICIES = ['open', 'approval_required', 'invite_only'];
   -- Governance's own "copy invite link" and any Fund/Settlement
   share action never have a password to pass (see shareMessage.js's
   own header comment) and never fake one.
+
+  The invite message's own link is built via the SAME tripJoinUrl()
+  Governance's own "copy invite link" action uses (see shareLinks.js)
+  -- never a bare /trips/{short_code} link, which requires existing
+  membership and would leave a genuine non-member at a plain access-
+  denied error instead of the real join flow.
 */
-export default function SettingsAccessSecurity({ canEdit, tripName, shortCode, joinPolicy, onChangeJoinPolicy, passwordProtected, password, onPasswordChange, onRequestRemovePassword }) {
+export default function SettingsAccessSecurity({ canEdit, tripName, joinCode, joinPolicy, onChangeJoinPolicy, passwordProtected, password, onPasswordChange, onRequestRemovePassword }) {
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
 
   const inviteMessage = buildTripShareMessage({
-    t, tripName, url: tripUrl(shortCode), joinPolicy, password: password || undefined, linkType: 'join',
+    t, tripName, url: tripJoinUrl(joinCode), joinPolicy, password: password || undefined, linkType: 'join',
   });
 
   return (

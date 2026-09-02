@@ -6,6 +6,9 @@ import { archiveTrip, restoreTrip, updateTrip } from '../api/tripsApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key), i18n: { language: 'en' } }) }));
 jest.mock('../api/tripsApi', () => ({ updateTrip: jest.fn(), archiveTrip: jest.fn(), restoreTrip: jest.fn() }));
+let mockAuthUser = { display_name: 'Fahad', email: 'fahad@example.com', avatar_key: 'avatar_01' };
+let mockAuthLoading = false;
+jest.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: mockAuthUser, isAuthenticated: Boolean(mockAuthUser), authLoading: mockAuthLoading }) }));
 jest.mock('../../../shared/components/CurrencyPicker', () => ({ id, value, onChange, label }) => (
   <select id={id} aria-label={label} value={value} onChange={(e) => onChange(e.target.value)}>
     <option value="SAR">SAR</option>
@@ -20,6 +23,7 @@ const readOnlyMemberPermissions = { canEditTrip: false, canArchiveTrip: false, c
 const baseTrip = {
   title: 'Georgia Winter Trip',
   short_code: 'short-1',
+  join_code: 'ABCD1234',
   currency: 'SAR',
   currency_locked: false,
   start_date: '2026-10-01',
@@ -46,6 +50,8 @@ const renderPage = (ctxOverrides = {}) => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockAuthUser = { display_name: 'Fahad', email: 'fahad@example.com', avatar_key: 'avatar_01' };
+  mockAuthLoading = false;
 });
 
 test('the title and every section shell render immediately -- there is no data fetch, so no loading placeholder at all', () => {
@@ -313,7 +319,8 @@ test('the copy-invite-message action is always available to an editor, building 
   const copied = writeText.mock.calls[0][0];
   expect(copied).toContain('share.join.open');
   expect(copied).toContain('Georgia Winter Trip');
-  expect(copied).toContain('short-1');
+  expect(copied).toContain('/trips/join?code=ABCD1234');
+  expect(copied).not.toContain('short-1');
   expect(await screen.findByText('common.inviteMessageCopied')).toBeInTheDocument();
 });
 
