@@ -140,6 +140,38 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
   cursor: pointer;
 }
 
+/* Password input + visibility toggle -- the toggle sits flush inside
+   the field's inline-end edge (logical, so it's the LEFT edge under
+   RTL) regardless of direction. The input itself gets extra
+   inline-end padding so typed text never runs under the button. */
+.set-password-field { position: relative; display: flex; align-items: center; }
+.set-password-field .field-control { padding-inline-end: 40px; }
+.set-password-field__toggle {
+  position: absolute;
+  inset-inline-end: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color var(--press-duration) ease, background-color var(--press-duration) ease, transform var(--press-duration) ease;
+}
+.set-password-field__toggle:hover { color: var(--color-text); background: var(--color-surface-alt); transform: var(--press-sm-hover); }
+.set-password-field__toggle:active { transform: var(--press-sm-active); }
+.set-password-field__toggle:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: 1px; }
+
+/* Password value shown/copied elsewhere (e.g. inside a share message
+   preview) stays a single LTR run even under an RTL page -- same
+   convention as dates/currency codes. */
+.set-password-value { unicode-bidi: isolate; }
+
+.set-password-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gs-sm); margin-block-start: var(--gs-xs); }
+
 /* Settlement rule row -- bordered box, checkbox + label + helper. */
 .set-rule {
   display: flex;

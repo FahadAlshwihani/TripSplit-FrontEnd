@@ -19,6 +19,7 @@ const readOnlyMemberPermissions = { canEditTrip: false, canArchiveTrip: false, c
 
 const baseTrip = {
   title: 'Georgia Winter Trip',
+  short_code: 'short-1',
   currency: 'SAR',
   currency_locked: false,
   start_date: '2026-10-01',
@@ -258,4 +259,90 @@ test('an unchanged save is never triggered -- the button stays disabled with no 
   renderPage();
   expect(screen.getByRole('button', { name: 'common.saveChanges' })).toBeDisabled();
   expect(updateTrip).not.toHaveBeenCalled();
+});
+
+// --- Password visibility, copy, and the share-message action -------
+
+test('the eye toggle reveals the typed password (type switches to text) and back to hidden, with correct aria labels', () => {
+  renderPage();
+  const input = screen.getByLabelText('settings.access.password');
+  fireEvent.change(input, { target: { value: 'hunter2' } });
+  expect(input).toHaveAttribute('type', 'password');
+  const toggle = screen.getByRole('button', { name: 'settings.access.showPassword' });
+  expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  fireEvent.click(toggle);
+  expect(input).toHaveAttribute('type', 'text');
+  expect(screen.getByRole('button', { name: 'settings.access.hidePassword' })).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(screen.getByRole('button', { name: 'settings.access.hidePassword' }));
+  expect(input).toHaveAttribute('type', 'password');
+});
+
+test('the eye toggle button never submits the form', () => {
+  renderPage();
+  fireEvent.click(screen.getByRole('button', { name: 'settings.access.showPassword' }));
+  expect(updateTrip).not.toHaveBeenCalled();
+});
+
+test('the copy-password action only appears once a password has actually been typed', () => {
+  renderPage();
+  expect(screen.queryByRole('button', { name: 'settings.access.copyPassword' })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('settings.access.password'), { target: { value: 'hunter2' } });
+  expect(screen.getByRole('button', { name: 'settings.access.copyPassword' })).toBeInTheDocument();
+});
+
+test('copy-password copies exactly the typed value, via clipboard only (never Web Share), with the correct feedback', async () => {
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  const share = jest.fn();
+  Object.defineProperty(navigator, 'share', { value: share, configurable: true });
+  renderPage();
+  fireEvent.change(screen.getByLabelText('settings.access.password'), { target: { value: 'hunter2' } });
+  fireEvent.click(screen.getByRole('button', { name: 'settings.access.copyPassword' }));
+  await waitFor(() => expect(writeText).toHaveBeenCalledWith('hunter2'));
+  expect(share).not.toHaveBeenCalled();
+  expect(await screen.findByText('settings.access.passwordCopied')).toBeInTheDocument();
+});
+
+test('the copy-invite-message action is always available to an editor, building the message from the current draft join policy and password', async () => {
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+  renderPage();
+  fireEvent.click(screen.getByRole('button', { name: 'settings.access.copyInviteMessage' }));
+  await waitFor(() => expect(writeText).toHaveBeenCalled());
+  const copied = writeText.mock.calls[0][0];
+  expect(copied).toContain('share.join.open');
+  expect(copied).toContain('Georgia Winter Trip');
+  expect(copied).toContain('short-1');
+  expect(await screen.findByText('common.inviteMessageCopied')).toBeInTheDocument();
+});
+
+test('the invite message includes the typed draft password once one exists, and switches template key accordingly', async () => {
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+  renderPage();
+  fireEvent.change(screen.getByLabelText('settings.access.password'), { target: { value: 'hunter2' } });
+  fireEvent.click(screen.getByRole('button', { name: 'settings.access.copyInviteMessage' }));
+  await waitFor(() => expect(writeText).toHaveBeenCalled());
+  const copied = writeText.mock.calls[0][0];
+  expect(copied).toContain('share.join.openWithPassword');
+  expect(copied).toContain('hunter2');
+});
+
+test('changing the draft join policy is reflected in the invite message template key immediately', async () => {
+  const writeText = jest.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+  Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+  renderPage();
+  fireEvent.click(screen.getByLabelText(/^joinPolicy\.invite_only/));
+  fireEvent.click(screen.getByRole('button', { name: 'settings.access.copyInviteMessage' }));
+  await waitFor(() => expect(writeText).toHaveBeenCalled());
+  expect(writeText.mock.calls[0][0]).toContain('share.join.invite_only');
+});
+
+test('a read-only viewer (no edit capability) sees neither the eye toggle nor any password/invite-message action', () => {
+  renderPage({ permissions: readOnlyMemberPermissions });
+  expect(screen.queryByRole('button', { name: 'settings.access.showPassword' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'settings.access.copyInviteMessage' })).not.toBeInTheDocument();
 });

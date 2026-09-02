@@ -141,6 +141,8 @@ export default function TripSettingsPage() {
           />
           <SettingsAccessSecurity
             canEdit={permissions.canEditTrip}
+            tripName={trip.title}
+            shortCode={trip.short_code}
             joinPolicy={draft.join_policy}
             onChangeJoinPolicy={(value) => onChange('join_policy', value)}
             passwordProtected={Boolean(trip.password_protected)}
