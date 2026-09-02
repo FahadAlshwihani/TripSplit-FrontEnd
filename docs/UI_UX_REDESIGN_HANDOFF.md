@@ -117,11 +117,25 @@ A deep link only ever focuses/opens existing UI; it never triggers a mutation (c
 `TripSettingsPage` never fetches its own data — `trip` is already loaded once by `TripLayout` and shared via outlet context, so the page has no loading state of its own at all (only individual mutations carry local busy state). It reuses the exact same `PATCH /trips/{id}/` mutation Governance/Fund already share — no separate settings endpoint.
 
 - **No `budget` field, anywhere.** The Trip Fund is the one canonical budget (`TripFund.target_amount`, edited only from the Fund page — see `docs/architecture/fund-accounting.md`). Settings never re-exposes it.
-- **`join_policy` is the single source of truth Governance and Settings both read/write** — a change in either place shows up in the other on its next fetch. No duplicate boolean.
+- **`join_policy` is the single source of truth Governance and Settings both read/write** — a change in either place shows up in the other on its next fetch. No duplicate boolean. See "Trip Access domain" below for the shared derivation/mutation layer.
 - **Currency locks read-only once `trip.currency_locked` is true** (server-derived — see `docs/api/trips.md`'s "Update trip"). Never attempt a client-side conversion of historical amounts.
 - **The join/room password is a real feature** (hashed, rate-limited, gates *joining* the trip — not, as a since-corrected mock implied, viewing balances). Leaving the field blank always means "no change"; removing password protection is its own explicitly-confirmed action, never a side effect of a blank Save.
 - **Simplify Debts** is shown locked/checked (informational) — there is no backend toggle, `simplify_debts()` runs unconditionally. **Require Receipts for Settlements** is Coming Soon — no receipt/attachment model exists yet; the control is disabled and excluded from every save payload.
 - Archive/Restore reuse the existing owner-only endpoints and the same `permissionsFor()` capability flags every other page already reads from outlet context — no new backend capability set was added.
+
+## Trip Access domain
+
+**Settings and Governance are separate UI surfaces over the same Trip Access domain. They must never maintain independent persisted state.** Both are children of the same `TripLayout` route and share its one `trip`/`setTrip` (outlet context) — since React Router keeps `TripLayout` mounted while navigating between sibling routes, a `setTrip(updated)` after either page's mutation is immediately visible to the other on its next render, with no extra cache/sync layer.
+
+Shared frontend helpers (never re-derived or re-assembled inline anywhere else):
+
+- **`src/shared/utils/tripAccess.js`** — `deriveTripAccessState(trip)` maps the canonical backend `join_policy` (`open` / `approval_required` / `invite_only`) to the `{ inviteLinkEnabled, approvalRequired }` shape Governance's two switches render from; `nextJoinPolicy({ inviteLinkEnabled, approvalRequired })` is its exact inverse, used to compute the PATCH payload when either switch fires. Governance holds no independent boolean state — both switches are a pure projection of `join_policy`. Settings' own `join_policy` radio group reads/writes the enum directly and PATCHes through the identical `PATCH /trips/{id}/` call Governance uses.
+- **`src/shared/utils/shareLinks.js`** — `tripJoinPath(joinCode)` / `tripJoinUrl(joinCode)` are the one canonical "join this trip" link builder, built from `join_code` (never `short_code` — `/trips/{shortCode}` requires existing membership and 403s a genuine non-member). `tripJoinPath` is the relative form for `navigate()` (Governance/Settings' own rejoin-adjacent flows, `AccountTripRow`'s Rejoin, `GuestTripsList`'s rejoin action); `tripJoinUrl` is the origin-qualified form for anything that leaves the app (copy/share). A static test (`tripAccessDuplicationGuard.test.js`) walks the source tree asserting no file other than `shareLinks.js` itself contains a hand-built `/trips/join?code=` string.
+- **`buildTripShareMessage`** (from the localized-share-message work) is the one message builder both Governance's and Settings' invite-copy actions call, driven by the same live `trip` — never a page-local reassembly of the invite text.
+
+"Copy Link" (URL only, via `tripJoinUrl`) and "Copy/Share Invite Message" (the full localized message from `buildTripShareMessage`, which embeds that same URL) are deliberately distinct, separately-labeled actions — never two controls with the same label copying different things.
+
+Rotate Join Code (`POST /trips/{id}/rotate-join-code/`) is Governance-only; Settings has no equivalent control (adding one would be a Settings redesign, out of scope here). Trip password state (`Trip.password_hash`) is owned and shown only by Settings' access-security card; Governance never reads or displays it. Both surfaces enforce mutation access via server-side `require_admin` regardless of which client-side capability check gated the button — Governance reads server-derived `trip.governance_capabilities`, Settings reads the general `permissions.canEditTrip` (same owner/admin who could already edit title/dates/currency); both currently resolve identically and neither is client-side-only authorization.
 
 ## Primary redesign surfaces
 
