@@ -115,11 +115,11 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 /* Read-only value display for a field the current viewer cannot edit
    (brief item 19: values render, controls don't, when the viewer has
    no edit capability). */
-.set-readonly-value { display: flex; align-items: center; min-height: 44px; padding: var(--space-2) var(--space-3); border: var(--border-width) solid var(--color-border-subtle); border-radius: var(--radius-sm); background: var(--color-surface-alt); color: var(--color-text); font: var(--text-body); }
+.set-readonly-value { display: flex; align-items: center; min-height: 44px; padding: var(--space-2) var(--space-3); border: var(--border-width) solid var(--color-border-subtle); border-radius: var(--radius-sm); background: var(--color-surface-alt); color: var(--color-text); font: var(--text-body); box-shadow: var(--shadow-hard-sm); }
 
 /* Join policy -- a bordered radio group, Stitch's own recipe (border
    border-on-background p-sm, a dashed divider between options). */
-.set-join-policy { display: flex; flex-direction: column; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); padding: var(--gs-sm); }
+.set-join-policy { display: flex; flex-direction: column; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); padding: var(--gs-sm); box-shadow: var(--shadow-hard-sm); }
 .set-join-policy__option { display: flex; align-items: flex-start; gap: var(--gs-sm); padding: var(--gs-sm); cursor: pointer; border-radius: var(--radius-sm); }
 .set-join-policy__option:hover { background: var(--color-surface-alt); }
 .set-join-policy__option input { margin-block-start: 3px; accent-color: var(--nc-indigo-700); width: 16px; height: 16px; flex: 0 0 auto; }
