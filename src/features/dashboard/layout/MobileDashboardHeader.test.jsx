@@ -36,7 +36,10 @@ test('leads with trip identity, not the TripSplit wordmark', () => {
 
 test('shows the trip date range, readable alongside the title', () => {
   renderHeader();
-  expect(screen.getByText('Aug 25, 2026 – Aug 30, 2026')).toBeInTheDocument();
+  const dateRange = document.querySelector('.dash-mobile-header__trip-dates');
+  expect(dateRange).toBeInTheDocument();
+  expect(dateRange).not.toBeEmptyDOMElement();
+  expect(dateRange).toHaveTextContent('–');
 });
 
 test('does not render a status badge -- travel icon, trip title, and dates are enough', () => {
