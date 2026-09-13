@@ -67,9 +67,16 @@ const AccountMenu = () => {
         aria-expanded={open}
         aria-controls="account-menu-panel"
       >
-        <Avatar avatarKey={avatarKeyFromUser(user)} displayName={user.display_name} size="sm" />
+        <span className="account-menu__avatar-slot" aria-hidden="true">
+          <Avatar
+            avatarKey={avatarKeyFromUser(user)}
+            displayName={user.display_name}
+            size="sm"
+            className="account-menu__avatar"
+          />
+        </span>
         <span className="account-menu__name text-label">{user.display_name}</span>
-        <i className={`bi bi-chevron-${open ? 'up' : 'down'} account-menu__chevron`} aria-hidden="true" />
+        <i className={`bi bi-chevron-down account-menu__chevron${open ? ' is-open' : ''}`} aria-hidden="true" />
       </button>
 
       {open && (

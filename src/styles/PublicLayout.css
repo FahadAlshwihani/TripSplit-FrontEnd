@@ -211,24 +211,35 @@
    embeds normal interactive controls (Theme/Language toggles) rather than
    a flat list of one-shot actions. */
 
-.account-menu { position: relative; flex: 0 0 auto; }
+.account-menu { position: relative; flex: 0 1 auto; min-width: 0; }
 
 .account-menu__trigger {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 0;
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: var(--space-1) var(--space-3);
+  padding: 0;
   min-height: 40px;
+  max-width: 100%;
+  overflow: hidden;
   cursor: pointer;
   color: var(--color-text);
-  transition: background-color .15s ease, transform var(--press-duration) ease;
+  box-shadow: var(--shadow-hard-sm);
+  transition: background-color .15s ease, box-shadow var(--press-duration) ease, transform var(--press-duration) ease;
 }
 
-.account-menu__trigger:hover { background: var(--color-surface-alt); transform: var(--press-sm-hover); }
-.account-menu__trigger:active { transform: var(--press-sm-active); }
+.account-menu__trigger:hover {
+  background: var(--color-surface-alt);
+  box-shadow: var(--shadow-hard-sm-hover);
+  transform: var(--press-sm-hover);
+}
+
+.account-menu__trigger:active {
+  box-shadow: var(--shadow-hard-sm-active);
+  transform: var(--press-sm-active);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .account-menu__trigger { transition: background-color .15s ease; }
@@ -237,17 +248,63 @@
 
 .account-menu__name {
   color: var(--color-text);
+  min-width: 0;
   max-width: 12ch;
+  margin-inline: var(--space-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-@media (max-width: 430px) {
-  .account-menu__name { display: none; }
+.account-menu__chevron {
+  flex: 0 0 auto;
+  margin-inline-end: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 0.75em;
+  transition: transform .15s ease;
 }
 
-.account-menu__chevron { color: var(--color-text-muted); font-size: 0.75em; }
+.account-menu__chevron.is-open { transform: rotate(180deg); }
+
+.account-menu__avatar-slot {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: stretch;
+  justify-content: stretch;
+  flex: 0 0 40px;
+  inline-size: 40px;
+  min-block-size: 38px;
+  overflow: hidden;
+  border-inline-end: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-alt);
+}
+
+/* The account trigger owns the visible frame. Its canonical Avatar child
+   fills the boundary slot without adding a second inset border/radius.
+   Initials and glyph fallbacks remain centered by Avatar's own flex
+   layout; image avatars retain object-fit: cover. */
+.account-menu__avatar-slot > .pf-avatar {
+  inline-size: 100%;
+  block-size: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+@media (max-width: 767px) {
+  .public-nav__links { min-width: 0; }
+  .public-nav .account-menu__name {
+    display: block;
+    max-width: clamp(4.5rem, 24vw, 8rem);
+  }
+}
+
+/* The dashboard's mobile top bar also reuses AccountMenu but has two
+   adjacent action buttons and trip identity to protect. This task only
+   changes the approved landing header; retain that existing compact
+   dashboard composition at phone widths. */
+@media (max-width: 430px) {
+  .dash-mobile-header .account-menu__name { display: none; }
+}
 
 .account-menu__panel {
   position: absolute;
