@@ -92,8 +92,9 @@ test.each(SUPPORT_WORKSPACE_FILES)('%s never reintroduces the removed "Back to a
   expect(source).not.toMatch(/backToArticles/);
 });
 
-test('support.css carries no drawer/overlay/modal-only styling any more', () => {
+test('support.css keeps the Support workspace drawer-free while scoping the reusable Quick Action modal', () => {
   expect(supportCss).not.toMatch(/\.support-drawer\b/);
   expect(supportCss).not.toMatch(/\.support-drawer-overlay\b/);
-  expect(supportCss).not.toMatch(/position:\s*fixed/);
+  expect(supportCss).toMatch(/\.support-dialog-overlay\s*\{[\s\S]*?position:\s*fixed/);
+  expect(supportCss).toContain('z-index: var(--z-modal-backdrop)');
 });

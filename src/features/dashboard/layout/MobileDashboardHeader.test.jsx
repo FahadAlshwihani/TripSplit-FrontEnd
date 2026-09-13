@@ -4,6 +4,9 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import MobileDashboardHeader from './MobileDashboardHeader';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
+jest.mock('../../account/hooks/usePreferenceControls', () => () => ({
+  language: 'en', theme: 'light', changeLanguage: jest.fn(), changeTheme: jest.fn(), status: {}, authLoading: false,
+}));
 
 const trip = {
   title: 'summer',

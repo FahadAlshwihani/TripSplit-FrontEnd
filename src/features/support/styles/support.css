@@ -20,11 +20,10 @@
   the same @import these three pages already carry.
 
   ONE unified Articles/Contact Us tab workspace, identical on desktop
-  and mobile (see TripSupportPage.jsx's own header comment) -- there
-  is no modal/drawer/overlay CSS anywhere in this file; both tabpanels
-  are always in the DOM and only ever toggled via the `hidden`
-  attribute, which the browser's own UA stylesheet already renders as
-  display:none.
+  and mobile (see TripSupportPage.jsx's own header comment). Both
+  tabpanels are always in the DOM and only ever toggled via `hidden`.
+  The only overlay rules in this file belong to SupportTicketDialog,
+  which reuses this same canonical SupportForm from Quick Actions.
 */
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 

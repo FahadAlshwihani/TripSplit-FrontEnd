@@ -111,7 +111,7 @@ test('a successful canonical settings mutation preserves server capabilities and
   await waitFor(() => expect(updateTrip).toHaveBeenCalledWith('t1', { join_policy: 'approval_required' }));
   expect(screen.getByText('governance.title')).toBeInTheDocument();
   expect(screen.queryByText('governance.accessDenied')).not.toBeInTheDocument();
-  expect(screen.getByLabelText('governance.requireApproval')).toBeChecked();
+  await waitFor(() => expect(screen.getByLabelText('governance.requireApproval')).toBeChecked());
 });
 
 test('rotated-link canonical resource keeps the management capability visible', async () => {
