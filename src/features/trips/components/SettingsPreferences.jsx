@@ -1,8 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../../auth/AuthContext';
-import { useTheme } from '../../../components/ThemeProvider';
-import usePreferenceSave from '../../account/hooks/usePreferenceSave';
+import usePreferenceControls from '../../account/hooks/usePreferenceControls';
 import SectionLoading from '../../../shared/components/SectionLoading';
 
 /*
@@ -24,10 +22,8 @@ import SectionLoading from '../../../shared/components/SectionLoading';
   new state invented for this card.
 */
 export default function SettingsPreferences() {
-  const { t, i18n } = useTranslation();
-  const { user, isAuthenticated, authLoading } = useAuth();
-  const theme = useTheme();
-  const { changeLanguage, changeTheme } = usePreferenceSave();
+  const { t } = useTranslation();
+  const { language, theme: themeValue, changeLanguage, changeTheme, authLoading } = usePreferenceControls();
 
   if (authLoading) {
     return (
@@ -37,19 +33,6 @@ export default function SettingsPreferences() {
       </section>
     );
   }
-
-  const language = isAuthenticated ? user.preferred_language : (i18n.language === 'ar' ? 'ar' : 'en');
-  const themeValue = isAuthenticated ? user.preferred_theme : (theme?.theme === 'dark' ? 'dark' : 'light');
-
-  const onLanguageChange = (value) => {
-    if (isAuthenticated) changeLanguage(value);
-    else i18n.changeLanguage(value);
-  };
-
-  const onThemeChange = (value) => {
-    if (isAuthenticated) changeTheme(value);
-    else theme?.setTheme(value);
-  };
 
   return (
     <section className="set-preferences-card">
@@ -61,7 +44,7 @@ export default function SettingsPreferences() {
           id="set-preferences-language"
           className="set-preferences-card__select"
           value={language}
-          onChange={(event) => onLanguageChange(event.target.value)}
+          onChange={(event) => changeLanguage(event.target.value)}
         >
           <option value="en">English</option>
           <option value="ar">العربية</option>
@@ -74,7 +57,7 @@ export default function SettingsPreferences() {
           id="set-preferences-theme"
           className="set-preferences-card__select"
           value={themeValue}
-          onChange={(event) => onThemeChange(event.target.value)}
+          onChange={(event) => changeTheme(event.target.value)}
         >
           <option value="light">{t('account.preferences.themeLight')}</option>
           <option value="dark">{t('account.preferences.themeDark')}</option>
