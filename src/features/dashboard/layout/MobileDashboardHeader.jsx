@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import AccountMenu from '../../../components/Layout/AccountMenu';
 import { TRIP_IDENTITY_ICON } from './dashboardNav';
 import { formatDateRange } from '../../../shared/utils/format';
 
@@ -17,7 +16,7 @@ import { formatDateRange } from '../../../shared/utils/format';
   have no /account (registered-only), so that link only renders for a
   registered current member -- a guest is scoped to one trip by design.
 */
-const MobileDashboardHeader = ({ trip, tripId, permissions }) => {
+const MobileDashboardHeader = ({ trip, tripId }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const isRegistered = trip.current_member?.identity_type === 'registered';
@@ -54,17 +53,6 @@ const MobileDashboardHeader = ({ trip, tripId, permissions }) => {
         )}
       </div>
       <div className="dash-mobile-header__actions">
-        {permissions?.canManageMembers && (
-          <button
-            type="button"
-            className="dash-btn dash-btn--secondary dash-mobile-header__action"
-            aria-label={t('dashboard.addMember')}
-            title={t('dashboard.addMember')}
-            onClick={() => navigate(`/trips/${tripId}/governance`)}
-          >
-            <i className="bi bi-person-plus" aria-hidden="true" />
-          </button>
-        )}
         <button
           type="button"
           className="dash-btn dash-btn--primary dash-mobile-header__action"
@@ -74,7 +62,6 @@ const MobileDashboardHeader = ({ trip, tripId, permissions }) => {
         >
           <i className="bi bi-plus-lg" aria-hidden="true" />
         </button>
-        <AccountMenu />
       </div>
     </header>
   );

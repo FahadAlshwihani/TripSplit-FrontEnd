@@ -5,10 +5,6 @@ import MobileDashboardHeader from './MobileDashboardHeader';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
 
-const user = { display_name: 'Fahad', email: 'fahad@example.com', preferred_theme: 'light', preferred_language: 'en', avatar_type: 'initials', avatar_color: 'indigo' };
-jest.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user, saveProfile: jest.fn(), logout: jest.fn() }) }));
-jest.mock('../../../components/ThemeProvider', () => ({ useTheme: () => ({ theme: 'light', setTheme: jest.fn() }) }));
-
 const trip = {
   title: 'summer',
   start_date: '2026-08-25',
@@ -48,16 +44,11 @@ test('does not render a status badge -- travel icon, trip title, and dates are e
   expect(document.querySelector('.dash-mobile-header__badge')).not.toBeInTheDocument();
 });
 
-test('exposes two obvious quick actions -- New Expense and Add Member -- each with a real accessible name', () => {
+test('keeps one compact creation action and removes the dashboard account entry point', () => {
   renderHeader();
   expect(screen.getByRole('button', { name: 'dashboard.newExpense' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'dashboard.addMember' })).toBeInTheDocument();
-});
-
-test('Add Member is hidden for a member without canManageMembers -- still only one other quick action remains, never zero', () => {
-  renderHeader({ permissions: { canManageMembers: false } });
   expect(screen.queryByRole('button', { name: 'dashboard.addMember' })).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'dashboard.newExpense' })).toBeInTheDocument();
+  expect(document.querySelector('.account-menu')).not.toBeInTheDocument();
 });
 
 test('the trip identity link keeps its full accessible name (title), not just a generic "switch trip" label', () => {
