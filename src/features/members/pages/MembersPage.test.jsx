@@ -114,8 +114,8 @@ describe('mobile flow: selecting a default member must never, by itself, force t
 test('selecting a member loads their detail panel from the canonical member_detail_view response', async () => {
   getMemberDetail.mockResolvedValue({ member: { ...regular, capabilities: noCaps }, statistics: { ...baseStatistics, expense_count: 3 } });
   renderPage();
-  await screen.findByText('Regular');
-  fireEvent.click(screen.getByText('Regular'));
+  await screen.findByText('Regular', { selector: '.mem-row__name' });
+  fireEvent.click(screen.getByText('Regular', { selector: '.mem-row__name' }).closest('button'));
   await waitFor(() => expect(getMemberDetail).toHaveBeenCalledWith('t1', 'm2'));
 });
 
