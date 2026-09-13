@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 const QuickActionRefreshContext = createContext(null);
+const noop = () => {};
 
 export function QuickActionRefreshProvider({ children }) {
   const [versions, setVersions] = useState({});
@@ -15,7 +16,7 @@ export function QuickActionRefreshProvider({ children }) {
   return <QuickActionRefreshContext.Provider value={value}>{children}</QuickActionRefreshContext.Provider>;
 }
 
-export const useQuickActionInvalidation = () => useContext(QuickActionRefreshContext)?.invalidate || (() => {});
+export const useQuickActionInvalidation = () => useContext(QuickActionRefreshContext)?.invalidate || noop;
 
 // Routes opt in explicitly. Updating a version refreshes only the active
 // feature resource whose key includes it; DashboardShell never remounts and
