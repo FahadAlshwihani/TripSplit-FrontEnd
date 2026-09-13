@@ -25,7 +25,7 @@ test('launcher reuses the canonical inward-press dash button contract', () => {
 test('uses Material Symbols and keeps one direction-neutral menu markup path', () => {
   expect(quickActionsSource).toContain('material-symbols-outlined');
   expect(quickActionsSource).not.toContain('bi bi-');
-  expect(quickActionsSource).not.toMatch(/dir\s*===|language\s*===|isRtl/);
+  expect(quickActionsSource).not.toMatch(/dir\s*===|isRtl/);
 });
 
 test('mobile header contains neither AccountMenu nor a duplicate Add Member shortcut', () => {
@@ -38,6 +38,19 @@ test('quick actions reuse the canonical portaled dialogs and modal layer tokens'
   expect(quickActionDialogsSource).toContain("import('../../expenses/components/NewExpenseDialog')");
   expect(quickActionDialogsSource).toContain("import('../../governance/components/InviteMemberDialog')");
   expect(quickActionDialogsSource).toContain("import('../../funds/components/FundingRoundComposer')");
+  expect(quickActionDialogsSource).toContain("import('../../settlements/components/SettlementActionDialog')");
+  expect(quickActionDialogsSource).toContain("import('../../support/components/SupportTicketDialog')");
   expect(quickActionDialogsSource).toContain('<ModalPortal>');
   expect(dashboardCss).toContain('z-index: var(--z-modal-backdrop)');
+});
+
+test('complete launcher is grouped and mobile popover remains viewport-contained', () => {
+  expect(quickActionsSource).toContain("id: 'create'");
+  expect(quickActionsSource).toContain("id: 'help'");
+  expect(quickActionsSource).toContain("id: 'account'");
+  expect(quickActionsSource).toContain("type: 'settlement'");
+  expect(quickActionsSource).toContain("type: 'support'");
+  expect(quickActionsSource).toContain("type: 'account'");
+  expect(dashboardCss).toContain('inset-inline: var(--page-margin-mobile)');
+  expect(dashboardCss).toContain('max-block-size: calc(100dvh');
 });

@@ -7,8 +7,15 @@ import { createInvitation } from '../../invitations/api/invitationsApi';
 import { createFundingRound, getFund } from '../../funds/api/fundsApi';
 import { getMembers } from '../../members/api/membersApi';
 import { getCategories, getCategoryBudgets } from '../../categories/api/categoriesApi';
+import { recordAdminSettlement } from '../../settlements/api/settlementsApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
+jest.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: true }) }));
+const mockChangeLanguage = jest.fn();
+const mockChangeTheme = jest.fn();
+jest.mock('../../account/hooks/usePreferenceControls', () => () => ({
+  language: 'en', theme: 'light', changeLanguage: mockChangeLanguage, changeTheme: mockChangeTheme, status: {}, authLoading: false, isAuthenticated: true,
+}));
 jest.mock('../../expenses/api/expensesApi', () => ({ addExpense: jest.fn() }));
 jest.mock('../../categories/api/categoriesApi', () => ({
   getCategories: jest.fn(() => Promise.resolve({ results: [] })),
@@ -22,6 +29,7 @@ jest.mock('../../funds/api/fundsApi', () => ({
   createFundingRound: jest.fn(),
 }));
 jest.mock('../../invitations/api/invitationsApi', () => ({ createInvitation: jest.fn() }));
+jest.mock('../../settlements/api/settlementsApi', () => ({ recordAdminSettlement: jest.fn() }));
 
 jest.mock('../../expenses/components/NewExpenseDialog', () => ({ onSubmit, onClose }) => (
   <div role="dialog" aria-label="canonical expense dialog">
@@ -40,6 +48,15 @@ jest.mock('../../funds/components/FundingRoundComposer', () => ({ onSubmit, onCl
     <button type="button" onClick={onClose}>close round</button>
   </div>
 ));
+jest.mock('../../settlements/components/SettlementActionDialog', () => ({ onSave, onClose }) => (
+  <div role="dialog" aria-label="canonical settlement dialog">
+    <button type="button" onClick={() => onSave({ from_member_id: 'member-1', to_member_id: 'member-2', amount: '10.00' })}>submit settlement</button>
+    <button type="button" onClick={onClose}>close settlement</button>
+  </div>
+));
+jest.mock('../../support/components/SupportTicketDialog', () => ({ onClose }) => (
+  <div role="dialog" aria-label="canonical support dialog"><button type="button" onClick={onClose}>close support</button></div>
+));
 
 const trip = {
   id: 'trip-uuid',
@@ -49,7 +66,7 @@ const trip = {
   current_member: { id: 'member-1', identity_type: 'registered' },
   governance_capabilities: { can_invite: true },
 };
-const permissions = { canCreateExpense: true, canManageMembers: true };
+const permissions = { canCreateExpense: true, canManageMembers: true, canManageFund: true, canRecordAdminSettlement: true };
 
 function LocationProbe() {
   const location = useLocation();
@@ -80,6 +97,7 @@ beforeEach(() => {
   addExpense.mockResolvedValue({});
   createInvitation.mockResolvedValue({});
   createFundingRound.mockResolvedValue({});
+  recordAdminSettlement.mockResolvedValue({});
   getMembers.mockResolvedValue({ results: [{ id: 'member-1', active: true }] });
   getCategories.mockResolvedValue({ results: [] });
   getCategoryBudgets.mockResolvedValue({ results: [] });
@@ -135,10 +153,48 @@ test('New Funding Round opens the canonical Fund composer without route navigati
   await waitFor(() => expect(createFundingRound).toHaveBeenCalledWith('trip-uuid', { title: 'Top up', target_amount: '100.00' }));
 });
 
-test('server-derived capabilities remove unavailable member and funding actions', () => {
-  renderShell({ trip: { governance_capabilities: { can_invite: false } }, permissions: { canManageMembers: false } });
+test('Record Settlement opens the canonical admin settlement dialog and saves without navigation', async () => {
+  renderShell();
+  openDesktopMenu();
+  fireEvent.click(screen.getByRole('menuitem', { name: 'dashboard.quickActionsSettlement' }));
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  expect(await screen.findByRole('dialog', { name: 'canonical settlement dialog' })).toBeInTheDocument();
+  expect(screen.getByTestId('pathname')).toHaveTextContent('/trips/t1/overview');
+  fireEvent.click(screen.getByRole('button', { name: 'submit settlement' }));
+  await waitFor(() => expect(recordAdminSettlement).toHaveBeenCalledTimes(1));
+});
+
+test('Report a Problem opens the canonical support form wrapper without navigation', async () => {
+  renderShell();
+  openDesktopMenu();
+  fireEvent.click(screen.getByRole('menuitem', { name: 'dashboard.quickActionsSupport' }));
+  expect(await screen.findByRole('dialog', { name: 'canonical support dialog' })).toBeInTheDocument();
+  expect(screen.getByTestId('pathname')).toHaveTextContent('/trips/t1/overview');
+});
+
+test('My Account navigates directly to the canonical account route', () => {
+  renderShell();
+  openDesktopMenu();
+  fireEvent.click(screen.getByRole('menuitem', { name: 'dashboard.quickActionsAccount' }));
+  expect(screen.getByTestId('pathname')).toHaveTextContent('/account');
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+});
+
+test('theme and language controls use the canonical preference adapter', () => {
+  renderShell();
+  openDesktopMenu();
+  fireEvent.click(screen.getByRole('menuitemradio', { name: 'account.preferences.themeDark' }));
+  expect(mockChangeTheme).toHaveBeenCalledWith('dark');
+  fireEvent.click(screen.getByRole('menuitemradio', { name: 'العربية' }));
+  expect(mockChangeLanguage).toHaveBeenCalledWith('ar');
+});
+
+test('server-derived and semantic capabilities remove unavailable privileged actions', () => {
+  renderShell({ trip: { governance_capabilities: { can_invite: false } }, permissions: { canManageMembers: false, canManageFund: false, canRecordAdminSettlement: false } });
   openDesktopMenu();
   expect(screen.getByRole('menuitem', { name: 'dashboard.quickActionsExpense' })).toBeInTheDocument();
   expect(screen.queryByRole('menuitem', { name: 'dashboard.quickActionsMember' })).not.toBeInTheDocument();
   expect(screen.queryByRole('menuitem', { name: 'dashboard.quickActionsFundingRound' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('menuitem', { name: 'dashboard.quickActionsSettlement' })).not.toBeInTheDocument();
+  expect(screen.getByRole('menuitem', { name: 'dashboard.quickActionsSupport' })).toBeInTheDocument();
 });
