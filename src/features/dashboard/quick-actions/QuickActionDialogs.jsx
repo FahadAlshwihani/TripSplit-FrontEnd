@@ -1,19 +1,24 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import ModalPortal from '../../../shared/components/ModalPortal';
 import SectionLoading from '../../../shared/components/SectionLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
 import useModalDialog from '../../../shared/hooks/useModalDialog';
-import NewExpenseDialog from '../../expenses/components/NewExpenseDialog';
-import InviteMemberDialog from '../../governance/components/InviteMemberDialog';
-import FundingRoundComposer from '../../funds/components/FundingRoundComposer';
 import { addExpense } from '../../expenses/api/expensesApi';
 import { getCategories, getCategoryBudgets } from '../../categories/api/categoriesApi';
 import { getMembers } from '../../members/api/membersApi';
 import { getFund, createFundingRound } from '../../funds/api/fundsApi';
 import { createInvitation } from '../../invitations/api/invitationsApi';
 import { useQuickActionInvalidation } from './QuickActionRefreshContext';
+
+// These canonical composers are substantial and their owning feature routes
+// are already lazy chunks. Keep the dashboard shell lightweight by loading a
+// composer only after its action is chosen; no duplicate form implementation
+// or route navigation is introduced.
+const NewExpenseDialog = lazy(() => import('../../expenses/components/NewExpenseDialog'));
+const InviteMemberDialog = lazy(() => import('../../governance/components/InviteMemberDialog'));
+const FundingRoundComposer = lazy(() => import('../../funds/components/FundingRoundComposer'));
 
 const fulfilled = (result, fallback) => (result.status === 'fulfilled' ? result.value : fallback);
 
@@ -119,8 +124,9 @@ function FundingRoundQuickAction({ trip, tripId, onClose }) {
 
 export default function QuickActionDialogs({ action, trip, tripId, currentMember, onClose }) {
   if (!action || action.type === 'menu') return null;
-  if (action.type === 'expense') return <ExpenseQuickAction trip={trip} tripId={tripId} currentMember={currentMember} onClose={onClose} />;
-  if (action.type === 'member') return <MemberQuickAction tripId={tripId} onClose={onClose} />;
-  if (action.type === 'funding-round') return <FundingRoundQuickAction trip={trip} tripId={tripId} onClose={onClose} />;
-  return null;
+  let dialog = null;
+  if (action.type === 'expense') dialog = <ExpenseQuickAction trip={trip} tripId={tripId} currentMember={currentMember} onClose={onClose} />;
+  if (action.type === 'member') dialog = <MemberQuickAction tripId={tripId} onClose={onClose} />;
+  if (action.type === 'funding-round') dialog = <FundingRoundQuickAction trip={trip} tripId={tripId} onClose={onClose} />;
+  return dialog ? <Suspense fallback={<QuickActionLoadState onClose={onClose} />}>{dialog}</Suspense> : null;
 }
