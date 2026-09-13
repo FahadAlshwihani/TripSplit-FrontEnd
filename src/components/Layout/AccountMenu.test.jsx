@@ -28,12 +28,44 @@ beforeEach(() => {
   mockSetTheme.mockReset();
 });
 
-test('the trigger shows the avatar and display name, collapsed by default', () => {
+test('the shared trigger uses semantic avatar, display name, chevron order', () => {
   renderMenu();
   const trigger = screen.getByRole('button', { name: /Fahad/ });
   expect(trigger).toHaveAttribute('aria-haspopup', 'true');
   expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  expect(trigger.querySelector('.account-menu__chevron')).toBeInTheDocument();
+  expect(trigger.querySelector('.account-menu__name')).toHaveTextContent('Fahad');
+  const avatarSlot = trigger.querySelector('.account-menu__avatar-slot');
+  expect(avatarSlot).toBeInTheDocument();
+  expect(avatarSlot.querySelector('.account-menu__avatar')).toHaveClass('pf-avatar');
+  expect([...trigger.children].map((node) => node.className)).toEqual([
+    expect.stringContaining('account-menu__avatar-slot'),
+    expect.stringContaining('account-menu__name'),
+    expect.stringContaining('account-menu__chevron'),
+  ]);
   expect(screen.queryByText('fahad@example.com')).not.toBeInTheDocument();
+});
+
+test.each(['ltr', 'rtl'])('uses the same accessible trigger markup for dir=%s', (dir) => {
+  document.documentElement.dir = dir;
+  renderMenu();
+  const trigger = screen.getByRole('button', { name: /Fahad/ });
+  expect([...trigger.children].map((node) => node.className)).toEqual([
+    expect.stringContaining('account-menu__avatar-slot'),
+    expect.stringContaining('account-menu__name'),
+    expect.stringContaining('account-menu__chevron'),
+  ]);
+  document.documentElement.dir = '';
+});
+
+test('keeps one down-chevron glyph and only marks its disclosure state', () => {
+  renderMenu();
+  const trigger = screen.getByRole('button', { name: /Fahad/ });
+  const chevron = trigger.querySelector('.account-menu__chevron');
+  expect(chevron).toHaveClass('bi-chevron-down');
+  fireEvent.click(trigger);
+  expect(chevron).toHaveClass('bi-chevron-down', 'is-open');
+  expect(trigger).toHaveAttribute('aria-expanded', 'true');
 });
 
 test('clicking the trigger opens the panel with identity, My Account, Theme, Language, and Log Out', () => {
