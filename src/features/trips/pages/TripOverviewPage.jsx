@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import SectionLoading from '../../../shared/components/SectionLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import useTripOverview from '../hooks/useTripOverview';
+import { useQuickActionRevision } from '../../dashboard/quick-actions/QuickActionRefreshContext';
 import OverviewSummaryCards from '../components/overview/OverviewSummaryCards';
 import FundSnapshot from '../components/overview/FundSnapshot';
 import CategoryLedger from '../components/overview/CategoryLedger';
@@ -29,7 +30,8 @@ import '../styles/overview.css';
 export default function TripOverviewPage() {
   const { trip: contextTrip, tripId } = useOutletContext();
   const { t } = useTranslation();
-  const resource = useTripOverview(tripId);
+  const quickActionRevision = useQuickActionRevision('overview');
+  const resource = useTripOverview(tripId, quickActionRevision);
   const data = resource.data;
 
   return (

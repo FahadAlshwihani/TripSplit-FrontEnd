@@ -5,6 +5,7 @@ import SectionLoading from '../../../shared/components/SectionLoading';
 import ErrorState from '../../../shared/components/ErrorState';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
 import useExpenseFilters from '../hooks/useExpenseFilters';
+import { useQuickActionRevision } from '../../dashboard/quick-actions/QuickActionRefreshContext';
 import { addExpense, deleteExpense, getExpenses, getExpensesSummary, getPage, updateExpense } from '../api/expensesApi';
 import { archiveCategory, createCategory, getCategories, getCategoryBudgets, resetCategoryBudget, setCategoryBudget, updateCategory } from '../../categories/api/categoriesApi';
 import { getMembers } from '../../members/api/membersApi';
@@ -30,8 +31,9 @@ export default function ExpensesPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   const [actionError, setActionError] = useState(null);
+  const quickActionRevision = useQuickActionRevision('expenses');
 
-  const summaryResource = useRouteResource((signal) => getExpensesSummary(tripId, { signal }), [tripId]);
+  const summaryResource = useRouteResource((signal) => getExpensesSummary(tripId, { signal }), [tripId, quickActionRevision]);
 
   const helpersResource = useRouteResource(async (signal) => {
     const results = await Promise.allSettled([
@@ -47,14 +49,14 @@ export default function ExpensesPage() {
       fund: fulfilledValue(results[3], null),
       helperError: results.some((result) => result.status === 'rejected'),
     };
-  }, [tripId]);
+  }, [tripId, quickActionRevision]);
 
   // Re-fetches whenever the URL-driven filters change (see
   // useExpenseFilters); resetOnKeyChange clears stale rows immediately
   // rather than leaving the previous filter's results on screen mid-load.
   const listResource = useRouteResource(
     (signal) => getExpenses(tripId, { signal, params: filters }),
-    [tripId, filters],
+    [tripId, filters, quickActionRevision],
     true,
   );
 

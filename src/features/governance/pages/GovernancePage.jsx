@@ -7,6 +7,7 @@ import InviteMemberDialog from '../components/InviteMemberDialog';
 import ErrorState from '../../../shared/components/ErrorState';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
+import { useQuickActionRevision } from '../../dashboard/quick-actions/QuickActionRefreshContext';
 import { getBans, getJoinRequests, reviewJoinRequest, revokeBan } from '../api/governanceApi';
 import { createInvitation, getInvitations, resendInvitation, revokeInvitation } from '../../invitations/api/invitationsApi';
 import { rotateJoinCode, updateTrip } from '../../trips/api/tripsApi';
@@ -28,15 +29,16 @@ export default function GovernancePage() {
   const [pending, setPending] = useState(null); // { kind: 'unban', ban } | null
   const [inviteOpen, setInviteOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const quickActionRevision = useQuickActionRevision('governance');
 
   // Three independent resources, one per data-dependent section --
   // Join Requests / Invitations / Restricted(Bans) each get their own
   // shell + independent load rather than one combined fetch blocking
   // the whole page. Access Settings needs only `trip`/`capabilities`
   // (already in outlet context) and never gates on any of these.
-  const requestsResource = useRouteResource((signal) => getJoinRequests(tripId, { signal }), [tripId]);
-  const invitationsResource = useRouteResource((signal) => getInvitations(tripId, { signal }), [tripId]);
-  const bansResource = useRouteResource((signal) => getBans(tripId, { signal }), [tripId]);
+  const requestsResource = useRouteResource((signal) => getJoinRequests(tripId, { signal }), [tripId, quickActionRevision]);
+  const invitationsResource = useRouteResource((signal) => getInvitations(tripId, { signal }), [tripId, quickActionRevision]);
+  const bansResource = useRouteResource((signal) => getBans(tripId, { signal }), [tripId, quickActionRevision]);
 
   const run = async (action, resource) => {
     try {

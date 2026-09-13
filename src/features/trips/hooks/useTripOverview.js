@@ -5,6 +5,9 @@ import { getTripOverview } from '../api/tripsApi';
 // stale requests on trip change/unmount, ignores out-of-order responses)
 // -- one purpose-built payload per GET, not several list downloads
 // stitched together client-side.
-const useTripOverview = (tripId) => useRouteResource((signal) => getTripOverview(tripId, { signal }), tripId);
+const useTripOverview = (tripId, revision = 0) => useRouteResource(
+  (signal) => getTripOverview(tripId, { signal }),
+  [tripId, revision],
+);
 
 export default useTripOverview;

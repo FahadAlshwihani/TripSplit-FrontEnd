@@ -8,6 +8,7 @@ import CopyLinkButton from '../../../shared/components/CopyLinkButton';
 import { tripUrl } from '../../../shared/utils/shareLinks';
 import { buildTripShareMessage } from '../../../shared/utils/shareMessage';
 import useRouteResource from '../../../shared/hooks/useRouteResource';
+import { useQuickActionRevision } from '../../dashboard/quick-actions/QuickActionRefreshContext';
 import { getMembers } from '../../members/api/membersApi';
 import { getCategories, getCategoryBudgets } from '../../categories/api/categoriesApi';
 import { getExpenses } from '../../expenses/api/expensesApi';
@@ -78,6 +79,7 @@ export default function FundPage() {
   // leaking cross-trip existence.
   const focusRoundId = searchParams.get('round');
   const hasScrolledToFocusRound = useRef(false);
+  const quickActionRevision = useQuickActionRevision('fund');
 
   const resource = useRouteResource(async (signal) => {
     const config = { signal };
@@ -95,7 +97,7 @@ export default function FundPage() {
       getActivity(tripId, { ...config, params: { page_size: 50 } }),
     ]);
     return { fund, members: members.results, categories: categories.results, budgets: budgets.results, recentExpenses: recentExpenses.results, activity };
-  }, [tripId]);
+  }, [tripId, quickActionRevision]);
 
   const [actionError, setActionError] = useState(null);
   // null | { type: 'create-round', prefill? } | { type: 'report-contribution'|'record-contribution', round }
