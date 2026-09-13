@@ -32,7 +32,7 @@ jest.mock('../../expenses/components/ExpenseDetailsDrawer', () => ({ __esModule:
 const fahad = { id: 'm1', display_name: 'Fahad', role: 'owner', active: true, avatar: { type: 'initials', color: 'indigo' } };
 const saud = { id: 'm2', display_name: 'Saud', role: 'member', active: true, avatar: { type: 'initials', color: 'slate' } };
 const members = [fahad, saud];
-const permissions = { canManageMembers: true, canEditExpense: () => true, canCreateExpense: true };
+const permissions = { canManageMembers: true, canManageFund: true, canEditExpense: () => true, canCreateExpense: true };
 const trip = { currency: 'SAR', archived_at: null, lifecycle_status: 'active', short_code: 'short-1' };
 
 const baseAccounting = { collected: '1000.00', spent: '400.00', refunded: '0.00', reimbursed: '0.00', balance: '600.00', surplus: '600.00', deficit: '0.00' };

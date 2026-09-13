@@ -4,6 +4,8 @@ test('owner controls disappear when a trip is archived', () => {
   const active = permissionsFor({ id: 'owner', role: 'owner' }, false);
   expect(active.canEditTrip).toBe(true);
   expect(active.canTransferOwnership).toBe(true);
+  expect(active.canManageFund).toBe(true);
+  expect(active.canRecordAdminSettlement).toBe(true);
   expect(active.canEditExpense({ created_by: 'other' })).toBe(true);
   const archived = permissionsFor({ id: 'owner', role: 'owner' }, true);
   expect(archived.canCreateExpense).toBe(false);
@@ -15,6 +17,8 @@ test('member may edit only their own expense', () => {
   expect(permissions.canEditExpense({ created_by: 'member' })).toBe(true);
   expect(permissions.canEditExpense({ created_by: 'other' })).toBe(false);
   expect(permissions.canManageMembers).toBe(false);
+  expect(permissions.canManageFund).toBe(false);
+  expect(permissions.canRecordAdminSettlement).toBe(false);
 });
 
 test('closed trips are read only for financial mutations', () => {

@@ -68,7 +68,7 @@ import '../styles/fund.css';
 export default function FundPage() {
   const { trip, tripId, currentMember, permissions } = useOutletContext();
   const { t } = useTranslation();
-  const canManage = Boolean(permissions.canManageMembers);
+  const canManage = Boolean(permissions.canManageFund);
   const [searchParams] = useSearchParams();
   // The optional deep-link focus target (?round=<public round id>) --
   // never anything beyond "which already-loaded round to scroll to and
