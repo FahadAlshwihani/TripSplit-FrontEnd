@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import GovernancePage from './GovernancePage';
@@ -24,6 +24,11 @@ jest.mock('../../trips/api/tripsApi', () => ({ updateTrip: jest.fn(), rotateJoin
 
 const fullCapabilities = { can_view_governance: true, can_review_join_requests: true, can_invite: true, can_resend_invite: true, can_revoke_invite: true, can_manage_bans: true, can_unban: true, can_manage_invite_link: true, can_manage_approval_setting: true };
 const baseTrip = { title: 'Trip', currency: 'SAR', join_code: 'ABC12345', join_policy: 'open', governance_capabilities: fullCapabilities };
+
+function StatefulTripOutlet() {
+  const [trip, setTrip] = useState(baseTrip);
+  return <Outlet context={{ trip, setTrip, tripId: 't1' }} />;
+}
 
 const renderPage = (ctxOverrides = {}) => render(
   <MemoryRouter initialEntries={['/trips/t1/governance']}>
@@ -81,6 +86,58 @@ test('turning the invite link off sends invite_only regardless of the approval t
   await screen.findByLabelText('governance.inviteLinkActive');
   fireEvent.click(screen.getByLabelText('governance.inviteLinkActive'));
   await waitFor(() => expect(updateTrip).toHaveBeenCalledWith('t1', { join_policy: 'invite_only' }));
+});
+
+test('a successful canonical settings mutation preserves server capabilities and never replaces Governance with a false permission error', async () => {
+  updateTrip.mockResolvedValue({
+    ...baseTrip,
+    join_policy: 'approval_required',
+    current_member: { id: 'owner-1', role: 'owner' },
+    governance_capabilities: fullCapabilities,
+    pending_join_requests: 0,
+    pending_settlement_confirmations: 0,
+  });
+  render(
+    <MemoryRouter initialEntries={['/trips/t1/governance']}>
+      <Routes>
+        <Route path="/trips/:tripId" element={<StatefulTripOutlet />}>
+          <Route path="governance" element={<GovernancePage />} />
+        </Route>
+      </Routes>
+    </MemoryRouter>,
+  );
+  const approval = await screen.findByLabelText('governance.requireApproval');
+  fireEvent.click(approval);
+  await waitFor(() => expect(updateTrip).toHaveBeenCalledWith('t1', { join_policy: 'approval_required' }));
+  expect(screen.getByText('governance.title')).toBeInTheDocument();
+  expect(screen.queryByText('governance.accessDenied')).not.toBeInTheDocument();
+  expect(screen.getByLabelText('governance.requireApproval')).toBeChecked();
+});
+
+test('rotated-link canonical resource keeps the management capability visible', async () => {
+  rotateJoinCode.mockResolvedValue({
+    ...baseTrip,
+    join_code: 'NEWCODE1',
+    current_member: { id: 'admin-1', role: 'admin' },
+    governance_capabilities: fullCapabilities,
+    pending_join_requests: 0,
+    pending_settlement_confirmations: 0,
+  });
+  render(
+    <MemoryRouter initialEntries={['/trips/t1/governance']}>
+      <Routes>
+        <Route path="/trips/:tripId" element={<StatefulTripOutlet />}>
+          <Route path="governance" element={<GovernancePage />} />
+        </Route>
+      </Routes>
+    </MemoryRouter>,
+  );
+  fireEvent.click(await screen.findByText('governance.rotateLink'));
+  fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'governance.rotateLink' }));
+  await waitFor(() => expect(rotateJoinCode).toHaveBeenCalledWith('t1'));
+  await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+  expect(screen.queryByText('governance.accessDenied')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'governance.rotateLink' })).toBeInTheDocument();
 });
 
 test('the invite link field and copy/rotate actions disappear once the link is off', async () => {
