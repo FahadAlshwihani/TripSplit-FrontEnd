@@ -13,11 +13,18 @@ const trip = {
   archived_at: null,
   current_member: { identity_type: 'registered' },
 };
+const quickActions = {
+  state: null,
+  capabilities: { expense: true, member: true, fundingRound: true },
+  onOpen: jest.fn(),
+  onClose: jest.fn(),
+  onSelect: jest.fn(),
+};
 
 const renderHeader = (props = {}) => render(
   <MemoryRouter initialEntries={['/trips/t1/overview']}>
     <Routes>
-      <Route path="/trips/:tripId/*" element={<MobileDashboardHeader trip={trip} tripId="t1" permissions={{ canManageMembers: true }} {...props} />} />
+      <Route path="/trips/:tripId/*" element={<MobileDashboardHeader trip={trip} quickActions={quickActions} {...props} />} />
       <Route path="/account" element={<p>account page</p>} />
     </Routes>
   </MemoryRouter>,
@@ -44,9 +51,10 @@ test('does not render a status badge -- travel icon, trip title, and dates are e
   expect(document.querySelector('.dash-mobile-header__badge')).not.toBeInTheDocument();
 });
 
-test('keeps one compact creation action and removes the dashboard account entry point', () => {
+test('keeps one compact Quick Actions launcher and removes dashboard account and duplicate member entry points', () => {
   renderHeader();
-  expect(screen.getByRole('button', { name: 'dashboard.newExpense' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'dashboard.quickActions' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'dashboard.newExpense' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'dashboard.addMember' })).not.toBeInTheDocument();
   expect(document.querySelector('.account-menu')).not.toBeInTheDocument();
 });

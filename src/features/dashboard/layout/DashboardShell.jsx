@@ -1,9 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardTopBar from './DashboardTopBar';
 import MobileDashboardHeader from './MobileDashboardHeader';
 import MobileBottomNav from './MobileBottomNav';
 import DashboardMoreSheet from './DashboardMoreSheet';
+import QuickActionDialogs from '../quick-actions/QuickActionDialogs';
+import { QuickActionRefreshProvider } from '../quick-actions/QuickActionRefreshContext';
 import '../styles/dashboard.css';
 
 /*
@@ -18,7 +20,38 @@ import '../styles/dashboard.css';
 */
 const DashboardShell = ({ trip, tripId, currentMember, permissions, children }) => {
   const [moreOpen, setMoreOpen] = useState(false);
+  // null | { type: 'menu'|'expense'|'member'|'funding-round', surface: 'desktop'|'mobile' }
+  // A single discriminated value guarantees the menu and an action dialog
+  // can never be mounted simultaneously, nor can two action dialogs coexist.
+  const [quickAction, setQuickAction] = useState(null);
   const moreTriggerRef = useRef(null);
+  const desktopQuickActionRef = useRef(null);
+  const mobileQuickActionRef = useRef(null);
+  const quickActionRefs = useMemo(() => ({ desktop: desktopQuickActionRef, mobile: mobileQuickActionRef }), []);
+
+  const quickActionCapabilities = useMemo(() => ({
+    expense: Boolean(permissions.canCreateExpense),
+    member: Boolean(trip.governance_capabilities?.can_invite),
+    // FundPage's existing canonical gate for creating rounds is the
+    // workspace permission helper's mutable manager capability.
+    fundingRound: Boolean(permissions.canManageMembers),
+  }), [permissions, trip.governance_capabilities]);
+
+  const restoreQuickActionFocus = useCallback((surface) => {
+    window.setTimeout(() => quickActionRefs[surface]?.current?.focus(), 0);
+  }, [quickActionRefs]);
+
+  const openQuickActions = useCallback((surface) => setQuickAction({ type: 'menu', surface }), []);
+  const closeQuickActions = useCallback((surface, { restoreFocus = false } = {}) => {
+    setQuickAction((current) => (current?.type === 'menu' && current.surface === surface ? null : current));
+    if (restoreFocus) restoreQuickActionFocus(surface);
+  }, [restoreQuickActionFocus]);
+  const selectQuickAction = useCallback((type, surface) => setQuickAction({ type, surface }), []);
+  const closeQuickActionDialog = useCallback(() => {
+    const surface = quickAction?.surface;
+    setQuickAction(null);
+    if (surface) restoreQuickActionFocus(surface);
+  }, [quickAction, restoreQuickActionFocus]);
 
   // Focus returns to the "More" button that opened the sheet once it
   // closes (by any means -- Escape, outside click, or following an
@@ -28,24 +61,41 @@ const DashboardShell = ({ trip, tripId, currentMember, permissions, children }) 
     moreTriggerRef.current?.focus();
   };
 
+  const quickActionsProps = {
+    state: quickAction,
+    capabilities: quickActionCapabilities,
+    onOpen: openQuickActions,
+    onClose: closeQuickActions,
+    onSelect: selectQuickAction,
+  };
+
   return (
-    <div className="dash-shell">
-      <DashboardSidebar trip={trip} tripId={tripId} permissions={permissions} />
-      <div className="dash-shell__canvas">
-        <DashboardTopBar trip={trip} tripId={tripId} permissions={permissions} />
-        <MobileDashboardHeader trip={trip} tripId={tripId} permissions={permissions} />
-        <main className="dash-content">{children}</main>
-      </div>
-      <MobileBottomNav ref={moreTriggerRef} tripId={tripId} onOpenMore={() => setMoreOpen(true)} />
-      {moreOpen && (
-        <DashboardMoreSheet
-          tripId={tripId}
+    <QuickActionRefreshProvider>
+      <div className="dash-shell">
+        <DashboardSidebar trip={trip} tripId={tripId} permissions={permissions} />
+        <div className="dash-shell__canvas">
+          <DashboardTopBar trip={trip} tripId={tripId} quickActions={{ ...quickActionsProps, triggerRef: desktopQuickActionRef }} />
+          <MobileDashboardHeader trip={trip} tripId={tripId} quickActions={{ ...quickActionsProps, triggerRef: mobileQuickActionRef }} />
+          <main className="dash-content">{children}</main>
+        </div>
+        <MobileBottomNav ref={moreTriggerRef} tripId={tripId} onOpenMore={() => setMoreOpen(true)} />
+        {moreOpen && (
+          <DashboardMoreSheet
+            tripId={tripId}
+            currentMember={currentMember}
+            permissions={permissions}
+            onClose={closeMore}
+          />
+        )}
+        <QuickActionDialogs
+          action={quickAction}
+          trip={trip}
+          tripId={trip.id}
           currentMember={currentMember}
-          permissions={permissions}
-          onClose={closeMore}
+          onClose={closeQuickActionDialog}
         />
-      )}
-    </div>
+      </div>
+    </QuickActionRefreshProvider>
   );
 };
 

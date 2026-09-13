@@ -1,24 +1,24 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { TRIP_IDENTITY_ICON } from './dashboardNav';
 import { formatDateRange } from '../../../shared/utils/format';
+import QuickActionsMenu from '../quick-actions/QuickActionsMenu';
 
 /*
   Mobile-only (hidden ≥768px via CSS). Trip identity leads -- not the
   TripSplit wordmark, which the desktop top bar already carries and
   which would only compete with the one piece of context that actually
-  matters once a member is inside a specific trip. Reuses the existing
-  global AccountMenu instead of building a second identity control (not
-  a second account hub, just the same one docked in here). Trip
-  switching is one tap away via a link to the Account hub's own trip
+  matters once a member is inside a specific trip. Account/profile
+  controls intentionally live only under Settings; this header keeps a
+  single shared Quick Actions launcher. Trip switching is one tap away
+  via a link to the Account hub's own trip
   history (already canonical) rather than a duplicate switcher; guests
   have no /account (registered-only), so that link only renders for a
   registered current member -- a guest is scoped to one trip by design.
 */
-const MobileDashboardHeader = ({ trip, tripId }) => {
+const MobileDashboardHeader = ({ trip, quickActions }) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const isRegistered = trip.current_member?.identity_type === 'registered';
   const dateRange = formatDateRange(trip.start_date, trip.end_date);
 
@@ -53,15 +53,7 @@ const MobileDashboardHeader = ({ trip, tripId }) => {
         )}
       </div>
       <div className="dash-mobile-header__actions">
-        <button
-          type="button"
-          className="dash-btn dash-btn--primary dash-mobile-header__action"
-          aria-label={t('dashboard.newExpense')}
-          title={t('dashboard.newExpense')}
-          onClick={() => navigate(`/trips/${tripId}/expenses`)}
-        >
-          <i className="bi bi-plus-lg" aria-hidden="true" />
-        </button>
+        <QuickActionsMenu surface="mobile" {...quickActions} />
       </div>
     </header>
   );

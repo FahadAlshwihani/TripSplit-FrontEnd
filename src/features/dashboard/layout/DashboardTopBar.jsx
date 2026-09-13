@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { DASHBOARD_NAV_ITEMS, DASHBOARD_FOOTER_ITEMS } from './dashboardNav';
+import QuickActionsMenu from '../quick-actions/QuickActionsMenu';
 
 const CONTEXT_ROUTES = [...DASHBOARD_NAV_ITEMS, ...DASHBOARD_FOOTER_ITEMS];
 
@@ -20,7 +21,7 @@ const CONTEXT_ROUTES = [...DASHBOARD_NAV_ITEMS, ...DASHBOARD_FOOTER_ITEMS];
   the same canonical dashboardNav metadata every other nav surface
   uses, never hardcoded per route.
 */
-const DashboardTopBar = ({ trip, tripId, permissions }) => {
+const DashboardTopBar = ({ trip, tripId, quickActions }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,20 +59,7 @@ const DashboardTopBar = ({ trip, tripId, permissions }) => {
             onChange={(event) => setQuery(event.target.value)}
           />
         </form>
-        {/* aria-label repeats the same text the visible label carries --
-            required because .dash-btn__label collapses to display:none
-            below 1280px (see dashboard.css), which would otherwise strip
-            these icon-only buttons of any accessible name at all. */}
-        {permissions.canManageMembers && (
-          <button type="button" className="dash-btn dash-btn--secondary" aria-label={t('dashboard.addMember')} onClick={() => navigate(`/trips/${tripId}/governance`)}>
-            <i className="bi bi-person-plus" aria-hidden="true" />
-            <span className="dash-btn__label" aria-hidden="true">{t('dashboard.addMember')}</span>
-          </button>
-        )}
-        <button type="button" className="dash-btn dash-btn--primary" aria-label={t('dashboard.quickExpense')} onClick={() => navigate(`/trips/${tripId}/expenses`)}>
-          <i className="bi bi-lightning-charge" aria-hidden="true" />
-          <span className="dash-btn__label" aria-hidden="true">{t('dashboard.quickExpense')}</span>
-        </button>
+        <QuickActionsMenu surface="desktop" {...quickActions} />
       </div>
     </header>
   );

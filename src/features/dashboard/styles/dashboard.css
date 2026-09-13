@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
 /*
   Canonical trip-dashboard shell. Desktop = sidebar + top bar; mobile =
   compact header + bottom nav + "More" sheet. Both variants stay mounted
@@ -386,6 +388,102 @@
 
 .dash-topbar__actions { display: flex; align-items: center; gap: var(--space-3); }
 
+/* One shared launcher serves both dashboard headers. The canonical
+   .dash-btn family supplies the existing hard-shadow inward press physics;
+   this block owns only popover geometry and action-row presentation. */
+.dash-shell .material-symbols-outlined,
+.dash-quick-action-status-overlay .material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "liga";
+}
+
+.dash-quick-actions {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.dash-quick-actions__trigger { min-inline-size: 40px; }
+
+.dash-quick-actions__menu {
+  position: absolute;
+  inset-block-start: calc(100% + var(--space-2));
+  inset-inline-end: 0;
+  z-index: var(--z-popover);
+  inline-size: min(260px, calc(100vw - (2 * var(--page-margin-mobile))));
+  padding: var(--space-2);
+  display: grid;
+  gap: var(--space-1);
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+}
+
+.dash-quick-actions__item {
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  font: var(--text-body);
+  text-align: start;
+  cursor: pointer;
+}
+
+.dash-quick-actions__item:hover,
+.dash-quick-actions__item:focus-visible { background: var(--color-surface-alt); }
+
+.dash-quick-actions__icon {
+  inline-size: 34px;
+  block-size: 34px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--nc-indigo-700);
+}
+
+.dash-quick-action-status-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal-backdrop);
+  padding: var(--space-4);
+  display: grid;
+  place-items: center;
+  background: rgba(27, 28, 25, 0.5);
+}
+
+.dash-quick-action-status {
+  inline-size: min(440px, 100%);
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+}
+
 .dash-topbar__search { position: relative; display: none; }
 
 @media (min-width: 1024px) {
@@ -489,10 +587,10 @@ a.dash-mobile-header__trip:active { transform: var(--press-sm-active); }
 
 .dash-mobile-header__actions { display: flex; align-items: center; gap: var(--space-2); flex: 0 0 auto; }
 
-/* Compact square icon buttons -- explicitly allowed to be icon-only at
-   mobile widths, as long as there are at least two obvious ones and
-   each carries a real aria-label/title (see the JSX). */
-.dash-mobile-header__action { inline-size: 40px; block-size: 40px; padding: 0; }
+/* Compact square launcher on mobile; its full accessible name remains on
+   the real button even though the visible label collapses at this width. */
+.dash-mobile-header__action,
+.dash-quick-actions--mobile .dash-quick-actions__trigger { inline-size: 40px; block-size: 40px; padding: 0; }
 
 /* ---------------------------------------------------------------------- */
 /* Mobile bottom navigation -- fixed, safe-area-aware, hidden ≥768px. */
