@@ -215,6 +215,66 @@ select.field-control { height: 44px; padding-block: 0; line-height: calc(44px - 
 .support-success__title { margin: 0; color: var(--color-text); font: 700 20px/28px var(--font-display); }
 .support-success__reference { margin: 0 0 var(--space-4); color: var(--color-text-muted); font: var(--text-financial); }
 
+/* Quick Actions reuses the exact SupportForm inside the app's canonical
+   modal layer. The normal Support page remains an in-page tab workspace. */
+.support-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(27, 28, 25, 0.5);
+}
+
+.support-dialog {
+  inline-size: min(620px, 100%);
+  max-block-size: min(760px, calc(100dvh - 2 * var(--space-4)));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: var(--border-width-lg) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+  z-index: var(--z-modal);
+}
+
+.support-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-block-end: var(--border-width) solid var(--color-border);
+}
+
+.support-dialog__title { margin: 0; font: var(--text-headline-sm); color: var(--color-text); }
+.support-dialog__body { min-block-size: 0; overflow-y: auto; overscroll-behavior: contain; }
+.support-dialog__close {
+  flex: 0 0 auto;
+  inline-size: 40px;
+  block-size: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-hard-sm);
+  cursor: pointer;
+}
+.support-dialog__close:hover { transform: var(--press-sm-hover); box-shadow: var(--shadow-hard-sm-hover); }
+.support-dialog__close:active { transform: var(--press-sm-active); box-shadow: none; }
+.support-dialog__close:focus-visible { outline: 2px solid var(--nc-indigo-700); outline-offset: 2px; }
+
+@media (max-width: 480px) {
+  .support-dialog-overlay { align-items: flex-end; padding: var(--space-2); padding-block-end: max(var(--space-2), env(safe-area-inset-bottom)); }
+  .support-dialog { max-block-size: calc(100dvh - var(--space-4)); }
+}
+
 /* ------------------------------------------------------------------ */
 /* Phone field -- one coherent bordered unit (select + input), not two
    unrelated fields. The internal divider sits at the logical

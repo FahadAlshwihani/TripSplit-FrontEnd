@@ -44,7 +44,7 @@ const fieldError = (error, name) => {
   return Array.isArray(value) ? value[0] : value;
 };
 
-export default function SupportForm({ tripId, currentMember, presetSubject, presetSignal }) {
+export default function SupportForm({ tripId, currentMember, presetSubject, presetSignal, idPrefix = 'support' }) {
   const { t, i18n } = useTranslation();
   const { user, isAuthenticated, authLoading } = useAuth();
 
@@ -133,9 +133,9 @@ export default function SupportForm({ tripId, currentMember, presetSubject, pres
                   <p className="support-identity__value">{currentMember?.display_name}</p>
                 </div>
                 <div className="field-group">
-                  <label className="field-label" htmlFor="support-email">{t('support.form.email')}</label>
+                  <label className="field-label" htmlFor={`${idPrefix}-email`}>{t('support.form.email')}</label>
                   <input
-                    id="support-email"
+                    id={`${idPrefix}-email`}
                     className="field-control"
                     type="email"
                     dir="ltr"
@@ -149,9 +149,9 @@ export default function SupportForm({ tripId, currentMember, presetSubject, pres
             )}
 
             <div className="field-group">
-              <label className="field-label" htmlFor="support-phone">{t('support.form.phone')}</label>
+              <label className="field-label" htmlFor={`${idPrefix}-phone`}>{t('support.form.phone')}</label>
               <PhoneField
-                id="support-phone"
+                id={`${idPrefix}-phone`}
                 countryCode={draft.phoneCountryCode}
                 onCountryCodeChange={(value) => setField('phoneCountryCode', value)}
                 number={draft.phoneNumber}
@@ -162,9 +162,9 @@ export default function SupportForm({ tripId, currentMember, presetSubject, pres
             </div>
 
             <div className="field-group">
-              <label className="field-label" htmlFor="support-subject">{t('support.form.subject')}</label>
+              <label className="field-label" htmlFor={`${idPrefix}-subject`}>{t('support.form.subject')}</label>
               <select
-                id="support-subject"
+                id={`${idPrefix}-subject`}
                 className="field-control"
                 required
                 value={draft.subjectType}
@@ -181,9 +181,9 @@ export default function SupportForm({ tripId, currentMember, presetSubject, pres
 
             {draft.subjectType === 'other' && (
               <div className="field-group">
-                <label className="field-label" htmlFor="support-custom-subject">{t('support.form.customSubject')}</label>
+                <label className="field-label" htmlFor={`${idPrefix}-custom-subject`}>{t('support.form.customSubject')}</label>
                 <input
-                  id="support-custom-subject"
+                  id={`${idPrefix}-custom-subject`}
                   className="field-control"
                   type="text"
                   required
@@ -197,9 +197,9 @@ export default function SupportForm({ tripId, currentMember, presetSubject, pres
             )}
 
             <div className="field-group">
-              <label className="field-label" htmlFor="support-message">{t('support.form.message')}</label>
+              <label className="field-label" htmlFor={`${idPrefix}-message`}>{t('support.form.message')}</label>
               <textarea
-                id="support-message"
+                id={`${idPrefix}-message`}
                 className="field-control support-message"
                 required
                 rows={5}
