@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import App from './App';
+import { getCurrencies } from './features/currencies/api/currenciesApi';
 
 jest.mock('./i18n', () => ({}));
 jest.mock('react-i18next', () => ({
@@ -19,6 +20,10 @@ jest.mock('./features/auth/api/authApi', () => ({ getCurrentUser: jest.fn(() => 
 jest.mock('./features/currencies/api/currenciesApi', () => ({ getCurrencies: jest.fn(() => Promise.resolve({ currencies: [] })) }));
 
 beforeEach(() => {
+  // CRA resets mock implementations between tests. Reinstall the catalog
+  // response so later navigation tests do not accidentally call an empty
+  // jest.fn after the first App render.
+  getCurrencies.mockResolvedValue({ currencies: [] });
   window.history.pushState({}, '', '/');
   window.localStorage.clear();
   document.documentElement.removeAttribute('data-theme');
