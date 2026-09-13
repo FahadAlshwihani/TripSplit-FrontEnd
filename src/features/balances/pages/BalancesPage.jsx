@@ -14,6 +14,7 @@ import NetBalanceCard from '../components/NetBalanceCard';
 import BalanceMemberRow from '../components/BalanceMemberRow';
 import '../styles/balances.css';
 import '../../settlements/styles/settlements.css';
+import { useQuickActionRevision } from '../../dashboard/quick-actions/QuickActionRefreshContext';
 
 /*
   Two separate ledgers: this page shows PERSONAL balances (personal
@@ -36,6 +37,7 @@ export default function BalancesPage() {
   const { t } = useTranslation();
   const readOnly = !permissions.canRecordSettlement;
   const canRecordAdmin = !readOnly && ['owner', 'admin'].includes(currentMember?.role);
+  const quickActionRevision = useQuickActionRevision('balances');
 
   const resource = useRouteResource(async (signal) => {
     const config = { signal };
@@ -50,7 +52,7 @@ export default function BalancesPage() {
       getSettlements(tripId, { ...config, params: { page_size: 100 } }),
     ]);
     return { balances, members: members.results, settlements: settlementPage.results };
-  }, [tripId]);
+  }, [tripId, quickActionRevision]);
 
   const [actionError, setActionError] = useState(null);
   const [reminderStates, setReminderStates] = useState({}); // member_id -> { status, message }

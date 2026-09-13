@@ -1,4 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../auth/AuthContext';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardTopBar from './DashboardTopBar';
 import MobileDashboardHeader from './MobileDashboardHeader';
@@ -19,8 +21,10 @@ import '../styles/dashboard.css';
   since it's an overlay, not layout chrome.
 */
 const DashboardShell = ({ trip, tripId, currentMember, permissions, children }) => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
-  // null | { type: 'menu'|'expense'|'member'|'funding-round', surface: 'desktop'|'mobile' }
+  // null | { type: 'menu'|'expense'|'member'|'funding-round'|'settlement'|'support', surface: 'desktop'|'mobile' }
   // A single discriminated value guarantees the menu and an action dialog
   // can never be mounted simultaneously, nor can two action dialogs coexist.
   const [quickAction, setQuickAction] = useState(null);
@@ -32,10 +36,11 @@ const DashboardShell = ({ trip, tripId, currentMember, permissions, children }) 
   const quickActionCapabilities = useMemo(() => ({
     expense: Boolean(permissions.canCreateExpense),
     member: Boolean(trip.governance_capabilities?.can_invite),
-    // FundPage's existing canonical gate for creating rounds is the
-    // workspace permission helper's mutable manager capability.
-    fundingRound: Boolean(permissions.canManageMembers),
-  }), [permissions, trip.governance_capabilities]);
+    fundingRound: Boolean(permissions.canManageFund),
+    settlement: Boolean(permissions.canRecordAdminSettlement),
+    support: true,
+    account: isAuthenticated,
+  }), [permissions, trip.governance_capabilities, isAuthenticated]);
 
   const restoreQuickActionFocus = useCallback((surface) => {
     window.setTimeout(() => quickActionRefs[surface]?.current?.focus(), 0);
@@ -46,7 +51,14 @@ const DashboardShell = ({ trip, tripId, currentMember, permissions, children }) 
     setQuickAction((current) => (current?.type === 'menu' && current.surface === surface ? null : current));
     if (restoreFocus) restoreQuickActionFocus(surface);
   }, [restoreQuickActionFocus]);
-  const selectQuickAction = useCallback((type, surface) => setQuickAction({ type, surface }), []);
+  const selectQuickAction = useCallback((type, surface) => {
+    setQuickAction(null);
+    if (type === 'account') {
+      navigate('/account');
+      return;
+    }
+    setQuickAction({ type, surface });
+  }, [navigate]);
   const closeQuickActionDialog = useCallback(() => {
     const surface = quickAction?.surface;
     setQuickAction(null);

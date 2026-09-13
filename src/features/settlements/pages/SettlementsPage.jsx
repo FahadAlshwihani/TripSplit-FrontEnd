@@ -13,6 +13,7 @@ import CurrentBalancesCard from '../components/CurrentBalancesCard';
 import SuggestedSettlementsCard from '../components/SuggestedSettlementsCard';
 import SettlementLedgerCard from '../components/SettlementLedgerCard';
 import '../styles/settlements.css';
+import { useQuickActionRevision } from '../../dashboard/quick-actions/QuickActionRefreshContext';
 
 /*
   A literal port of the supplied Stitch "Settle Up" source's page
@@ -56,6 +57,7 @@ export default function SettlementsPage() {
   // null | { type: 'timeline', id } | { type: 'action', mode, counterpart?, debt?, initialFromId?, initialToId? }
   const [overlay, setOverlay] = useState(null);
   const [searchParams] = useSearchParams();
+  const quickActionRevision = useQuickActionRevision('settlements');
   // ?settlement=<public settlement id> -- opens straight to that
   // settlement's timeline drawer once the ledger has loaded. Never
   // executes any mutation by itself (confirm/cancel/retry all still
@@ -73,11 +75,11 @@ export default function SettlementsPage() {
   // are two views of one server response, not two round trips), so
   // they share balancesResource but each still renders its own
   // section-scoped loading/error independently of the other cards.
-  const balancesResource = useRouteResource((signal) => getBalances(tripId, { signal }), [tripId]);
-  const membersResource = useRouteResource((signal) => getMembers(tripId, { signal }), [tripId]);
+  const balancesResource = useRouteResource((signal) => getBalances(tripId, { signal }), [tripId, quickActionRevision]);
+  const membersResource = useRouteResource((signal) => getMembers(tripId, { signal }), [tripId, quickActionRevision]);
   const settlementsResource = useRouteResource(
     (signal) => getSettlements(tripId, { signal, params: { page_size: 25 } }),
-    [tripId],
+    [tripId, quickActionRevision],
   );
 
   const balances = balancesResource.data;
