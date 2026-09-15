@@ -4,8 +4,16 @@ import { normalizeApiError } from './errors';
 import { emitSessionExpired } from '../auth/sessionEvents';
 
 export const apiClient = axios.create({ baseURL: API_BASE_URL, withCredentials: true, timeout: API_TIMEOUT });
+
+let responseCsrfToken = null;
+
 apiClient.interceptors.request.use((config) => {
-  const csrf = document.cookie.split('; ').find((row) => row.startsWith('csrftoken='))?.split('=')[1];
+  // The API may be hosted on a different origin, so its CSRF cookie is not
+  // readable through document.cookie. OTP verification and /auth/me/ expose
+  // a masked token in a CORS-allowlisted response header for this purpose.
+  // The cookie fallback keeps local/same-host deployments working as before.
+  const cookieCsrf = document.cookie.split('; ').find((row) => row.startsWith('csrftoken='))?.split('=')[1];
+  const csrf = responseCsrfToken || (cookieCsrf ? decodeURIComponent(cookieCsrf) : null);
   if (csrf) config.headers['X-CSRFToken'] = decodeURIComponent(csrf);
   return config;
 });
@@ -18,7 +26,11 @@ apiClient.interceptors.request.use((config) => {
 // one generic "please sign in again" for every case.
 const SESSION_EXPIRY_CODES = new Set(['session_expired', 'session_idle_timeout', 'session_revoked']);
 
-apiClient.interceptors.response.use((response) => response, (error) => {
+apiClient.interceptors.response.use((response) => {
+  const csrf = response.headers?.['x-csrftoken'];
+  if (csrf) responseCsrfToken = csrf;
+  return response;
+}, (error) => {
   const normalized = normalizeApiError(error);
   if (SESSION_EXPIRY_CODES.has(normalized.code)) emitSessionExpired(normalized.code);
   return Promise.reject(normalized);
