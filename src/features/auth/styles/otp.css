@@ -1,0 +1,191 @@
+/*
+  Canonical OTP verification surface. This stylesheet lives with OtpStep
+  so every entry path (normal authentication, invitation, or join
+  continuation) receives the exact same visual and responsive contract.
+*/
+
+.otp-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--page-margin-mobile);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.otp-page a,
+.otp-page button { font-family: inherit; }
+
+.otp-page p,
+.otp-page span,
+.otp-page li { color: inherit; }
+
+.otp-page a:focus-visible,
+.otp-page button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+  .otp-page { padding: var(--page-margin-desktop); }
+}
+
+.otp-card-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+}
+
+.otp-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 40px;
+  block-size: 40px;
+  margin-block-end: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-hard-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform var(--press-duration) ease, box-shadow var(--press-duration) ease;
+}
+
+.otp-back:hover:not(:disabled) {
+  background: var(--color-surface-alt);
+  transform: var(--press-sm-hover);
+  box-shadow: var(--shadow-hard-sm-hover);
+}
+
+.otp-back:active:not(:disabled) {
+  transform: var(--press-sm-active);
+  box-shadow: var(--shadow-hard-sm-active);
+}
+
+.otp-back:disabled { opacity: 0.5; cursor: not-allowed; }
+
+[dir="rtl"] .otp-back svg:not(.auth-spinner):not(.loading-spinner) { transform: scaleX(-1); }
+
+@media (min-width: 768px) {
+  .otp-back {
+    position: absolute;
+    inset-inline-start: calc(-1 * (40px + var(--space-3)));
+    inset-block-start: 0;
+    margin-block-end: 0;
+  }
+}
+
+.otp-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-md);
+}
+
+@media (min-width: 768px) {
+  .otp-card { padding: var(--space-8); }
+}
+
+.otp-card__header { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.otp-card__heading.text-headline-lg {
+  margin: 0;
+  color: var(--color-text);
+  text-transform: uppercase;
+}
+
+.otp-card__description.text-copy { margin: 0; color: var(--color-text-muted); }
+
+.otp-card__email {
+  display: inline;
+  padding: 1px var(--space-2);
+  border: var(--border-width) solid var(--color-border-subtle);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.otp-card__form { display: flex; flex-direction: column; gap: var(--space-8); }
+.otp-card__field { display: flex; flex-direction: column; gap: var(--space-2); }
+.otp-card__helper.text-copy-sm { margin: 0; color: var(--color-text-muted); }
+
+.otp-cells { display: flex; justify-content: space-between; gap: var(--space-1); }
+
+.otp-cells__cell {
+  flex: 0 1 40px;
+  min-inline-size: 0;
+  max-inline-size: 40px;
+  block-size: 56px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+  color: var(--color-text);
+  font: var(--text-display);
+  text-align: center;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+@media (min-width: 768px) {
+  .otp-cells__cell { flex-basis: 48px; max-inline-size: 48px; block-size: 64px; }
+}
+
+.otp-cells__cell:focus-visible {
+  outline: none;
+  border-color: var(--nc-indigo-700);
+  box-shadow: 2px 2px 0 0 var(--nc-indigo-700);
+  transform: translateY(-2px);
+}
+
+.otp-cells__cell[aria-invalid="true"] { border-color: var(--color-danger); }
+
+.otp-card .auth-error {
+  margin: 0;
+  color: var(--color-danger);
+  font: var(--text-body-sm);
+}
+
+.otp-card .auth-btn { width: 100%; }
+
+.otp-card__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.otp-card .auth-btn--primary { box-shadow: var(--shadow-hard-md); }
+
+.otp-card .auth-btn--primary:hover:not(:disabled),
+.otp-card .auth-btn--primary:focus-visible { box-shadow: var(--shadow-hard-md-hover); }
+
+.otp-card .auth-btn:hover:not(:disabled) { transform: var(--press-md-hover); }
+.otp-card .auth-btn:active:not(:disabled) { transform: var(--press-md-active); }
+.otp-card .auth-btn--primary:active:not(:disabled) { box-shadow: var(--shadow-hard-md-active); }
+
+.otp-resend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.otp-resend:hover:not(:disabled) { color: var(--nc-indigo-700); }
+.otp-resend:disabled { color: var(--color-text-faint); cursor: not-allowed; }
+.otp-resend--loading:disabled { color: var(--nc-indigo-700); cursor: progress; }
+
+@media (prefers-reduced-motion: reduce) {
+  .otp-cells__cell { transition: none; }
+  .otp-cells__cell:focus-visible { transform: none; }
+}

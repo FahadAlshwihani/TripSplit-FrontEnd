@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import OtpInput from './OtpInput';
 import LoadingButton from '../../../shared/components/LoadingButton';
+import '../styles/otp.css';
 
 const ArrowBackIcon = () => (
   <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -34,7 +35,18 @@ const formatCountdown = (totalSeconds) => {
   inside the two-column shell the Email/Profile steps use. AuthPage.jsx
   renders this in place of the whole page when step === 'otp'.
 */
-const OtpStep = ({ email, isVerifying, isResending, errorKey, resendSeconds, onSubmit, onResend, onBack }) => {
+const OtpStep = ({
+  email,
+  isVerifying,
+  isResending,
+  errorKey,
+  resendSeconds,
+  onSubmit,
+  onResend,
+  onBack,
+  titleKey = 'auth.otp.title',
+  descriptionKey = 'auth.otp.description',
+}) => {
   const { t } = useTranslation();
   const [code, setCode] = useState('');
 
@@ -58,10 +70,10 @@ const OtpStep = ({ email, isVerifying, isResending, errorKey, resendSeconds, onS
         </button>
         <div className="otp-card">
           <header className="otp-card__header">
-            <h1 className="otp-card__heading text-headline-lg">{t('auth.otp.title')}</h1>
+            <h1 className="otp-card__heading text-headline-lg">{t(titleKey)}</h1>
             <p className="otp-card__description text-copy">
               <Trans
-                i18nKey="auth.otp.description"
+                i18nKey={descriptionKey}
                 values={{ email }}
                 components={{ email: <span className="otp-card__email text-financial" dir="ltr" /> }}
               />
@@ -69,7 +81,7 @@ const OtpStep = ({ email, isVerifying, isResending, errorKey, resendSeconds, onS
           </header>
           <form className="otp-card__form" onSubmit={handleSubmit} noValidate>
             <div className="otp-card__field">
-              <OtpInput value={code} onChange={setCode} disabled={isVerifying} label={t('auth.otp.label')} />
+              <OtpInput value={code} onChange={setCode} disabled={isVerifying} invalid={Boolean(errorKey)} label={t('auth.otp.label')} />
               <p className="otp-card__helper text-copy-sm">{t('auth.otp.expires')}</p>
               {errorKey && <p className="auth-error" role="alert">{t(errorKey)}</p>}
             </div>

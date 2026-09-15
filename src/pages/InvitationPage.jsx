@@ -182,6 +182,8 @@ const InvitationPage = () => {
         onSubmit={verifyOtp}
         onResend={resendOtp}
         onBack={() => navigate('/')}
+        titleKey="invitation.otpTitle"
+        descriptionKey="invitation.otpDescription"
       />
     );
   }

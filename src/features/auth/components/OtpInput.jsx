@@ -11,7 +11,7 @@ const CELL_COUNT = 6;
   dir="ltr" is deliberate: digit entry stays left-to-right even inside an
   Arabic RTL page, so cell order and reading order never fight each other.
 */
-const OtpInput = ({ value, onChange, disabled, label }) => {
+const OtpInput = ({ value, onChange, disabled, invalid = false, label }) => {
   const refs = useRef([]);
 
   const handleChange = (index, event) => {
@@ -55,6 +55,8 @@ const OtpInput = ({ value, onChange, disabled, label }) => {
           onPaste={handlePaste}
           disabled={disabled}
           autoFocus={index === 0}
+          autoComplete={index === 0 ? 'one-time-code' : 'off'}
+          aria-invalid={invalid || undefined}
           aria-label={`${label} ${index + 1}`}
         />
       ))}
