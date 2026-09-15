@@ -25,8 +25,8 @@ test('PublicLayout.css resets bare <p>/<span>/<li> color, but never <a> (would o
   expect(css).not.toMatch(/\.public-layout a,\s*\n\s*\.public-layout (p|span|li)/);
 });
 
-test("auth.css's standalone OTP-page guard resets p/span/li, but never <a>", () => {
-  const css = readCss('../features/auth/styles/auth.css');
+test("otp.css's standalone OTP-page guard resets p/span/li, but never <a>", () => {
+  const css = readCss('../features/auth/styles/otp.css');
   expect(css).toMatch(/\.otp-page p,\s*\n\s*\.otp-page span,\s*\n\s*\.otp-page li \{ color: inherit; \}/);
   expect(css).not.toMatch(/\.otp-page a,\s*\n\s*\.otp-page (p|span|li)/);
 });
