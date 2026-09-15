@@ -60,7 +60,8 @@ test('anonymous email-bound invitation requests and auto-starts the invitation-s
   requestInvitationOtp.mockResolvedValue({ otp_id: 42 });
   await renderPage();
   await waitFor(() => expect(requestInvitationOtp).toHaveBeenCalledWith('secrettoken1234567890'));
-  expect(await screen.findByText('auth.otp.title')).toBeInTheDocument();
+  expect(await screen.findByText('invitation.otpTitle')).toBeInTheDocument();
+  expect(document.querySelector('.otp-card')).toBeInTheDocument();
 });
 
 test('verifying the OTP signs the user in, then requires an explicit JOIN TRIP click to accept', async () => {
@@ -71,7 +72,7 @@ test('verifying the OTP signs the user in, then requires an explicit JOIN TRIP c
   verifyInvitationOtp.mockResolvedValue({ user: { email: 'invitee@example.com', onboarding_complete: true }, is_new_user: false, onboarding_required: false });
   acceptInvitation.mockResolvedValue({ trip: { id: 'trip-1' } });
   await renderPage();
-  await screen.findByText('auth.otp.title');
+  await screen.findByText('invitation.otpTitle');
 
   const cells = screen.getAllByLabelText(/auth\.otp\.label \d/);
   fireEvent.paste(cells[0], { clipboardData: { getData: () => '123456' } });

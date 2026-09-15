@@ -17,17 +17,53 @@ test('renders durable pending state and cancels the request', async () => {
   cancelJoinRequest.mockResolvedValue({});
   render(<MemoryRouter initialEntries={['/join-request/r1']}><Routes><Route path="/join-request/:requestId" element={<JoinRequestPage />} /><Route path="/" element={<p>home</p>} /></Routes></MemoryRouter>);
   expect(await screen.findByText('Georgia')).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'joinRequest.pendingTitle' })).toBeInTheDocument();
+  expect(document.querySelector('.join-request-card')).toBeInTheDocument();
+  expect(document.querySelector('.legacy-shell')).not.toBeInTheDocument();
   expect(screen.getByText('joinRequest.waiting')).toBeInTheDocument();
   fireEvent.click(screen.getByText('joinRequest.cancel'));
   await waitFor(() => expect(cancelJoinRequest).toHaveBeenCalledWith('r1', null));
   expect(await screen.findByText('home')).toBeInTheDocument();
 });
 
+test('renders the static TripSplit shell while the first status request is still pending', async () => {
+  getJoinRequestStatus.mockImplementation(() => new Promise(() => {}));
+  const view = render(<MemoryRouter initialEntries={['/join-request/r1']}><Routes><Route path="/join-request/:requestId" element={<JoinRequestPage />} /></Routes></MemoryRouter>);
+  expect(screen.getByRole('heading', { name: 'joinRequest.pendingTitle' })).toBeInTheDocument();
+  expect(screen.getByText('joinRequest.checking')).toBeInTheDocument();
+  expect(document.querySelector('.neo-loading')).not.toBeInTheDocument();
+  view.unmount();
+});
+
 test('renders the rejected state', async () => {
   getJoinRequestStatus.mockResolvedValue({ request_id: 'r1', status: 'rejected', trip: { public_id: 't1', title: 'Georgia' }, requested_at: '2026-08-19T12:00:00Z' });
   render(<MemoryRouter initialEntries={['/join-request/r1']}><Routes><Route path="/join-request/:requestId" element={<JoinRequestPage />} /></Routes></MemoryRouter>);
   expect(await screen.findByText('joinRequest.rejected')).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'joinRequest.rejectedTitle' })).toBeInTheDocument();
   expect(screen.queryByText('joinRequest.cancel')).not.toBeInTheDocument();
+});
+
+test('keeps the last pending request visible while a background refresh is in flight', async () => {
+  let finishRefresh;
+  getJoinRequestStatus
+    .mockResolvedValueOnce({ request_id: 'r1', status: 'pending', trip: { public_id: 't1', title: 'Georgia' }, requested_at: '2026-08-19T12:00:00Z' })
+    .mockImplementationOnce(() => new Promise((resolve) => { finishRefresh = resolve; }));
+  render(<MemoryRouter initialEntries={['/join-request/r1']}><Routes><Route path="/join-request/:requestId" element={<JoinRequestPage />} /></Routes></MemoryRouter>);
+  expect(await screen.findByText('Georgia')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /joinRequest.refresh/ }));
+  expect(screen.getByText('Georgia')).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'joinRequest.pendingTitle' })).toBeInTheDocument();
+  await act(async () => {
+    finishRefresh({ request_id: 'r1', status: 'pending', trip: { public_id: 't1', title: 'Georgia' }, requested_at: '2026-08-19T12:00:00Z' });
+  });
+});
+
+test('renders a retryable access state instead of a blank page', async () => {
+  getJoinRequestStatus.mockRejectedValue({ status: 403 });
+  render(<MemoryRouter initialEntries={['/join-request/r1']}><Routes><Route path="/join-request/:requestId" element={<JoinRequestPage />} /></Routes></MemoryRouter>);
+  expect(await screen.findByRole('heading', { name: 'joinRequest.accessTitle' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /joinRequest.refresh/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /joinRequest.back/ })).toBeInTheDocument();
 });
 
 test('renders the banned state on a still-pending request instead of a plain "waiting" message', async () => {
