@@ -35,7 +35,25 @@ npm run build
 
 ## Security notes
 
-Axios sends cookies with `withCredentials: true` and attaches Django's CSRF token to modifying requests. Only guest trip credentials are stored in localStorage, under a trip-specific key. No passwords, OTPs, session cookies, or registered-user tokens are stored by JavaScript.
+Axios sends cookies with `withCredentials: true`. The API exposes a masked CSRF token after OTP verification and from `/auth/me/`; the canonical client keeps it in memory and attaches it to modifying requests, with the readable CSRF cookie retained as a local/same-host fallback. Only guest trip credentials are stored in localStorage, under a trip-specific key. No passwords, OTPs, session cookies, CSRF tokens, or registered-user auth tokens are stored persistently by JavaScript.
+
+## Production deployment
+
+The router uses `BrowserRouter`. `public/.htaccess` is copied into the CRA build
+so Apache/Hostinger serves real files and directories normally and sends other
+deep-link requests to `index.html`. API calls are made directly to the backend;
+there is no `/api/` Apache proxy rule.
+
+After Render has attached `api.fyaa.io` and issued its TLS certificate, build
+the production frontend with:
+
+```text
+REACT_APP_API_BASE_URL=https://api.fyaa.io/api/v1
+```
+
+Until that custom domain is live, the existing Render URL may remain in the
+hosting environment. Do not switch the build early: doing so would point the
+SPA at a hostname that cannot yet serve the API.
 
 ## Structure
 
