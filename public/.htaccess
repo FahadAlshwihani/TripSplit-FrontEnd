@@ -1,0 +1,11 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Serve real CRA build assets and directories normally.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # BrowserRouter deep links are client routes; let React resolve them.
+  RewriteRule ^ index.html [L]
+</IfModule>
