@@ -1,11 +1,15 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  # Build-generated Arabic-first head shells for approved public pages.
+  RewriteRule ^$ __seo/home.html [L]
+  RewriteRule ^features/?$ __seo/features.html [L]
+  RewriteRule ^pricing/?$ __seo/pricing.html [L]
 
   # Serve real CRA build assets and directories normally.
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # BrowserRouter deep links are client routes; let React resolve them.
+  # Private, tokenized, and unknown routes use the restrictive base document.
   RewriteRule ^ index.html [L]
 </IfModule>
