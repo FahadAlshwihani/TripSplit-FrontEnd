@@ -124,7 +124,9 @@ export default function FundPage() {
     try {
       const result = await action();
       setActionError(null);
-      await resource.retry();
+      // The write has already succeeded. Keep the existing Fund snapshot on
+      // screen and revalidate it without making dialogs wait for six GETs.
+      void resource.retry();
       return result;
     } catch (error) {
       setActionError(error);

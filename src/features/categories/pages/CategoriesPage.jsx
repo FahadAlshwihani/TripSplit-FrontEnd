@@ -19,10 +19,12 @@ export default function CategoriesPage() {
     return { categories: categories.results, budgets: budgets.results, summary: budgets.summary };
   }, [tripId]);
 
-  const run = async (action) => {
+  const run = async (action, update) => {
     try {
-      await action();
-      await state.retry();
+      const result = await action();
+      if (update) state.setData((current) => (current ? update(current, result) : current));
+      void state.retry();
+      return result;
     } catch (e) {
       setActionError(e);
     }
@@ -42,9 +44,18 @@ export default function CategoriesPage() {
           budgetSummary={data.summary}
           currency={trip.currency}
           canManage={permissions.canManageMembers}
-          onCreate={(p) => run(() => createCategory(tripId, p))}
-          onUpdate={(c, p) => run(() => updateCategory(tripId, c.id, p))}
-          onArchive={(c) => run(() => archiveCategory(tripId, c.id))}
+          onCreate={(p) => run(
+            () => createCategory(tripId, p),
+            (current, category) => ({ ...current, categories: [...current.categories, category] }),
+          )}
+          onUpdate={(c, p) => run(
+            () => updateCategory(tripId, c.id, p),
+            (current, category) => ({ ...current, categories: current.categories.map((row) => (row.id === category.id ? category : row)) }),
+          )}
+          onArchive={(c) => run(
+            () => archiveCategory(tripId, c.id),
+            (current) => ({ ...current, categories: current.categories.filter((row) => row.id !== c.id) }),
+          )}
           onBudget={(c, budget) => run(() => setCategoryBudget(tripId, { category: c.code, budget, currency: trip.currency }))}
           onResetBudget={(c) => run(() => resetCategoryBudget(tripId, c.id))}
         />

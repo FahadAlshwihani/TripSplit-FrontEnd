@@ -97,3 +97,16 @@ test('retry clears the previous error and starts a fresh read', async () => {
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   expect(loader).toHaveBeenCalledTimes(2);
 });
+
+test('retry preserves last-good data even when key changes opt into clearing', async () => {
+  const refresh = deferred();
+  const loader = jest.fn()
+    .mockResolvedValueOnce({ value: 'canonical result' })
+    .mockImplementationOnce(() => refresh.promise);
+  render(<Harness loader={loader} resourceKey="trip-a" resetOnKeyChange />);
+  expect(await screen.findByText('canonical result')).toBeInTheDocument();
+  await act(async () => screen.getByRole('button', { name: 'retry' }).click());
+  await waitFor(() => expect(loader).toHaveBeenCalledTimes(2));
+  expect(screen.getByText('canonical result')).toBeInTheDocument();
+  expect(screen.getByText('loading')).toBeInTheDocument();
+});

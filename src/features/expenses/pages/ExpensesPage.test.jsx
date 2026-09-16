@@ -185,8 +185,9 @@ test('New Expense is hidden entirely for a member without canCreateExpense (e.g.
   expect(screen.queryByRole('button', { name: 'expenses.ledger.newExpense' })).not.toBeInTheDocument();
 });
 
-test('submitting the New Expense composer calls addExpense (with a fresh idempotency key) and refreshes the list and summary', async () => {
-  addExpense.mockResolvedValue({});
+test('submitting uses the canonical response immediately while list and summary revalidate in the background', async () => {
+  const created = { ...coffeeExpense, id: 'e4', title: 'Snacks', amount: '25.00' };
+  addExpense.mockResolvedValue(created);
   renderPage();
   await screen.findByText('Hotel Rooms — Tbilisi');
   fireEvent.click(screen.getByRole('button', { name: 'expenses.ledger.newExpense' }));
@@ -195,8 +196,14 @@ test('submitting the New Expense composer calls addExpense (with a fresh idempot
   fireEvent.change(screen.getByLabelText('expense.description'), { target: { value: 'Snacks' } });
   getExpenses.mockClear();
   getExpensesSummary.mockClear();
-  fireEvent.click(screen.getByRole('button', { name: 'expense.add' }));
+  getExpenses.mockImplementationOnce(() => new Promise(() => {}));
+  getExpensesSummary.mockImplementationOnce(() => new Promise(() => {}));
+  const submit = screen.getByRole('button', { name: 'expense.add' });
+  expect(submit).toBeEnabled();
+  fireEvent.click(submit);
   await waitFor(() => expect(addExpense).toHaveBeenCalledWith('t1', expect.objectContaining({ title: 'Snacks', amount: '25', idempotency_key: expect.any(String) })));
+  expect(await screen.findByText('Snacks')).toBeInTheDocument();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   await waitFor(() => expect(getExpenses).toHaveBeenCalled());
   await waitFor(() => expect(getExpensesSummary).toHaveBeenCalled());
 });
@@ -210,8 +217,9 @@ test('the Categories button opens the category manager with the trip\'s real cat
   expect(dialog).toHaveTextContent('categories.transport');
 });
 
-test('creating a category in the manager calls createCategory and refreshes the category list', async () => {
-  createCategory.mockResolvedValue({});
+test('creating a category shows the canonical response before background helper refresh resolves', async () => {
+  const created = { id: 'c3', code: 'ski-gear', name: 'Ski Gear', icon_key: 'tag', color: '' };
+  createCategory.mockResolvedValue(created);
   getCategoryBudgets.mockResolvedValue({ results: [] });
   renderPage();
   await screen.findByText('Hotel Rooms — Tbilisi');
@@ -220,9 +228,18 @@ test('creating a category in the manager calls createCategory and refreshes the 
   fireEvent.click(within(dialog).getByRole('button', { name: 'categoriesManager.addNew' }));
   fireEvent.change(within(dialog).getByLabelText('categoriesManager.namePlaceholder'), { target: { value: 'Ski Gear' } });
   getCategories.mockClear();
+  getCategories.mockImplementationOnce(() => new Promise(() => {}));
   fireEvent.click(within(dialog).getByRole('button', { name: 'categoriesManager.create' }));
   await waitFor(() => expect(createCategory).toHaveBeenCalledWith('t1', expect.objectContaining({ name: 'Ski Gear' })));
+  expect(await within(dialog).findByText('Ski Gear')).toBeInTheDocument();
   await waitFor(() => expect(getCategories).toHaveBeenCalled());
+});
+
+test('an unavailable optional Fund helper does not show the partial-data error on an otherwise usable trip', async () => {
+  getFund.mockRejectedValue(new Error('no Fund yet'));
+  renderPage();
+  expect(await screen.findByText('Coffee')).toBeInTheDocument();
+  expect(screen.queryByText('common.partialDataError')).not.toBeInTheDocument();
 });
 
 test('clicking a row opens the details dialog with the full record', async () => {

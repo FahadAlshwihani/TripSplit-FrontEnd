@@ -47,7 +47,9 @@ export default function ExpensesPage() {
       budgets: fulfilledValue(results[1], { results: [] }).results,
       members: fulfilledValue(results[2], { results: [] }).results,
       fund: fulfilledValue(results[3], null),
-      helperError: results.some((result) => result.status === 'rejected'),
+      // Fund is optional on a brand-new trip. A failed/absent Fund helper
+      // must not make an otherwise usable Expenses page look broken.
+      helperError: results.slice(0, 3).some((result) => result.status === 'rejected'),
     };
   }, [tripId, quickActionRevision]);
 
@@ -76,12 +78,26 @@ export default function ExpensesPage() {
   // usable on a server rejection, not silently close.
   const save = async (payload) => {
     try {
-      if (dialog?.expense && !dialog.expense.duplicate) await updateExpense(tripId, dialog.expense.id, payload);
-      else await addExpense(tripId, { ...payload, idempotency_key: crypto.randomUUID() });
+      const editing = dialog?.expense && !dialog.expense.duplicate;
+      const savedExpense = editing
+        ? await updateExpense(tripId, dialog.expense.id, payload)
+        : await addExpense(tripId, { ...payload, idempotency_key: crypto.randomUUID() });
       setActionError(null);
-      await Promise.all([listResource.retry(), summaryResource.retry()]);
+      // The mutation already returns the canonical expense. Show that server
+      // truth immediately; aggregates/filter membership revalidate without
+      // holding the dialog open behind another network waterfall.
+      if (!hasActiveFilters) {
+        listResource.setData((current) => current ? {
+          ...current,
+          results: editing
+            ? current.results.map((row) => (row.id === savedExpense.id ? savedExpense : row))
+            : [savedExpense, ...current.results],
+        } : current);
+      }
       setDialog(null);
       setDetailsExpense(null);
+      void listResource.retry();
+      void summaryResource.retry();
     } catch (error) {
       setActionError(error);
       throw error;
@@ -99,18 +115,31 @@ export default function ExpensesPage() {
   // based, unaffected by category budgeting) or the expense list itself
   // (a renamed/recolored category resolves live via categoriesByCode on
   // the next render, no expense row data actually changed).
-  const runCategoryAction = async (action) => {
+  const runCategoryAction = async (action, update) => {
     try {
-      await action();
+      const result = await action();
       setActionError(null);
-      await helpersResource.retry();
+      if (update) helpersResource.setData((current) => (current ? update(current, result) : current));
+      // Category CRUD responses are canonical. Keep them visible immediately
+      // and refresh annotated budget/spend helpers in the background.
+      void helpersResource.retry();
+      return result;
     } catch (error) {
       setActionError(error);
     }
   };
-  const createCategoryAction = (payload) => runCategoryAction(() => createCategory(tripId, payload));
-  const updateCategoryAction = (categoryId, payload) => runCategoryAction(() => updateCategory(tripId, categoryId, payload));
-  const archiveCategoryAction = (categoryId) => runCategoryAction(() => archiveCategory(tripId, categoryId));
+  const createCategoryAction = (payload) => runCategoryAction(
+    () => createCategory(tripId, payload),
+    (current, category) => ({ ...current, categories: [...current.categories, category] }),
+  );
+  const updateCategoryAction = (categoryId, payload) => runCategoryAction(
+    () => updateCategory(tripId, categoryId, payload),
+    (current, category) => ({ ...current, categories: current.categories.map((row) => (row.id === category.id ? category : row)) }),
+  );
+  const archiveCategoryAction = (categoryId) => runCategoryAction(
+    () => archiveCategory(tripId, categoryId),
+    (current) => ({ ...current, categories: current.categories.filter((row) => row.id !== categoryId) }),
+  );
   const setCategoryBudgetAction = (payload) => runCategoryAction(() => setCategoryBudget(tripId, payload));
   const resetCategoryBudgetAction = (categoryId) => runCategoryAction(() => resetCategoryBudget(tripId, categoryId));
 

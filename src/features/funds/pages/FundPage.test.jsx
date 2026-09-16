@@ -87,6 +87,9 @@ const renderPage = (tripOverride = trip, entry = '/trips/t1/fund') => render(
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // A deliberately pending background-revalidation implementation in one
+  // test must never leak into the next test's initial route load.
+  getFund.mockReset();
   localStorage.clear();
   getMembers.mockResolvedValue({ results: members });
   getCategories.mockResolvedValue({ results: [] });
@@ -185,15 +188,18 @@ test('creating an equal-split round submits the expected payload', async () => {
   fireEvent.change(await screen.findByLabelText('fund.roundTitle'), { target: { value: 'Activities' } });
   fireEvent.change(screen.getByLabelText('fund.target'), { target: { value: '200' } });
   const participantCheckboxes = screen.getAllByRole('checkbox');
+  let resolveRefresh;
+  getFund.mockImplementationOnce(() => new Promise((resolve) => { resolveRefresh = resolve; }));
   fireEvent.click(screen.getByText('fund.createRound'));
   await waitFor(() => expect(createFundingRound).toHaveBeenCalledWith('t1', expect.objectContaining({ title: 'Activities', target_amount: '200', contribution_method: 'equal' })));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(participantCheckboxes.length).toBeGreaterThan(0);
+  await act(async () => resolveRefresh(baseFund));
 });
 
 test('a percentage split that does not sum to 100 is blocked before submit', async () => {
   renderPage();
-  await screen.findByText('fund.title');
-  fireEvent.click(screen.getByText('fund.newRound'));
+  fireEvent.click((await screen.findAllByText('fund.newRound'))[0]);
   fireEvent.change(await screen.findByLabelText('fund.roundTitle'), { target: { value: 'Split' } });
   fireEvent.change(screen.getByLabelText('fund.target'), { target: { value: '1000' } });
   fireEvent.click(screen.getByRole('radio', { name: 'fund.methodOptions.percentage' }));

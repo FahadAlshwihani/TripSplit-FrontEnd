@@ -22,13 +22,13 @@ export default function useRouteResource(loader, key, resetOnKeyChange = false) 
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (resetData = false) => {
     void stableKey;
     controllerRef.current?.abort();
     const controller = new AbortController();
     const generation = ++generationRef.current;
     controllerRef.current = controller;
-    if (resetOnKeyChange) setData(null);
+    if (resetData) setData(null);
     setLoading(true);
     setError(null);
     try {
@@ -42,16 +42,21 @@ export default function useRouteResource(loader, key, resetOnKeyChange = false) 
         controllerRef.current = null;
       }
     }
-  }, [stableKey, resetOnKeyChange]);
+  }, [stableKey]);
 
   useEffect(() => {
-    load();
+    load(resetOnKeyChange);
     return () => {
       generationRef.current += 1;
       controllerRef.current?.abort();
       controllerRef.current = null;
     };
-  }, [load]);
+  }, [load, resetOnKeyChange]);
+
+  // An explicit retry/background revalidation keeps the last successful
+  // value visible. Clearing is reserved for an actual resource-key change
+  // when the caller opts into resetOnKeyChange.
+  const retry = useCallback(() => load(false), [load]);
 
   const loadMore = useCallback(async (pageLoader, merge) => {
     controllerRef.current?.abort();
@@ -82,7 +87,7 @@ export default function useRouteResource(loader, key, resetOnKeyChange = false) 
     loadingMore,
     error,
     isEmpty: !loading && !error && emptyValue(data),
-    retry: load,
+    retry,
     loadMore,
   };
 }
