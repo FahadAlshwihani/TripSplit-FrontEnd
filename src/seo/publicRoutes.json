@@ -1,0 +1,5 @@
+[
+  { "path": "/", "key": "home" },
+  { "path": "/features", "key": "features" },
+  { "path": "/pricing", "key": "pricing" }
+]
