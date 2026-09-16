@@ -130,6 +130,14 @@ test('renders the static product preview content', () => {
   expect(screen.getByText('home.preview.mobileTripName')).toBeInTheDocument();
 });
 
+test('renders concise semantic product guidance and descriptive internal links', () => {
+  renderHome();
+  expect(screen.getByRole('heading', { level: 2, name: 'home.guide.title' })).toBeInTheDocument();
+  expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(3);
+  expect(screen.getByRole('link', { name: 'home.guide.featuresLink' })).toHaveAttribute('href', '/features');
+  expect(screen.getByRole('link', { name: 'home.guide.pricingLink' })).toHaveAttribute('href', '/pricing');
+});
+
 test('renders the reference-matching preview eyebrow icon and expenses filter icon', () => {
   renderHome();
   expect(document.querySelector('.preview__eyebrow-icon')).toBeInTheDocument();

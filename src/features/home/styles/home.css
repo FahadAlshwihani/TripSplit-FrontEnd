@@ -292,6 +292,31 @@
 
 .preview-mobile { display: none; }
 
+/* A compact editorial ledger explains the product in crawlable HTML without
+   turning the approved landing page into a wall of marketing copy. */
+.home-guide {
+  max-width: 1080px;
+  margin-inline: auto;
+  padding: 0 var(--page-margin-desktop) var(--space-20);
+}
+.home-guide__header { max-width: 720px; margin-inline: auto; text-align: center; }
+.home-guide__eyebrow { color: var(--color-primary); margin-block-end: var(--space-2); }
+.home-guide__intro { color: var(--color-text-muted); margin-block-start: var(--space-3); }
+.home-guide__ledger { margin-block-start: var(--space-8); border-block: var(--border-width) solid var(--color-border); }
+.home-guide__row { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: var(--space-5); padding-block: var(--space-5); border-block-start: var(--border-width) solid var(--color-border-faint); }
+.home-guide__row:first-child { border-block-start: 0; }
+.home-guide__number { color: var(--color-primary); }
+.home-guide__row p { color: var(--color-text-muted); margin-block-start: var(--space-2); }
+.home-guide__links { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--space-3); margin-block-start: var(--space-6); }
+
+@media (max-width: 767px) {
+  .home-guide { padding-inline: var(--page-margin-mobile); padding-block-end: var(--space-14); }
+  .home-guide__header { text-align: start; }
+  .home-guide__row { grid-template-columns: 40px minmax(0, 1fr); gap: var(--space-3); }
+  .home-guide__links { justify-content: stretch; }
+  .home-guide__links .btn { flex: 1 1 100%; }
+}
+
 @media (max-width: 767px) {
   .preview__grid--desktop { display: none; }
   .preview {

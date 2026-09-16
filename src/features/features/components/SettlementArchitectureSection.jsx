@@ -43,7 +43,6 @@ const SettlementArchitectureSection = () => {
           tagKey="features.section2.cards.bank.tag"
           titleKey="features.section2.cards.bank.title"
           descriptionKey="features.section2.cards.bank.description"
-          soon
         />
       </div>
     </section>

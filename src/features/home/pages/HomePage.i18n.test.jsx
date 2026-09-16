@@ -31,7 +31,7 @@ test('clicking AR renders real Arabic Home copy and switches direction to RTL', 
   renderHome();
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Travel money, without the group-chat math.');
   clickByVisibleText('AR');
-  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('فلوس السفر، من غير حسابات الجروب المعقّدة.');
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('مصاريف السفر، بدون حسبة القروب المعقّدة.');
   expect(document.documentElement.dir).toBe('rtl');
   expect(document.documentElement.lang).toBe('ar');
 });
@@ -61,7 +61,7 @@ test('the selected language persists to localStorage and is restored on the next
   expect(window.localStorage.getItem('tripsplit:language')).toBe('ar');
   unmount();
   renderHome();
-  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('فلوس السفر، من غير حسابات الجروب المعقّدة.');
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('مصاريف السفر، بدون حسبة القروب المعقّدة.');
   expect(document.documentElement.dir).toBe('rtl');
 });
 

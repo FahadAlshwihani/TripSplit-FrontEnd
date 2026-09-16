@@ -25,10 +25,10 @@ test('renders the split-engine mini feature list', () => {
   expect(screen.getByText('features.section1.items.multiCurrency.title')).toBeInTheDocument();
 });
 
-test('renders the Direct Bank Links card with its coming-soon indicator', () => {
+test('shows the live Trip Fund capability without a coming-soon badge', () => {
   renderFeatures();
   expect(screen.getByRole('heading', { level: 3, name: 'features.section2.cards.bank.title' })).toBeInTheDocument();
-  expect(screen.getByText('features.section2.cards.bank.soon')).toBeInTheDocument();
+  expect(screen.queryByText('features.section2.cards.bank.soon')).not.toBeInTheDocument();
 });
 
 test('does not mark the live Debt Minimization card as coming soon', () => {

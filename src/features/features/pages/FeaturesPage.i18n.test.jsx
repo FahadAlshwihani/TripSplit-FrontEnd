@@ -19,8 +19,8 @@ test('renders real English features copy', () => {
   renderFeatures();
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('The Editorial Ledger');
   expect(screen.getByText('The Split Engine')).toBeInTheDocument();
-  expect(screen.getByText('Direct Bank Links')).toBeInTheDocument();
-  expect(screen.getByText('Coming soon')).toBeInTheDocument();
+  expect(screen.getByText('Pooled trip money')).toBeInTheDocument();
+  expect(screen.queryByText('Coming soon')).not.toBeInTheDocument();
 });
 
 test('renders real Arabic features copy and switches direction to RTL', async () => {
