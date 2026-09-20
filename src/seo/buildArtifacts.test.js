@@ -39,6 +39,10 @@ test('indexable mode emits canonical public shells and sitemap discovery', () =>
   expect(pricing).toContain('index,follow');
   expect(pricing).toContain('<link rel="canonical" href="https://tripsplit.example/pricing"');
   expect(pricing).toContain('og:site_name');
+  expect(pricing).toContain('<meta property="og:image" content="https://tripsplit.example/OG.png"');
+  expect(pricing).toContain('<meta property="og:image:width" content="1200"');
+  expect(pricing).toContain('<meta property="og:image:height" content="630"');
+  expect(pricing).toContain('<meta name="twitter:image" content="https://tripsplit.example/OG.png"');
   const home = fs.readFileSync(path.join(temp, '__seo/home.html'), 'utf8');
   expect(home).toContain('WebSite');
   expect(home).toContain('WebApplication');

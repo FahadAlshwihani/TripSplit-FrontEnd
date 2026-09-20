@@ -64,10 +64,14 @@ export default function SeoHead() {
     setMeta('property', 'og:locale', state.locale === 'ar' ? 'ar_SA' : 'en_US');
     setMeta('property', 'og:url', state.canonical);
     setMeta('property', 'og:image', state.image);
-    setMeta('name', 'twitter:card', 'summary');
+    setMeta('property', 'og:image:width', state.image ? '1200' : null);
+    setMeta('property', 'og:image:height', state.image ? '630' : null);
+    setMeta('property', 'og:image:alt', state.image ? 'TripSplit - قطتنا group travel expense ledger' : null);
+    setMeta('name', 'twitter:card', 'summary_large_image');
     setMeta('name', 'twitter:title', state.title);
     setMeta('name', 'twitter:description', state.description);
     setMeta('name', 'twitter:image', state.image);
+    setMeta('name', 'twitter:image:alt', state.image ? 'TripSplit - قطتنا group travel expense ledger' : null);
     setCanonical(state.canonical);
     setStructuredData(state.structuredData);
   }, [i18n.language, i18n.resolvedLanguage, location.pathname]);

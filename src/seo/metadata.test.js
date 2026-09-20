@@ -13,10 +13,12 @@ test('defines the exact official bilingual site name', () => {
 test('resolves distinct Arabic and English public metadata', () => {
   const ar = resolveSeoState('/', 'ar');
   const en = resolveSeoState('/', 'en');
-  expect(ar.title).toContain('تقسيم مصاريف السفر');
+  expect(ar.title).toBe('TripSplit - قطتنا | قسم مصاريف السفر بسهولة مع قروبك');
+  expect(ar.description).toContain('إدارة صندوق الرحلة وتسوية الحسابات');
   expect(en.title).toContain('Split group travel expenses');
   expect(ar.description).not.toBe(en.description);
   expect(ar.robots).toBe('index,follow');
+  expect(ar.image).toBe('https://trip.fyaa.io/OG.png');
 });
 
 test('builds canonical URLs only for approved public routes', () => {

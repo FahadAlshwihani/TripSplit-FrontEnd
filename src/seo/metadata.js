@@ -2,10 +2,11 @@ import publicRoutes from './publicRoutes.json';
 
 export const SITE_NAME = 'TripSplit - قطتنا';
 export const DEFAULT_LOCALE = 'ar';
+export const SOCIAL_IMAGE_PATH = '/OG.png';
 
 const COPY = {
   ar: {
-    home: { title: 'TripSplit - قطتنا | تقسيم مصاريف السفر مع القروب', description: 'نظّم وقسّم مصاريف السفر بين الأصدقاء، تابع من دفع ومن عليه، وأدر صندوق الرحلة وتسوية الحسابات في مكان واحد.' },
+    home: { title: 'TripSplit - قطتنا | قسم مصاريف السفر بسهولة مع قروبك', description: 'TripSplit - قطتنا يساعدك على تنظيم وتقسيم مصاريف السفر بين الأصدقاء والقروبات، متابعة من دفع ومين عليه، إدارة صندوق الرحلة وتسوية الحسابات في مكان واحد.' },
     features: { title: 'مميزات TripSplit - قطتنا | إدارة مصاريف وصندوق الرحلة', description: 'اكتشف تقسيم المصاريف المرن، دعم العملات، صندوق الرحلة، الأرصدة والتسويات لإدارة تكاليف السفر مع القروب بوضوح.' },
     pricing: { title: 'TripSplit - قطتنا مجاني | إدارة مصاريف السفر بدون اشتراك', description: 'أنشئ رحلتك ونظّم المصاريف المشتركة وصندوق الرحلة والأرصدة والتسويات مجانًا، بدون اشتراك أو بطاقة ائتمان.' },
     private: { title: 'TripSplit - قطتنا', description: 'مساحة TripSplit الخاصة لإدارة الرحلة والمصاريف والحسابات.' },
@@ -72,7 +73,7 @@ export function resolveSeoState(pathname, language, options = {}) {
   const indexable = Boolean(key && canonical && isIndexingAllowed() && !notFound);
   return {
     key: key || (notFound ? 'notFound' : 'private'), locale, title: content.title, description: content.description, canonical,
-    image: canonical ? `${siteUrl}/android-chrome-512x512.png` : null,
+    image: canonical ? `${siteUrl}${SOCIAL_IMAGE_PATH}` : null,
     robots: indexable ? 'index,follow' : 'noindex,nofollow', type: 'website',
     structuredData: key && !notFound ? structuredDataFor({ key, title: content.title, description: content.description, canonical, siteUrl }) : null,
   };

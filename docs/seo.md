@@ -22,9 +22,11 @@ Create Trip and Join Trip are intentionally not sitemap pages today: anonymous u
 
 `src/seo/SeoHead.jsx` owns route-aware runtime metadata. `src/seo/metadata.js` owns bilingual titles, descriptions, canonical rules, robot rules, Open Graph/Twitter values, and JSON-LD. The official site name is always `TripSplit - قطتنا`.
 
-The homepage emits `WebSite`, `WebApplication`, and `WebPage` data. Features and pricing emit `WebPage`. No Organization, ratings, reviews, pricing claims, awards, user counts, or hidden FAQ data are invented. The existing square brand image is used with a conservative `summary` Twitter card. A purpose-made 1200×630 social image is a future visual asset, not an SEO blocker.
+The homepage emits `WebSite`, `WebApplication`, and `WebPage` data. Features and pricing emit `WebPage`. No Organization, ratings, reviews, pricing claims, awards, user counts, or hidden FAQ data are invented. The purpose-made 1200×630 `public/OG.png` artwork is used for Open Graph and `summary_large_image` Twitter cards. Square Android icons remain install/app icons and are not reused as social preview art.
 
 Arabic and English currently share the same URLs and change client-side. Because there are no stable language URLs, the app deliberately does not publish fabricated hreflang links. Static crawler metadata is Arabic-first; runtime metadata follows the selected language.
+
+`public/index.html` is a restrictive Arabic-first fallback for private, tokenized, and unknown routes. It owns browser/PWA identity (favicons, Apple touch icon, manifest, theme color, and application name) but intentionally does not hardcode a canonical origin or absolute social image. The runtime SEO layer and build-generated public shells resolve `public/OG.png` to `${REACT_APP_PUBLIC_SITE_URL}/OG.png`, so a future domain change remains environment-only.
 
 ## Canonical domain and build artifacts
 

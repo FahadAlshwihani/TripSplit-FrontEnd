@@ -24,9 +24,13 @@ function renderHead(path) {
 
 test('writes Arabic public title, Open Graph, canonical and structured data', async () => {
   renderHead('/');
-  await waitFor(() => expect(document.title).toContain('تقسيم مصاريف السفر'));
+  await waitFor(() => expect(document.title).toContain('قسم مصاريف السفر'));
   expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'index,follow');
   expect(document.head.querySelector('meta[property="og:site_name"]')).toHaveAttribute('content', 'TripSplit - قطتنا');
+  expect(document.head.querySelector('meta[property="og:image"]')).toHaveAttribute('content', 'https://trip.fyaa.io/OG.png');
+  expect(document.head.querySelector('meta[property="og:image:width"]')).toHaveAttribute('content', '1200');
+  expect(document.head.querySelector('meta[property="og:image:height"]')).toHaveAttribute('content', '630');
+  expect(document.head.querySelector('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
   expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute('href', 'https://trip.fyaa.io/');
   expect(document.head.querySelector('script[type="application/ld+json"]')).toBeInTheDocument();
 });
@@ -42,5 +46,6 @@ test('removes public canonical and marks private routes noindex', async () => {
   renderHead('/trips/private/expenses');
   await waitFor(() => expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex,nofollow'));
   expect(document.head.querySelector('link[rel="canonical"]')).not.toBeInTheDocument();
+  expect(document.head.querySelector('meta[property="og:image"]')).not.toBeInTheDocument();
   expect(document.head.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
 });

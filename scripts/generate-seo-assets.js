@@ -3,7 +3,7 @@ const path = require('path');
 
 const routes = require('../src/seo/publicRoutes.json');
 const copy = {
-  home: { title: 'TripSplit - قطتنا | تقسيم مصاريف السفر مع القروب', description: 'نظّم وقسّم مصاريف السفر بين الأصدقاء، تابع من دفع ومن عليه، وأدر صندوق الرحلة وتسوية الحسابات في مكان واحد.' },
+  home: { title: 'TripSplit - قطتنا | قسم مصاريف السفر بسهولة مع قروبك', description: 'TripSplit - قطتنا يساعدك على تنظيم وتقسيم مصاريف السفر بين الأصدقاء والقروبات، متابعة من دفع ومين عليه، إدارة صندوق الرحلة وتسوية الحسابات في مكان واحد.' },
   features: { title: 'مميزات TripSplit - قطتنا | إدارة مصاريف وصندوق الرحلة', description: 'اكتشف تقسيم المصاريف المرن، دعم العملات، صندوق الرحلة، الأرصدة والتسويات لإدارة تكاليف السفر مع القروب بوضوح.' },
   pricing: { title: 'TripSplit - قطتنا مجاني | إدارة مصاريف السفر بدون اشتراك', description: 'أنشئ رحلتك ونظّم المصاريف المشتركة وصندوق الرحلة والأرصدة والتسويات مجانًا، بدون اشتراك أو بطاقة ائتمان.' },
 };
@@ -58,7 +58,7 @@ function renderShell(base, route, origin, allowIndexing) {
   html = replaceTag(html, /<meta name="twitter:title" content="[^"]*"\s*\/>/, `<meta name="twitter:title" content="${item.title}" />`);
   html = replaceTag(html, /<meta name="twitter:description" content="[^"]*"\s*\/>/, `<meta name="twitter:description" content="${item.description}" />`);
   const data = structuredData(route, item, canonical, origin);
-  return html.replace('</head>', `    <link rel="canonical" href="${canonical}" />\n    <meta property="og:url" content="${canonical}" />\n    <meta property="og:image" content="${origin}/android-chrome-512x512.png" />\n    <meta name="twitter:image" content="${origin}/android-chrome-512x512.png" />\n    <script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>\n  </head>`);
+  return html.replace('</head>', `    <link rel="canonical" href="${canonical}" />\n    <meta property="og:url" content="${canonical}" />\n    <meta property="og:image" content="${origin}/OG.png" />\n    <meta property="og:image:width" content="1200" />\n    <meta property="og:image:height" content="630" />\n    <meta property="og:image:alt" content="TripSplit - قطتنا group travel expense ledger" />\n    <meta name="twitter:image" content="${origin}/OG.png" />\n    <meta name="twitter:image:alt" content="TripSplit - قطتنا group travel expense ledger" />\n    <script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>\n  </head>`);
 }
 
 function generate({ root = path.resolve(__dirname, '..'), output = path.resolve(root, 'build') } = {}) {
