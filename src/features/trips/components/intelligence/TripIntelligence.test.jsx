@@ -63,3 +63,11 @@ test('closed trip recap is aggregate-only and bilingual copy stays in HTML', asy
   expect(screen.getByText('رحلة الصيف')).toBeInTheDocument();
   expect(screen.getByText('150.00 SAR')).toHaveAttribute('dir', 'ltr');
 });
+
+test('category risk uses the canonical localized category label', async () => {
+  getTripIntelligence.mockResolvedValue({ currency: 'SAR', health: { status: 'WATCH' }, suggestions: [
+    { code: 'category_risk', priority: 3, action: 'expenses', category: { code: 'food', name: 'Food' } },
+  ] });
+  renderInsights('expenses');
+  expect(await screen.findByText(/categories\.food/)).toBeInTheDocument();
+});

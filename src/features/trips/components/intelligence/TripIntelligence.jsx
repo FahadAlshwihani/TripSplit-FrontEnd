@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import useRouteResource from '../../../../shared/hooks/useRouteResource';
 import { getTripIntelligence } from '../../api/tripsApi';
+import { categoryLabel } from '../../../../shared/utils/categoryPresentation';
 import './intelligence.css';
 
 const pageCodes = {
@@ -24,7 +25,7 @@ function SmartInsight({ item, currency, tripRef }) {
       : item.code === 'forecast' ? money(item.projected_total, currency)
         : item.code === 'settle_now' ? money(item.outstanding, currency)
           : item.code === 'fund_runway' ? <bdi dir="ltr" className="trip-insight__money">{item.runway_days} {t('intelligence.days')}</bdi>
-            : item.code === 'category_risk' ? item.category?.code : null;
+            : item.code === 'category_risk' ? categoryLabel(t, item.category?.code, item.category?.name) : null;
   return (
     <article className={`trip-insight trip-insight--${item.priority <= 3 ? 'attention' : 'note'}`}>
       <div className="trip-insight__top"><span className="material-symbols-outlined" aria-hidden="true">tips_and_updates</span><span>{t('intelligence.label')}</span></div>
