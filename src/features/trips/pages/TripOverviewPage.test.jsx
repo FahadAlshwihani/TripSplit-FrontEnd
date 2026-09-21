@@ -64,6 +64,13 @@ test('renders total spent and my balance from the authoritative overview payload
   expect(getMoney('620.00 SAR')).toBeInTheDocument();
 });
 
+test('an invite-link manager sees the canonical join code in Overview', async () => {
+  getTripOverview.mockResolvedValue(baseOverview);
+  renderPage({ trip: { ...contextTrip, join_code: 'JOIN7788', short_code: 'url-slug', governance_capabilities: { can_manage_invite_link: true } } });
+  expect(await screen.findByText('JOIN7788')).toHaveAttribute('dir', 'ltr');
+  expect(screen.queryByText('url-slug')).not.toBeInTheDocument();
+});
+
 test('the summary bento renders all four canonical metrics: budget, spent, available, and my balance', async () => {
   getTripOverview.mockResolvedValue(baseOverview);
   renderPage();

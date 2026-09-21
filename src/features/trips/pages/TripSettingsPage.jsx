@@ -145,6 +145,7 @@ export default function TripSettingsPage() {
           />
           <SettingsAccessSecurity
             canEdit={permissions.canEditTrip}
+            canViewJoinCode={Boolean(trip.governance_capabilities?.can_manage_invite_link)}
             tripName={trip.title}
             joinCode={trip.join_code}
             joinPolicy={draft.join_policy}

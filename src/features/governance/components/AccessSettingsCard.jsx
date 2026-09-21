@@ -56,7 +56,7 @@ const AccessSettingsCard = ({ trip, onUpdateSettings, onRotateLink, capabilities
   // header comment and Settings' own password field, the one place in
   // the app that legitimately can include a real value (the viewer's
   // own current, in-memory, not-yet-saved draft).
-  const shareMessage = buildTripShareMessage({ t, tripName: trip.title, url: inviteLink, joinPolicy: trip.join_policy, linkType: 'join' });
+  const shareMessage = buildTripShareMessage({ t, tripName: trip.title, url: inviteLink, joinCode: trip.join_code, joinPolicy: trip.join_policy, linkType: 'join' });
 
   const copyLink = async () => {
     try {

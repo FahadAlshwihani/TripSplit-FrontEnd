@@ -64,6 +64,17 @@ test('the title and every section shell render immediately -- there is no data f
   expect(container.querySelector('.neo-loading')).not.toBeInTheDocument();
 });
 
+test('Access & Security shows the same canonical join code when the server grants invite-link management', () => {
+  renderPage({ trip: { ...baseTrip, governance_capabilities: { can_manage_invite_link: true } } });
+  expect(screen.getByText('ABCD1234')).toHaveAttribute('dir', 'ltr');
+  expect(screen.queryByText('short-1')).not.toBeInTheDocument();
+});
+
+test('Access & Security hides the join code when the server capability denies it', () => {
+  renderPage({ trip: { ...baseTrip, governance_capabilities: { can_manage_invite_link: false } } });
+  expect(screen.queryByText('ABCD1234')).not.toBeInTheDocument();
+});
+
 test('no budget field appears anywhere on the page', () => {
   renderPage();
   expect(screen.queryByText('trip.budget')).not.toBeInTheDocument();

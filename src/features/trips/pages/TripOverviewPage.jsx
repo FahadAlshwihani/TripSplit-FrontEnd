@@ -10,6 +10,7 @@ import FundSnapshot from '../components/overview/FundSnapshot';
 import CategoryLedger from '../components/overview/CategoryLedger';
 import SpendingSplit from '../components/overview/SpendingSplit';
 import RecentActivity from '../components/overview/RecentActivity';
+import JoinCodeCard from '../components/JoinCodeCard';
 import '../styles/overview.css';
 
 /*
@@ -53,6 +54,10 @@ export default function TripOverviewPage() {
           </button>
         </div>
       </div>
+
+      {contextTrip.governance_capabilities?.can_manage_invite_link && (
+        <JoinCodeCard joinCode={contextTrip.join_code} joinPolicy={contextTrip.join_policy} />
+      )}
 
       {!data && resource.loading && <SectionLoading minHeight={320} />}
       {!data && resource.error && <ErrorState title={t('dashboard.overview.errorLoad')} message={resource.error.message} onRetry={resource.retry} />}

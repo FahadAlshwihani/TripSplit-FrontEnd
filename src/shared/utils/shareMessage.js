@@ -26,12 +26,12 @@
 //                    not a join/access link.
 //   'settlement' -- a contextual settlement deep link. Same rule:
 //                    never includes a password.
-export function buildTripShareMessage({ t, tripName, url, joinPolicy, password, linkType = 'join' }) {
+export function buildTripShareMessage({ t, tripName, url, joinCode, joinPolicy, password, linkType = 'join' }) {
   if (linkType === 'fund') return t('share.fund', { tripName, url });
   if (linkType === 'settlement') return t('share.settlement', { tripName, url });
 
   const key = password
     ? `share.join.${joinPolicy}WithPassword`
     : `share.join.${joinPolicy}`;
-  return t(key, { tripName, url, password });
+  return t(key, { tripName, url, joinCode, password });
 }

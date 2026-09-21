@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import CopyLinkButton from '../../../shared/components/CopyLinkButton';
 import { tripJoinUrl } from '../../../shared/utils/shareLinks';
 import { buildTripShareMessage } from '../../../shared/utils/shareMessage';
+import JoinCodeCard from './JoinCodeCard';
 
 const POLICIES = ['open', 'approval_required', 'invite_only'];
 
@@ -77,12 +78,12 @@ const POLICIES = ['open', 'approval_required', 'invite_only'];
   stable but the lock isn't." Explicit z-index makes both always paint
   above the input, independent of the input's own hover/focus state.
 */
-export default function SettingsAccessSecurity({ canEdit, tripName, joinCode, joinPolicy, onChangeJoinPolicy, passwordProtected, password, onPasswordChange, onRequestRemovePassword }) {
+export default function SettingsAccessSecurity({ canEdit, canViewJoinCode, tripName, joinCode, joinPolicy, onChangeJoinPolicy, passwordProtected, password, onPasswordChange, onRequestRemovePassword }) {
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
 
   const inviteMessage = buildTripShareMessage({
-    t, tripName, url: tripJoinUrl(joinCode), joinPolicy, password: password || undefined, linkType: 'join',
+    t, tripName, url: tripJoinUrl(joinCode), joinCode, joinPolicy, password: password || undefined, linkType: 'join',
   });
 
   return (
@@ -92,6 +93,7 @@ export default function SettingsAccessSecurity({ canEdit, tripName, joinCode, jo
         <p className="set-card__subtitle">{t('settings.access.subtitle')}</p>
       </div>
       <div className="set-card__body">
+        {canViewJoinCode && <JoinCodeCard joinCode={joinCode} joinPolicy={joinPolicy} className="join-code-card--embedded" />}
         <div className="field-group">
           <span className="field-label" id="set-join-policy-label">{t('trip.joinPolicy')}</span>
           <div className="set-join-policy" role="radiogroup" aria-labelledby="set-join-policy-label">
