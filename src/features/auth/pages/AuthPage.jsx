@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { requestOtp, verifyOtp } from '../api/authApi';
 import { useAuth } from '../../../auth/AuthContext';
 import { getSafeNext } from '../../../auth/safeNext';
+import { postProfileNavigation } from '../../../auth/onboardingContinuation';
 import { getAuthErrorKey, getOtpErrorKey, getProfileErrorKey } from '../authErrors';
 import PublicLayout from '../../../components/Layout/PublicLayout';
 import AuthContextPanel from '../components/AuthContextPanel';
@@ -121,8 +122,13 @@ const AuthPage = () => {
     setIsSavingProfile(true);
     setErrorKey(null);
     try {
-      await saveProfile(profile);
-      navigate(next);
+      const updated = await saveProfile(profile);
+      if (!updated?.onboarding_complete) {
+        setErrorKey('profile.setup.errors.incomplete');
+        return;
+      }
+      const continuation = postProfileNavigation(next);
+      navigate(continuation.to, { state: continuation.state });
     } catch (err) {
       setErrorKey(getProfileErrorKey(err));
     } finally {

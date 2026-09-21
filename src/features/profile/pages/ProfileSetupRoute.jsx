@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../auth/AuthContext';
 import { getSafeNext } from '../../../auth/safeNext';
+import { postProfileNavigation } from '../../../auth/onboardingContinuation';
 import { getProfileErrorKey } from '../../auth/authErrors';
 import ProfileSetupPage from './ProfileSetupPage';
 
@@ -20,8 +21,13 @@ const ProfileSetupRoute = () => {
     setBusy(true);
     setErrorKey(null);
     try {
-      await saveProfile(profile);
-      navigate(getSafeNext(location.search, '/account'));
+      const updated = await saveProfile(profile);
+      if (!updated?.onboarding_complete) {
+        setErrorKey('profile.setup.errors.incomplete');
+        return;
+      }
+      const continuation = postProfileNavigation(getSafeNext(location.search, '/account'));
+      navigate(continuation.to, { state: continuation.state });
     } catch (err) {
       setErrorKey(getProfileErrorKey(err));
     } finally {

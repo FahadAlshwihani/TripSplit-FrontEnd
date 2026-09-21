@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import AuthPage from './AuthPage';
 import OtpStep from '../components/OtpStep';
 import { requestOtp, verifyOtp } from '../api/authApi';
@@ -32,12 +32,17 @@ const mockSetUser = jest.fn();
 const mockSaveProfile = jest.fn();
 jest.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: null, authLoading: false, setUser: mockSetUser, saveProfile: mockSaveProfile, logout: jest.fn() }) }));
 
+const JoinDestination = () => {
+  const location = useLocation();
+  return <p>join-trip-page <span data-testid="join-continuation">{JSON.stringify(location.state?.onboardingContinuation || null)}</span></p>;
+};
+
 const renderAuth = (entry = '/auth') => render(
   <MemoryRouter initialEntries={[entry]}>
     <Routes>
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/create-trip" element={<p>create-trip-page</p>} />
-      <Route path="/trips/join" element={<p>join-trip-page</p>} />
+      <Route path="/trips/join" element={<JoinDestination />} />
       <Route path="/account" element={<p>account-page</p>} />
       <Route path="/" element={<p>home-page</p>} />
     </Routes>
@@ -291,13 +296,33 @@ const advanceToProfile = async () => {
 };
 
 test('completing profile setup saves the structured avatar payload and continues to the preserved next destination', async () => {
-  mockSaveProfile.mockResolvedValue({ id: 'u2', display_name: 'Alex Smith', avatar_type: 'initials', avatar_color: 'indigo' });
+  mockSaveProfile.mockResolvedValue({ id: 'u2', display_name: 'Alex Smith', avatar_type: 'initials', avatar_color: 'indigo', onboarding_complete: true });
   renderAuth('/auth?next=%2Fcreate-trip');
   await advanceToProfile();
   fireEvent.change(screen.getByLabelText('profile.setup.displayName'), { target: { value: 'Alex Smith' } });
   fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
   await waitFor(() => expect(mockSaveProfile).toHaveBeenCalledWith({ display_name: 'Alex Smith', avatar_type: 'initials', avatar_color: 'indigo' }));
   await screen.findByText('create-trip-page');
+});
+
+test('OTP and profile completion carry the typed join-code intent to the join route', async () => {
+  mockSaveProfile.mockResolvedValue({ id: 'u2', onboarding_complete: true });
+  renderAuth('/auth?next=%2Ftrips%2Fjoin%3Fcode%3DABCD1234');
+  await advanceToProfile();
+  fireEvent.change(screen.getByLabelText('profile.setup.displayName'), { target: { value: 'Alex Smith' } });
+  fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
+  expect(await screen.findByTestId('join-continuation')).toHaveTextContent('"type":"join_code"');
+  expect(screen.getByTestId('join-continuation')).toHaveTextContent('"joinCode":"ABCD1234"');
+});
+
+test('profile submission that remains incomplete stays on the guided form', async () => {
+  mockSaveProfile.mockResolvedValue({ id: 'u2', onboarding_complete: false });
+  renderAuth('/auth?next=%2Ftrips%2Fjoin%3Fcode%3DABCD1234');
+  await advanceToProfile();
+  fireEvent.change(screen.getByLabelText('profile.setup.displayName'), { target: { value: 'Alex Smith' } });
+  fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('profile.setup.errors.incomplete');
+  expect(screen.queryByTestId('join-continuation')).not.toBeInTheDocument();
 });
 
 test('a validation-error response from PATCH /profile/ renders the generic localized save-failure copy, never raw backend field errors', async () => {

@@ -21,7 +21,8 @@ import NeoLoading from '../shared/components/NeoLoading';
       router state { fromGateway: true } -> renders through immediately,
       since the gateway has already been shown and guest continuation was
       the user's explicit choice.
-  Authenticated visitors always render through, regardless of state.
+  Authenticated visitors with an incomplete profile retain the exact safe
+  route/query intent while completing onboarding, then resume that route.
 */
 const GatedRoute = ({ next, children }) => {
   const { user, authLoading } = useAuth();
@@ -30,6 +31,10 @@ const GatedRoute = ({ next, children }) => {
   if (authLoading) return <NeoLoading />;
   if (!user && !location.state?.fromGateway) {
     return <Navigate to={buildAuthUrl(next || nextFromLocation(location))} replace />;
+  }
+  if (user?.onboarding_complete === false) {
+    const returnPath = next || nextFromLocation(location);
+    return <Navigate to={`/profile/setup?next=${encodeURIComponent(returnPath)}`} replace />;
   }
   return children;
 };

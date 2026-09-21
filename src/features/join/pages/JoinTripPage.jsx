@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PublicLayout from '../../../components/Layout/PublicLayout';
@@ -11,6 +11,7 @@ import { avatarKeyFromUser } from '../../profile/utils/avatarKey';
 import { joinTrip } from '../../trips/api/tripsApi';
 import { useAuth } from '../../../auth/AuthContext';
 import { nextFromLocation } from '../../../auth/safeNext';
+import { continuationFromLocation } from '../../../auth/onboardingContinuation';
 import { requestTokenKey } from '../../../pages/JoinRequestPage';
 import { loadGuestProfile, saveGuestProfile } from '../../../shared/guestProfileStore';
 import useJoinCapability from '../hooks/useJoinCapability';
@@ -56,6 +57,7 @@ const JoinTripPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [serverErrorKey, setServerErrorKey] = useState('');
   const [formGuest, setFormGuest] = useState({ guest_name: guestProfile?.display_name || '', avatar_key: 'avatar_02' });
+  const resumedRef = useRef(false);
 
   const { data: capability, loading: lookingUp, error: lookupError, parsed } = useJoinCapability(committedInput);
 
@@ -137,8 +139,7 @@ const JoinTripPage = () => {
 
   const canSubmit = action === 'ready_open' || action === 'ready_request';
 
-  const submit = async (event) => {
-    event.preventDefault();
+  const continueJoin = async () => {
     if (submitting || !canSubmit || parsed?.mode !== 'code') return;
     setSubmitting(true);
     setServerErrorKey('');
@@ -163,6 +164,30 @@ const JoinTripPage = () => {
       setSubmitting(false);
     }
   };
+
+  const submit = (event) => {
+    event.preventDefault();
+    continueJoin();
+  };
+
+  // Consume one typed post-profile continuation after the server-derived
+  // capability has resolved. Password-protected trips still wait for the
+  // password field; the intent and code remain present without a re-entry.
+  useEffect(() => {
+    const continuation = continuationFromLocation(location);
+    if (resumedRef.current || continuation?.type !== 'join_code') return;
+    if (continuation.joinCode !== parsed?.value) return;
+    if (action === 'already_member' && (capability?.trip_short_code || capability?.trip_id)) {
+      resumedRef.current = true;
+      navigate(`/trips/${capability.trip_short_code || capability.trip_id}/overview`);
+      return;
+    }
+    if (!canSubmit || trip?.password_required) return;
+    resumedRef.current = true;
+    continueJoin();
+    // Snapshot-driven by the resolved capability; the ref prevents repeats.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [action, parsed?.value, trip?.password_required, capability?.trip_short_code, capability?.trip_id]);
 
   const identity = user
     ? { avatarKey: avatarKeyFromUser(user), displayName: user.display_name }
@@ -293,7 +318,7 @@ const JoinTripPage = () => {
                     </LoadingButton>
                   )}
                   {action === 'already_member' && (
-                    <button type="button" className="jt-btn jt-btn--primary" onClick={() => navigate(`/trips/${capability.trip_id}/overview`)}>
+                    <button type="button" className="jt-btn jt-btn--primary" onClick={() => navigate(`/trips/${capability.trip_short_code || capability.trip_id}/overview`)}>
                       {t('joinTrip.openTrip')}
                     </button>
                   )}

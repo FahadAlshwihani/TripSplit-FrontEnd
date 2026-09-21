@@ -71,6 +71,12 @@ test('signed-in "/trips/join" loads the dedicated join-trip route directly', asy
   expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('joinTrip.pageTitle');
 });
 
+test('an authenticated incomplete profile keeps its join code when routed to guided setup', async () => {
+  mockAuthUser = { id: 'u1', onboarding_complete: false };
+  renderAt('/trips/join?code=ABCD1234', [...publicRoutes, ...accountRoutes]);
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('profile.setup.title');
+});
+
 test('legacy "/join-trip" redirects to "/trips/join" and preserves the query string', () => {
   const legacyRoute = publicRoutes.find((route) => route.key === 'join-trip-legacy');
   const ShowSearch = () => <p>search: {useLocation().search}</p>;

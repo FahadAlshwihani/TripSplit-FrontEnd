@@ -43,6 +43,7 @@ const lookup = async (code = 'ABCD1234') => {
 };
 
 beforeEach(() => {
+  jest.clearAllMocks();
   mockAuthUser = null;
   localStorage.clear();
 });
@@ -154,6 +155,41 @@ test('a ?code= query param pre-fills and auto-triggers the lookup (Flow B)', asy
   await renderPage('/trips/join?code=PREFILL1');
   expect(await screen.findByText('Georgia Winter Trip')).toBeInTheDocument();
   expect(getJoinCapability).toHaveBeenCalledWith({ mode: 'code', value: 'PREFILL1' }, expect.anything());
+});
+
+test('post-profile join-code continuation automatically consumes an immediate join exactly once', async () => {
+  mockAuthUser = { id: 'u1', display_name: 'Fahad', onboarding_complete: true, avatar_type: 'legacy', avatar_key: 'avatar_01' };
+  getJoinCapability.mockResolvedValue({ mode: 'code', trip: TRIP_PREVIEW, action: 'ready_open' });
+  joinTrip.mockResolvedValue({ trip: { id: 'trip-1', short_code: 'summer-trip' } });
+  await renderPage({ pathname: '/trips/join', search: '?code=ABCD1234', state: { onboardingContinuation: { type: 'join_code', joinCode: 'ABCD1234', returnPath: '/trips/join?code=ABCD1234' } } });
+  await waitFor(() => expect(joinTrip).toHaveBeenCalledTimes(1));
+  expect(joinTrip).toHaveBeenCalledWith({ join_code: 'ABCD1234', password: '' });
+  expect(await screen.findByTestId('landed-trip-id')).toHaveTextContent('summer-trip');
+});
+
+test('post-profile approval continuation creates one request and opens the pending route', async () => {
+  mockAuthUser = { id: 'u1', display_name: 'Fahad', onboarding_complete: true, avatar_type: 'legacy', avatar_key: 'avatar_01' };
+  getJoinCapability.mockResolvedValue({ mode: 'code', trip: { ...TRIP_PREVIEW, join_policy: 'approval_required' }, action: 'ready_request' });
+  joinTrip.mockResolvedValue({ join_request: { id: 'request-1' } });
+  await renderPage({ pathname: '/trips/join', search: '?code=WAIT1234', state: { onboardingContinuation: { type: 'join_code', joinCode: 'WAIT1234', returnPath: '/trips/join?code=WAIT1234' } } });
+  await waitFor(() => expect(joinTrip).toHaveBeenCalledTimes(1));
+  expect(await screen.findByText('join request page')).toBeInTheDocument();
+});
+
+test('post-profile continuation opens an existing membership without a duplicate join', async () => {
+  mockAuthUser = { id: 'u1', display_name: 'Fahad', onboarding_complete: true };
+  getJoinCapability.mockResolvedValue({ mode: 'code', action: 'already_member', trip_id: 'trip-uuid', trip_short_code: 'summer-trip' });
+  await renderPage({ pathname: '/trips/join', search: '?code=ABCD1234', state: { onboardingContinuation: { type: 'join_code', joinCode: 'ABCD1234', returnPath: '/trips/join?code=ABCD1234' } } });
+  expect(await screen.findByTestId('landed-trip-id')).toHaveTextContent('summer-trip');
+  expect(joinTrip).not.toHaveBeenCalled();
+});
+
+test('password-protected continuation preserves the code but waits for the required password', async () => {
+  mockAuthUser = { id: 'u1', display_name: 'Fahad', onboarding_complete: true, avatar_type: 'legacy', avatar_key: 'avatar_01' };
+  getJoinCapability.mockResolvedValue({ mode: 'code', trip: { ...TRIP_PREVIEW, password_required: true }, action: 'ready_open' });
+  await renderPage({ pathname: '/trips/join', search: '?code=LOCK1234', state: { onboardingContinuation: { type: 'join_code', joinCode: 'LOCK1234', returnPath: '/trips/join?code=LOCK1234' } } });
+  expect(await screen.findByLabelText('joinTrip.roomPassword')).toBeInTheDocument();
+  expect(joinTrip).not.toHaveBeenCalled();
 });
 
 test('cancel navigates anonymous visitors to Home', async () => {

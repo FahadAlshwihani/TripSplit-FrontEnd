@@ -8,7 +8,7 @@ import { getJoinCapability, requestInvitationOtp, verifyInvitationOtp } from '..
 let mockUser = null;
 const mockSetUser = jest.fn((user) => { mockUser = user; });
 const mockLogout = jest.fn(async () => { mockUser = null; });
-const mockSaveProfile = jest.fn(async () => {});
+const mockSaveProfile = jest.fn(async () => ({ onboarding_complete: true }));
 
 jest.mock('react-i18next', () => {
   const ReactActual = require('react');
@@ -70,7 +70,7 @@ test('verifying the OTP signs the user in, then requires an explicit JOIN TRIP c
     .mockResolvedValueOnce({ mode: 'invitation', trip: { title: 'Georgia', currency: 'SAR', join_policy: 'open', member_count: 3 }, action: 'needs_email_verification', masked_email: 'i***e@example.com', matches_current_session: true });
   requestInvitationOtp.mockResolvedValue({ otp_id: 42 });
   verifyInvitationOtp.mockResolvedValue({ user: { email: 'invitee@example.com', onboarding_complete: true }, is_new_user: false, onboarding_required: false });
-  acceptInvitation.mockResolvedValue({ trip: { id: 'trip-1' } });
+  acceptInvitation.mockResolvedValue({ trip: { id: 'trip-1', short_code: 'SUMMER' } });
   await renderPage();
   await screen.findByText('invitation.otpTitle');
 
@@ -87,10 +87,43 @@ test('verifying the OTP signs the user in, then requires an explicit JOIN TRIP c
   expect(await screen.findByText('trip opened')).toBeInTheDocument();
 });
 
+test('profile completion consumes the invitation immediately and navigates by canonical short_code', async () => {
+  getJoinCapability.mockResolvedValue({ mode: 'invitation', trip: { title: 'Georgia' }, action: 'needs_email_verification', masked_email: 'i***e@example.com', matches_current_session: null });
+  requestInvitationOtp.mockResolvedValue({ otp_id: 42 });
+  verifyInvitationOtp.mockResolvedValue({ user: { email: 'invitee@example.com', onboarding_complete: false }, onboarding_required: true });
+  mockSaveProfile.mockResolvedValueOnce({ email: 'invitee@example.com', onboarding_complete: true });
+  acceptInvitation.mockResolvedValue({ trip: { id: 'trip-uuid', short_code: 'SUMMER' } });
+  await renderPage();
+  await screen.findByText('invitation.otpTitle');
+  fireEvent.paste(screen.getAllByLabelText(/auth\.otp\.label \d/)[0], { clipboardData: { getData: () => '123456' } });
+  fireEvent.click(screen.getByText('auth.otp.verify'));
+  fireEvent.change(await screen.findByLabelText('profile.setup.displayName'), { target: { value: 'Fahad' } });
+  fireEvent.click(screen.getByRole('button', { name: 'profile.setup.finish' }));
+  await waitFor(() => expect(acceptInvitation).toHaveBeenCalledWith('secrettoken1234567890', {}));
+  expect(await screen.findByText('trip opened')).toBeInTheDocument();
+});
+
+test('a typed post-profile invitation continuation auto-accepts once after capability confirms the session', async () => {
+  mockUser = { email: 'invitee@example.com', onboarding_complete: true };
+  getJoinCapability.mockResolvedValue({ mode: 'invitation', trip: { title: 'Georgia' }, action: 'needs_email_verification', matches_current_session: true });
+  acceptInvitation.mockResolvedValue({ trip: { id: 'trip-uuid', short_code: 'SUMMER' } });
+  await renderPage({ pathname: '/invite/secrettoken1234567890', state: { onboardingContinuation: { type: 'invitation', token: 'secrettoken1234567890', returnPath: '/invite/secrettoken1234567890' } } });
+  await waitFor(() => expect(acceptInvitation).toHaveBeenCalledTimes(1));
+  expect(await screen.findByText('trip opened')).toBeInTheDocument();
+});
+
+test('a typed invitation continuation opens an existing membership without accepting twice', async () => {
+  mockUser = { email: 'invitee@example.com', onboarding_complete: true };
+  getJoinCapability.mockResolvedValue({ mode: 'invitation', action: 'already_member', trip_id: 'trip-uuid', trip_short_code: 'SUMMER' });
+  await renderPage({ pathname: '/invite/secrettoken1234567890', state: { onboardingContinuation: { type: 'invitation', token: 'secrettoken1234567890', returnPath: '/invite/secrettoken1234567890' } } });
+  expect(await screen.findByText('trip opened')).toBeInTheDocument();
+  expect(acceptInvitation).not.toHaveBeenCalled();
+});
+
 test('an already-authenticated matching session shows a YOU\'RE INVITED confirmation, no OTP, and requires an explicit JOIN TRIP click', async () => {
   mockUser = { email: 'invitee@example.com' };
   getJoinCapability.mockResolvedValue({ mode: 'invitation', trip: { title: 'Georgia', currency: 'SAR', join_policy: 'open', member_count: 3 }, action: 'needs_email_verification', masked_email: 'i***e@example.com', matches_current_session: true });
-  acceptInvitation.mockResolvedValue({ trip: { id: 'trip-1' } });
+  acceptInvitation.mockResolvedValue({ trip: { id: 'trip-1', short_code: 'SUMMER' } });
   await renderPage();
   expect(await screen.findByText('invitation.youreInvited')).toBeInTheDocument();
   expect(screen.getByText('Georgia')).toBeInTheDocument();
@@ -134,7 +167,7 @@ test.each([
 
 test('a guest-invite link (no email required) reuses the Guest Profile Setup onboarding component', async () => {
   getJoinCapability.mockResolvedValue({ mode: 'invitation', trip: { title: 'Georgia' }, action: 'ready_open' });
-  acceptInvitation.mockResolvedValue({ trip: { id: 'trip-1' } });
+  acceptInvitation.mockResolvedValue({ trip: { id: 'trip-1', short_code: 'SUMMER' } });
   await renderPage();
 
   const nameInput = await screen.findByLabelText('profile.setup.displayName');

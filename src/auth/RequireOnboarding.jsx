@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { buildAuthUrl, getSafeNext, nextFromLocation } from './safeNext';
+import { postProfileNavigation } from './onboardingContinuation';
 import NeoLoading from '../shared/components/NeoLoading';
 
 /*
@@ -17,7 +18,10 @@ const RequireOnboarding = ({ children }) => {
 
   if (authLoading) return <NeoLoading />;
   if (!user) return <Navigate to={buildAuthUrl(nextFromLocation(location))} replace />;
-  if (user.onboarding_complete) return <Navigate to={getSafeNext(location.search, '/account')} replace />;
+  if (user.onboarding_complete) {
+    const continuation = postProfileNavigation(getSafeNext(location.search, '/account'));
+    return <Navigate to={continuation.to} state={continuation.state} replace />;
+  }
   return children;
 };
 

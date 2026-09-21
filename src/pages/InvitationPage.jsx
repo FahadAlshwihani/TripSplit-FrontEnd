@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PublicLayout from '../components/Layout/PublicLayout';
 import NeoLoading from '../shared/components/NeoLoading';
@@ -11,8 +11,10 @@ import { acceptInvitation } from '../features/invitations/api/invitationsApi';
 import { requestInvitationOtp, verifyInvitationOtp } from '../features/join/api/joinApi';
 import useJoinCapability from '../features/join/hooks/useJoinCapability';
 import { getOtpErrorKey, getProfileErrorKey } from '../features/auth/authErrors';
+import { getJoinErrorKey } from '../features/join/joinErrors';
 import { loadGuestProfile, saveGuestProfile } from '../shared/guestProfileStore';
 import { useAuth } from '../auth/AuthContext';
+import { continuationFromLocation } from '../auth/onboardingContinuation';
 import '../features/join/styles/joinTrip.css';
 
 const RESEND_SECONDS = 60;
@@ -40,6 +42,7 @@ const INVALID_REASON_KEYS = { revoked: 'invitation.revoked', expired: 'invitatio
 */
 const InvitationPage = () => {
   const { token } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { authLoading, setUser, saveProfile, logout } = useAuth();
@@ -59,6 +62,7 @@ const InvitationPage = () => {
   const [accepting, setAccepting] = useState(false);
   const [acceptError, setAcceptError] = useState('');
   const autoRequestedRef = useRef(false);
+  const resumedRef = useRef(false);
 
   useEffect(() => {
     if (!resendSeconds) return undefined;
@@ -67,19 +71,39 @@ const InvitationPage = () => {
   }, [resendSeconds]);
 
   const accept = async (payload) => {
-    if (accepting) return;
+    if (accepting) return false;
     setAccepting(true);
     setAcceptError('');
     try {
       const result = await acceptInvitation(token, payload);
-      navigate(`/trips/${result.trip.id}/overview`);
+      navigate(`/trips/${result.trip.short_code}/overview`);
+      return true;
     } catch (err) {
-      setAcceptError(err.message || t('invite.invalid'));
+      setAcceptError(getJoinErrorKey(err, 'joinTrip.errors.invitationInvalid'));
       setAccepting(false);
+      return false;
     }
   };
 
   const matchesSession = capability?.action === 'needs_email_verification' ? capability.matches_current_session : null;
+
+  // A user sent through the standalone profile route (rather than this
+  // page's inline OTP/profile steps) resumes the same invitation exactly
+  // once. Ordinary visits still retain the explicit Join confirmation.
+  useEffect(() => {
+    const continuation = continuationFromLocation(location);
+    if (resumedRef.current || continuation?.type !== 'invitation' || continuation.token !== token) return;
+    if (capability?.action === 'already_member' && (capability.trip_short_code || capability.trip_id)) {
+      resumedRef.current = true;
+      navigate(`/trips/${capability.trip_short_code || capability.trip_id}/overview`);
+      return;
+    }
+    if (matchesSession !== true || needsProfile || otpStarted) return;
+    resumedRef.current = true;
+    accept({});
+    // Consume only when the server capability confirms the matching session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capability?.action, capability?.trip_short_code, capability?.trip_id, matchesSession, needsProfile, otpStarted, token]);
 
   // Anonymous + email-bound: request the invitation-scoped OTP once, the
   // moment we know it's needed -- the target email is fixed server-side,
@@ -144,9 +168,20 @@ const InvitationPage = () => {
     setIsSavingProfile(true);
     setProfileErrorKey(null);
     try {
-      await saveProfile(profile);
-      setNeedsProfile(false);
-      retry();
+      const updated = await saveProfile(profile);
+      if (!updated?.onboarding_complete) {
+        setProfileErrorKey('profile.setup.errors.incomplete');
+        return;
+      }
+      // The invitation token remains in the current route and the backend
+      // revalidates it. Consume it here so profile onboarding never strands
+      // the user on a second confirmation step.
+      const accepted = await accept({});
+      if (!accepted) {
+        setNeedsProfile(false);
+        setOtpStarted(false);
+        retry();
+      }
     } catch (err) {
       setProfileErrorKey(getProfileErrorKey(err));
     } finally {
@@ -228,7 +263,7 @@ const InvitationPage = () => {
                   <div className="jt-card__body"><p className="jt-status text-copy">{t('joinTrip.states.alreadyMember')}</p></div>
                   <footer className="jt-footer">
                     <div className="jt-actions">
-                      <button type="button" className="jt-btn jt-btn--primary" onClick={() => navigate(`/trips/${capability.trip_id}/overview`)}>
+                      <button type="button" className="jt-btn jt-btn--primary" onClick={() => navigate(`/trips/${capability.trip_short_code || capability.trip_id}/overview`)}>
                         {t('joinTrip.openTrip')}
                       </button>
                     </div>
@@ -263,7 +298,7 @@ const InvitationPage = () => {
                     {capability.masked_email && (
                       <p className="jt-status text-copy-sm">{t('invitation.invitedAs', { email: capability.masked_email })}</p>
                     )}
-                    {acceptError && <p className="jt-error" role="alert">{acceptError}</p>}
+                    {acceptError && <p className="jt-error" role="alert">{t(acceptError)}</p>}
                   </div>
                   <footer className="jt-footer">
                     <div className="jt-actions">
