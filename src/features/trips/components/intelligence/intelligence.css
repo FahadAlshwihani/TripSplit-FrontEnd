@@ -15,3 +15,8 @@
 .trip-insight__actions button, .trip-insight__actions a { font: inherit; font-size: .8rem; font-weight: 700; color: var(--color-primary); background: transparent; border: 0; cursor: pointer; padding: .25rem; }
 .trip-insight__actions :is(button, a):focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
 .trip-insight .trip-insight__explanation { border-block-start: 1px solid var(--color-border-subtle); padding-block-start: .6rem; margin-block-start: .6rem; font-size: .85rem; color: var(--color-text-muted); }
+.trip-insight ul { margin: .65rem 0 0; padding-inline-start: 1.25rem; line-height: 1.7; }
+.trip-insight dl { margin: .75rem 0 0; }
+.trip-insight dl div { display: flex; justify-content: space-between; gap: .75rem; padding-block: .35rem; border-block-start: 1px solid var(--color-border-subtle); }
+.trip-insight dt { color: var(--color-text-muted); }
+.trip-insight dd { margin: 0; font-weight: 750; }

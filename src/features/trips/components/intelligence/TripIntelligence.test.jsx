@@ -45,3 +45,21 @@ test('overview caps ranked cards at three without introducing an AI tab', async 
   expect(container.querySelectorAll('.trip-insight')).toHaveLength(3);
   expect(screen.queryByText('intelligence.forecast.title')).not.toBeInTheDocument();
 });
+
+test('settlements shows closeout blockers without hiding the page', async () => {
+  getTripIntelligence.mockResolvedValue({ currency: 'SAR', health: { status: 'WATCH' }, suggestions: [],
+    closeout: { ready: false, blockers: [{ code: 'fund_balance', amount: '125.00' }], warnings: [] } });
+  renderInsights('settlements');
+  expect(await screen.findByText('intelligence.closeoutTitle')).toBeInTheDocument();
+  expect(screen.getByText('125.00 SAR')).toHaveAttribute('dir', 'ltr');
+});
+
+test('closed trip recap is aggregate-only and bilingual copy stays in HTML', async () => {
+  getTripIntelligence.mockResolvedValue({ currency: 'SAR', health: { status: 'HEALTHY' }, suggestions: [],
+    recap: { trip_title: 'رحلة الصيف', expense_count: 3, member_count: 2, duration_days: 5,
+      total_spent: '150.00', average_per_member: '75.00' } });
+  renderInsights();
+  expect(await screen.findByText('intelligence.recap')).toBeInTheDocument();
+  expect(screen.getByText('رحلة الصيف')).toBeInTheDocument();
+  expect(screen.getByText('150.00 SAR')).toHaveAttribute('dir', 'ltr');
+});
