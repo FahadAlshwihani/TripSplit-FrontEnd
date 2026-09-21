@@ -11,6 +11,7 @@ import CategoryLedger from '../components/overview/CategoryLedger';
 import SpendingSplit from '../components/overview/SpendingSplit';
 import RecentActivity from '../components/overview/RecentActivity';
 import JoinCodeCard from '../components/JoinCodeCard';
+import TripIntelligence from '../components/intelligence/TripIntelligence';
 import '../styles/overview.css';
 
 /*
@@ -58,6 +59,8 @@ export default function TripOverviewPage() {
       {contextTrip.governance_capabilities?.can_manage_invite_link && (
         <JoinCodeCard joinCode={contextTrip.join_code} joinPolicy={contextTrip.join_policy} />
       )}
+
+      <TripIntelligence tripId={tripId} tripRef={contextTrip.short_code || tripId} placement="overview" revision={quickActionRevision} />
 
       {!data && resource.loading && <SectionLoading minHeight={320} />}
       {!data && resource.error && <ErrorState title={t('dashboard.overview.errorLoad')} message={resource.error.message} onRetry={resource.retry} />}

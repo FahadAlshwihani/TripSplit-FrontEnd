@@ -48,3 +48,4 @@ export const closeTrip = (id) => responseData(apiClient.post(`/trips/${id}/close
 export const reopenTrip = (id) => responseData(apiClient.post(`/trips/${id}/reopen/`, {}, tripRequest(id)));
 export const getTripSummary = (id, config) => responseData(apiClient.get(`/trips/${id}/summary/`, tripRequest(id, config)));
 export const getTripOverview = (id, config) => responseData(apiClient.get(`/trips/${id}/overview/`, tripRequest(id, config)));
+export const getTripIntelligence = (id, config) => responseData(apiClient.get(`/trips/${id}/intelligence/`, tripRequest(id, config)));

@@ -34,6 +34,7 @@ import FundRefundHistory from '../components/FundRefundHistory';
 import RefundDistributionModal from '../components/RefundDistributionModal';
 import RecentFundExpenses from '../components/RecentFundExpenses';
 import FundHistoryDialog, { FUND_EVENT_TYPES } from '../components/FundHistoryDialog';
+import TripIntelligence from '../../trips/components/intelligence/TripIntelligence';
 // Fund dialogs reuse the exact same field/button/composer primitives
 // Expenses' and Balances/Settlements' own dialogs already use
 // (.field-control, .field-group, .exp-composer__*, .bal-remind-btn,
@@ -100,6 +101,7 @@ export default function FundPage() {
   }, [tripId, quickActionRevision]);
 
   const [actionError, setActionError] = useState(null);
+  const [insightRevision, refreshInsights] = useState(0);
   // null | { type: 'create-round', prefill? } | { type: 'report-contribution'|'record-contribution', round }
   // | { type: 'change-holder' } | { type: 'reimbursement' } | { type: 'refund' } | { type: 'close-confirm' }
   // | { type: 'expense-details', expense } | { type: 'history' }
@@ -124,6 +126,7 @@ export default function FundPage() {
     try {
       const result = await action();
       setActionError(null);
+      refreshInsights((current) => current + 1);
       // The write has already succeeded. Keep the existing Fund snapshot on
       // screen and revalidate it without making dialogs wait for six GETs.
       void resource.retry();
@@ -246,6 +249,7 @@ export default function FundPage() {
         )}
       </header>
 
+      <TripIntelligence tripId={tripId} tripRef={trip.short_code || tripId} placement="fund" revision={`${quickActionRevision}-${insightRevision}`} />
       <p className="fund-page__hint"><i className="bi bi-info-circle" aria-hidden="true" />{t('fund.explanation')}</p>
 
       {actionError && <ErrorState message={actionError.message} />}

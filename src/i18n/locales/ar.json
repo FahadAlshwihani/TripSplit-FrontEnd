@@ -439,5 +439,17 @@
   "settlements.successTitle": "تمت التسوية بنجاح", "settlements.successBodyConfirmed": "تم تسجيل استلامك {{amount}} {{currency}} من {{name}}، وتم تحديث الأرصدة.",
   "settlements.viewSettlementHistory": "عرض سجل التسوية", "settlements.done": "تم",
   "settlements.paymentDateLabel": "تاريخ الدفع", "settlements.confirmedAtLabel": "تم التأكيد", "settlements.viewDetailsAction": "عرض التفاصيل", "settlements.recordedByLabel": "سجّلها",
-  "settlements.resolvedBadge": "تمت المعالجة لاحقًا", "settlements.resolvedNote": "تمت تسوية هذا الدين بدفعة لاحقة. لا حاجة لأي إجراء إضافي هنا."
+  "settlements.resolvedBadge": "تمت المعالجة لاحقًا", "settlements.resolvedNote": "تمت تسوية هذا الدين بدفعة لاحقة. لا حاجة لأي إجراء إضافي هنا.",
+  "intelligence.heading": "رؤى الرحلة", "intelligence.label": "ملاحظة مالية", "intelligence.why": "ليش هذا الاقتراح؟", "intelligence.recap": "ملخص الرحلة المالي", "intelligence.expenses": "مصاريف",
+  "intelligence.health.HEALTHY": "الصرف ماشي بشكل جيد.", "intelligence.health.WATCH": "فيه وتيرة صرف تستحق المراجعة.", "intelligence.health.AT_RISK": "راجع المصاريف وتغطية الصندوق.",
+  "intelligence.action.expenses": "عرض المصاريف", "intelligence.action.fund": "عرض الصندوق", "intelligence.action.balances": "عرض الأرصدة", "intelligence.action.settlements": "مراجعة التسويات",
+  "intelligence.financial_risk.title": "الصرف يحتاج انتباه", "intelligence.financial_risk.body": "تجاوز الصرف أحد حدود الميزانية أو الصندوق.", "intelligence.financial_risk.why": "نقارن الصرف المسجل بمخصصات التصنيفات والنقد المتاح في الصندوق، كل واحد بشكل مستقل.",
+  "intelligence.fund_shortfall.title": "شيّك على صندوق الرحلة", "intelligence.fund_shortfall.body": "المتاح في الصندوق قد ما يكفي الصرف المتوقع بنفس الوتيرة.", "intelligence.fund_shortfall.why": "نقارن النقد المؤكد بعد مصاريف الصندوق والتعويضات والمبالغ المستردة بوتيرة الصرف للأيام الباقية.",
+  "intelligence.category_risk.title": "صرف التصنيف أسرع من المتوقع", "intelligence.category_risk.body": "راجع ميزانية التصنيف:", "intelligence.category_risk.why": "نسبة استخدام المخصص أعلى من نسبة الوقت المنقضي من الرحلة.",
+  "intelligence.closeout_blockers.title": "باقي خطوات قبل إغلاق الرحلة", "intelligence.closeout_blockers.body": "راجع العمليات المالية المعلقة قبل الإغلاق.", "intelligence.closeout_blockers.why": "نراجع التسويات المعلقة وجولات التحصيل المفتوحة ورصيد الصندوق والأرصدة الشخصية كلٌّ على حدة.",
+  "intelligence.settle_now.title": "قد يكون الوقت مناسبًا للتسوية", "intelligence.settle_now.body": "فيه أرصدة شخصية متبقية:", "intelligence.settle_now.why": "الرحلة انتهت أو الأرصدة كبيرة، وما فيه تسوية معلقة تنتظر التأكيد.",
+  "intelligence.settle_wait.title": "تقدر تنتظر قبل التسوية", "intelligence.settle_wait.body": "الرحلة لسه مستمرة والأرصدة الشخصية ممكن تتغير مع المصروف المشترك القادم.", "intelligence.settle_wait.why": "الرحلة ما انتهت والأرصدة الحالية أقل من الحد العملي للتسوية. وإذا فيه دفعة معلقة، تحتاج تأكيد أول.",
+  "intelligence.next_payer.title": "اقتراح للدفع القادم", "intelligence.next_payer.body": "ممكن هذا العضو يدفع المصروف المشترك القادم:", "intelligence.next_payer.why": "رصيده الشخصي حاليًا بالسالب. دفعه للمصروف القادم قد يقرّبه من الصفر، وهذا اقتراح وليس تحويلًا.",
+  "intelligence.fund_round_gap.title": "جولة التحصيل تحتاج دعم", "intelligence.fund_round_gap.body": "باقي من المساهمات المؤكدة", "intelligence.fund_round_gap.why": "هدف الجولات المفتوحة ناقص المساهمات المؤكدة فيها؛ البلاغات المعلقة ما تُحسب كنقد مستلم.",
+  "intelligence.forecast.title": "توقع الصرف", "intelligence.forecast.body": "على الوتيرة الحالية، الصرف المتوقع للرحلة", "intelligence.forecast.why": "نقسم الصرف المسجل حتى اليوم على الأيام المنقضية ونقدّره لباقي مدة الرحلة. هذا توقع مو ضمان."
 }

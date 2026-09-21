@@ -14,6 +14,7 @@ import SuggestedSettlementsCard from '../components/SuggestedSettlementsCard';
 import SettlementLedgerCard from '../components/SettlementLedgerCard';
 import '../styles/settlements.css';
 import { useQuickActionRevision } from '../../dashboard/quick-actions/QuickActionRefreshContext';
+import TripIntelligence from '../../trips/components/intelligence/TripIntelligence';
 
 /*
   A literal port of the supplied Stitch "Settle Up" source's page
@@ -53,6 +54,7 @@ export default function SettlementsPage() {
   const { trip, tripId, currentMember, permissions } = useOutletContext();
   const { t } = useTranslation();
   const [actionError, setActionError] = useState(null);
+  const [insightRevision, refreshInsights] = useState(0);
   const [busyId, setBusyId] = useState(null);
   // null | { type: 'timeline', id } | { type: 'action', mode, counterpart?, debt?, initialFromId?, initialToId? }
   const [overlay, setOverlay] = useState(null);
@@ -115,7 +117,8 @@ export default function SettlementsPage() {
     try {
       await reviewSettlement(tripId, settlement.id, decision);
       setActionError(null);
-      await settlementsResource.retry();
+      refreshInsights((current) => current + 1);
+      await Promise.all([balancesResource.retry(), settlementsResource.retry()]);
       setOverlay(null);
     } catch (error) {
       setActionError(error);
@@ -149,6 +152,7 @@ export default function SettlementsPage() {
     else await recordAdminSettlement(tripId, payload);
     setOverlay(null);
     setActionError(null);
+    refreshInsights((current) => current + 1);
     await Promise.all([balancesResource.retry(), settlementsResource.retry()]);
   };
 
@@ -184,6 +188,7 @@ export default function SettlementsPage() {
 
       {actionError && <ErrorState message={actionError.message} />}
 
+      <TripIntelligence tripId={tripId} tripRef={trip.short_code || tripId} placement="settlements" revision={`${quickActionRevision}-${insightRevision}`} />
       <div className="settle-workspace">
         <div className="settle-workspace__left">
           {!balances && balancesResource.loading && <SectionLoading minHeight={180} />}

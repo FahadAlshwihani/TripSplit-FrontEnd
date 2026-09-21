@@ -15,6 +15,7 @@ import BalanceMemberRow from '../components/BalanceMemberRow';
 import '../styles/balances.css';
 import '../../settlements/styles/settlements.css';
 import { useQuickActionRevision } from '../../dashboard/quick-actions/QuickActionRefreshContext';
+import TripIntelligence from '../../trips/components/intelligence/TripIntelligence';
 
 /*
   Two separate ledgers: this page shows PERSONAL balances (personal
@@ -55,6 +56,7 @@ export default function BalancesPage() {
   }, [tripId, quickActionRevision]);
 
   const [actionError, setActionError] = useState(null);
+  const [insightRevision, refreshInsights] = useState(0);
   const [reminderStates, setReminderStates] = useState({}); // member_id -> { status, message }
   const [remindAllOpen, setRemindAllOpen] = useState(false);
   const [remindAllSending, setRemindAllSending] = useState(false);
@@ -127,6 +129,7 @@ export default function BalancesPage() {
     setPendingStates((current) => ({ ...current, [settlement.id]: { status: 'sending', action } }));
     try {
       const updated = await reviewSettlement(tripId, settlement.id, decision);
+      refreshInsights((current) => current + 1);
       setActionError(null);
       setPendingStates((current) => ({ ...current, [settlement.id]: null }));
       // A confirmed settlement gets a clear, explained conclusion here --
@@ -155,6 +158,7 @@ export default function BalancesPage() {
       await recordAdminSettlement(tripId, payload); // neither party is "you" here -- no first-person success copy fits
     }
     setActionDialog(null);
+    refreshInsights((current) => current + 1);
     setActionError(null);
     await resource.retry();
   };
@@ -201,6 +205,7 @@ export default function BalancesPage() {
         </div>
       )}
 
+      <TripIntelligence tripId={tripId} tripRef={trip.short_code || tripId} placement="balances" revision={`${quickActionRevision}-${insightRevision}`} />
       {!data && resource.loading && <SectionLoading minHeight={240} />}
       {!data && resource.error && <ErrorState message={resource.error.message} onRetry={resource.retry} />}
       {data && (

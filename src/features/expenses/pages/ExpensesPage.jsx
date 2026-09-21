@@ -18,6 +18,7 @@ import NewExpenseDialog from '../components/NewExpenseDialog';
 import ExpenseDetailsDrawer from '../components/ExpenseDetailsDrawer';
 import CategoryManagerDialog from '../components/CategoryManagerDialog';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog';
+import TripIntelligence from '../../trips/components/intelligence/TripIntelligence';
 import '../styles/expenses.css';
 
 const fulfilledValue = (result, fallback) => (result.status === 'fulfilled' ? result.value : fallback);
@@ -31,6 +32,7 @@ export default function ExpensesPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   const [actionError, setActionError] = useState(null);
+  const [insightRevision, refreshInsights] = useState(0);
   const quickActionRevision = useQuickActionRevision('expenses');
 
   const summaryResource = useRouteResource((signal) => getExpensesSummary(tripId, { signal }), [tripId, quickActionRevision]);
@@ -66,6 +68,7 @@ export default function ExpensesPage() {
     try {
       await action();
       setActionError(null);
+      refreshInsights((current) => current + 1);
       await Promise.all([listResource.retry(), summaryResource.retry()]);
     } catch (error) {
       setActionError(error);
@@ -83,6 +86,7 @@ export default function ExpensesPage() {
         ? await updateExpense(tripId, dialog.expense.id, payload)
         : await addExpense(tripId, { ...payload, idempotency_key: crypto.randomUUID() });
       setActionError(null);
+      refreshInsights((current) => current + 1);
       // The mutation already returns the canonical expense. Show that server
       // truth immediately; aggregates/filter membership revalidate without
       // holding the dialog open behind another network waterfall.
@@ -119,6 +123,7 @@ export default function ExpensesPage() {
     try {
       const result = await action();
       setActionError(null);
+      refreshInsights((current) => current + 1);
       if (update) helpersResource.setData((current) => (current ? update(current, result) : current));
       // Category CRUD responses are canonical. Keep them visible immediately
       // and refresh annotated budget/spend helpers in the background.
@@ -172,6 +177,7 @@ export default function ExpensesPage() {
         <p className="exp-page__subtitle text-copy-lg">{t('expenses.ledger.subtitle')}</p>
       </div>
 
+      <TripIntelligence tripId={tripId} tripRef={trip.short_code || tripId} placement="expenses" revision={`${quickActionRevision}-${insightRevision}`} />
       {actionError && <ErrorState message={actionError.message} />}
       {helpers?.helperError && <ErrorState message={t('common.partialDataError')} onRetry={helpersResource.retry} />}
 
