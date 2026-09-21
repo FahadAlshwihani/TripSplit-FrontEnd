@@ -23,7 +23,7 @@ export default function JoinCodeCard({ joinCode, joinPolicy, className = '' }) {
           enableShare={false}
           label={t('trip.joinCode.copy')}
           successMessage={t('trip.joinCode.copied')}
-          className="join-code-card__button"
+          className="join-code-card__button pressable-sm"
         />
       </div>
     </section>
