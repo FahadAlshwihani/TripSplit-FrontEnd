@@ -12,6 +12,9 @@
 // actually happening for a known event type).
 export const activityCopyKeys = (event) => {
   const base = `activity.${event.event_type}`;
+  if (event.event_type === 'trip_updated' && event.summary?.fund_target_change) {
+    return [`${base}.fund_target`, base, 'activity.unknownEvent'];
+  }
   const origin = event.summary?.origin;
   const keys = origin ? [`${base}.${origin}`, base] : [base];
   return [...keys, 'activity.unknownEvent'];

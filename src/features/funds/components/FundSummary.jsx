@@ -8,15 +8,16 @@ import Money from '../../../shared/components/Money';
   collected/spent/refunded/reimbursed are ALL server-computed
   (apps.funds.services.accounting) -- nothing here is re-derived
   client-side. The budget header (target + collected/remaining, plus the
-  edit action) is the ONE place this page communicates that the Trip
-  Fund IS the trip's budget (see docs/architecture/fund-accounting.md)
+  edit action) communicates the current plan, with a compact historical
+  original only when revised (see docs/architecture/fund-accounting.md)
   -- added here rather than a redesign of the existing bento below.
 */
-const FundSummary = ({ accounting, targetAmount, collected, collectionRemaining, fundingOverTarget, spendingOverTarget, totalSpent, currency, canManage, onEditTarget }) => {
+const FundSummary = ({ accounting, targetAmount, originalTargetAmount, collected, collectionRemaining, fundingOverCurrentTarget, spendingOverCurrentTarget, spendingOverOriginalTarget, totalSpent, currency, canManage, onEditTarget }) => {
   const { t } = useTranslation();
   const balance = Number(accounting.balance);
   const state = balance > 0 ? 'positive' : balance < 0 ? 'negative' : 'zero';
   const hasTarget = Number(targetAmount) > 0;
+  const revised = originalTargetAmount !== undefined && Number(originalTargetAmount) !== Number(targetAmount);
 
   return (
     <div className="fund-summary">
@@ -28,15 +29,21 @@ const FundSummary = ({ accounting, targetAmount, collected, collectionRemaining,
           ) : (
             <span className="fund-summary__budget-unset text-copy">{t('fund.budgetNotSetYet')}</span>
           )}
+          {revised && (
+            <p className="fund-summary__budget-collected text-copy-sm">
+              {t('fund.originalTarget')} {Number(originalTargetAmount) > 0 ? <Money value={originalTargetAmount} currency={currency} variant="tabular" /> : t('fund.noOriginalTarget')}
+            </p>
+          )}
           {hasTarget && (
             <p className="fund-summary__budget-collected text-copy-sm">
               {t('fund.collected')} <Money value={collected} currency={currency} variant="tabular" /> · {t('dashboard.overview.remainingToCollect')} <Money value={collectionRemaining} currency={currency} variant="tabular" />
             </p>
           )}
-          {hasTarget && (Number(fundingOverTarget) > 0 || Number(spendingOverTarget) > 0) && (
+          {hasTarget && (Number(fundingOverCurrentTarget) > 0 || Number(spendingOverCurrentTarget) > 0 || (revised && Number(spendingOverOriginalTarget) > 0)) && (
             <div className="fund-summary__variance text-copy-sm">
-              {Number(fundingOverTarget) > 0 && <span>{t('fund.additionalFunding')} <Money value={fundingOverTarget} currency={currency} variant="tabular" /></span>}
-              {Number(spendingOverTarget) > 0 && <span>{t('fund.spendingAbovePlan')} <Money value={spendingOverTarget} currency={currency} variant="tabular" /></span>}
+              {Number(fundingOverCurrentTarget) > 0 && <span>{t('fund.fundingAboveCurrent')} <Money value={fundingOverCurrentTarget} currency={currency} variant="tabular" /></span>}
+              {Number(spendingOverCurrentTarget) > 0 && <span>{t('fund.spendingAboveCurrent')} <Money value={spendingOverCurrentTarget} currency={currency} variant="tabular" /></span>}
+              {revised && Number(spendingOverOriginalTarget) > 0 && <span>{t('fund.spendingAboveOriginal')} <Money value={spendingOverOriginalTarget} currency={currency} variant="tabular" /></span>}
             </div>
           )}
         </div>

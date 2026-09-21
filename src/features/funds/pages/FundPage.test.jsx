@@ -135,13 +135,28 @@ test('the budget target is shown prominently on the Fund page, with an Edit acti
   await screen.findByText('fund.title');
   expect(screen.getByText('fund.budgetTarget')).toBeInTheDocument();
   expect(screen.getByText('fund.editBudget')).toBeInTheDocument();
+  expect(screen.queryByText('fund.originalTarget')).not.toBeInTheDocument();
+});
+
+test('a revised target shows a compact immutable baseline and distinct current/original spending variances', async () => {
+  getFund.mockResolvedValue({ ...baseFund, original_target_amount: '7000.00', target_amount: '8000.00', total_target: '8000.00', collection_remaining: '0.00', funding_over_current_target: '2000.00', spending_over_current_target: '400.00', spending_over_original_target: '1400.00', total_spent: '8400.00' });
+  renderPage();
+  expect(await screen.findByText('fund.originalTarget')).toBeInTheDocument();
+  expect(screen.getByText('fund.fundingAboveCurrent')).toBeInTheDocument();
+  expect(screen.getByText('fund.spendingAboveCurrent')).toBeInTheDocument();
+  expect(screen.getByText('fund.spendingAboveOriginal')).toBeInTheDocument();
+});
+
+test('a Fund funded before any original plan does not present zero as a historical budget', async () => {
+  getFund.mockResolvedValue({ ...baseFund, original_target_amount: '0.00', total_target: '8000.00' });
+  renderPage();
+  await waitFor(() => expect(screen.getByText((_, node) => node?.classList?.contains('fund-summary__budget-collected') && node.textContent.includes('fund.noOriginalTarget'))).toBeInTheDocument());
 });
 
 test('editing the budget target calls the Fund PATCH with the new value', async () => {
   updateFund.mockResolvedValue({ ...baseFund, total_target: '9000.00' });
   renderPage();
-  await screen.findByText('fund.title');
-  fireEvent.click(screen.getByText('fund.editBudget'));
+  fireEvent.click(await screen.findByText('fund.editBudget'));
   const input = await screen.findByLabelText('fund.budgetTarget');
   fireEvent.change(input, { target: { value: '9000' } });
   fireEvent.click(screen.getByText('common.save'));
@@ -151,8 +166,7 @@ test('editing the budget target calls the Fund PATCH with the new value', async 
 test('a Fund with no target set yet shows the zero-state prompt instead of a fake 0.00 budget', async () => {
   getFund.mockResolvedValue({ ...baseFund, total_target: '0.00', collection_remaining: '0.00' });
   renderPage();
-  await screen.findByText('fund.title');
-  expect(screen.getByText('fund.budgetNotSetYet')).toBeInTheDocument();
+  expect(await screen.findByText('fund.budgetNotSetYet')).toBeInTheDocument();
 });
 
 test('a shortfall renders the alert and pre-fills the top-up round composer', async () => {
@@ -185,8 +199,8 @@ test('a trip with nothing left to collect opens a fully blank composer -- no mea
 test('post-target round creation is not blocked and the two variances stay distinct', async () => {
   getFund.mockResolvedValue({ ...baseFund, total_target: '7000.00', collection_remaining: '0.00', funding_over_target: '1500.00', spending_over_target: '800.00', total_spent: '7800.00' });
   renderPage();
-  expect((await screen.findAllByText('fund.additionalFunding')).length).toBeGreaterThan(0);
-  expect(screen.getByText('fund.spendingAbovePlan')).toBeInTheDocument();
+  expect(await screen.findByText('fund.fundingAboveCurrent')).toBeInTheDocument();
+  expect(screen.getByText('fund.spendingAboveCurrent')).toBeInTheDocument();
   fireEvent.click((await screen.findAllByText('fund.newRound'))[0]);
   expect(screen.getByText((_, node) => node?.classList?.contains('fund-round-composer__target-note'))).toHaveTextContent('fund.roundReachedContext');
   fireEvent.change(screen.getByLabelText('fund.roundTitle'), { target: { value: 'Extra' } });

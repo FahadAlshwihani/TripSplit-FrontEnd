@@ -75,14 +75,19 @@ const FundSnapshot = ({ fund, roundsSummary, currency }) => {
           <div className="ov-fund-progress__track">
             <div className="ov-fund-progress__fill" style={{ width: `${Math.min(fund.collection_percent, 100)}%` }} />
           </div>
+          {fund.original_target_amount !== undefined && Number(fund.original_target_amount) !== Number(fund.total_target) && (
+            <p className="ov-fund-progress__remaining text-copy-sm">
+              {t('fund.originalTarget')} {Number(fund.original_target_amount) > 0 ? <Money value={fund.original_target_amount} currency={currency} variant="tabular" /> : t('fund.noOriginalTarget')}
+            </p>
+          )}
           {Number(fund.collection_remaining) > 0 && (
             <p className="ov-fund-progress__remaining text-copy-sm">
               {t('dashboard.overview.remainingToCollect')} <Money value={fund.collection_remaining} currency={currency} variant="tabular" />
             </p>
           )}
-          {Number(fund.funding_over_target) > 0 && (
+          {Number(fund.funding_over_current_target ?? fund.funding_over_target) > 0 && (
             <p className="ov-fund-progress__remaining text-copy-sm">
-              {t('fund.additionalFunding')} <Money value={fund.funding_over_target} currency={currency} variant="tabular" />
+              {t('fund.fundingAboveCurrent')} <Money value={fund.funding_over_current_target ?? fund.funding_over_target} currency={currency} variant="tabular" />
             </p>
           )}
         </div>

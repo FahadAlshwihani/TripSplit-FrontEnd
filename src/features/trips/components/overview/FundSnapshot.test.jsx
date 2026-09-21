@@ -89,6 +89,12 @@ test('omits the "remaining to collect" line once everything has been collected',
   expect(screen.queryByText('dashboard.overview.remainingToCollect')).not.toBeInTheDocument();
 });
 
+test('a revised plan retains compact original-target context without replacing current collection progress', () => {
+  renderSnapshot({ fund: { ...baseFund, original_target_amount: '7000.00', total_target: '8000.00', funding_over_current_target: '500.00' } });
+  expect(screen.getByText('fund.originalTarget')).toBeInTheDocument();
+  expect(screen.getByText('fund.fundingAboveCurrent')).toBeInTheDocument();
+});
+
 test('the Fund link always points at the real Fund page', () => {
   renderSnapshot();
   expect(screen.getByText('dashboard.overview.viewDetails')).toHaveAttribute('href', '/trips/t1/fund');

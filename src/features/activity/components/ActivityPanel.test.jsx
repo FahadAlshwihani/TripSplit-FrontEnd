@@ -9,7 +9,7 @@ import ActivityPanel from './ActivityPanel';
 // this fake dictionary "knows", falling through to the last entry
 // (production's activity.unknownEvent) otherwise -- lets tests exercise
 // the genuine fallback path without needing the real translation bundle.
-const KNOWN_KEYS = ['activity.trip_updated', 'activity.member_joined', 'activity.expense_created', 'activity.fund_contribution_recorded', 'activity.member_role_changed'];
+const KNOWN_KEYS = ['activity.trip_updated', 'activity.trip_updated.fund_target', 'activity.member_joined', 'activity.expense_created', 'activity.fund_contribution_recorded', 'activity.member_role_changed'];
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key, vars) => {
@@ -22,6 +22,15 @@ jest.mock('react-i18next', () => ({
 }));
 
 const baseEvent = { id: 'e1', event_type: 'trip_updated', created_at: '2026-08-20T12:30:00Z', actor: null, summary: {} };
+
+test('Fund target revisions identify the change and isolate old-to-new amounts LTR', () => {
+  const event = { ...baseEvent, summary: { fund_target_change: true, previous_budget: '7000.00', budget: '8000.00', original_target: '7000.00', currency: 'SAR' } };
+  const { container } = render(<ActivityPanel events={[event]} />);
+  expect(screen.getByText(/activity.trip_updated.fund_target/)).toBeInTheDocument();
+  expect(container.querySelector('.act-row__meta bdi[dir="ltr"]')).toBeInTheDocument();
+  expect(screen.getByText('7,000.00')).toBeInTheDocument();
+  expect(screen.getByText('8,000.00')).toBeInTheDocument();
+});
 
 test('activity timestamps follow app locale and remain LTR in RTL layouts', () => {
   render(<ActivityPanel events={[baseEvent]} />);

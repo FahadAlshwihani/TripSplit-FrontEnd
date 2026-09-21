@@ -37,6 +37,9 @@ const ActivityRow = ({ event }) => {
         </p>
         <p className="act-row__meta">
           <bdi dir="ltr">{time}</bdi>
+          {event.summary?.fund_target_change && (
+            <span> · <bdi dir="ltr"><Money value={event.summary.previous_budget} currency={event.summary.currency} variant="tabular" /> → <Money value={event.summary.budget} currency={event.summary.currency} variant="tabular" /></bdi></span>
+          )}
           {scopeLabel && <> · {scopeLabel}</>}
         </p>
       </div>

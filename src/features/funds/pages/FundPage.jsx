@@ -275,10 +275,12 @@ export default function FundPage() {
           <FundSummary
             accounting={fund.accounting}
             targetAmount={fund.total_target}
+            originalTargetAmount={fund.original_target_amount}
             collected={fund.accounting.collected}
             collectionRemaining={fund.collection_remaining}
-            fundingOverTarget={fund.funding_over_target}
-            spendingOverTarget={fund.spending_over_target}
+            fundingOverCurrentTarget={fund.funding_over_current_target ?? fund.funding_over_target}
+            spendingOverCurrentTarget={fund.spending_over_current_target ?? fund.spending_over_target}
+            spendingOverOriginalTarget={fund.spending_over_original_target}
             totalSpent={fund.total_spent}
             currency={currency}
             canManage={canManage}
