@@ -54,6 +54,13 @@ test('settlements shows closeout blockers without hiding the page', async () => 
   expect(screen.getByText('125.00 SAR')).toHaveAttribute('dir', 'ltr');
 });
 
+test('closeout checklist can be clear even without a planning target', async () => {
+  getTripIntelligence.mockResolvedValue({ currency: 'SAR', spending: { expense_count: 1 },
+    health: { status: 'NO_DATA' }, suggestions: [], closeout: { ready: true, blockers: [], warnings: [] } });
+  renderInsights('settlements');
+  expect(await screen.findByText('intelligence.closeoutReady')).toBeInTheDocument();
+});
+
 test('closed trip recap is aggregate-only and bilingual copy stays in HTML', async () => {
   getTripIntelligence.mockResolvedValue({ currency: 'SAR', health: { status: 'HEALTHY' }, suggestions: [],
     recap: { trip_title: 'رحلة الصيف', expense_count: 3, member_count: 2, duration_days: 5,

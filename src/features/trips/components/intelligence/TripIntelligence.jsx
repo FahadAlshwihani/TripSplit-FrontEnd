@@ -48,7 +48,7 @@ export default function TripIntelligence({ tripId, tripRef, placement, revision 
   const data = resource.data;
   const relevant = (data?.suggestions || []).filter((item) => pageCodes[placement]?.includes(item.code)).slice(0, placement === 'overview' ? 3 : 2);
   const showRecap = placement === 'overview' && data?.recap;
-  const showCloseout = placement === 'settlements' && data?.health?.status !== 'NO_DATA' && data?.closeout;
+  const showCloseout = placement === 'settlements' && data?.closeout && (data.spending?.expense_count > 0 || data.closeout.blockers.length > 0);
   if (!relevant.length && !showRecap && !showCloseout) return null;
   return (
     <section className="trip-intelligence" aria-label={t('intelligence.heading')}>
