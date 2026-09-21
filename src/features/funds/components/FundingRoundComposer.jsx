@@ -16,7 +16,7 @@ const METHODS = ['equal', 'custom', 'percentage', 'shares'];
   submit -- the server independently re-validates the exact same totals
   regardless, see apps.funds.services.create_round).
 */
-const FundingRoundComposer = ({ members, currency, prefill, onSubmit, onClose }) => {
+const FundingRoundComposer = ({ members, currency, prefill, targetContext, onSubmit, onClose }) => {
   const { t } = useTranslation();
   const [title, setTitle] = useState(prefill?.title || '');
   const [reason, setReason] = useState(prefill?.reason || '');
@@ -73,6 +73,15 @@ const FundingRoundComposer = ({ members, currency, prefill, onSubmit, onClose })
           </div>
 
           <div className="fund-dialog__body">
+            {Number(targetContext?.target) > 0 && (
+              <p className="fund-round-composer__target-note text-copy-sm">
+                {Number(targetContext.remaining) > 0 ? (
+                  <>{t('fund.roundRemainingContext')} <Money value={targetContext.remaining} currency={currency} variant="tabular" /> {t('fund.roundExtraContext')}</>
+                ) : (
+                  <>{t('fund.roundReachedContext')} <Money value={targetContext.target} currency={currency} variant="tabular" />. {t('fund.roundExtraContext')}</>
+                )}
+              </p>
+            )}
             <div className="exp-composer__grid exp-composer__grid--2">
               <div className="field-group">
                 <label className="field-label" htmlFor="fund-round-title">{t('fund.roundTitle')}</label>

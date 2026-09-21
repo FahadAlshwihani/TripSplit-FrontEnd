@@ -179,6 +179,21 @@ test('a trip with nothing left to collect opens a fully blank composer -- no mea
   renderPage();
   fireEvent.click((await screen.findAllByText('fund.newRound'))[0]);
   expect(await screen.findByLabelText('fund.target')).toHaveValue(null);
+  expect(screen.getByText((_, node) => node?.classList?.contains('fund-round-composer__target-note'))).toHaveTextContent('fund.roundReachedContext');
+});
+
+test('post-target round creation is not blocked and the two variances stay distinct', async () => {
+  getFund.mockResolvedValue({ ...baseFund, total_target: '7000.00', collection_remaining: '0.00', funding_over_target: '1500.00', spending_over_target: '800.00', total_spent: '7800.00' });
+  renderPage();
+  expect((await screen.findAllByText('fund.additionalFunding')).length).toBeGreaterThan(0);
+  expect(screen.getByText('fund.spendingAbovePlan')).toBeInTheDocument();
+  fireEvent.click((await screen.findAllByText('fund.newRound'))[0]);
+  expect(screen.getByText((_, node) => node?.classList?.contains('fund-round-composer__target-note'))).toHaveTextContent('fund.roundReachedContext');
+  fireEvent.change(screen.getByLabelText('fund.roundTitle'), { target: { value: 'Extra' } });
+  fireEvent.change(screen.getByLabelText('fund.target'), { target: { value: '1500' } });
+  fireEvent.click(screen.getByRole('button', { name: 'fund.createRound' }));
+  await waitFor(() => expect(createFundingRound).toHaveBeenCalledWith('t1', expect.objectContaining({ target_amount: '1500' })));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 });
 
 test('creating an equal-split round submits the expected payload', async () => {
@@ -238,8 +253,7 @@ test('direct "record received" requires the acknowledgement checkbox before it c
 
 test('only one primary Fund dialog can ever be open at a time -- opening a second trigger replaces, never stacks, the first', async () => {
   renderPage();
-  await screen.findByText('fund.title');
-  fireEvent.click(screen.getByText('fund.newRound'));
+  fireEvent.click(await screen.findByText('fund.newRound'));
   expect(screen.getAllByRole('dialog')).toHaveLength(1);
   fireEvent.click(screen.getByText('fund.changeHolder'));
   expect(screen.getAllByRole('dialog')).toHaveLength(1);

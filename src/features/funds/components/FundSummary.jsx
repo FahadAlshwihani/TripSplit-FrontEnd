@@ -12,7 +12,7 @@ import Money from '../../../shared/components/Money';
   Fund IS the trip's budget (see docs/architecture/fund-accounting.md)
   -- added here rather than a redesign of the existing bento below.
 */
-const FundSummary = ({ accounting, targetAmount, collected, collectionRemaining, currency, canManage, onEditTarget }) => {
+const FundSummary = ({ accounting, targetAmount, collected, collectionRemaining, fundingOverTarget, spendingOverTarget, totalSpent, currency, canManage, onEditTarget }) => {
   const { t } = useTranslation();
   const balance = Number(accounting.balance);
   const state = balance > 0 ? 'positive' : balance < 0 ? 'negative' : 'zero';
@@ -33,6 +33,12 @@ const FundSummary = ({ accounting, targetAmount, collected, collectionRemaining,
               {t('fund.collected')} <Money value={collected} currency={currency} variant="tabular" /> · {t('dashboard.overview.remainingToCollect')} <Money value={collectionRemaining} currency={currency} variant="tabular" />
             </p>
           )}
+          {hasTarget && (Number(fundingOverTarget) > 0 || Number(spendingOverTarget) > 0) && (
+            <div className="fund-summary__variance text-copy-sm">
+              {Number(fundingOverTarget) > 0 && <span>{t('fund.additionalFunding')} <Money value={fundingOverTarget} currency={currency} variant="tabular" /></span>}
+              {Number(spendingOverTarget) > 0 && <span>{t('fund.spendingAbovePlan')} <Money value={spendingOverTarget} currency={currency} variant="tabular" /></span>}
+            </div>
+          )}
         </div>
         {canManage && (
           <button type="button" className="dash-btn dash-btn--secondary" onClick={onEditTarget}>
@@ -48,6 +54,10 @@ const FundSummary = ({ accounting, targetAmount, collected, collectionRemaining,
         </p>
       </div>
       <div className="fund-summary__tiles">
+        <div className="fund-summary__tile">
+          <span className="fund-summary__tile-label">{t('fund.totalTripSpent')}</span>
+          <Money value={totalSpent} currency={currency} variant="tabular" className="fund-summary__tile-value" />
+        </div>
         <div className="fund-summary__tile">
           <span className="fund-summary__tile-label">{t('fund.collected')}</span>
           <Money value={accounting.collected} currency={currency} variant="tabular" className="fund-summary__tile-value" />

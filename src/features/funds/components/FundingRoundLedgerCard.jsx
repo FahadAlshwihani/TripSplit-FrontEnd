@@ -79,6 +79,9 @@ const FundingRoundLedgerCard = ({
             )}
           </div>
           <h3 className="fund-round-card__title text-headline-sm">{round.title}</h3>
+          {stats.completed_original_target && <p className="fund-round-card__reason text-copy-sm">{t('fund.targetCompletedHere')}</p>}
+          {stats.post_target && Number(stats.above_original_target) > 0 && <p className="fund-round-card__reason text-copy-sm">{t('fund.additionalFunding')} <Money value={stats.above_original_target} currency={currency} variant="tabular" /></p>}
+          {stats.completed_original_target && Number(stats.above_original_target) > 0 && <p className="fund-round-card__reason text-copy-sm">{t('fund.towardOriginalTarget')} <Money value={stats.toward_original_target} currency={currency} variant="tabular" /> · {t('fund.additionalFunding')} <Money value={stats.above_original_target} currency={currency} variant="tabular" /></p>}
           {round.reason && <p className="fund-round-card__reason text-copy-sm">{round.reason}</p>}
         </div>
         <div className="fund-round-card__progress">

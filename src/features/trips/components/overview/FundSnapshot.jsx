@@ -80,6 +80,11 @@ const FundSnapshot = ({ fund, roundsSummary, currency }) => {
               {t('dashboard.overview.remainingToCollect')} <Money value={fund.collection_remaining} currency={currency} variant="tabular" />
             </p>
           )}
+          {Number(fund.funding_over_target) > 0 && (
+            <p className="ov-fund-progress__remaining text-copy-sm">
+              {t('fund.additionalFunding')} <Money value={fund.funding_over_target} currency={currency} variant="tabular" />
+            </p>
+          )}
         </div>
 
         {roundsSummary.length > 0 && (

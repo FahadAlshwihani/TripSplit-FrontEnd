@@ -277,6 +277,9 @@ export default function FundPage() {
             targetAmount={fund.total_target}
             collected={fund.accounting.collected}
             collectionRemaining={fund.collection_remaining}
+            fundingOverTarget={fund.funding_over_target}
+            spendingOverTarget={fund.spending_over_target}
+            totalSpent={fund.total_spent}
             currency={currency}
             canManage={canManage}
             onEditTarget={() => setFundDialog({ type: 'edit-target' })}
@@ -390,6 +393,7 @@ export default function FundPage() {
           members={activeMembers}
           currency={currency}
           prefill={fundDialog.prefill}
+          targetContext={{ target: fund.total_target, remaining: fund.collection_remaining }}
           onSubmit={handleCreateRound}
           onClose={closeDialog}
         />
