@@ -41,7 +41,8 @@ test('uses the shared public layout: nav and footer both present', () => {
   renderFeatures();
   expect(document.querySelector('.public-nav')).toBeInTheDocument();
   expect(document.querySelector('.public-footer')).toBeInTheDocument();
-  expect(screen.getAllByText('home.nav.brand').length).toBeGreaterThanOrEqual(2);
+  expect(screen.getByText('home.nav.brand')).toBeInTheDocument();
+  expect(screen.getByText('home.footer.brand')).toBeInTheDocument();
 });
 
 test('theme and language controls remain present on the features page', () => {

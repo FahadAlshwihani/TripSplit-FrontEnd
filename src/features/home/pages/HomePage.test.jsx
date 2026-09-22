@@ -29,7 +29,8 @@ test('renders the approved hero headline', () => {
 test('renders the desktop hero, nav and footer content', () => {
   renderHome();
   expect(screen.getByText('home.hero.descriptionDesktop')).toBeInTheDocument();
-  expect(screen.getAllByText('home.nav.brand').length).toBeGreaterThanOrEqual(2);
+  expect(screen.getByText('home.nav.brand')).toBeInTheDocument();
+  expect(screen.getByText('home.footer.brand')).toBeInTheDocument();
   expect(screen.getByText('home.nav.features')).toBeInTheDocument();
   expect(screen.getByText('home.footer.copyright')).toBeInTheDocument();
 });

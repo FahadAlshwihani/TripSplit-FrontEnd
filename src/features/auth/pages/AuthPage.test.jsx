@@ -78,7 +78,7 @@ test('Auth mounts through the same canonical PublicNav/PublicFooter shell as Cre
   expect(screen.getByRole('link', { name: 'home.nav.features' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'home.nav.pricing' })).toBeInTheDocument();
   // PublicFooter content.
-  expect(screen.getByText('home.footer.copyright:{"year":' + new Date().getFullYear() + '}')).toBeInTheDocument();
+  expect(screen.getByText('home.footer.copyright')).toBeInTheDocument();
   // The retired AuthHeader's own copy must never render again.
   expect(screen.queryByText('auth.secureLabel')).not.toBeInTheDocument();
   expect(screen.queryByText('auth.secureStatus')).not.toBeInTheDocument();

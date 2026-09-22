@@ -60,7 +60,8 @@ test('uses the shared public layout: nav brand, footer and utility controls all 
   renderPricing();
   expect(document.querySelector('.public-nav')).toBeInTheDocument();
   expect(document.querySelector('.public-footer')).toBeInTheDocument();
-  expect(screen.getAllByText('home.nav.brand').length).toBeGreaterThanOrEqual(2);
+  expect(screen.getByText('home.nav.brand')).toBeInTheDocument();
+  expect(screen.getByText('home.footer.brand')).toBeInTheDocument();
   expect(await screen.findByRole('link', { name: 'home.nav.signIn' })).toHaveAttribute('href', '/auth');
 });
 
