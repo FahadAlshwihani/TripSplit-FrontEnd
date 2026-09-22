@@ -442,7 +442,7 @@
   "settlements.viewSettlementHistory": "View settlement history", "settlements.done": "Done",
   "settlements.paymentDateLabel": "Payment date", "settlements.confirmedAtLabel": "Confirmed", "settlements.viewDetailsAction": "View details", "settlements.recordedByLabel": "Recorded by",
   "settlements.resolvedBadge": "Resolved later", "settlements.resolvedNote": "This debt was settled by a later payment. No further action is needed here.",
-  "intelligence.heading": "Trip Insights", "intelligence.label": "TRIP INSIGHT", "intelligence.why": "Why this suggestion?", "intelligence.recap": "Trip financial recap", "intelligence.expenses": "expenses",
+  "intelligence.heading": "Trip Insights", "intelligence.label": "TRIP INSIGHT", "intelligence.why": "Why this suggestion?", "intelligence.dismiss": "Dismiss this insight", "intelligence.recap": "Trip financial recap", "intelligence.expenses": "expenses",
   "intelligence.health.HEALTHY": "Spending is on track.", "intelligence.health.WATCH": "A spending pattern deserves a closer look.", "intelligence.health.AT_RISK": "Review spending and Fund coverage.",
   "intelligence.action.expenses": "View expenses", "intelligence.action.fund": "View Fund", "intelligence.action.balances": "View balances", "intelligence.action.settlements": "Review settlements",
   "intelligence.financial_risk.title": "Spending needs attention", "intelligence.financial_risk.body": "A budget or Fund limit has been exceeded.", "intelligence.financial_risk.why": "Recorded spending, category allocations and available Fund cash are compared with their respective targets.",

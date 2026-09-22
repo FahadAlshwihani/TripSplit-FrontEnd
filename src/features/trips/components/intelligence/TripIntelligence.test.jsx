@@ -1,17 +1,25 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import TripIntelligence from './TripIntelligence';
 import { getTripIntelligence } from '../../api/tripsApi';
 
 jest.mock('../../api/tripsApi', () => ({ getTripIntelligence: jest.fn() }));
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
 
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="route">{location.pathname}</output>;
+}
+
 const renderInsights = (placement = 'overview', direction = 'rtl') => render(
-  <MemoryRouter><div dir={direction}><TripIntelligence tripId="uuid" tripRef="short" placement={placement} /></div></MemoryRouter>,
+  <MemoryRouter><div dir={direction}><TripIntelligence tripId="uuid" tripRef="short" placement={placement} /><LocationProbe /></div></MemoryRouter>,
 );
 
-beforeEach(() => getTripIntelligence.mockReset());
+beforeEach(() => {
+  getTripIntelligence.mockReset();
+  window.sessionStorage.clear();
+});
 
 test('renders contextual payer suggestion with explanation and canonical trip action', async () => {
   getTripIntelligence.mockResolvedValue({
@@ -22,9 +30,15 @@ test('renders contextual payer suggestion with explanation and canonical trip ac
   renderInsights('balances');
   expect(await screen.findByText(/Abdullah/)).toBeInTheDocument();
   expect(screen.getByText('✨')).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'intelligence.action.balances' })).toHaveAttribute('href', '/trips/short/balances');
-  fireEvent.click(screen.getByRole('button', { name: 'intelligence.why' }));
+  fireEvent.click(screen.getByRole('button', { name: 'intelligence.action.balances' }));
+  expect(screen.getByTestId('route')).toHaveTextContent('/trips/short/balances');
+  const why = screen.getByRole('button', { name: 'intelligence.why' });
+  expect(why).toHaveAttribute('aria-expanded', 'false');
+  fireEvent.click(why);
+  expect(why).toHaveAttribute('aria-expanded', 'true');
   expect(screen.getByText('-420.00 SAR')).toHaveAttribute('dir', 'ltr');
+  fireEvent.click(why);
+  expect(screen.queryByText('-420.00 SAR')).not.toBeInTheDocument();
 });
 
 test('suppresses irrelevant and empty-trip suggestions', async () => {
@@ -42,7 +56,8 @@ test('overview caps ranked cards at three without introducing an AI tab', async 
     { code: 'forecast', priority: 8, action: 'expenses', projected_total: '500.00' },
   ] });
   const { container } = renderInsights();
-  expect(await screen.findByText('intelligence.heading')).toBeInTheDocument();
+  expect(await screen.findByText('intelligence.financial_risk.title')).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: 'intelligence.heading' })).not.toBeInTheDocument();
   expect(container.querySelectorAll('.trip-insight')).toHaveLength(3);
   expect(container.querySelectorAll('.trip-insight--primary')).toHaveLength(1);
   expect(container.querySelectorAll('.trip-insight--secondary')).toHaveLength(2);
@@ -119,4 +134,57 @@ test('fund context shows compact ranked strips with LTR amounts under RTL', asyn
   expect(container.querySelectorAll('.trip-insight--secondary')).toHaveLength(2);
   expect(container.querySelectorAll('.trip-insight--primary')).toHaveLength(0);
   expect(container.querySelector('[dir="rtl"]')).toBeInTheDocument();
+});
+
+test('dismissal promotes the next ranked insight and leaves no empty shell', async () => {
+  getTripIntelligence.mockResolvedValue({ currency: 'SAR', health: { status: 'WATCH' }, suggestions: [
+    { code: 'financial_risk', priority: 1, action: 'expenses' },
+    { code: 'fund_shortfall', priority: 2, action: 'fund' },
+    { code: 'forecast', priority: 8, action: 'expenses', projected_total: '400.00' },
+    { code: 'fund_runway', priority: 9, action: 'fund', runway_days: 5 },
+  ] });
+  const { container } = renderInsights();
+  expect(await screen.findByText('intelligence.financial_risk.title')).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole('button', { name: 'intelligence.dismiss' })[0]);
+  expect(screen.queryByText('intelligence.financial_risk.title')).not.toBeInTheDocument();
+  expect(screen.getByText('intelligence.fund_shortfall.title').closest('.trip-insight')).toHaveClass('trip-insight--primary');
+  expect(screen.getByText('intelligence.fund_runway.title')).toBeInTheDocument();
+  while (screen.queryAllByRole('button', { name: 'intelligence.dismiss' }).length) {
+    fireEvent.click(screen.getAllByRole('button', { name: 'intelligence.dismiss' })[0]);
+  }
+  expect(container.querySelector('.trip-intelligence')).toBeNull();
+});
+
+test('dismissal survives remount in the same session but another insight remains visible', async () => {
+  getTripIntelligence.mockResolvedValue({ currency: 'SAR', health: { status: 'WATCH' }, suggestions: [
+    { code: 'financial_risk', priority: 1, action: 'expenses' },
+    { code: 'fund_shortfall', priority: 2, action: 'fund' },
+  ] });
+  const first = renderInsights();
+  expect(await screen.findByText('intelligence.financial_risk.title')).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole('button', { name: 'intelligence.dismiss' })[0]);
+  expect(window.sessionStorage.length).toBe(1);
+  const storedKey = window.sessionStorage.key(0);
+  expect(storedKey).toContain('trip-intelligence-dismissed:v1:');
+  expect(storedKey).not.toContain('SAR');
+  expect(storedKey).not.toContain('uuid');
+  expect(window.sessionStorage.getItem(storedKey)).toBe('1');
+  first.unmount();
+  renderInsights();
+  expect(await screen.findByText('intelligence.fund_shortfall.title')).toBeInTheDocument();
+  expect(screen.queryByText('intelligence.financial_risk.title')).not.toBeInTheDocument();
+});
+
+test('a materially changed closeout state can reappear during the session', async () => {
+  const initial = { currency: 'SAR', suggestions: [{ code: 'closeout_blockers', priority: 4, action: 'settlements' }],
+    closeout: { ready: false, blockers: [{ code: 'fund_balance', amount: '125.00' }], warnings: [] } };
+  getTripIntelligence.mockResolvedValue(initial);
+  const first = renderInsights('settlements');
+  expect(await screen.findByText('intelligence.closeout_blockers.title')).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole('button', { name: 'intelligence.dismiss' })[0]);
+  first.unmount();
+  getTripIntelligence.mockResolvedValue({ ...initial, closeout: { ...initial.closeout,
+    blockers: [{ code: 'pending_settlements', count: 2 }] } });
+  renderInsights('settlements');
+  expect(await screen.findByText('intelligence.closeout_blockers.title')).toBeInTheDocument();
 });

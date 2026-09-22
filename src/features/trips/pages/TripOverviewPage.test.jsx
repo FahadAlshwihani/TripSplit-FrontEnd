@@ -2,10 +2,10 @@ import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import TripOverviewPage from './TripOverviewPage';
-import { getTripOverview } from '../api/tripsApi';
+import { getTripOverview, getTripIntelligence } from '../api/tripsApi';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key, opts) => (opts ? `${key}:${JSON.stringify(opts)}` : key) }) }));
-jest.mock('../api/tripsApi', () => ({ getTripOverview: jest.fn() }));
+jest.mock('../api/tripsApi', () => ({ getTripOverview: jest.fn(), getTripIntelligence: jest.fn() }));
 
 // The Trip Fund IS the trip budget (see docs/architecture/
 // fund-accounting.md) -- the summary bento's Budget and Available cards
@@ -55,7 +55,10 @@ const findMoney = (text) => screen.findByText(moneyMatcher(text));
 const getMoney = (text) => screen.getByText(moneyMatcher(text));
 const queryMoney = (text) => screen.queryByText(moneyMatcher(text));
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  getTripIntelligence.mockResolvedValue({ currency: 'SAR', health: { status: 'NO_DATA' }, suggestions: [] });
+});
 
 test('renders total spent and my balance from the authoritative overview payload', async () => {
   getTripOverview.mockResolvedValue(baseOverview);
@@ -64,11 +67,24 @@ test('renders total spent and my balance from the authoritative overview payload
   expect(getMoney('620.00 SAR')).toBeInTheDocument();
 });
 
-test('an invite-link manager sees the canonical join code in Overview', async () => {
+test('Overview never shows the canonical join code; Settings remains its management location', async () => {
   getTripOverview.mockResolvedValue(baseOverview);
   renderPage({ trip: { ...contextTrip, join_code: 'JOIN7788', short_code: 'url-slug', governance_capabilities: { can_manage_invite_link: true } } });
-  expect(await screen.findByText('JOIN7788')).toHaveAttribute('dir', 'ltr');
+  await findMoney('7,720.00 SAR');
+  expect(screen.queryByText('JOIN7788')).not.toBeInTheDocument();
   expect(screen.queryByText('url-slug')).not.toBeInTheDocument();
+});
+
+test('an intelligence insight appears between the header and four metrics', async () => {
+  getTripOverview.mockResolvedValue(baseOverview);
+  getTripIntelligence.mockResolvedValue({ currency: 'SAR', health: { status: 'WATCH' }, suggestions: [
+    { code: 'financial_risk', priority: 1, action: 'expenses' },
+  ] });
+  const { container } = renderPage();
+  expect(await screen.findByText('intelligence.financial_risk.title')).toBeInTheDocument();
+  expect(container.querySelector('.ov-page__header').compareDocumentPosition(container.querySelector('.trip-intelligence')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(container.querySelector('.trip-intelligence').compareDocumentPosition(container.querySelector('.ov-card--budget')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.queryByRole('heading', { name: 'intelligence.heading' })).not.toBeInTheDocument();
 });
 
 test('the summary bento renders all four canonical metrics: budget, spent, available, and my balance', async () => {

@@ -1,9 +1,10 @@
 import React, { useId, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import useRouteResource from '../../../../shared/hooks/useRouteResource';
 import { getTripIntelligence } from '../../api/tripsApi';
 import { categoryLabel } from '../../../../shared/utils/categoryPresentation';
+import useDismissedInsights from './useDismissedInsights';
 import './intelligence.css';
 
 const pageCodes = {
@@ -16,8 +17,14 @@ const pageCodes = {
 
 const money = (value, currency) => value == null ? null : <bdi dir="ltr" className="trip-insight__money">{value} {currency}</bdi>;
 
-function SmartInsight({ item, currency, tripRef, tier }) {
+function DismissButton({ onClick }) {
   const { t } = useTranslation();
+  return <button type="button" className="trip-insight__dismiss pressable-sm" onClick={onClick} aria-label={t('intelligence.dismiss')}>×</button>;
+}
+
+function SmartInsight({ item, currency, tripRef, tier, onDismiss }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const [explained, setExplained] = useState(false);
   const explanationId = useId();
   const key = `intelligence.${item.code}`;
@@ -29,31 +36,33 @@ function SmartInsight({ item, currency, tripRef, tier }) {
             : item.code === 'category_risk' ? categoryLabel(t, item.category?.code, item.category?.name) : null;
   return (
     <article className={`trip-insight trip-insight--${tier}`}>
-      <div className="trip-insight__copy">
+      <div className="trip-insight__head">
         <h3><span className="trip-insight__sparkle" aria-hidden="true">✨</span>{t(`${key}.title`)}</h3>
-        <p>{t(`${key}.body`)} {value}</p>
+        <DismissButton onClick={onDismiss} />
       </div>
+      <p>{t(`${key}.body`)} {value}</p>
       <div className="trip-insight__actions">
-        <button className="trip-insight__disclosure" type="button" aria-expanded={explained} aria-controls={explanationId} onClick={() => setExplained((shown) => !shown)}>{t('intelligence.why')}</button>
-        <Link to={`/trips/${tripRef}/${item.action}`}>{t(`intelligence.action.${item.action}`)} <span aria-hidden="true">→</span></Link>
+        <button className="trip-insight__control trip-insight__control--primary pressable-sm" type="button" onClick={() => navigate(`/trips/${tripRef}/${item.action}`)}>{t(`intelligence.action.${item.action}`)}</button>
+        <button className="trip-insight__control trip-insight__control--secondary pressable-sm" type="button" aria-expanded={explained} aria-controls={explanationId} onClick={() => setExplained((shown) => !shown)}>{t('intelligence.why')}</button>
       </div>
       {explained && <p id={explanationId} className="trip-insight__explanation">{t(`${key}.why`)} {item.code === 'next_payer' ? money(item.payer?.balance_before, currency) : null}</p>}
     </article>
   );
 }
 
-function CloseoutProgress({ closeout, currency }) {
+function CloseoutProgress({ closeout, currency, onDismiss }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const id = useId();
   const outstanding = closeout.blockers.length;
   return <article className="trip-insight trip-insight--closeout">
-    <div className="trip-insight__copy">
+    <div className="trip-insight__head">
       <h3><span className="trip-insight__sparkle" aria-hidden="true">✨</span>{t('intelligence.closeoutTitle')}</h3>
-      <p>{outstanding ? t('intelligence.closeoutBlockerCount', { count: outstanding }) : t('intelligence.closeoutReady')}</p>
+      <DismissButton onClick={onDismiss} />
     </div>
+    <p>{outstanding ? t('intelligence.closeoutBlockerCount', { count: outstanding }) : t('intelligence.closeoutReady')}</p>
     {(outstanding > 0 || closeout.warnings?.length > 0) && <>
-      <button className="trip-insight__disclosure" type="button" aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded((shown) => !shown)}>
+      <button className="trip-insight__control trip-insight__control--secondary pressable-sm" type="button" aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded((shown) => !shown)}>
         {t(expanded ? 'intelligence.hideDetails' : 'intelligence.showDetails')}
       </button>
       {expanded && <div id={id} className="trip-insight__details">
@@ -68,24 +77,26 @@ function CloseoutProgress({ closeout, currency }) {
 
 export default function TripIntelligence({ tripId, tripRef, placement, revision = 0 }) {
   const { t } = useTranslation();
+  const { isDismissed, dismiss } = useDismissedInsights(tripId);
   const resource = useRouteResource((signal) => getTripIntelligence(tripId, { signal }), [tripId, revision], true);
   const data = resource.data;
   // Keep the server's ranking; only limit the presentation per page.
-  const relevant = (data?.suggestions || []).filter((item) => pageCodes[placement]?.includes(item.code))
+  const relevant = (data?.suggestions || []).filter((item) => pageCodes[placement]?.includes(item.code) && !isDismissed(item, data))
     .slice(0, placement === 'overview' ? 3 : placement === 'settlements' ? 1 : 2);
   const showRecap = placement === 'overview' && data?.recap;
-  const showCloseout = placement === 'settlements' && data?.closeout && (data.spending?.expense_count > 0 || data.closeout.blockers.length > 0);
-  const showHealth = placement === 'overview' && !relevant.length && data?.health?.status === 'HEALTHY';
+  const closeoutItem = { code: 'closeout_checklist' };
+  const healthItem = { code: 'healthy' };
+  const showCloseout = placement === 'settlements' && data?.closeout && (data.spending?.expense_count > 0 || data.closeout.blockers.length > 0) && !isDismissed(closeoutItem, data);
+  const showHealth = placement === 'overview' && !(data?.suggestions || []).length && data?.health?.status === 'HEALTHY' && !isDismissed(healthItem, data);
   if (!relevant.length && !showRecap && !showCloseout && !showHealth) return null;
   return (
     <section className={`trip-intelligence trip-intelligence--${placement}`} aria-label={t('intelligence.heading')}>
-      {placement === 'overview' && <h2 className="trip-intelligence__heading"><span aria-hidden="true">✨</span> {t('intelligence.heading')}</h2>}
-      {showHealth && <p className="trip-intelligence__health"><span aria-hidden="true">✨</span> {t('intelligence.health.HEALTHY')}</p>}
+      {showHealth && <div className="trip-intelligence__health"><span aria-hidden="true">✨</span> {t('intelligence.health.HEALTHY')}<DismissButton onClick={() => dismiss(healthItem, data)} /></div>}
       {relevant.length > 0 && <div className="trip-intelligence__list">
         {relevant.map((item, index) => <SmartInsight key={item.code} item={item} currency={data.currency} tripRef={tripRef}
-          tier={(placement === 'overview' && index === 0) || placement === 'settlements' ? 'primary' : 'secondary'} />)}
+          tier={(placement === 'overview' && index === 0) || placement === 'settlements' ? 'primary' : 'secondary'} onDismiss={() => dismiss(item, data)} />)}
       </div>}
-      {showCloseout && <CloseoutProgress closeout={data.closeout} currency={data.currency} />}
+      {showCloseout && <CloseoutProgress closeout={data.closeout} currency={data.currency} onDismiss={() => dismiss(closeoutItem, data)} />}
       {showRecap && <div className="trip-intelligence__recap">
         <article className="trip-insight trip-insight--recap">
           <h3>{t('intelligence.recap')}</h3><p>{data.recap.trip_title}</p>
