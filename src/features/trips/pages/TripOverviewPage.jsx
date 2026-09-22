@@ -60,8 +60,6 @@ export default function TripOverviewPage() {
         <JoinCodeCard joinCode={contextTrip.join_code} joinPolicy={contextTrip.join_policy} />
       )}
 
-      <TripIntelligence tripId={tripId} tripRef={contextTrip.short_code || tripId} placement="overview" revision={quickActionRevision} />
-
       {!data && resource.loading && <SectionLoading minHeight={320} />}
       {!data && resource.error && <ErrorState title={t('dashboard.overview.errorLoad')} message={resource.error.message} onRetry={resource.retry} />}
 
@@ -70,6 +68,7 @@ export default function TripOverviewPage() {
         return (
           <>
             <OverviewSummaryCards summary={summary} fund={fund} currency={contextTrip.currency} />
+            <TripIntelligence tripId={tripId} tripRef={contextTrip.short_code || tripId} placement="overview" revision={quickActionRevision} />
             <FundSnapshot fund={fund} roundsSummary={roundsSummary} currency={contextTrip.currency} />
             <div className="ov-page__mid">
               <CategoryLedger categories={categories} currency={contextTrip.currency} totalAllocated={summary.total_allocated} unallocated={summary.unallocated} />

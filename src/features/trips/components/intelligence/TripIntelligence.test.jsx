@@ -7,8 +7,8 @@ import { getTripIntelligence } from '../../api/tripsApi';
 jest.mock('../../api/tripsApi', () => ({ getTripIntelligence: jest.fn() }));
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key) => key }) }));
 
-const renderInsights = (placement = 'overview') => render(
-  <MemoryRouter><TripIntelligence tripId="uuid" tripRef="short" placement={placement} /></MemoryRouter>,
+const renderInsights = (placement = 'overview', direction = 'rtl') => render(
+  <MemoryRouter><div dir={direction}><TripIntelligence tripId="uuid" tripRef="short" placement={placement} /></div></MemoryRouter>,
 );
 
 beforeEach(() => getTripIntelligence.mockReset());
@@ -21,6 +21,7 @@ test('renders contextual payer suggestion with explanation and canonical trip ac
   });
   renderInsights('balances');
   expect(await screen.findByText(/Abdullah/)).toBeInTheDocument();
+  expect(screen.getByText('✨')).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'intelligence.action.balances' })).toHaveAttribute('href', '/trips/short/balances');
   fireEvent.click(screen.getByRole('button', { name: 'intelligence.why' }));
   expect(screen.getByText('-420.00 SAR')).toHaveAttribute('dir', 'ltr');
@@ -43,14 +44,21 @@ test('overview caps ranked cards at three without introducing an AI tab', async 
   const { container } = renderInsights();
   expect(await screen.findByText('intelligence.heading')).toBeInTheDocument();
   expect(container.querySelectorAll('.trip-insight')).toHaveLength(3);
+  expect(container.querySelectorAll('.trip-insight--primary')).toHaveLength(1);
+  expect(container.querySelectorAll('.trip-insight--secondary')).toHaveLength(2);
   expect(screen.queryByText('intelligence.forecast.title')).not.toBeInTheDocument();
 });
 
-test('settlements shows closeout blockers without hiding the page', async () => {
+test('settlements keeps closeout blockers collapsed until requested', async () => {
   getTripIntelligence.mockResolvedValue({ currency: 'SAR', health: { status: 'WATCH' }, suggestions: [],
     closeout: { ready: false, blockers: [{ code: 'fund_balance', amount: '125.00' }], warnings: [] } });
   renderInsights('settlements');
   expect(await screen.findByText('intelligence.closeoutTitle')).toBeInTheDocument();
+  expect(screen.queryByText('125.00 SAR')).not.toBeInTheDocument();
+  const details = screen.getByRole('button', { name: 'intelligence.showDetails' });
+  expect(details).toHaveAttribute('aria-expanded', 'false');
+  fireEvent.click(details);
+  expect(details).toHaveAttribute('aria-expanded', 'true');
   expect(screen.getByText('125.00 SAR')).toHaveAttribute('dir', 'ltr');
 });
 
@@ -77,4 +85,38 @@ test('category risk uses the canonical localized category label', async () => {
   ] });
   renderInsights('expenses');
   expect(await screen.findByText(/categories\.food/)).toBeInTheDocument();
+});
+
+test('healthy overview is a single compact strip without empty cards', async () => {
+  getTripIntelligence.mockResolvedValue({ currency: 'SAR', health: { status: 'HEALTHY' }, suggestions: [] });
+  const { container } = renderInsights();
+  expect(await screen.findByText(/intelligence.health.HEALTHY/)).toBeInTheDocument();
+  expect(container.querySelectorAll('.trip-insight')).toHaveLength(0);
+  expect(container.querySelector('.trip-intelligence__list')).toBeNull();
+});
+
+test('settlements has one primary recommendation while its checklist stays compact', async () => {
+  getTripIntelligence.mockResolvedValue({ currency: 'SAR', spending: { expense_count: 2 },
+    suggestions: [
+      { code: 'closeout_blockers', priority: 4, action: 'fund' },
+      { code: 'settle_now', priority: 5, action: 'settlements', outstanding: '300.00' },
+    ], closeout: { ready: false, blockers: [{ code: 'fund_balance', amount: '120.00' }], warnings: [] } });
+  const { container } = renderInsights('settlements', 'ltr');
+  expect(await screen.findByText('intelligence.closeout_blockers.title')).toBeInTheDocument();
+  expect(screen.queryByText('intelligence.settle_now.title')).not.toBeInTheDocument();
+  expect(container.querySelectorAll('.trip-insight--primary')).toHaveLength(1);
+  expect(container.querySelector('.trip-intelligence')).toHaveAttribute('aria-label', 'intelligence.heading');
+  expect(container.querySelector('[dir="ltr"]')).toBeInTheDocument();
+});
+
+test('fund context shows compact ranked strips with LTR amounts under RTL', async () => {
+  getTripIntelligence.mockResolvedValue({ currency: 'SAR', suggestions: [
+    { code: 'fund_round_gap', priority: 6, action: 'fund', amount: '750.00' },
+    { code: 'fund_runway', priority: 8, action: 'fund', runway_days: 4 },
+  ] });
+  const { container } = renderInsights('fund');
+  expect(await screen.findByText('750.00 SAR')).toHaveAttribute('dir', 'ltr');
+  expect(container.querySelectorAll('.trip-insight--secondary')).toHaveLength(2);
+  expect(container.querySelectorAll('.trip-insight--primary')).toHaveLength(0);
+  expect(container.querySelector('[dir="rtl"]')).toBeInTheDocument();
 });
