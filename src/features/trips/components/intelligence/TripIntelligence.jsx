@@ -43,7 +43,7 @@ function SmartInsight({ item, currency, tripRef, tier, onDismiss }) {
       <p>{t(`${key}.body`)} {value}</p>
       <div className="trip-insight__actions">
         <button className="trip-insight__control trip-insight__control--primary pressable-sm" type="button" onClick={() => navigate(`/trips/${tripRef}/${item.action}`)}>{t(`intelligence.action.${item.action}`)}</button>
-        <button className="trip-insight__control trip-insight__control--secondary pressable-sm" type="button" aria-expanded={explained} aria-controls={explanationId} onClick={() => setExplained((shown) => !shown)}>{t('intelligence.why')}</button>
+        <button className="trip-insight__control trip-insight__control--secondary" type="button" aria-expanded={explained} aria-controls={explanationId} onClick={() => setExplained((shown) => !shown)}>{t('intelligence.why')}</button>
       </div>
       {explained && <p id={explanationId} className="trip-insight__explanation">{t(`${key}.why`)} {item.code === 'next_payer' ? money(item.payer?.balance_before, currency) : null}</p>}
     </article>

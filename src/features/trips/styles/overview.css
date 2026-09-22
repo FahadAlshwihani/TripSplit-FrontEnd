@@ -2,14 +2,14 @@
   Trip Overview -- compact editorial ledger density (per the approved
   Stitch screenshot), not a spacious generic SaaS dashboard. Mobile-
   first: source order already matches the required mobile reading order
-  (header -> summary cards -> category ledger -> spending split ->
+  (header -> contextual insight -> summary cards -> category ledger -> spending split ->
   recent activity) except within the four summary cards themselves,
-  where My Balance/Available must lead on mobile even though desktop
-  visually groups Budget/Spent as the two large cards -- handled with
+  where My Balance/Available must lead on mobile -- handled with
   `order`, not DOM reordering, so keyboard/reader order stays sane.
 */
 
 .ov-page { display: flex; flex-direction: column; gap: var(--space-5); }
+.ov-page > .trip-intelligence { width: 100%; margin-block: calc(-1 * var(--space-2)); }
 
 .ov-page__header {
   display: flex;
@@ -40,6 +40,7 @@
 .ov-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -94,16 +95,22 @@
 .ov-card--balance.is-positive .ov-card__value-sm { color: var(--color-success); }
 .ov-card--balance.is-negative .ov-card__value-sm { color: var(--color-danger); }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .ov-cards {
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: auto auto;
-    gap: var(--space-3);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .ov-card--budget { grid-column: 1; grid-row: 1 / span 2; order: 1; }
-  .ov-card--spent { grid-column: 2; grid-row: 1 / span 2; order: 2; }
-  .ov-card--available { grid-column: 3; grid-row: 1; order: 3; }
-  .ov-card--balance { grid-column: 3; grid-row: 2; order: 4; }
+  .ov-card--budget { order: 1; }
+  .ov-card--spent { order: 2; }
+  .ov-card--available { order: 3; }
+  .ov-card--balance { order: 4; }
+  .ov-card--available, .ov-card--balance { flex-direction: column; align-items: stretch; justify-content: space-between; padding: var(--space-3); }
+  .ov-card--available .ov-card__muted, .ov-card--balance .ov-card__muted { margin-block-start: auto; padding-block-start: var(--space-3); }
+}
+
+@media (min-width: 1200px) {
+  .ov-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ov-card__value { font-size: 32px; line-height: 40px; }
+  .ov-card__value-currency { font: var(--text-body-sm); }
 }
 
 /* ---------------------------------------------------------------------- */
