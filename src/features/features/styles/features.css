@@ -283,21 +283,33 @@
   .ledger-demo__mock { width: 80%; }
 }
 
-/* The Home sequence already provides section hierarchy. Tighten only its
-   embedded mobile rhythm; the dedicated Features page retains its layout. */
+/* Home-only mobile rhythm. Keep the dedicated Features page and desktop
+   composition untouched, with distinct spacing for related copy, numbered
+   sections, and the transition into Pricing. */
 @media (max-width: 767px) {
   .features-page--embedded {
     gap: var(--space-6);
+    padding-block: var(--space-8);
+  }
+  .features-page--embedded .features-header {
+    margin-block-end: var(--space-4);
     padding-block-end: var(--space-6);
   }
-  .features-page--embedded .features-header { margin-block-end: var(--space-4); }
-  .features-page--embedded .features-section { margin-block-end: var(--space-4); }
-}
-
-@media (max-width: 480px) {
-  .features-page--embedded .features-header { margin-block-end: var(--space-2); }
-  .features-page--embedded .features-section { margin-block-end: var(--space-2); }
-  .features-page--embedded .features-section__head { margin-block-end: var(--space-4); }
-  .features-page--embedded .feature-mini-list__row { padding: var(--space-3); }
-  .features-page--embedded .capability-card { padding: var(--space-5); }
+  .features-page--embedded .features-header__description {
+    margin-block-start: var(--space-3);
+  }
+  .features-page--embedded .features-section {
+    margin-block-end: var(--space-6);
+  }
+  .features-page--embedded .features-section:last-child {
+    margin-block-end: 0;
+  }
+  .features-page--embedded .features-section__head {
+    padding-block-end: var(--space-3);
+    margin-block-end: var(--space-6);
+  }
+  .features-page--embedded .split-engine,
+  .features-page--embedded .settlement-grid {
+    gap: var(--space-6);
+  }
 }
