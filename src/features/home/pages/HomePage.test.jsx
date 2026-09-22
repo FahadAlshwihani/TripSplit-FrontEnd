@@ -146,6 +146,22 @@ test('renders the approved Hero and preview, then canonical Features and Pricing
   expect(screen.queryByText('home.guide.eyebrow')).not.toBeInTheDocument();
 });
 
+test('Home keeps its shared content while the embedded Pricing canvas owns the full-width texture', () => {
+  const { container } = renderHome();
+  const pricing = container.querySelector('.public-layout__main > .pricing--embedded');
+  expect(pricing).toBeInTheDocument();
+  expect(pricing.tagName).toBe('SECTION');
+  expect(pricing.querySelector('.pricing__texture')).toBeInTheDocument();
+  expect(pricing.querySelector('.pricing-receipt')).toBeInTheDocument();
+
+  const pricingCss = fs.readFileSync(path.join(__dirname, '..', '..', 'pricing', 'styles', 'pricing.css'), 'utf8');
+  const featuresCss = fs.readFileSync(path.join(__dirname, '..', '..', 'features', 'styles', 'features.css'), 'utf8');
+  expect(pricingCss).toMatch(/\.pricing--embedded\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none;/);
+  expect(pricingCss).toMatch(/\.pricing-receipt\s*\{[^}]*max-width:\s*48rem;/);
+  expect(pricingCss).toMatch(/@media \(max-width: 767px\)\s*\{[\s\S]*?\.pricing--embedded\s*\{/);
+  expect(featuresCss).toMatch(/@media \(max-width: 480px\)\s*\{[\s\S]*?\.features-page--embedded/);
+});
+
 test('the dedicated Features and Pricing routes remain in public navigation', () => {
   renderHome();
   expect(screen.getByRole('link', { name: 'home.nav.features' })).toHaveAttribute('href', '/features');

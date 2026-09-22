@@ -30,7 +30,12 @@
 
 /* The same receipt sits in the Home sequence without a second full-screen
    canvas or the dedicated page's large top offset. */
-.pricing--embedded { min-height: 0; padding-block-end: var(--space-16); }
+.pricing--embedded {
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  padding-block-end: var(--space-16);
+}
 .pricing--embedded .pricing-receipt { margin-block-start: var(--space-8); }
 
 /* Decorative ledger-dot texture. Absolutely positioned within .pricing only
@@ -43,6 +48,13 @@
   background-size: 8px 8px;
   opacity: 0.1;
   pointer-events: none;
+}
+
+/* On Home, .pricing--embedded is the full-width textured section. The receipt
+   remains centered and width-constrained by its own max-width above. */
+@media (max-width: 767px) {
+  .pricing--embedded { padding-block: var(--space-6) var(--space-8); }
+  .pricing--embedded .pricing-receipt { margin-block: 0; }
 }
 
 /* ---------------------------------------------------------------------- */

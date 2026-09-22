@@ -282,3 +282,22 @@
   .ledger-demo { min-height: 200px; }
   .ledger-demo__mock { width: 80%; }
 }
+
+/* The Home sequence already provides section hierarchy. Tighten only its
+   embedded mobile rhythm; the dedicated Features page retains its layout. */
+@media (max-width: 767px) {
+  .features-page--embedded {
+    gap: var(--space-6);
+    padding-block-end: var(--space-6);
+  }
+  .features-page--embedded .features-header { margin-block-end: var(--space-4); }
+  .features-page--embedded .features-section { margin-block-end: var(--space-4); }
+}
+
+@media (max-width: 480px) {
+  .features-page--embedded .features-header { margin-block-end: var(--space-2); }
+  .features-page--embedded .features-section { margin-block-end: var(--space-2); }
+  .features-page--embedded .features-section__head { margin-block-end: var(--space-4); }
+  .features-page--embedded .feature-mini-list__row { padding: var(--space-3); }
+  .features-page--embedded .capability-card { padding: var(--space-5); }
+}
