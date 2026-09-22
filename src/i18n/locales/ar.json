@@ -190,11 +190,6 @@
 
   "home.nav.brand": "TripSplit - قطتنا", "home.nav.features": "المميزات", "home.nav.pricing": "الأسعار", "home.nav.signIn": "تسجيل الدخول", "home.nav.dashboard": "لوحة التحكم",
   "home.hero.headline": "مصاريف السفر، بدون حسبة القروب المعقّدة.", "home.hero.descriptionDesktop": "خطط للميزانية. اجمع صندوق الرحلة. تابع المصاريف. وسوّ الحسابات بوضوح.", "home.hero.descriptionMobile": "سجل موثوق لمغامراتكم المشتركة. تابعوا المصاريف، سوّوا الحسابات، وركزوا على الرحلة.", "home.hero.createTrip": "أنشئ رحلة", "home.hero.joinTrip": "انضم لرحلة",
-  "home.guide.eyebrow": "دفتر سفر واحد للقروب", "home.guide.title": "وش هو TripSplit - قطتنا؟", "home.guide.intro": "مكان واضح للأصدقاء والقروبات لتسجيل تكاليف السفر، ومعرفة من دفع ومن عليه، وتجميع قطة الرحلة وإنهاء الحسابات.",
-  "home.guide.split.title": "قسّم مصاريف السفر بوضوح", "home.guide.split.body": "سجّل المصاريف الشخصية أو المشتركة وحدد من دفع، ثم قسّمها بالتساوي أو بمبالغ ونسب وأوزان مخصصة.",
-  "home.guide.fund.title": "اجمع قطة السفر في صندوق الرحلة", "home.guide.fund.body": "أنشئ جولات تمويل وسجّل المساهمات، وخلك واضح بين مصروف الصندوق المشترك ورصيد كل عضو الشخصي.",
-  "home.guide.settle.title": "اعرف من دفع ومن عليه", "home.guide.settle.body": "شوف أرصدة الأعضاء والتسويات المقترحة، وسجّل الدفعات وأكدها بدون ما تضيع الحسبة في القروب.",
-  "home.guide.linksLabel": "اعرف أكثر عن TripSplit", "home.guide.featuresLink": "استكشف كل المميزات", "home.guide.pricingLink": "شوف السعر المجاني",
   "notFound.title": "هذه الصفحة مو ضمن خطة الرحلة.", "notFound.body": "يمكن الصفحة تغير مكانها أو الرابط ناقص. ارجع للرئيسية أو استكشف مميزات TripSplit.", "notFound.home": "العودة للرئيسية", "notFound.features": "استكشف المميزات",
   "home.preview.eyebrow": "معاينة المنتج", "home.preview.overviewLabel": "نظرة عامة على الرحلة", "home.preview.tripName": "طوكيو، خريف 2024", "home.preview.tripDates": "12 أكتوبر – 20 أكتوبر", "home.preview.budgetLabel": "إجمالي الميزانية", "home.preview.budgetUsed": "نسبة الاستخدام {{percent}}%", "home.preview.fundLabel": "صندوق الرحلة", "home.preview.fundPaid": "{{count}}/{{total}} دفعوا", "home.preview.expensesLabel": "أحدث المصروفات",
   "home.preview.expense1Title": "رحلات الطيران (ANA)", "home.preview.expense1Meta": "دفعها أليكس · تقسيم بالتساوي", "home.preview.expense1Amount": "١٬٢٥٠٫٠٠$",

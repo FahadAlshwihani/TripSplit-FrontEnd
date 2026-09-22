@@ -28,6 +28,11 @@
   .pricing { padding-inline: var(--page-margin-desktop); }
 }
 
+/* The same receipt sits in the Home sequence without a second full-screen
+   canvas or the dedicated page's large top offset. */
+.pricing--embedded { min-height: 0; padding-block-end: var(--space-16); }
+.pricing--embedded .pricing-receipt { margin-block-start: var(--space-8); }
+
 /* Decorative ledger-dot texture. Absolutely positioned within .pricing only
    (never fixed), pointer-events disabled, static (no animation) — cannot
    leak into other pages or recreate the old animated background. */

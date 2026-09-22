@@ -31,6 +31,10 @@
   .features-page { padding-inline: var(--page-margin-desktop); }
 }
 
+/* Home keeps the exact feature composition; the approved preview already
+   supplies the preceding section's breathing room. */
+.features-page--embedded { padding-block-start: 0; }
+
 /* ---------------------------------------------------------------------- */
 /* Header */
 

@@ -83,17 +83,17 @@ const ArrowRightIcon = () => (
   </svg>
 );
 
-const PricingReceipt = () => {
+const PricingReceipt = ({ headingLevel: Heading = 'h1' }) => {
   const { t } = useTranslation();
 
   return (
     <div className="pricing-receipt">
       <div className="pricing-receipt__header">
         <p className="pricing-receipt__eyebrow text-label">{t('pricing.eyebrow')}</p>
-        <h1 className="pricing-receipt__title text-display">
+        <Heading className="pricing-receipt__title text-display">
           <span>{t('pricing.titleLine1')}</span>
           <span>{t('pricing.titleLine2')}</span>
-        </h1>
+        </Heading>
       </div>
 
       <div className="pricing-receipt__price">

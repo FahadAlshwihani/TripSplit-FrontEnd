@@ -1,4 +1,6 @@
 import React from 'react';
+import fs from 'fs';
+import path from 'path';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import HomePage from './HomePage';
@@ -130,12 +132,33 @@ test('renders the static product preview content', () => {
   expect(screen.getByText('home.preview.mobileTripName')).toBeInTheDocument();
 });
 
-test('renders concise semantic product guidance and descriptive internal links', () => {
+test('renders the approved Hero and preview, then canonical Features and Pricing before the footer', () => {
+  const { container } = renderHome();
+  expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+  expect(screen.getByRole('heading', { level: 2, name: 'features.title' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 2, name: 'pricing.titleLine1 pricing.titleLine2' })).toBeInTheDocument();
+  expect(screen.getByText('features.section1.items.exactSplits.title')).toBeInTheDocument();
+  expect(screen.getByText('pricing.features.tripFund')).toBeInTheDocument();
+  expect(Array.from(container.querySelector('.public-layout__main').children).map((element) => element.className))
+    .toEqual(['hero', 'preview', 'features-page features-page--embedded', 'pricing pricing--embedded']);
+  expect(container.querySelector('.home-guide')).not.toBeInTheDocument();
+  expect(screen.queryByText('home.guide.title')).not.toBeInTheDocument();
+  expect(screen.queryByText('home.guide.eyebrow')).not.toBeInTheDocument();
+});
+
+test('the dedicated Features and Pricing routes remain in public navigation', () => {
   renderHome();
-  expect(screen.getByRole('heading', { level: 2, name: 'home.guide.title' })).toBeInTheDocument();
-  expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(3);
-  expect(screen.getByRole('link', { name: 'home.guide.featuresLink' })).toHaveAttribute('href', '/features');
-  expect(screen.getByRole('link', { name: 'home.guide.pricingLink' })).toHaveAttribute('href', '/pricing');
+  expect(screen.getByRole('link', { name: 'home.nav.features' })).toHaveAttribute('href', '/features');
+  expect(screen.getByRole('link', { name: 'home.nav.pricing' })).toHaveAttribute('href', '/pricing');
+});
+
+test('Home and dedicated routes import the same canonical Features and Pricing content', () => {
+  const featuresPage = fs.readFileSync(path.join(__dirname, '..', '..', 'features', 'pages', 'FeaturesPage.jsx'), 'utf8');
+  const pricingPage = fs.readFileSync(path.join(__dirname, '..', '..', 'pricing', 'pages', 'PricingPage.jsx'), 'utf8');
+  expect(featuresPage).toContain('FeaturesContent');
+  expect(pricingPage).toContain('PricingContent');
+  expect(featuresPage).not.toContain('<FeaturesHeader');
+  expect(pricingPage).not.toContain('<PricingReceipt');
 });
 
 test('renders the reference-matching preview eyebrow icon and expenses filter icon', () => {

@@ -34,6 +34,10 @@ test('clicking AR renders real Arabic Home copy and switches direction to RTL', 
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('مصاريف السفر، بدون حسبة القروب المعقّدة.');
   expect(document.documentElement.dir).toBe('rtl');
   expect(document.documentElement.lang).toBe('ar');
+  expect(screen.getByRole('heading', { level: 2, name: i18n.t('features.title') })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 2, name: `${i18n.t('pricing.titleLine1')} ${i18n.t('pricing.titleLine2')}` })).toBeInTheDocument();
+  expect(screen.queryByText('دفتر سفر واحد للقروب')).not.toBeInTheDocument();
+  expect(screen.queryByText(/وش هو TripSplit/)).not.toBeInTheDocument();
 });
 
 test('clicking EN restores English copy and LTR direction', async () => {
@@ -42,6 +46,8 @@ test('clicking EN restores English copy and LTR direction', async () => {
   clickByVisibleText('EN');
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Travel money, without the group-chat math.');
   expect(document.documentElement.dir).toBe('ltr');
+  expect(screen.getByRole('heading', { level: 2, name: i18n.t('features.title') })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 2, name: `${i18n.t('pricing.titleLine1')} ${i18n.t('pricing.titleLine2')}` })).toBeInTheDocument();
 });
 
 test('switching language does not navigate away or blank the page — the same route stays mounted', () => {
