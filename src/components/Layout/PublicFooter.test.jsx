@@ -31,7 +31,14 @@ test('credit and profile links use the established destinations and safe new-tab
   expect(linkedin).toHaveAttribute('href', 'https://www.linkedin.com/in/fahad-alshwihani/');
   expect(github).toHaveAttribute('href', 'https://github.com/FahadAlshwihani');
   [linkedin, github].forEach((link) => {
+    expect(link).toHaveAttribute('aria-label');
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noreferrer noopener');
+    expect(link.querySelector('svg')).toBeInTheDocument();
+    expect(link).toHaveTextContent('');
   });
+  expect(linkedin).toHaveAttribute('aria-label', 'LinkedIn');
+  expect(github).toHaveAttribute('aria-label', 'GitHub');
+  expect(within(profiles).queryByText('LinkedIn')).not.toBeInTheDocument();
+  expect(within(profiles).queryByText('GitHub')).not.toBeInTheDocument();
 });

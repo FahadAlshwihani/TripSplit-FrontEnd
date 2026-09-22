@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { FaGithub, FaLinkedinIn } from 'react-icons/fa';
 
 const FOOTER_URLS = {
   portfolio: 'https://fyaa.io/',
@@ -17,8 +18,12 @@ const PublicFooter = () => {
           Powered by <a href={FOOTER_URLS.portfolio}>fyaa.io</a>
         </p>
         <div className="public-footer__social">
-          <a href={FOOTER_URLS.linkedin} target="_blank" rel="noreferrer noopener">LinkedIn</a>
-          <a href={FOOTER_URLS.github} target="_blank" rel="noreferrer noopener">GitHub</a>
+          <a href={FOOTER_URLS.linkedin} aria-label="LinkedIn" target="_blank" rel="noreferrer noopener">
+            <FaLinkedinIn aria-hidden="true" focusable="false" />
+          </a>
+          <a href={FOOTER_URLS.github} aria-label="GitHub" target="_blank" rel="noreferrer noopener">
+            <FaGithub aria-hidden="true" focusable="false" />
+          </a>
         </div>
         <p className="public-footer__copyright text-caption" dir="ltr">{t('home.footer.copyright')}</p>
       </div>
