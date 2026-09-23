@@ -31,7 +31,7 @@ const AuthPage = () => {
   const rawNext = getSafeNext(location.search);
   const next = rawNext === '/' ? '/account' : rawNext;
   const guestAllowed = new URLSearchParams(location.search).get('guest') !== '0';
-  const { user, authLoading, setUser, saveProfile } = useAuth();
+  const { user, authLoading, refreshUser, saveProfile } = useAuth();
 
   const [step, setStep] = useState('email');
   const [email, setEmail] = useState('');
@@ -102,7 +102,17 @@ const AuthPage = () => {
     setErrorKey(null);
     try {
       const result = await verifyOtp({ otp_id: otpId, email, code });
-      setUser(result.user);
+      // The OTP response proves the code, but not that the browser retained
+      // the Django session cookie. This matters while the UI and API are on
+      // different sites: a browser can accept the response body (including
+      // the profile) while blocking the third-party Set-Cookie. Confirm the
+      // new session through an independent /auth/me request before exposing
+      // authenticated UI or issuing My Trips/Create/Join requests.
+      const confirmedUser = await refreshUser();
+      if (!confirmedUser || String(confirmedUser.id) !== String(result.user.id)) {
+        setErrorKey('auth.otp.errors.sessionUnavailable');
+        return;
+      }
       // Awaited (not fire-and-forget) so the merge-success notice it may
       // set is visible to whatever page we navigate to next -- but never
       // surfaces its own failure or blocks login on a claim error; a

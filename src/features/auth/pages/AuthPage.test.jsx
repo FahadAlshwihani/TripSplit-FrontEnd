@@ -28,9 +28,9 @@ jest.mock('react-i18next', () => {
 });
 jest.mock('../api/authApi', () => ({ requestOtp: jest.fn(), verifyOtp: jest.fn() }));
 
-const mockSetUser = jest.fn();
+const mockRefreshUser = jest.fn();
 const mockSaveProfile = jest.fn();
-jest.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: null, authLoading: false, setUser: mockSetUser, saveProfile: mockSaveProfile, logout: jest.fn() }) }));
+jest.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: null, authLoading: false, refreshUser: mockRefreshUser, saveProfile: mockSaveProfile, logout: jest.fn() }) }));
 
 const JoinDestination = () => {
   const location = useLocation();
@@ -49,7 +49,10 @@ const renderAuth = (entry = '/auth') => render(
   </MemoryRouter>
 );
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  mockRefreshUser.mockResolvedValue({ id: 'u1' });
+});
 
 const fillOtp = (code) => {
   const cells = screen.getAllByLabelText(/auth\.otp\.label \d/);
@@ -256,7 +259,7 @@ test('verifying a correct 6-digit code signs the user in and returns to the safe
   fillOtp('123456');
   fireEvent.click(screen.getByRole('button', { name: /auth.otp.verify/ }));
   await waitFor(() => expect(verifyOtp).toHaveBeenCalledWith({ otp_id: 'otp-1', email: 'nomad@tripsplit.io', code: '123456' }));
-  expect(mockSetUser).toHaveBeenCalledWith({ id: 'u1' });
+  expect(mockRefreshUser).toHaveBeenCalledTimes(1);
   expect(await screen.findByText('create-trip-page')).toBeInTheDocument();
 });
 
@@ -280,6 +283,7 @@ test('logging in with a join-trip intent preserves the original code/token query
 
 test('a new registrant sees the profile step before continuing', async () => {
   verifyOtp.mockResolvedValue({ user: { id: 'u2' }, onboarding_required: true });
+  mockRefreshUser.mockResolvedValue({ id: 'u2' });
   renderAuth();
   await advanceToOtp();
   fillOtp('123456');
@@ -289,11 +293,34 @@ test('a new registrant sees the profile step before continuing', async () => {
 
 const advanceToProfile = async () => {
   verifyOtp.mockResolvedValue({ user: { id: 'u2' }, onboarding_required: true });
+  mockRefreshUser.mockResolvedValue({ id: 'u2' });
   await advanceToOtp();
   fillOtp('123456');
   fireEvent.click(screen.getByRole('button', { name: /auth.otp.verify/ }));
   await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('profile.setup.title'));
 };
+
+test('OTP success is not treated as login when the browser did not retain the session cookie', async () => {
+  verifyOtp.mockResolvedValue({ user: { id: 'u1' }, onboarding_required: false });
+  mockRefreshUser.mockResolvedValue(null);
+  renderAuth('/auth');
+  await advanceToOtp();
+  fillOtp('123456');
+  fireEvent.click(screen.getByRole('button', { name: /auth.otp.verify/ }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('auth.otp.errors.sessionUnavailable');
+  expect(screen.queryByText('account-page')).not.toBeInTheDocument();
+});
+
+test('OTP session confirmation rejects a different authenticated user ID', async () => {
+  verifyOtp.mockResolvedValue({ user: { id: 'u1' }, onboarding_required: false });
+  mockRefreshUser.mockResolvedValue({ id: 'u2' });
+  renderAuth('/auth');
+  await advanceToOtp();
+  fillOtp('123456');
+  fireEvent.click(screen.getByRole('button', { name: /auth.otp.verify/ }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('auth.otp.errors.sessionUnavailable');
+  expect(screen.queryByText('account-page')).not.toBeInTheDocument();
+});
 
 test('completing profile setup saves the structured avatar payload and continues to the preserved next destination', async () => {
   mockSaveProfile.mockResolvedValue({ id: 'u2', display_name: 'Alex Smith', avatar_type: 'initials', avatar_color: 'indigo', onboarding_complete: true });

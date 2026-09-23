@@ -243,6 +243,19 @@ test('a load failure shows a retry action', async () => {
   await waitFor(() => expect(getAccountTrips).toHaveBeenCalledTimes(2));
 });
 
+test('a fresh account mount always refetches authoritative trips instead of reusing an empty device cache', async () => {
+  getAccountTrips
+    .mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] })
+    .mockResolvedValueOnce({ count: 2, next: null, previous: null, results: [activeOwnerTrip, activeMemberTrip] });
+  const first = await renderTrips();
+  expect(await screen.findByText('account.trips.emptyAll.title')).toBeInTheDocument();
+  first.unmount();
+  await renderTrips();
+  expect(await screen.findByText('Georgia Winter Trip')).toBeInTheDocument();
+  expect(screen.getByText('Tokyo Autumn')).toBeInTheDocument();
+  expect(getAccountTrips).toHaveBeenCalledTimes(2);
+});
+
 test('switching filters requests the new filter and clears the previous results while loading', async () => {
   getAccountTrips.mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [activeOwnerTrip] });
   await renderTrips();

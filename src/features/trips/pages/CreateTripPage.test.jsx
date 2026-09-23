@@ -80,13 +80,19 @@ test('submits the create-trip payload and navigates directly into the new trip o
 });
 
 test('keeps the user on the page and shows the server error when creation fails', async () => {
-  createTrip.mockRejectedValue({ response: { data: { message: 'Something broke' } } });
-  await renderPage();
-  fireEvent.change(screen.getByPlaceholderText('createTrip.namePlaceholder'), { target: { value: 'Tokyo' } });
-  fireEvent.change(screen.getByPlaceholderText('guest.displayNamePlaceholder'), { target: { value: 'Alex' } });
-  fireEvent.click(screen.getByText('createTrip.submit'));
-  expect(await screen.findByRole('alert')).toHaveTextContent('Something broke');
-  expect(screen.queryByText('trip workspace overview')).not.toBeInTheDocument();
+  const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    createTrip.mockRejectedValue({ status: 401, code: 'not_authenticated', message: 'Authentication credentials were not provided.' });
+    await renderPage();
+    fireEvent.change(screen.getByPlaceholderText('createTrip.namePlaceholder'), { target: { value: 'Tokyo' } });
+    fireEvent.change(screen.getByPlaceholderText('guest.displayNamePlaceholder'), { target: { value: 'Alex' } });
+    fireEvent.click(screen.getByText('createTrip.submit'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('auth.otp.errors.sessionUnavailable');
+    expect(screen.queryByText('trip workspace overview')).not.toBeInTheDocument();
+    expect(consoleError).toHaveBeenCalledWith('create_trip_failed', { status: 401, code: 'not_authenticated' });
+  } finally {
+    consoleError.mockRestore();
+  }
 });
 
 test('cancel navigates anonymous visitors to Home', async () => {

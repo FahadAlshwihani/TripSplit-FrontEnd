@@ -82,7 +82,17 @@ const CreateTripPage = () => {
       const result = await createTrip(payload);
       navigate(`/trips/${result.trip.short_code}/overview`);
     } catch (err) {
-      setServerError(err.response?.data?.message || t('set.Error'));
+      // Axios errors are normalized by api/client before reaching pages.
+      // Reading err.response here discarded the safe backend/network message
+      // and turned every mobile/session/validation failure into one generic
+      // Arabic string, making the real production failure impossible to
+      // distinguish. Never include payload, cookie, or token data in logs.
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('create_trip_failed', { status: err?.status || 0, code: err?.code || 'unknown' });
+      }
+      setServerError(err?.code === 'not_authenticated'
+        ? t('auth.otp.errors.sessionUnavailable')
+        : (err?.message || t('set.Error')));
     } finally {
       setLoading(false);
     }

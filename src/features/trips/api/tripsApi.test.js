@@ -1,4 +1,4 @@
-import { getTrip } from './tripsApi';
+import { getAccountTrips, getTrip } from './tripsApi';
 import { getGuestDeviceToken, getGuestToken, saveGuestDeviceToken, saveGuestToken } from '../../../api/credentials';
 
 jest.mock('../../../api/client', () => ({
@@ -12,6 +12,15 @@ import { apiClient } from '../../../api/client';
 beforeEach(() => {
   jest.clearAllMocks();
   localStorage.clear();
+});
+
+test('getAccountTrips requests the account scope and preserves the paginated response envelope', async () => {
+  const page = { count: 2, next: null, previous: null, results: [{ id: 'georgia' }, { id: 'arabic' }] };
+  apiClient.get.mockResolvedValue({ data: page });
+  await expect(getAccountTrips('all')).resolves.toEqual(page);
+  expect(apiClient.get).toHaveBeenCalledWith('/trips/', {
+    params: { scope: 'account', filter: 'all' },
+  });
 });
 
 test('getTrip always sends the durable device credential alongside whatever per-trip guest token it finds', async () => {
