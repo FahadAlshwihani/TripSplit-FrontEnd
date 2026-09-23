@@ -50,9 +50,15 @@ The ignored root `.env` controls production/local switching. Keep the
 production block active for deployed builds:
 
 ```text
-REACT_APP_API_BASE_URL=https://travel-budget-backend.onrender.com/api/v1
+REACT_APP_API_BASE_URL=https://api.fyaa.io/api/v1
 REACT_APP_PUBLIC_SITE_URL=https://trip.fyaa.io
 ```
+
+The former `https://travel-budget-backend.onrender.com` origin remains a
+backend transition/rollback hostname, but production frontend builds use the
+same-site `api.fyaa.io` origin. This does not remove the need for credentialed
+CORS requests or Django CSRF validation because the hosts are still different
+origins.
 
 To work locally, comment the production values and uncomment the localhost
 block shown in `.env.example`. Restart `npm start` after changing `.env`, and
