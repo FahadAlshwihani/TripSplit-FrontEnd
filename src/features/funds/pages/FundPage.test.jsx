@@ -133,7 +133,7 @@ test('the Fund can be created WITH an initial budget target in the same step -- 
 test('the budget target is shown prominently on the Fund page, with an Edit action for managers', async () => {
   renderPage();
   await screen.findByText('fund.title');
-  expect(screen.getByText('fund.budgetTarget')).toBeInTheDocument();
+  expect(await screen.findByText('fund.budgetTarget')).toBeInTheDocument();
   expect(screen.getByText('fund.editBudget')).toBeInTheDocument();
   expect(screen.queryByText('fund.originalTarget')).not.toBeInTheDocument();
 });
@@ -328,8 +328,7 @@ test('a rejected contribution stays visible with retry, new-payment, and direct-
 test('sending a Fund contribution reminder calls the reminder API for that member', async () => {
   remindContribution.mockResolvedValue({ status: 'sent' });
   renderPage();
-  await screen.findByText('fund.title');
-  fireEvent.click(screen.getByRole('button', { name: 'fund.remind' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'fund.remind' }));
   await waitFor(() => expect(remindContribution).toHaveBeenCalledWith('t1', 'r1', 'm2'));
 });
 
