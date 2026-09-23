@@ -40,7 +40,9 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "prestart": "node scripts/validate-env.js",
     "start": "react-scripts start",
+    "prebuild": "node scripts/validate-env.js",
     "build": "react-scripts build && node scripts/generate-seo-assets.js",
     "seo:generate": "node scripts/generate-seo-assets.js",
     "test": "react-scripts test",

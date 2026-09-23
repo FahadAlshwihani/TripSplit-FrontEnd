@@ -14,7 +14,9 @@ npm start
 
 The lockfile intentionally pins `react-router-dom` and `react-router` to 6.30.6. The application uses the stable v6 routing API and does not require React Router 7. If an interrupted install leaves `node_modules` inconsistent, remove only `node_modules`, run `npm cache verify`, and repeat the `npm ci` command above; do not regenerate the lockfile.
 
-The default API URL is `http://localhost:8000/api/v1`. Start the Django backend first. Keep the browser and API on the same hostname in development (`localhost` by default) so the SPA can read Django's host-scoped CSRF cookie for authenticated writes.
+The checked-in example keeps production active by default. For local work,
+switch its `.env` blocks so the SPA uses `http://127.0.0.1:8000/api/v1` and
+`http://localhost:3000`, then start the Django backend before `npm start`.
 
 ## Commands
 
@@ -44,16 +46,18 @@ so Apache/Hostinger serves real files and directories normally and sends other
 deep-link requests to `index.html`. API calls are made directly to the backend;
 there is no `/api/` Apache proxy rule.
 
-After Render has attached `api.fyaa.io` and issued its TLS certificate, build
-the production frontend with:
+The ignored root `.env` controls production/local switching. Keep the
+production block active for deployed builds:
 
 ```text
-REACT_APP_API_BASE_URL=https://api.fyaa.io/api/v1
+REACT_APP_API_BASE_URL=https://travel-budget-backend.onrender.com/api/v1
+REACT_APP_PUBLIC_SITE_URL=https://trip.fyaa.io
 ```
 
-Until that custom domain is live, the existing Render URL may remain in the
-hosting environment. Do not switch the build early: doing so would point the
-SPA at a hostname that cannot yet serve the API.
+To work locally, comment the production values and uncomment the localhost
+block shown in `.env.example`. Restart `npm start` after changing `.env`, and
+run `npm run build` after restoring production. The frontend does not select
+an environment automatically.
 
 ## Structure
 
